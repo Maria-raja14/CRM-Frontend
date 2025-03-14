@@ -3,10 +3,14 @@ import "./App.css";
 import Login from "./pages/auth/login";
 import Dashboard from "./pages/dashboard";
 import Layout from "./navbar/Layout";
+<<<<<<< HEAD
 import LeadsGroup from "./pages/LeadGroup/LeadGroup"
 import AddLeadGroup from "./pages/LeadGroup/AddLeadGroup";
 import AddOrganization from "./pages/organization/addOrganization";
 
+=======
+import UserTop from "./pages/useroles/UserTop";
+>>>>>>> 832b1d744fb5e5414b26f93e021e28b0093d475d
 
 function App() {
   return (
@@ -21,6 +25,8 @@ function App() {
           <Route path="/leadGroup" element={<LeadsGroup/>} />
           <Route path="/AddleadGroup" element={<AddLeadGroup />} />
           <Route path="/organization" element={<AddOrganization />} />
+          <Route path="/user/roles" element={<UserTop />} />
+
         </Route>
       </Routes>
     </BrowserRouter>
