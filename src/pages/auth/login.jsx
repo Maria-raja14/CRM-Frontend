@@ -12,12 +12,12 @@ const Login = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post("http://localhost:5000/api/auth/users/login", {
+            const response = await axios.post("http://localhost:5000/api/users/login", {
                 email,
                 password,
             });
     
-            console.log("Login Response:", response.data); // Debugging log
+            console.log("Login Response:", response.data); 
     
             if (response.data.token) {
                 localStorage.setItem("token", response.data.token); // ✅ Store token

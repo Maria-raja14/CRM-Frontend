@@ -16,12 +16,12 @@ const Layout = () => {
       <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col ">
         {/* Header */}
         <Header toggleSidebar={toggleSidebar} />
 
         {/* Page Content */}
-        <div className="p-6 h-full overflow-auto">
+        <div className="p-6 h-full overflow-auto  backdrop-blur-sm bg-gray-50">
           <Outlet />
         </div>
       </div>

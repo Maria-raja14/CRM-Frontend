@@ -7,17 +7,21 @@ import {
   X,
   User
 } from "react-feather";
+import { useNavigate,Link } from "react-router-dom";
+
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
   const [showHRM, setShowHRM] = useState(false);
   const [showHRMSystem, setShowHRMSystem] = useState(false);
   const [showUserManagement, setShowUserManagement] = useState(false); 
 
+  const navigate=useNavigate();
+
   return (
     <>
       {/* Sidebar */}
       <div
-        className={`fixed lg:relative top-0 left-0 h-full bg-white p-4 w-64 transition-transform ${
+        className={`fixed lg:relative top-0 left-0 h-full bg-white p-4  w-64 transition-transform ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0 lg:w-64 z-50`}
       >
@@ -72,7 +76,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
               <div className="bg-white p-2 rounded-[12px] shadow-lg">
                 <User size={18} className="text-gray-600 hover:text-[#008ECC]" />
               </div>
-              <span>HRM System</span>
+              <span>Leads</span>
             </div>
             <ChevronRight
               size={18}
@@ -86,16 +90,23 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             <>
               <button className="flex ml-2 text-sm items-center space-x-3 p-3 rounded-lg hover:text-[#008ECC]">
                 <div className="bg-white p-1 rounded-[12px] shadow-md">
-                  <Briefcase size={18} className="text-gray-500 hover:text-[#008ECC]" />
+                  
                 </div>
-                <span>Payroll</span>
+                <span>Persons</span>
               </button>
-              <button className="flex ml-2 text-sm items-center space-x-3 p-3 rounded-lg hover:text-[#008ECC]">
+              <Link to="/organization" className="flex ml-2 text-sm items-center space-x-3 p-3 rounded-lg hover:text-[#008ECC]">
                 <div className="bg-white p-1 rounded-[12px] shadow-md">
-                  <Briefcase size={18} className="text-gray-500 hover:text-[#008ECC]" />
+                  
                 </div>
-                <span>Customer</span>
-              </button>
+                <span>Organization</span>
+              </Link>
+              <Link to="/leadGroup" className="flex ml-2 text-sm items-center space-x-3 p-3 rounded-lg hover:text-[#008ECC]">
+                <div className="bg-white p-1 rounded-[12px] shadow-md">
+                  
+                </div>
+                <span>Lead groups</span>
+             
+              </Link>
             </>
           )}
 

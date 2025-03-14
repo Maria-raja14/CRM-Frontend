@@ -13,7 +13,7 @@ const Header = ({ toggleSidebar }) => {
   };
 
   return (
-    <div className="w-full bg-white p-2 flex justify-between items-center">
+    <div className="w-full bg-white p-2 flex justify-between items-center shadow">
       {/* Toggle Button for Sidebar (Mobile) */}
       <button onClick={toggleSidebar} className="lg:hidden">
         <Menu size={24} className="text-gray-600" />
