@@ -1,17 +1,10 @@
 import React, { useState } from "react";
-import {
-  Home,
-  Briefcase,
-  ChevronRight,
-  Users,
-  X,
-  User
-} from "react-feather";
+import { Home, Briefcase, ChevronRight, Users, X, User } from "react-feather";
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
   const [showHRM, setShowHRM] = useState(false);
   const [showHRMSystem, setShowHRMSystem] = useState(false);
-  const [showUserManagement, setShowUserManagement] = useState(false); 
+  const [showUserManagement, setShowUserManagement] = useState(false);
 
   return (
     <>
@@ -57,7 +50,10 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           {showHRM && (
             <button className="flex ml-2 text-sm items-center space-x-3 p-3 rounded-lg hover:text-[#008ECC]">
               <div className="bg-white p-1 rounded-[12px] shadow-md">
-                <Briefcase size={18} className="text-gray-500 hover:text-[#008ECC]" />
+                <Briefcase
+                  size={18}
+                  className="text-gray-500 hover:text-[#008ECC]"
+                />
               </div>
               <span>HRM</span>
             </button>
@@ -70,7 +66,10 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           >
             <div className="flex items-center space-x-3">
               <div className="bg-white p-2 rounded-[12px] shadow-lg">
-                <User size={18} className="text-gray-600 hover:text-[#008ECC]" />
+                <User
+                  size={18}
+                  className="text-gray-600 hover:text-[#008ECC]"
+                />
               </div>
               <span>HRM System</span>
             </div>
@@ -86,13 +85,19 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             <>
               <button className="flex ml-2 text-sm items-center space-x-3 p-3 rounded-lg hover:text-[#008ECC]">
                 <div className="bg-white p-1 rounded-[12px] shadow-md">
-                  <Briefcase size={18} className="text-gray-500 hover:text-[#008ECC]" />
+                  <Briefcase
+                    size={18}
+                    className="text-gray-500 hover:text-[#008ECC]"
+                  />
                 </div>
                 <span>Payroll</span>
               </button>
               <button className="flex ml-2 text-sm items-center space-x-3 p-3 rounded-lg hover:text-[#008ECC]">
                 <div className="bg-white p-1 rounded-[12px] shadow-md">
-                  <Briefcase size={18} className="text-gray-500 hover:text-[#008ECC]" />
+                  <Briefcase
+                    size={18}
+                    className="text-gray-500 hover:text-[#008ECC]"
+                  />
                 </div>
                 <span>Customer</span>
               </button>
@@ -122,18 +127,52 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             <>
               <button className="flex ml-2 text-sm items-center space-x-3 p-3 rounded-lg hover:text-[#008ECC]">
                 <div className="bg-white p-1 rounded-[12px] shadow-md">
-                  <Briefcase size={18} className="text-gray-500 hover:text-[#008ECC]" />
+                  <Briefcase
+                    size={18}
+                    className="text-gray-500 hover:text-[#008ECC]"
+                  />
                 </div>
                 <span>Roles</span>
               </button>
               <button className="flex ml-2 text-sm items-center space-x-3 p-3 rounded-lg hover:text-[#008ECC]">
                 <div className="bg-white p-1 rounded-[12px] shadow-md">
-                  <Briefcase size={18} className="text-gray-500 hover:text-[#008ECC]" />
+                  <Briefcase
+                    size={18}
+                    className="text-gray-500 hover:text-[#008ECC]"
+                  />
                 </div>
                 <span>Permissions</span>
               </button>
             </>
           )}
+
+          <button
+            className="flex items-center justify-between p-3 rounded-lg text-white font-semibold bg-[#008ecc] shadow-[0_5 px_10px_0_#99c7db]"
+           
+          >
+            <div className="flex items-center space-x-3 text-sm font-semibold">
+              <div className="bg-white p-1 rounded-[12px] shadow-md text-gray-500">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  height="20px"
+                  viewBox="0 -960 960 960"
+                  width="20px"
+                  fill="#1f1f1f"
+                >
+                  <path d="M695-456 576-575l51-51 68 68 153-152 51 50-204 204Zm-311-24q-60 0-102-42t-42-102q0-60 42-102t102-42q60 0 102 42t42 102q0 60-42 102t-102 42ZM96-192v-92q0-25.78 12.5-47.39T143-366q55-32 116-49t125-17q64 0 125 17t116 49q22 13 34.5 34.61T672-284v92H96Zm72-72h432v-20q0-6.47-3.03-11.76-3.02-5.3-7.97-8.24-47-27-99-41.5T384-360q-54 0-106 14.5T179-304q-4.95 2.94-7.98 8.24Q168-290.47 168-284v20Zm216.21-288Q414-552 435-573.21t21-51Q456-654 434.79-675t-51-21Q354-696 333-674.79t-21 51Q312-594 333.21-573t51 21ZM384-312Zm0-312Z" />
+                </svg>
+              </div>
+              <span>Users & Roles</span>
+            </div>
+            <ChevronRight
+              size={18}
+              className={`ml-auto transition-transform duration-300 ${
+                showHRM ? "rotate90" : ""
+              }`}
+            />
+          </button>
+
+          
         </nav>
       </div>
 

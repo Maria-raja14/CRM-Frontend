@@ -30,7 +30,7 @@ const Header = ({ toggleSidebar }) => {
 
           {/* Employee Name */}
           <span className="text-gray-500 ml-2">
-            Hi, MariaSoosai <span className="text-gray-500">(Employee)!</span>
+            Hi, MariaSoosai <span className="text-gray-500">(Employee) !</span>
           </span>
 
           {/* Dropdown Icon */}
