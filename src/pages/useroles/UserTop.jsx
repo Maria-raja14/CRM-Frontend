@@ -63,6 +63,10 @@ const UserTop = () => {
     setOpenUserModal(true);
   };
 
+  const toggleShowAllUsers = (roleId) => {
+    setShowAllUsers((prev) => ({ ...prev, [roleId]: !prev[roleId] }));
+  };
+
   useEffect(() => {
     axios
       .get("http://localhost:5000/api/auth/roles/getrole")
@@ -73,7 +77,6 @@ const UserTop = () => {
         console.error("Error fetching roles:", error);
       });
   }, []);
-  
 
   useEffect(() => {
     fetchRoles();
@@ -139,7 +142,9 @@ const UserTop = () => {
 
   const handleOpenAddUserModal = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/auth/adduser/getUser");
+      const response = await fetch(
+        "http://localhost:5000/api/auth/adduser/getUser"
+      );
       const data = await response.json();
       setUsers(data);
       setOpenAddUserModal(true);
@@ -147,7 +152,6 @@ const UserTop = () => {
       console.error("Error fetching users:", error);
     }
   };
-  
 
   // Handle form submission
   const handleSubmit = async (e) => {
@@ -197,8 +201,7 @@ const UserTop = () => {
       console.error(err);
       alert("Failed to add role");
     }
-};
-
+  };
 
   // Handle Delete Role
   // const handleDeleteRole = async (id) => {
@@ -217,32 +220,33 @@ const UserTop = () => {
     //   alert("Please select a user and a role.");
     //   return;
     // }
-  
+
     console.log("Adding user to role...");
     console.log("Selected Role: ", selectedRole);
     console.log("Selected User: ", selectedUser);
-  
+
     try {
       const response = await axios.put(
         `http://localhost:5000/api/auth/roles/update/${selectedRole._id}`,
         { users: [selectedUser._id] }
       );
-  
+
       setRoles((prevRoles) =>
         prevRoles.map((role) =>
           role._id === response.data._id ? response.data : role
         )
       );
-  
+
       alert("User added to role successfully!");
     } catch (err) {
-      console.error("Error adding user to role:", err.response ? err.response.data : err);
+      console.error(
+        "Error adding user to role:",
+        err.response ? err.response.data : err
+      );
       alert("Failed to add user to role");
     }
   };
-  
-  
-  
+
   const handleEditClick = (user) => {
     setSelectedUser(user);
     setFirstName(user.firstName);
@@ -252,25 +256,37 @@ const UserTop = () => {
 
   const handleUpdateUser = async () => {
     if (!selectedUser) return;
-
+  
+    const formData = new FormData();
+    formData.append("firstName", firstName);
+    formData.append("lastName", lastName);
+    
+    // Append file only if changed
+    if (selectedUser.profilePhoto instanceof File) {
+      formData.append("profilePhoto", selectedUser.profilePhoto);
+    }
+  
     try {
-      const response = await axios.put(
-        `http://localhost:5000/api/auth/adduser/update/${selectedUser._id}`,
-        { firstName, lastName }
-      );
-
+      const response = await fetch(`http://localhost:3004/users/${selectedUser._id}`, {
+        method: "PUT",
+        body: formData,
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to update user");
+      }
+  
       alert("User updated successfully!");
       setOpenEditModal(false);
-      window.location.reload(); // Refresh to see changes
     } catch (error) {
       console.error("Error updating user:", error);
-      alert("Failed to update user.");
     }
   };
+  
 
   return (
     <div className="">
-      <div className="flex justify-between items-center bg-white  rounded-lg">
+      <div className="flex justify-between items-center   rounded-lg">
         {/* Left Section */}
         <div className="flex items-center gap-3">
           <h2 className="text-2xl font-semibold text-gray-800">
@@ -539,52 +555,191 @@ const UserTop = () => {
         </div>
       </div>
 
-{/* FirstName & LastName  */}
+      {/* FirstName & LastName  */}
 
       <Dialog open={openEditModal} onOpenChange={setOpenEditModal}>
-        <DialogContent className=" p-4 sm:w-[400px]">
-          <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
-          </DialogHeader>
+  <DialogContent className="md:max-w-2xl w-full max-w-3xl sm:max-w-xl lg:max-w-4xl max-h-screen min-h-[400px] overflow-y-auto">
+    <DialogHeader className="p-5">
+      <DialogTitle className="text-lg font-bold">Edit User</DialogTitle>
+    </DialogHeader>
 
-          {/* Input Fields */}
-          <div className="grid gap-3 p-4">
-            <label className="font-medium">First Name</label>
-            <input
-              type="text"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md"
+    {/* Profile Photo Upload */}
+    <div className="flex justify-center py-5">
+      <div className="relative w-28 h-28 flex items-center justify-center rounded-full border-2">
+        <div className="w-24 h-24 flex items-center justify-center rounded-full border-2 border-gray-300 overflow-hidden">
+     
+            <img
+              src="https://static.vecteezy.com/system/resources/previews/020/429/953/non_2x/admin-icon-vector.jpg"
+              alt="User Icon"
+              className="w-full h-full object-cover rounded-full"
             />
+      
+        </div>
 
-            <label className="font-medium">Last Name</label>
+        {/* Upload Button */}
+        <label className="absolute bottom-0 right-0 bg-[#008ecc] text-white p-2 rounded-full cursor-pointer hover:bg-blue-700 flex items-center justify-center">
+          <input
+            type="file"
+            name="profilePhoto"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            height="18px"
+            viewBox="0 -960 960 960"
+            width="18px"
+            fill="white"
+          >
+            <path d="M480-264q72 0 120-49t48-119q0-69-48-118.5T480-600q-72 0-120 49.5t-48 119q0 69.5 48 118.5t120 49Zm0-72q-42 0-69-28.13T384-433q0-39.9 27-67.45Q438-528 480-528t69 27.55q27 27.55 27 67.45 0 40.74-27 68.87Q522-336 480-336ZM168-144q-29 0-50.5-21.5T96-216v-432q0-29 21.5-50.5T168-720h120l72-96h240l72 96h120q29.7 0 50.85 21.5Q864-677 864-648v432q0 29-21.15 50.5T792-144H168Zm0-72h624v-432H636l-72.1-96H396l-72 96H168v432Zm312-217Z" />
+          </svg>
+        </label>
+      </div>
+    </div>
+
+    {/* Form Fields */}
+    <form onSubmit={handleUpdateUser}>
+      <div className="flex flex-col gap-5 p-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="flex flex-col">
+            <label className="font-medium pb-1.5">First Name:</label>
             <input
               type="text"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md"
+              name="firstName"
+              placeholder="First Name"
+              value={selectedUser?.firstName || ""}
+              onChange={(e) =>
+                setSelectedUser({ ...selectedUser, firstName: e.target.value })
+              }
+              className="p-2 border rounded-md w-full"
+              required
             />
           </div>
 
-          {/* Buttons */}
-          <div className="flex justify-end gap-3 p-4 border-t">
-            <button
-              className="px-4 py-2 bg-gray-300 text-black rounded-md hover:bg-gray-400"
-              onClick={() => setOpenEditModal(false)}
-            >
-              Cancel
-            </button>
-            <button
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              onClick={handleUpdateUser}
-            >
-              Save
-            </button>
+          <div className="flex flex-col">
+            <label className="font-medium pb-1.5">Last Name:</label>
+            <input
+              type="text"
+              name="lastName"
+              placeholder="Last Name"
+              value={selectedUser?.lastName || ""}
+              onChange={(e) =>
+                setSelectedUser({ ...selectedUser, lastName: e.target.value })
+              }
+              className="p-2 border rounded-md w-full"
+              required
+            />
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
 
-{/* Roles selections */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="flex flex-col">
+            <label className="font-medium pb-1.5">Gender:</label>
+            <select
+              name="gender"
+              value={selectedUser?.gender || ""}
+              onChange={(e) =>
+                setSelectedUser({ ...selectedUser, gender: e.target.value })
+              }
+              className="p-2 border rounded-md w-full"
+              required
+            >
+              <option value="">Select Gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+          
+            </select>
+          </div>
+
+          <div>
+            <label className="font-medium pb-1.5">Date Of Birth:</label>
+            <input
+              type="date"
+              value={selectedUser?.DateOB || ""}
+              onChange={(e) =>
+                setSelectedUser({ ...selectedUser, DateOB: e.target.value })
+              }
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="flex flex-col">
+            <label className="font-medium pb-1.5">Mobile Number:</label>
+            <input
+              type="text"
+              name="mobileNumber"
+              placeholder="Mobile Number"
+              value={selectedUser?.mobileNumber || ""}
+              onChange={(e) =>
+                setSelectedUser({
+                  ...selectedUser,
+                  mobileNumber: e.target.value,
+                })
+              }
+              className="p-2 border rounded-md w-full"
+              required
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <label className="font-medium pb-1.5">Email:</label>
+            <input
+              type="email"
+              name="email"
+              placeholder="Email"
+              value={selectedUser?.email || ""}
+              onChange={(e) =>
+                setSelectedUser({ ...selectedUser, email: e.target.value })
+              }
+              className="p-2 border rounded-md w-full"
+              required
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="flex flex-col">
+            <label className="font-medium pb-1.5">Address:</label>
+            <textarea
+              name="address"
+              placeholder="Address"
+              value={selectedUser?.address || ""}
+              onChange={(e) =>
+                setSelectedUser({ ...selectedUser, address: e.target.value })
+              }
+              className="p-2 border rounded-md w-full"
+              required
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Submit Button */}
+      <div className="flex flex-col sm:flex-row justify-end items-center border-t-2 p-5 gap-3">
+        <button
+          type="button"
+          onClick={() => setOpenEditModal(false)}
+          className="px-4 py-2 w-full sm:w-fit bg-gray-200 hover:bg-gray-300 text-black rounded-md"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="submit"
+          className="px-4 py-2 w-full sm:w-fit bg-[#008ecc] text-white rounded-md hover:shadow-lg"
+        >
+          Save Changes
+        </button>
+      </div>
+    </form>
+  </DialogContent>
+</Dialog>
+
+
+      {/* Roles selections */}
 
       <Dialog open={openViewModal} onOpenChange={setOpenViewModal}>
         <DialogContent className=" min-w-[650px] h-[40vh] overflow-y-auto">
@@ -624,7 +779,7 @@ const UserTop = () => {
         </DialogContent>
       </Dialog>
 
-{/* Add Users in models */}
+      {/* Add Users in models */}
       <Dialog open={openUserModal} onOpenChange={setOpenUserModal}>
         <DialogContent className="min-w-[600px] p-5 h-[400px]">
           <DialogHeader>
@@ -650,7 +805,9 @@ const UserTop = () => {
                       )}
                     </div>
 
-                    <span>{user.firstName} {user.lastName}</span>
+                    <span>
+                      {user.firstName} {user.lastName}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -683,7 +840,7 @@ const UserTop = () => {
         </DialogContent>
       </Dialog>
 
-{/* Add Users in roles */}
+      {/* Add Users in roles */}
       <Dialog open={openAddUserModal} onOpenChange={setOpenAddUserModal}>
         <DialogContent className="min-w-[700px] p-10">
           <DialogHeader>
@@ -735,11 +892,11 @@ const UserTop = () => {
         </DialogContent>
       </Dialog>
 
-      <div className="grid grid-cols-[38%_62%]  gap-9 mt-10">
+      <div className="grid grid-cols-[38%_62%]  gap-5 mt-10">
         {/* Users Card */}
-        <Card className="bg-white  rounded-sm shadow-lg">
+        <Card className="bg-white rounded-sm shadow-lg">
           {/* Header Section */}
-          <div className="flex justify-between  items-center px-6">
+          <div className="flex justify-between pt-5 items-center px-6">
             <h2 className="text-xl font-semibold mb-3">Users</h2>
 
             {/* Search Input */}
@@ -866,25 +1023,31 @@ const UserTop = () => {
         {/* Roles */}
 
         <div>
-          <Card>
-            <div className="flex justify-between items-center px-5">
-              <h2 className="text-xl flex  font-semibold mb-3">Roles</h2>
+          <Card className="bg-white px-1 rounded-sm shadow-lg">
+            <div className="flex justify-between pt-5 items-center px-6">
+              <h2 className="text-xl font-semibold mb-3">Roles</h2>
 
               {/* Search Input */}
-              {/* Search Input */}
-              <div className=" mb-4">
+              <div className="relative flex flex-row justify-between items-center ">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="absolute left-3 top-[22px] transform -translate-y-1/2 w-7 h-6 text-gray-500"
+                  viewBox="0 -960 960 960"
+                  fill="#1f1f1f"
+                >
+                  <path d="M765-144 526-383q-30 22-65.79 34.5-35.79 12.5-76.18 12.5Q284-336 214-406t-70-170q0-100 70-170t170-70q100 0 170 70t70 170.03q0 40.39-12.5 76.18Q599-464 577-434l239 239-51 51ZM384-408q70 0 119-49t49-119q0-70-49-119t-119-49q-70 0-119 49t-49 119q0 70 49 119t119 49Z" />
+                </svg>
                 <input
                   type="text"
-                  placeholder="Search Roles"
-                  value={roleSearch} // Use the correct state
-                  onChange={(e) => setRoleSearch(e.target.value)} // Update correctly
-                  className="w-[300px] pl-10 pr-3 py-2 rounded-3xl focus:outline-none focus:ring-2 bg-[#f9f9f9] focus:ring-blue-500"
+                  placeholder="Search"
+                  value={roleSearch}
+                  onChange={(e) => setRoleSearch(e.target.value)}
+                  className="w-[190px] pl-10 py-2 rounded-3xl mb-4 focus:outline-none focus:ring-2 bg-[#f9f9f9] focus:ring-blue-500"
                 />
               </div>
-
-              <div className="border-t"></div>
             </div>
             <div className="border-t"></div>
+
             {/* Role List */}
             <CardContent>
               <table className="w-full">
@@ -897,8 +1060,8 @@ const UserTop = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {roles.length > 0 ? (
-                    roles.map((role) => (
+                  {filteredRoles.length > 0 ? (
+                    filteredRoles.map((role) => (
                       <tr key={role._id} className="border-t">
                         <td className="p-3">{role.name}</td>
                         <td>
@@ -912,16 +1075,16 @@ const UserTop = () => {
                             View
                           </button>
                         </td>
-                        <td className="p-3 relative flex">
+                        <td className="p-3">
                           {role.users && role.users.length > 0 ? (
                             <div className="flex items-center">
                               {/* Show first 3 users */}
                               {role.users.slice(0, 3).map((user) => (
                                 <div
                                   key={user._id}
-                                  className="flex items-center relative "
+                                  className="flex items-center mr-2"
                                 >
-                                  <div className="w-10 h-10 flex items-center justify-center rounded-full  bg-gray-300 text-white font-semibold">
+                                  <div className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-300 text-white font-semibold">
                                     {user.firstName && user.lastName
                                       ? `${user.firstName[0].toUpperCase()}${user.lastName[0].toUpperCase()}`
                                       : "?"}
@@ -930,24 +1093,23 @@ const UserTop = () => {
                               ))}
 
                               {/* Show remaining users count */}
-                              {role.users.length > 3 && !showAllUsers && (
-                                <div className="flex items-center ">
+                              {role.users.length > 3 &&
+                                !showAllUsers[role._id] && (
                                   <button
                                     className="text-blue-500 font-semibold"
-                                    onClick={() => setShowAllUsers(true)}
+                                    onClick={() => toggleShowAllUsers(role._id)}
                                   >
                                     +{role.users.length - 3} more
                                   </button>
-                                </div>
-                              )}
+                                )}
 
-                              {/* Show full list of users if 'showAllUsers' is true */}
-                              {showAllUsers && (
-                                <div className="mt-2">
+                              {/* Show full list of users */}
+                              {showAllUsers[role._id] && (
+                                <div className="mt-2 flex flex-wrap">
                                   {role.users.slice(3).map((user) => (
                                     <div
                                       key={user._id}
-                                      className="flex items-center"
+                                      className="flex items-center mr-2"
                                     >
                                       <div className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-300 text-white font-semibold">
                                         {user.firstName && user.lastName
@@ -965,11 +1127,10 @@ const UserTop = () => {
                             </span>
                           )}
                         </td>
-
                         <td>
                           <button
-                            className="px-4 py-1 text-white rounded-lg "
-                            onClick={() => handleManageUsers(role)} // Open the modal with role data
+                            className="px-4 py-1 text-white rounded-lg"
+                            onClick={() => handleManageUsers(role)}
                           >
                             🔧
                           </button>
@@ -987,6 +1148,7 @@ const UserTop = () => {
               </table>
             </CardContent>
           </Card>
+          ;
         </div>
       </div>
     </div>
