@@ -44,7 +44,7 @@ const Login = () => {
                 password,
             });
     
-            console.log("Login Response:", response.data); // Debugging log
+            console.log("Login Response:", response.data); 
     
             if (response.data.token) {
                 localStorage.setItem("token", response.data.token); // ✅ Store token

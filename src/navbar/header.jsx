@@ -1,54 +1,47 @@
 import React, { useState } from "react";
-import { Menu, User, LogOut, ChevronDown } from "react-feather";
-import { useNavigate } from "react-router-dom"; // Import for navigation
-import boy1 from '../../src/assets/boy1.png';
+import { Menu, User, Power, ChevronDown } from "react-feather";
+import { Link } from "react-router-dom";
 
-const Header = ({ toggleSidebar }) => {
+const Navbar = ({ toggleSidebar }) => {
   const [showDropdown, setShowDropdown] = useState(false);
-  const navigate = useNavigate(); // Initialize useNavigate
-
-  const handleLogout = () => {
-    localStorage.removeItem("token"); // Remove token from localStorage
-    navigate("/"); // Redirect to login page
-  };
 
   return (
-    <div className="w-full bg-white p-2 flex justify-between items-center">
-      {/* Toggle Button for Sidebar (Mobile) */}
+    <div className="w-full bg-white p-3 flex justify-between items-center">
       <button onClick={toggleSidebar} className="lg:hidden">
         <Menu size={24} className="text-gray-600" />
       </button>
 
-      {/* Profile Section */}
+     
       <div className="relative">
         <button
-          className="flex items-center bg-white rounded-[12px] border border-gray-100 p-1 hover:bg-gray-100"
+          className="flex items-center bg-white rounded-xl border border-gray-200 px-1 py-1 shadow-sm hover:shadow-sm transition-all"
           onClick={() => setShowDropdown(!showDropdown)}
         >
-          {/* Profile Picture */}
-          <img src={boy1} alt="User Avatar" className="w-10 h-10 rounded-full object-cover" />
+         
+          <img
+            src="https://randomuser.me/api/portraits/men/32.jpg"
+            alt="User Avatar"
+            className="w-10 h-10 rounded-full object-cover border border-gray-300"
+          />
 
-          {/* Employee Name */}
-          <span className="text-gray-500 ml-2">
-            Hi, MariaSoosai <span className="text-gray-500">(Employee) !</span>
+         
+          <span className="text-gray-700 ml-3 font-medium">
+            Hi, Mohana Ruben <span className="text-gray-500">(Employee)</span>
           </span>
 
-          {/* Dropdown Icon */}
-          <ChevronDown size={16} className="text-gray-500 ml-1" />
+         
+          <ChevronDown size={16} className="text-gray-600 ml-2" />
         </button>
 
-        {/* Dropdown Menu */}
+       
         {showDropdown && (
-          <div className="absolute right-0 mt-2 w-44 bg-white shadow rounded-md p-2 border border-gray-200">
-            <button className="flex items-center space-x-2 w-full p-2 hover:bg-gray-100 rounded">
+          <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-lg p-2 border border-gray-200 z-10">
+            <Link to="/dashboard/profile" className="flex items-center space-x-3 w-full p-3 hover:bg-gray-100 rounded-md">
               <User size={18} className="text-gray-600" />
               <span>Profile</span>
-            </button>
-            <button
-              onClick={handleLogout} // Call logout function
-              className="flex items-center space-x-2 w-full p-2 hover:bg-gray-100 rounded"
-            >
-              <LogOut size={18} className="text-gray-600" />
+            </Link>
+            <button className="flex items-center space-x-3 w-full p-3 hover:bg-gray-100 rounded-md">
+              <Power size={18} className="text-gray-600" />
               <span>Logout</span>
             </button>
           </div>
@@ -58,4 +51,4 @@ const Header = ({ toggleSidebar }) => {
   );
 };
 
-export default Header;
+export default Navbar;
