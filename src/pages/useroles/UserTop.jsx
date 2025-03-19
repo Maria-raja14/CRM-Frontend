@@ -983,10 +983,10 @@ const UserTop = () => {
         <Card className="bg-white rounded-sm shadow-lg">
           {/* Header Section */}
           <div className="flex justify-between pt-5 items-center px-6">
-            <h2 className="text-xl font-semibold mb-3">Users</h2>
+            <h2 className="text-xl font-semibold mt-3 mb-3">Users</h2>
 
             {/* Search Input */}
-            <div className="relative flex flex-row items-center ">
+            <div className="relative mt-3  flex flex-row items-center ">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="absolute left-3 top-[22px] transform -translate-y-1/2 w-7 h-6 text-gray-500"
@@ -1110,11 +1110,11 @@ const UserTop = () => {
 
         <div>
           <Card className="bg-white px-1 rounded-sm shadow-lg">
-            <div className="flex justify-between pt-5 items-center px-6">
-              <h2 className="text-xl font-semibold mb-3">Roles</h2>
+            <div className="flex justify-between pt-5  items-center px-6">
+              <h2 className="text-xl font-semibold mt-3 mb-3">Roles</h2>
 
               {/* Search Input */}
-              <div className="relative flex flex-row justify-between items-center ">
+              <div className="relative flex flex-row mt-3 justify-between items-center ">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="absolute left-3 top-[22px] transform -translate-y-1/2 w-7 h-6 text-gray-500"
@@ -1137,18 +1137,21 @@ const UserTop = () => {
             {/* Role List */}
             <CardContent>
               <table className="w-full">
-                <thead>
-                  <tr className="text-gray-600 border-b">
-                    <th className="text-left">Role Name</th>
-                    <th className="text-left">Permission</th>
-                    <th className="text-left">Users</th>
-                    <th className="text-left">Manage Users</th>
+              
+            
+                 <thead  className="p-5">
+                  <tr className="  border-b  ">
+                    <td className="text-left pb-5 font-bold">Role Name</td>
+                    <td className="text-left pb-5 font-bold">Permission</td>
+                    <td className="text-left pb-5 font-bold">Users</td>
+                    <td className="text-left pb-5 font-bold">Manage Users</td>
                   </tr>
                 </thead>
-                <tbody>
+                
+                <tbody className="">
                   {filteredRoles.length > 0 ? (
                     filteredRoles.map((role) => (
-                      <tr key={role._id} className="border-t">
+                      <tr key={role._id} className="border-b ">
                         <td className="p-3">{role.name}</td>
                         <td>
                           <button
@@ -1161,7 +1164,7 @@ const UserTop = () => {
                             View
                           </button>
                         </td>
-                        <td className="p-3">
+                        <td className="p-4 mt-5 ">
                           {role.users && role.users.length > 0 ? (
                             <div className="flex items-center">
                               {/* Show first 3 users */}
