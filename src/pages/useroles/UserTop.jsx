@@ -128,21 +128,20 @@ const   UserTop = () => {
           {/* Add User Button */}
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+              <button className="px-4 py-2  bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                 Add User
               </button>
             </DialogTrigger>
-            <DialogContent className="min-w-[900px] ">
+            <DialogContent className=" md:max-w-2xl   w-full max-w-3xl sm:max-w-xl lg:max-w-4xl  max-h-screen min-h-[400px] overflow-y-auto ">
               <DialogHeader className="p-5">
-                <DialogTitle className=" text-lg  font-bold">
+                <DialogTitle className="text-lg font-bold">
                   Add New User
                 </DialogTitle>
               </DialogHeader>
-              <div className="border-t-1  "></div>
-              <div className="flex justify-center py-5 relative items-center">
-                {/* Outer Circle */}
-                <div className="relative w-28 h-28 flex items-center justify-center rounded-full border-2 ">
-                  {/* Inner Circle */}
+
+              {/* Profile Photo Upload */}
+              <div className="flex justify-center py-5">
+                <div className="relative w-28 h-28 flex items-center justify-center rounded-full border-2">
                   <div className="w-24 h-24 flex items-center justify-center rounded-full border-2 border-gray-300 overflow-hidden">
                     {formData.profilePhoto ? (
                       <img
@@ -185,8 +184,8 @@ const   UserTop = () => {
 
               {/* Form Fields */}
               <form onSubmit={handleSubmit}>
-                <div className="flex p-5 flex-col gap-5">
-                  <div className="grid grid-cols-2 gap-5">
+                <div className="flex flex-col gap-5 p-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div className="flex flex-col">
                       <label className="font-medium pb-1.5">First Name:</label>
                       <input
@@ -195,7 +194,7 @@ const   UserTop = () => {
                         placeholder="First Name"
                         value={formData.firstName}
                         onChange={handleChange}
-                        className="p-2 border rounded-md"
+                        className="p-2 border rounded-md w-full"
                         required
                       />
                     </div>
@@ -208,20 +207,20 @@ const   UserTop = () => {
                         placeholder="Last Name"
                         value={formData.lastName}
                         onChange={handleChange}
-                        className="p-2 border rounded-md"
+                        className="p-2 border rounded-md w-full"
                         required
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div className="flex flex-col">
                       <label className="font-medium pb-1.5">Gender:</label>
                       <select
                         name="gender"
                         value={formData.gender}
                         onChange={handleChange}
-                        className="p-2 border rounded-md"
+                        className="p-2 border rounded-md w-full"
                         required
                       >
                         <option value="">Select Gender</option>
@@ -230,9 +229,18 @@ const   UserTop = () => {
                         <option value="other">Other</option>
                       </select>
                     </div>
+                    <div>
+                      <label className="font-medium pb-1.5">
+                        Date Of Birth
+                      </label>
+                      <input
+                        type="date"
+                        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div className="flex flex-col">
                       <label className="font-medium pb-1.5">
                         Mobile Number:
@@ -243,7 +251,7 @@ const   UserTop = () => {
                         placeholder="Mobile Number"
                         value={formData.mobileNumber}
                         onChange={handleChange}
-                        className="p-2 border rounded-md"
+                        className="p-2 border rounded-md w-full"
                         required
                       />
                     </div>
@@ -256,7 +264,7 @@ const   UserTop = () => {
                         placeholder="Email"
                         value={formData.email}
                         onChange={handleChange}
-                        className="p-2 border rounded-md"
+                        className="p-2 border rounded-md w-full"
                         required
                       />
                     </div>
@@ -265,53 +273,34 @@ const   UserTop = () => {
                   <div className="flex flex-col">
                     <label className="font-medium pb-1.5">Address:</label>
                     <textarea
-                      type="text"
                       name="address"
                       placeholder="Address"
                       value={formData.address}
                       onChange={handleChange}
-                      className="p-2 border rounded-md"
+                      className="p-2 border rounded-md w-full"
                       required
                     />
                   </div>
                 </div>
-                <div className="border-t-0.5  "></div>
-                {/* Submit Button */}
 
-                <div className="flex justify-end items-center border-t-2 p-5 gap-5">
+                {/* Submit Button */}
+                <div className="flex flex-col sm:flex-row justify-end items-center border-t-2 p-5 gap-3">
                   <button
                     type="button"
                     onClick={handleCancel}
-                    className="px-4 py-2 w-fit bg-[#f8f9fa] hover:bg-[#e5e7eb] text-black rounded-sm hover:shadow-[0_4px_10px_0_#99c7db]"
+                    className="px-4 py-2 w-full sm:w-fit bg-gray-200 hover:bg-gray-300 text-black rounded-md"
                   >
                     Cancel
                   </button>
 
                   <button
                     type="submit"
-                    className="px-4 py-2  w-fit  bg-[#008ecc] text-white rounded-sm hover:shadow-[0_4px_10px_0_#99c7db]"
+                    className="px-4 py-2 w-full sm:w-fit bg-[#008ecc] text-white rounded-md hover:shadow-lg"
                   >
                     Submit
                   </button>
                 </div>
               </form>
-            </DialogContent>
-          </Dialog>
-
-          {/* Add Role Button */}
-          <Dialog>
-            <DialogTrigger asChild>
-              <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                Add Role
-              </button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle className="text-lg font-bold">
-                  Add New Role
-                </DialogTitle>
-              </DialogHeader>
-              <p className="text-gray-600">Enter role details here...</p>
             </DialogContent>
           </Dialog>
 

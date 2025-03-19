@@ -94,21 +94,21 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
           {showHRMSystem && (
             <>
-              <button className="flex ml-2 text-sm items-center space-x-3 p-3 rounded-lg hover:text-[#008ECC]">
+              <Link to="/person"className="flex ml-2 text-sm items-center space-x-3 p-3 rounded-lg hover:text-[#008ECC]">
                 <div className="bg-white p-1 rounded-[12px] shadow-md">
-                  <Briefcase
+                  {/* <Briefcase
                     size={18}
                     className="text-gray-500 hover:text-[#008ECC]"
-                  />
+                  /> */}
                 </div>
                 <span>Persons</span>
-              </button>
+              </Link>
               <Link to="/organization" className="flex ml-2 text-sm items-center space-x-3 p-3 rounded-lg hover:text-[#008ECC]">
                 <div className="bg-white p-1 rounded-[12px] shadow-md">
-                  <Briefcase
+                  {/* <Briefcase
                     size={18}
                     className="text-gray-500 hover:text-[#008ECC]"
-                  />
+                  /> */}
                 </div>
                 <span>Organization</span>
               </Link>
