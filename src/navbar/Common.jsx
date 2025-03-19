@@ -72,7 +72,7 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Sidebar from "./Myprofile_Sidebar";
-import PersonalInfoForm from "./Myprofile_Manicontent";
+import PersonalInfoForm from "./Myprofile_Maincontent";
 import PasswordChange from "./Password_change";
 import SocialLinks from "./MyProfile_socialLinks";
 
