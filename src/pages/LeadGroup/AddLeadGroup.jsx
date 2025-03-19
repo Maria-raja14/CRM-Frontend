@@ -1,5 +1,6 @@
 import React, { useState,useEffect } from "react";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const AddLeadGroup = ({ onClose, onAdd,leadGroupToEdit  }) => {
   const [name, setName] = useState("");
@@ -45,18 +46,20 @@ const AddLeadGroup = ({ onClose, onAdd,leadGroupToEdit  }) => {
           name,
           leadClass: selectedClass,
         });
+        toast.success("Leads update successfully");
       } else {
         response = await axios.post("http://localhost:5000/api/leadGroup/add", {
           name,
           leadClass: selectedClass,
         });
+        toast.success("Leads Added successfully");
       }
 
-      alert(leadGroupToEdit ? "Lead Group Updated Successfully!" : "Lead Group Added Successfully!");
+      // alert(leadGroupToEdit ? "Lead Group Updated Successfully!" : "Lead Group Added Successfully!");
       onAdd(response.data.data);
       onClose();
     } catch (error) {
-      alert("Error saving lead group");
+      toast.error("Error saving lead group");
       console.error("Error:", error);
     } finally {
       setLoading(false);
