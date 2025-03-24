@@ -1137,9 +1137,7 @@ const UserTop = () => {
             {/* Role List */}
             <CardContent>
               <table className="w-full">
-              
-            
-                 <thead  className="p-5">
+                <thead className="p-5">
                   <tr className="  border-b  ">
                     <td className="text-left pb-5 font-bold">Role Name</td>
                     <td className="text-left pb-5 font-bold">Permission</td>
@@ -1147,7 +1145,7 @@ const UserTop = () => {
                     <td className="text-left pb-5 font-bold">Manage Users</td>
                   </tr>
                 </thead>
-                
+
                 <tbody className="">
                   {filteredRoles.length > 0 ? (
                     filteredRoles.map((role) => (

@@ -12,11 +12,15 @@ import { ToastContainer } from "react-toastify"; // Import ToastContainer
 import "react-toastify/dist/ReactToastify.css"; // Import styles
 import PersonTable from "./pages/person/PersonTable";
 
+import { ModalProvider } from "./context/ModalContext";
+import InvoiceHead from "./pages/invoice/InvoiceHead";
+
 import OrganizationPage from "./pages/organization/OrganizationPage";
 import DragDropUpload from "./pages/organization/DragAndDrop";
 import AddOrganization from "./pages/organization/addOrganization";
 import UserTop from "./pages/useroles/UserTop";
 import ProfileCard from "./navbar/Myprofile_Topcenter";
+import Lastreasons from "./pages/lostReasons/Lastreasons";
 // import MyProfile from "./pages/MyProfile/MyProfile";
 
 function App() {
@@ -35,7 +39,9 @@ function App() {
           <Route path="/import-persons" element={<DragDropUpload />} />
           <Route path="/person" element={<AddPerson />} />
           <Route path="/user/roles" element={<UserTop />} />
+          <Route path="/invoice" element={<InvoiceHead/>}/>
           <Route path="/dashboard/profile" element={<ProfileCard />} />
+          <Route path="/LostReasons" element={<Lastreasons/>}/>
 
           {/* MyProfile Routes with Sidebar and Top Center Always Visible */}
           <Route

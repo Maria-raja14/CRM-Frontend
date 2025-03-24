@@ -26,7 +26,7 @@ const Navbar = ({ toggleSidebar }) => {
 
          
           <span className="text-gray-700 ml-3 font-medium">
-            Hi, Mohana Ruben <span className="text-gray-500">(Employee)</span>
+            Hi, Jovince Felson   <span className="text-gray-500">(Employee)</span>
           </span>
 
          
