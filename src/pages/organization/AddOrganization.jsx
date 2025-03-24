@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { Search, Upload, Download, Plus, Settings } from "lucide-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -11,7 +11,7 @@ const AddOrganization = ({ search, setSearch, addNewOrganization }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [organizations, setOrganizations] = useState("");
+  const [organizations, setOrganizations] = useState([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const navigate = useNavigate();
@@ -21,13 +21,16 @@ const AddOrganization = ({ search, setSearch, addNewOrganization }) => {
       const response = await axios.get(
         "http://localhost:5000/api/organization"
       );
-      setOrganizations(response.data);
+      setOrganizations(response.data || []);
       console.log("Organizations refreshed:", response.data);
     } catch (error) {
       console.error("Error refreshing organizations:", error);
     }
   };
-
+  useEffect(() => {
+    refreshOrganizations();
+  }, []);
+  
   return (
     <div>
       {/* Header Section */}

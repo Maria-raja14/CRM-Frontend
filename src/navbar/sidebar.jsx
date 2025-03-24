@@ -131,7 +131,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
               <div className="bg-white shadow-lg p-1 rounded-[12px]">
                 <Users size={18} className="text-gray-500" />
               </div>
-              <span>User Management</span>
+              <span>Deals</span>
             </div>
             <ChevronRight
               size={18}
@@ -150,17 +150,17 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                     className="text-gray-500 hover:text-[#008ECC]"
                   />
                 </div>
-                <span>Roles</span>
+                <span>Pipeline view</span>
               </button>
-              <button className="flex ml-2 text-sm items-center space-x-3 p-3 rounded-lg hover:text-[#008ECC]">
+              <Link to="/deals" className="flex ml-2 text-sm items-center space-x-3 p-3 rounded-lg hover:text-[#008ECC]">
                 <div className="bg-white p-1 rounded-[12px] shadow-md">
                   <Briefcase
                     size={18}
                     className="text-gray-500 hover:text-[#008ECC]"
                   />
                 </div>
-                <span>Permissions</span>
-              </button>
+                <span>All deals</span>
+              </Link>
             </>
           )}
 

@@ -1,10 +1,14 @@
-
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 
-const ModalOrganization = ({ isOpen, onClose,organizationData,addNewOrganization,refreshOrganizations   }) => {
-  
+const ModalOrganization = ({
+  isOpen,
+  onClose,
+  organizationData,
+  addNewOrganization,
+  refreshOrganizations,
+}) => {
   const [isAddressOpen, setIsAddressOpen] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -28,7 +32,6 @@ const ModalOrganization = ({ isOpen, onClose,organizationData,addNewOrganization
   });
   const [leadGroups, setLeadGroups] = useState([]);
 
-
   const fetchLeadGroups = async () => {
     try {
       const response = await axios.get("http://localhost:5000/api/leadGroup");
@@ -39,26 +42,23 @@ const ModalOrganization = ({ isOpen, onClose,organizationData,addNewOrganization
   };
 
   useEffect(() => {
-    fetchLeadGroups(); 
+    fetchLeadGroups();
   }, []);
-  
 
-  
   useEffect(() => {
     if (organizationData) {
-      setFormData(organizationData); 
+      setFormData(organizationData);
       setIsAddressOpen(true);
     }
   }, [organizationData]);
 
   const API_URL = "http://localhost:5000/api/organization";
-  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       let response;
-      
+  
       if (organizationData) {
         response = await axios.put(`${API_URL}/${organizationData._id}`, formData);
         toast.success("Organization updated successfully!");
@@ -67,27 +67,27 @@ const ModalOrganization = ({ isOpen, onClose,organizationData,addNewOrganization
         toast.success("Organization added successfully!");
       }
   
-     
-      setLeadGroups((prev) => [...prev, response.data]); 
-  
-      
-      if (fetchLeadGroups) {
-        await fetchLeadGroups(); // Fetch the latest data
-        console.log("Lead Groups refreshed successfully!");
-      } else {
-        console.warn("fetchLeadGroups is not defined!");
+      // Ensure response contains valid data
+      if (!response.data || !response.data._id) {
+        console.error("API response is missing _id:", response.data);
+        toast.error("Error: API response does not contain _id.");
+        return;
       }
   
-      onClose(); // Close the modal
+      // Refresh organizations after adding/updating
+      if (refreshOrganizations) {
+        await refreshOrganizations();
+      }
+  
+      // Close the modal after updating
+      onClose();
     } catch (error) {
       console.error("Error saving organization:", error);
       toast.error("Error saving organization");
     }
   };
   
-  
-  
-  
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -96,7 +96,6 @@ const ModalOrganization = ({ isOpen, onClose,organizationData,addNewOrganization
     }));
   };
   if (!isOpen) return null;
-  
 
   return (
     <>
@@ -111,9 +110,9 @@ const ModalOrganization = ({ isOpen, onClose,organizationData,addNewOrganization
         <div className="bg-white w-[700px] h-[600px] rounded-lg shadow-lg flex flex-col">
           {/* Modal Header */}
           <div className="flex justify-between items-center border-b p-4">
-          <h2 className="text-lg font-semibold">
-            {organizationData ? "Edit Organization" : "Add Organization"}
-          </h2>
+            <h2 className="text-lg font-semibold">
+              {organizationData ? "Edit Organization" : "Add Organization"}
+            </h2>
             <button
               onClick={onClose}
               className="text-gray-500 hover:text-black"
@@ -241,9 +240,12 @@ const ModalOrganization = ({ isOpen, onClose,organizationData,addNewOrganization
                 >
                   Cancel
                 </button>
-                <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded-md">
-              {organizationData ? "Update" : "Save"}
-            </button>
+                <button
+                  type="submit"
+                  className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                >
+                  {organizationData ? "Update" : "Save"}
+                </button>
               </div>
             </form>
           </div>
@@ -254,12 +256,3 @@ const ModalOrganization = ({ isOpen, onClose,organizationData,addNewOrganization
 };
 
 export default ModalOrganization;
-
-
-
-
-
-
-
-
-

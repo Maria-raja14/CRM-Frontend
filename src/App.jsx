@@ -11,13 +11,14 @@ import AddPerson from "./pages/person/AddPerson";
 import { ToastContainer } from "react-toastify"; // Import ToastContainer
 import "react-toastify/dist/ReactToastify.css"; // Import styles
 import PersonTable from "./pages/person/PersonTable";
-
 import OrganizationPage from "./pages/organization/OrganizationPage";
 import DragDropUpload from "./pages/organization/DragAndDrop";
 import AddOrganization from "./pages/organization/addOrganization";
 import UserTop from "./pages/useroles/UserTop";
 import ProfileCard from "./navbar/Myprofile_Topcenter";
-// import MyProfile from "./pages/MyProfile/MyProfile";
+import addDeals from "./pages/allDeals/addDeals";
+import AddDeals from "./pages/allDeals/addDeals";
+import CardDeals from "./pages/allDeals/CardDeals";
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,8 +37,9 @@ function App() {
           <Route path="/person" element={<AddPerson />} />
           <Route path="/user/roles" element={<UserTop />} />
           <Route path="/dashboard/profile" element={<ProfileCard />} />
+          <Route path="/deals" element={<AddDeals />} />
+          <Route path="/cardDeal" element={<CardDeals />} />
 
-          {/* MyProfile Routes with Sidebar and Top Center Always Visible */}
           <Route
             path="/myprofile/*"
             element={
