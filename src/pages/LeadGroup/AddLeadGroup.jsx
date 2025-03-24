@@ -67,7 +67,7 @@ const AddLeadGroup = ({ onClose, onAdd,leadGroupToEdit  }) => {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center mb-[300px] bg-opacity-40">
+    <div className="fixed inset-0 flex items-center justify-center mb-[300px] bg-opacity-40 ">
       <div className="bg-white mt-16 p-6 rounded-lg w-[580px] h-[350px] shadow-lg">
         <div className="flex justify-between items-center pb-3">
           <h2 className="text-xl font-semibold">Add Lead Group</h2>

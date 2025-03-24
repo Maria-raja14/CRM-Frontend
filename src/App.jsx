@@ -22,6 +22,9 @@ import UserTop from "./pages/useroles/UserTop";
 import ProfileCard from "./navbar/Myprofile_Topcenter";
 import Lastreasons from "./pages/lostReasons/Lastreasons";
 // import MyProfile from "./pages/MyProfile/MyProfile";
+import addDeals from "./pages/allDeals/addDeals";
+import AddDeals from "./pages/allDeals/addDeals";
+import CardDeals from "./pages/allDeals/CardDeals";
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -42,8 +45,9 @@ function App() {
           <Route path="/invoice" element={<InvoiceHead/>}/>
           <Route path="/dashboard/profile" element={<ProfileCard />} />
           <Route path="/LostReasons" element={<Lastreasons/>}/>
+          <Route path="/deals" element={<AddDeals />} />
+          <Route path="/cardDeal" element={<CardDeals />} />
 
-          {/* MyProfile Routes with Sidebar and Top Center Always Visible */}
           <Route
             path="/myprofile/*"
             element={

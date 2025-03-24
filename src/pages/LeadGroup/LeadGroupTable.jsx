@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 import AddLeadGroup from "./AddLeadGroup";
 
 const LeadGroupsTable = ({ onOpen, leadGroups, setLeadGroups }) => {
+  console.log("leadGroups",leadGroups);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [leadGroupToEdit, setLeadGroupToEdit] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -17,12 +18,14 @@ const LeadGroupsTable = ({ onOpen, leadGroups, setLeadGroups }) => {
 
   useEffect(() => {
     fetchLeadGroups();
+    console.log("wefweq")
   }, []);
 
   const fetchLeadGroups = async () => {
     try {
       const response = await axios.get("http://localhost:5000/api/leadGroup");
       setLeadGroups(response.data);
+      console.log("res",response)
     } catch (error) {
       console.error("Error fetching lead groups:", error);
     }
@@ -37,7 +40,7 @@ const LeadGroupsTable = ({ onOpen, leadGroups, setLeadGroups }) => {
       setLeadGroups((prev) => prev.filter((group) => group._id !== id));
       toast.success("Lead deleted successfully")
     } catch (error) {
-      toast.error("Error deleting lead group");
+      toast.error("Error deleting lead group")
       console.error("Error deleting lead group:", error);
     }
   };
@@ -47,9 +50,10 @@ const LeadGroupsTable = ({ onOpen, leadGroups, setLeadGroups }) => {
     setIsEditModalOpen(true);
   };
 
-  const filteredLeadGroups = leadGroups.filter((group) =>
+  const filteredLeadGroups = Array.isArray(leadGroups) ? leadGroups.filter((group) =>
     group.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  ) : [];
+  
 
   // Pagination Logic
   const totalPages = Math.ceil(filteredLeadGroups.length / entriesPerPage);
