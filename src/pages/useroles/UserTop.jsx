@@ -16,6 +16,9 @@ import {
   CardTitle,
 } from "../../components/ui/card";
 
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 const UserTop = () => {
   // State to store form values
 
@@ -59,18 +62,6 @@ const UserTop = () => {
     }
   };
 
-  const handleInputChange = (event) => {
-    const { name, value } = event.target;
-    setUserData((prevData) => ({ ...prevData, [name]: value }));
-  };
-
-  const handleUpdate = (event) => {
-    event.preventDefault();
-    console.log("Updated User Data:", userData);
-    setIsEditModalOpen(false);
-  };
-
-  // const [selectedUser, setSelectedUser] = useState(null);
   const [selectedRole, setSelectedRole] = useState(null);
   const [open, setOpen] = useState(false); // Control modal visibility
   const [formData, setFormData] = useState({
@@ -90,12 +81,6 @@ const UserTop = () => {
   const handleManageUsers = (role) => {
     setSelectedRole(role); // Store the selected role
     setOpenUserModal(true); // Open the modal
-  };
-
-  const handleAddClick = (role) => {
-    setSelectedRole(role);
-    setSelectedRoleUsers(role.users || []);
-    setOpenUserModal(true);
   };
 
   const toggleShowAllUsers = (roleId) => {
@@ -164,7 +149,9 @@ const UserTop = () => {
       .get("http://localhost:5000/api/auth/roles/getrole")
       .then((response) => {
         setRoles(response.data);
+        console.log(response.data);
       })
+
       .catch((error) => {
         console.error("Error fetching roles:", error);
       });
@@ -207,8 +194,10 @@ const UserTop = () => {
         }
       );
       console.log("User Added:", response.data);
+      toast.success("User added successfully!");
       setIsDialogOpen(false);
     } catch (error) {
+      toast.error("Error adding user");
       console.error("Error adding user:", error);
     }
   };
@@ -216,7 +205,7 @@ const UserTop = () => {
 
   const handleAddRole = async () => {
     if (!roleName) {
-      alert("Role name is required");
+      toast.warn("Role name is required");
       return;
     }
 
@@ -224,29 +213,41 @@ const UserTop = () => {
       const res = await axios.post(
         "http://localhost:5000/api/auth/roles/createrole",
         {
-          name: roleName, // Make sure this matches your backend model
-          permissions: formData.permissions, // Ensure permissions are passed correctly
+          name: roleName,
+          permissions: formData.permissions,
         }
       );
       setRoles((prevRoles) => [...prevRoles, res.data]);
       setRoleName("");
-      alert("Role added successfully");
+      toast.success("Role added successfully!");
       setOpen(false);
     } catch (err) {
       console.error(err);
-      alert("Failed to add role");
+      toast.error("Failed to add role");
     }
   };
 
-  // Handle Delete Role
-  // const handleDeleteRole = async (id) => {
+  // const handleAddRole = async () => {
+  //   if (!roleName) {
+  //     alert("Role name is required");
+  //     return;
+  //   }
+
   //   try {
-  //     await axios.delete(`http://localhost:5000/api/auth/roles/delete/${id}`);
-  //     setRoles(roles.filter((role) => role._id !== id));
-  //     toast.success("Role deleted successfully");
+  //     const res = await axios.post(
+  //       "http://localhost:5000/api/auth/roles/createrole",
+  //       {
+  //         name: roleName, // Make sure this matches your backend model
+  //         permissions: formData.permissions, // Ensure permissions are passed correctly
+  //       }
+  //     );
+  //     setRoles((prevRoles) => [...prevRoles, res.data]);
+  //     setRoleName("");
+  //     alert("Role added successfully");
+  //     setOpen(false);
   //   } catch (err) {
   //     console.error(err);
-  //     toast.error("Failed to delete role");
+  //     alert("Failed to add role");
   //   }
   // };
 
@@ -272,13 +273,14 @@ const UserTop = () => {
         )
       );
 
-      alert("User added to role successfully!");
+      toast.success("User updated successfully!");
+      setOpenAddUserModal(false);
     } catch (err) {
       console.error(
         "Error adding user to role:",
         err.response ? err.response.data : err
       );
-      alert("Failed to add user to role");
+      toast.error("Error updating user");
     }
   };
 
@@ -294,13 +296,6 @@ const UserTop = () => {
     setProfilePhoto(null); // Reset profile photo input
     setOpenEditModal(true);
   };
-
-  // const handleFileChange = (e) => {
-  //   const file = e.target.files[0];
-  //   if (file) {
-  //     setProfilePhoto(file);
-  //   }
-  // }
 
   const handleUpdateUser = async () => {
     if (!selectedUser) return;
@@ -338,24 +333,6 @@ const UserTop = () => {
     }
   };
 
-  // const handleUpdateUser = async () => {
-  //   if (!selectedUser) return;
-
-  //   try {
-  //     const response = await axios.put(
-  //       `http://localhost:5000/api/auth/adduser/update/${selectedUser._id}`,
-  //       { firstName, lastName }
-  //     );
-
-  //     alert("User updated successfully!");
-  //     setOpenEditModal(false);
-  //     window.location.reload(); // Refresh to see changes
-  //   } catch (error) {
-  //     console.error("Error updating user:", error);
-  //     alert("Failed to update user.");
-  //   }
-  // };
-
   return (
     <div className="">
       <div className="flex justify-between items-center   rounded-lg">
@@ -383,7 +360,7 @@ const UserTop = () => {
           {/* Add User Button */}
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <button className="px-4 py-2  bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+              <button className="px-4 py-2  bg-blue-600 hover:cursor-pointer text-white rounded-lg hover:bg-blue-700">
                 Add User
               </button>
             </DialogTrigger>
@@ -580,7 +557,7 @@ const UserTop = () => {
 
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+              <button className="px-4 py-2 bg-green-600 hover:cursor-pointer text-white rounded-lg hover:bg-green-700">
                 Add Role
               </button>
             </DialogTrigger>
@@ -603,7 +580,7 @@ const UserTop = () => {
                   className="w-full sm:w-[300px] h-12 rounded-md px-3 border border-gray-300 focus:ring outline-none"
                   required
                 />
-              </div>
+              </div>  
 
               {/* Buttons */}
               <div className="border-b-2"></div>
@@ -621,7 +598,7 @@ const UserTop = () => {
             </DialogContent>
           </Dialog>
           {/* Invite User Button */}
-          <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+          <button className="px-4 py-2 hover:cursor-pointer bg-purple-600 text-white rounded-lg hover:bg-purple-700">
             Invite User
           </button>
         </div>
@@ -867,57 +844,52 @@ const UserTop = () => {
 
       {/* Add Users in models */}
       <Dialog open={openUserModal} onOpenChange={setOpenUserModal}>
-        <DialogContent className="min-w-[600px] p-5 h-[400px]">
-          <DialogHeader>
-            <DialogTitle>Users in {selectedRole?.name}</DialogTitle>
+        <DialogContent className="min-w-[600px] p-6 h-auto max-h-[500px] flex flex-col">
+          {/* Header */}
+          <DialogHeader className="mb-4">
+            <DialogTitle className="text-lg font-semibold">
+              Users in {selectedRole?.name}
+            </DialogTitle>
           </DialogHeader>
 
           <div className="border-b"></div>
 
-          {/* List Existing Users */}
-          <div className="p-4">
+          {/* User List */}
+          <div className="flex-1 overflow-y-auto p-4">
             {selectedRole?.users && selectedRole.users.length > 0 ? (
-              <ul>
+              <ul className="space-y-3">
                 {selectedRole.users.map((user) => (
-                  <li
-                    key={user._id}
-                    className="flex items-center  space-x-3 mb-2"
-                  >
-                    <div className="w-14 h-14 flex items-center justify-center rounded-full bg-gray-300 text-white font-semibold text-lg">
+                  <li key={user._id} className="flex items-center space-x-3">
+                    <div className="w-12 h-12 flex items-center justify-center rounded-full bg-gray-300 text-white font-semibold text-lg">
                       {user.firstName && user.lastName ? (
                         `${user.firstName[0].toUpperCase()}${user.lastName[0].toUpperCase()}`
                       ) : (
                         <span>?</span>
                       )}
                     </div>
-
-                    <span>
+                    <span className="text-gray-700 font-medium">
                       {user.firstName} {user.lastName}
                     </span>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-gray-500">No users assigned</p>
+              <p className="text-gray-500 text-center">No users assigned</p>
             )}
           </div>
 
           <div className="border-b"></div>
 
-          {/* Add Users Button */}
-          <div className="p-4">
+          {/* Footer Buttons */}
+          <div className="flex justify-between items-center p-4">
             <button
-              className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+              className="px-5 py-2 bg-green-500 text-white font-medium rounded-lg shadow-md hover:bg-green-600 transition-all duration-300"
               onClick={handleOpenAddUserModal}
             >
-              + Add
+              + Add User
             </button>
-          </div>
-
-          {/* Close Button */}
-          <div className="flex justify-end p-4">
             <button
-              className="px-4 py-2 bg-gray-300 text-black rounded-md hover:bg-gray-400"
+              className="px-5 py-2 bg-gray-300 text-gray-700 font-medium rounded-lg shadow-md hover:bg-gray-400 transition-all duration-300"
               onClick={() => setOpenUserModal(false)}
             >
               Close
@@ -928,32 +900,40 @@ const UserTop = () => {
 
       {/* Add Users in roles */}
       <Dialog open={openAddUserModal} onOpenChange={setOpenAddUserModal}>
-        <DialogContent className="min-w-[700px] p-10">
-          <DialogHeader>
-            <DialogTitle>Add Users to {selectedRole?.name}</DialogTitle>
+        <DialogContent className="min-w-[700px] p-6 max-h-[500px] flex flex-col">
+          {/* Header */}
+          <DialogHeader className="mb-4">
+            <DialogTitle className="text-lg font-semibold">
+              Add Users to {selectedRole?.name}
+            </DialogTitle>
           </DialogHeader>
 
           <div className="border-b"></div>
 
           {/* Users List */}
-          <div className="p-4">
+          <div className="flex-1 overflow-y-auto p-4">
             {users.length > 0 ? (
-              <ul>
+              <ul className="space-y-3">
                 {users.map((user) => (
                   <li
                     key={user._id}
-                    className="flex items-center space-x-3 mb-2"
+                    className="flex items-center justify-between p-3 bg-gray-100 rounded-lg"
                   >
-                    <img
-                      src={user.profilePhoto || "/default-profile.png"}
-                      alt="Profile"
-                      className="w-8 h-8 rounded-full border"
-                      onError={(e) => (e.target.src = "/default-profile.png")}
-                    />
-                    <span>{user.lastName}</span>
+                    <div className="flex items-center space-x-3">
+                      {/* Placeholder for User Initials */}
+                      <div className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-300 text-white font-semibold text-lg">
+                        {user.firstName && user.lastName
+                          ? `${user.firstName[0].toUpperCase()}${user.lastName[0].toUpperCase()}`
+                          : "?"}
+                      </div>
+
+                      <span className="text-gray-700 font-medium">
+                        {user.firstName} {user.lastName}
+                      </span>
+                    </div>
                     <button
-                      className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                      onClick={() => handleAddUserToRole(user)} // Pass a single user object
+                      className="px-4 py-2 bg-blue-500 text-white font-medium rounded-lg shadow-md hover:bg-blue-600 transition-all duration-300"
+                      onClick={() => handleAddUserToRole(user)} // Add User and Close Modal
                     >
                       Add
                     </button>
@@ -961,15 +941,16 @@ const UserTop = () => {
                 ))}
               </ul>
             ) : (
-              <p className="text-gray-500">No users available</p>
+              <p className="text-gray-500 text-center">No users available</p>
             )}
           </div>
 
           <div className="border-b"></div>
 
+          {/* Footer - Close Button */}
           <div className="flex justify-end p-4">
             <button
-              className="px-4 py-2 bg-gray-300 text-black rounded-md hover:bg-gray-400"
+              className="px-5 py-2 bg-gray-300 text-gray-700 font-medium rounded-lg shadow-md hover:bg-gray-400 transition-all duration-300"
               onClick={() => setOpenAddUserModal(false)}
             >
               Close
@@ -1137,9 +1118,7 @@ const UserTop = () => {
             {/* Role List */}
             <CardContent>
               <table className="w-full">
-              
-            
-                 <thead  className="p-5">
+                <thead className="p-5">
                   <tr className="  border-b  ">
                     <td className="text-left pb-5 font-bold">Role Name</td>
                     <td className="text-left pb-5 font-bold">Permission</td>
@@ -1147,7 +1126,7 @@ const UserTop = () => {
                     <td className="text-left pb-5 font-bold">Manage Users</td>
                   </tr>
                 </thead>
-                
+
                 <tbody className="">
                   {filteredRoles.length > 0 ? (
                     filteredRoles.map((role) => (
@@ -1155,7 +1134,7 @@ const UserTop = () => {
                         <td className="p-3">{role.name}</td>
                         <td>
                           <button
-                            className="bg-[#4466f2] p-1 rounded-2xl px-4 text-white"
+                            className="bg-[#4466f2] p-1 rounded-2xl hover:cursor-pointer px-4 text-white"
                             onClick={() => {
                               setSelectedRole(role);
                               setOpenViewModal(true);
@@ -1218,7 +1197,7 @@ const UserTop = () => {
                         </td>
                         <td>
                           <button
-                            className="px-4 py-1 text-white rounded-lg"
+                            className="px-4 py-1 text-white hover:cursor-pointer rounded-lg"
                             onClick={() => handleManageUsers(role)}
                           >
                             🔧

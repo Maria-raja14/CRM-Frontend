@@ -123,3 +123,12 @@
     @apply bg-background text-foreground;
   }
 }
+html,
+body {
+  @apply bg-white text-black transition-colors duration-300;
+}
+
+.dark html,
+.dark body {
+  @apply bg-black text-white;
+}
