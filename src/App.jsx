@@ -1,4 +1,7 @@
 
+
+
+
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 import "./App.css";
@@ -16,42 +19,53 @@ import DragDropUpload from "./pages/organization/DragAndDrop";
 import AddOrganization from "./pages/organization/addOrganization";
 import UserTop from "./pages/useroles/UserTop";
 import ProfileCard from "./navbar/Myprofile_Topcenter";
-import addDeals from "./pages/allDeals/addDeals";
-import AddDeals from "./pages/allDeals/addDeals";
+import AddDeals from "./pages/allDeals/addDeals"; // Correct import
 import CardDeals from "./pages/allDeals/CardDeals";
+import CalendarView from "./pages/activities/CalendarView";
+import CalendarComponent from "./pages/activities/CalendarComponent";
+import Activity from "./pages/activityList/Activity"
+import ListActivity from "./pages/activityList/ListActivity";
+import ReportDeals from "./pages/Reports/ReportDeals";
+import PaymentAdd from "./pages/Payment/PaymentAdd";
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
- 
+  
 
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route element={<Layout isModalOpen={isModalOpen} />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/leadGroup" element={<LeadsGroup />} />
-          <Route path="/AddleadGroup" element={<AddLeadGroup />} />
-          <Route path="/organization" element={<OrganizationPage />} />
-          <Route path="/import-persons" element={<DragDropUpload />} />
-          <Route path="/person" element={<AddPerson />} />
-          <Route path="/user/roles" element={<UserTop />} />
-          <Route path="/dashboard/profile" element={<ProfileCard />} />
-          <Route path="/deals" element={<AddDeals />} />
-          <Route path="/cardDeal" element={<CardDeals />} />
+    
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route element={<Layout isModalOpen={isModalOpen} />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/leadGroup" element={<LeadsGroup />} />
+            <Route path="/AddleadGroup" element={<AddLeadGroup />} />
+            <Route path="/organization" element={<OrganizationPage />} />
+            <Route path="/import-persons" element={<DragDropUpload />} />
+            <Route path="/person" element={<AddPerson />} />
+            <Route path="/user/roles" element={<UserTop />} />
+            <Route path="/dashboard/profile" element={<ProfileCard />} />
+            <Route path="/deals" element={<AddDeals />} />
+            <Route path="/cardDeal" element={<CardDeals />} />
+            <Route path="/calendar" element={<CalendarView />} />
+            <Route path="/list" element={<Activity />} />
+            <Route path="/report" element={<ReportDeals />} />
+            <Route path="/payment" element={<PaymentAdd />} />
+          
 
-          <Route
-            path="/myprofile/*"
-            element={
-              <div className="flex flex-col w-full">
-                <ProfileCard />
-               
-              </div>
-            }
-          />
-        </Route>
-      </Routes>
-      <ToastContainer position="top-right" autoClose={3000} />
+            <Route
+              path="/myprofile/*"
+              element={
+                <div className="flex flex-col w-full">
+                  <ProfileCard />
+                </div>
+              }
+            />
+          </Route>
+        </Routes>
+         <ToastContainer position="top-right" autoClose={3000} />
+      
     </BrowserRouter>
   );
 }
