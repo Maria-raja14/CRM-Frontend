@@ -1,18 +1,18 @@
   
-
+//Card Deals
   import React, { useState } from "react";
   import { MoreVertical, Gift, Calendar, Edit, Trash2 } from "lucide-react";
   import DealModal from "./DealModal"; 
 
   const CardDeals = ({ deal, onEdit, onDelete }) => {
-    console.log("CardDeals",deal)
+    //console.log("CardDeals",deal)
     const [menuOpen, setMenuOpen] = useState(false);
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedDeal, setSelectedDeal] = useState(null); 
     
 
     return (
-      <div className="bg-white rounded shadow-2xl p-4 w-58 h-[300px] border border-gray-50 relative">
+      <div className="bg-white rounded shadow-2xl p-4 w-full sm:w-58 h-[300px] border border-gray-50 relative">
         {/* Three-dot menu */}
         <div className="absolute top-2 right-3 cursor-pointer">
           <MoreVertical size={18} className="text-gray-500" onClick={() => setMenuOpen(!menuOpen)} />
