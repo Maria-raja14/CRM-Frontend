@@ -1,4 +1,4 @@
-import { useState } from "react";///it is original..
+import { useState } from "react"; ///it is original..
 import { Menu, Trash2, X } from "lucide-react";
 import { SocialIcon } from "react-social-icons";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
@@ -43,22 +43,21 @@ function DraggableItem({ social, index, moveItem, updateUrl, removeUrl }) {
       }
     },
   });
- 
-function extractSocialName(url) {
-  try {
-    const domain = new URL(url).hostname.replace("www.", "").toLowerCase();
-    const domainParts = domain.split(".");
-    
-    // Use the main domain name instead of the full hostname
-    const socialName = domainParts.length > 2 ? domainParts[1] : domainParts[0];
 
-    return socialName.charAt(0).toUpperCase() + socialName.slice(1);
-  } catch {
-    return "Unknown Social Media";
+  function extractSocialName(url) {
+    try {
+      const domain = new URL(url).hostname.replace("www.", "").toLowerCase();
+      const domainParts = domain.split(".");
+
+      // Use the main domain name instead of the full hostname
+      const socialName =
+        domainParts.length > 2 ? domainParts[1] : domainParts[0];
+
+      return socialName.charAt(0).toUpperCase() + socialName.slice(1);
+    } catch {
+      return "Unknown Social Media";
+    }
   }
-}
-
-
 
   const handleAddUrl = () => {
     const name = extractSocialName(newUrl);
@@ -75,59 +74,68 @@ function extractSocialName(url) {
     <div
       ref={(node) => drag(drop(node))}
       className={`flex items-center justify-between p-3 rounded-lg transition ${
-        isDragging ? "opacity-50" : ""
+        isDragging ? "opacity-50" : " "
       }`}
     >
       <div className="flex items-center space-x-3">
         <Menu size={20} className="text-gray-500 cursor-pointer" />
         <SocialIcon url={social.url} style={{ height: 40, width: 40 }} />
-        <span className="text-gray-800 font-medium">{social.name || "Social Media"}</span>
+        <span className="text-gray-800 font-medium">
+          {social.name || "Social Media"}
+        </span>
       </div>
       <div className="flex items-center space-x-4">
-  {isEditing ? (
-    <>
-      <input
-        type="text"
-        value={newUrl}
-        onChange={(e) => setNewUrl(e.target.value)}
-        className="border border-gray-300 rounded-lg p-1"
-        placeholder="Enter URL"
-      />
-      <button
-        className="bg-blue-600 text-white px-4 py-1 rounded-lg"
-        onClick={handleAddUrl}
-      >
-        Add
-      </button>
-      <X size={22} className="text-gray-400 cursor-pointer" onClick={handleCancel} />
-    </>
-  ) : social.url ? (
-    <div className="flex items-center justify-between w-full">
-      <a
-        href={social.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-blue-600 truncate"
-      >
-        {social.url}
-      </a>
-      <Trash2
-        size={22}
-        className="text-gray-400 cursor-pointer ml-4"
-        onClick={() => removeUrl(index)}
-      />
-      <Tooltip id={`tooltip-${social.id}`} place="top" content={social.url} />
-    </div>
-  ) : (
-    <button
-      className="bg-blue-600 text-white px-4 py-1 rounded-lg"
-      onClick={() => setIsEditing(true)}
-    >
-      Link
-    </button>
-  )}
-</div>
-
+        {isEditing ? (
+          <>
+            <input
+              type="text"
+              value={newUrl}
+              onChange={(e) => setNewUrl(e.target.value)}
+              className="border border-gray-300 rounded-lg p-1"
+              placeholder="Enter URL"
+            />
+            <button
+              className="bg-blue-600 text-white px-4 py-1 rounded-lg"
+              onClick={handleAddUrl}
+            >
+              Add
+            </button>
+            <X
+              size={22}
+              className="text-gray-400 cursor-pointer"
+              onClick={handleCancel}
+            />
+          </>
+        ) : social.url ? (
+          <div className="flex items-center justify-between w-full">
+            <a
+              href={social.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 truncate"
+            >
+              {social.url}
+            </a>
+            <Trash2
+              size={22}
+              className="text-gray-400 cursor-pointer ml-4"
+              onClick={() => removeUrl(index)}
+            />
+            <Tooltip
+              id={`tooltip-${social.id}`}
+              place="top"
+              content={social.url}
+            />
+          </div>
+        ) : (
+          <button
+            className="bg-blue-600 text-white px-4 py-1 rounded-lg"
+            onClick={() => setIsEditing(true)}
+          >
+            Link
+          </button>
+        )}
+      </div>
     </div>
   );
 }

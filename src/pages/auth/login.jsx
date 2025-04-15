@@ -24,7 +24,7 @@ const Login = () => {
                 setMessage(response.data.message);
                 setIsError(false);
                 setTimeout(() => {
-                    navigate("/dashboard");
+                    navigate("/layout");
                 }, 1500);
             } else {
                 setMessage("Token missing in response");

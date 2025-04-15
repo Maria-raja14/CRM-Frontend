@@ -28,17 +28,8 @@ const InvoiceModal = () => {
   const [note, setNote] = useState("");
   const [isNoteVisible, setIsNoteVisible] = useState(false);
 
-  // const handleAddNoteClick = () => {
-  //   setIsNoteVisible(true);
-  // };
+  const [validationErrors, setValidationErrors] = useState({});
 
-  // const handleRemoveNoteClick = () => {
-  //   setIsNoteVisible(false);
-  //   setNote(""); // Optionally clear the note when removed
-  //   setInvoiceData((prev) => ({ ...prev, note: "" })); // Remove note from invoiceData
-  // };
-
-  // Fetch owners from API
   useEffect(() => {
     axios
       .get("http://localhost:5000/api/auth/owners/getOwner")
@@ -52,13 +43,11 @@ const InvoiceModal = () => {
     label: owner.name,
   }));
 
-  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setInvoiceData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle owner selection
   const handleOwnerChange = (selected) => {
     setSelectedOwner(selected);
     setInvoiceData((prev) => ({ ...prev, owner: selected?.value || "" }));
@@ -67,41 +56,37 @@ const InvoiceModal = () => {
   const handleAddNoteClick = () => {
     setIsNoteVisible(true);
   };
-  
+
   const handleNoteChange = (e) => {
     setNote(e.target.value);
     setInvoiceData((prev) => ({ ...prev, note: e.target.value }));
   };
-  
+
   const handleRemoveNoteClick = () => {
     setIsNoteVisible(false);
     setNote("");
     setInvoiceData((prev) => ({ ...prev, note: "" }));
   };
-  
 
-  // Calculate the total based on quantity, price, tax, and discount
-  const calculateTotal = () => {
-    const { quantity, price, tax, discountType, discountValue } = invoiceData;
+  // Add validation function
+  const validateInputs = () => {
+    const errors = {};
+    const { owner, issueDate, dueDate, quantity, price } = invoiceData;
 
-    let total = quantity * price;
+    if (!owner) errors.owner = "Owner is required.";
+    if (!issueDate) errors.issueDate = "Issue Date is required.";
+    if (!dueDate) errors.dueDate = "Due Date is required.";
+    if (quantity <= 0) errors.quantity = "Quantity must be greater than 0.";
+    if (price <= 0) errors.price = "Price must be greater than 0.";
 
-    // Apply discount if any
-    if (discountType === "percentage" && discountValue > 0) {
-      total -= (total * discountValue) / 100;
-    } else if (discountType === "fixed" && discountValue > 0) {
-      total -= discountValue;
-    }
+    setValidationErrors(errors);
 
-    // Apply tax
-    total += (total * parseFloat(tax)) / 100;
-
-    return total;
+    return Object.keys(errors).length === 0;
   };
 
-  // Handle form submission
   const handleSaveInvoice = async () => {
-    // Create the items array
+    if (!validateInputs()) return; // Only proceed if validation passes
+
     const items = [
       {
         deal: invoiceData.deal,
@@ -111,22 +96,16 @@ const InvoiceModal = () => {
       },
     ];
 
-    // Calculate total
-    const total = calculateTotal(); // Calculate total based on tax, discount, etc.
+    const total = calculateTotal();
 
-    // Prepare the full invoice data
     const invoiceToSave = { ...invoiceData, items, total };
-
-    // Log the data to verify it's correct
-    console.log("Invoice data being sent to backend:", invoiceToSave);
 
     try {
       const response = await axios.post(
         "http://localhost:5000/api/auth/invoice/createinvoice",
         invoiceToSave
       );
-      console.log(response);
-      
+
       if (response.status === 201) {
         alert("Invoice saved successfully!");
         closeModal();
@@ -139,9 +118,25 @@ const InvoiceModal = () => {
     }
   };
 
+  const calculateTotal = () => {
+    const { quantity, price, tax, discountType, discountValue } = invoiceData;
+
+    let total = quantity * price;
+
+    if (discountType === "percentage" && discountValue > 0) {
+      total -= (total * discountValue) / 100;
+    } else if (discountType === "fixed" && discountValue > 0) {
+      total -= discountValue;
+    }
+
+    total += (total * parseFloat(tax)) / 100;
+
+    return total;
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={closeModal}>
-      <DialogContent className="min-w-[1200px] p-2 w-full max-h-screen min-h-[700px] overflow-y-auto">
+      <DialogContent className="min-w-[1300px] p-5 w-full max-h-screen min-h-[700px] overflow-y-auto">
         <DialogHeader className="p-5 border-b">
           <DialogTitle className="text-xl">Add Invoice</DialogTitle>
         </DialogHeader>
@@ -157,8 +152,13 @@ const InvoiceModal = () => {
                 value={invoiceData.owner}
                 onChange={handleChange}
                 placeholder="Enter Owner Name"
-                className="w-full p-2 border rounded-md"
+                className="w-full p-3 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              {validationErrors.owner && (
+                <span className="text-red-500 text-sm">
+                  {validationErrors.owner}
+                </span>
+              )}
             </div>
 
             {/* Issue Date */}
@@ -167,11 +167,16 @@ const InvoiceModal = () => {
               <input
                 type="date"
                 name="issueDate"
-                className="p-2 border rounded-md w-full"
+                className="p-3 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
                 value={invoiceData.issueDate}
                 onChange={handleChange}
                 required
               />
+              {validationErrors.issueDate && (
+                <span className="text-red-500 text-sm">
+                  {validationErrors.issueDate}
+                </span>
+              )}
             </div>
           </div>
 
@@ -182,11 +187,16 @@ const InvoiceModal = () => {
               <input
                 type="date"
                 name="dueDate"
-                className="p-2 border rounded-md w-full"
+                className="p-3 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
                 value={invoiceData.dueDate}
                 onChange={handleChange}
                 required
               />
+              {validationErrors.dueDate && (
+                <span className="text-red-500 text-sm">
+                  {validationErrors.dueDate}
+                </span>
+              )}
             </div>
 
             {/* Status Dropdown */}
@@ -194,7 +204,7 @@ const InvoiceModal = () => {
               <label className="font-medium pb-1.5">Status</label>
               <select
                 name="status"
-                className="p-2 border rounded-md w-full"
+                className="p-3 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
                 value={invoiceData.status}
                 onChange={handleChange}
                 required
@@ -205,8 +215,8 @@ const InvoiceModal = () => {
             </div>
           </div>
 
-          {/* Deal, Quantity, Price */}
-          <div className="flex justify-between items-center mt-5 text-white bg-[#343a40] p-2 rounded-t-sm">
+          {/* Quantity and Price */}
+          <div className="flex justify-between items-center mt-5 bg-[#343a40] p-3 text-white rounded-t-lg">
             <p>Deal</p>
             <p>Quantity</p>
             <p>Price</p>
@@ -230,6 +240,11 @@ const InvoiceModal = () => {
               value={invoiceData.quantity}
               onChange={handleChange}
             />
+            {validationErrors.quantity && (
+              <span className="text-red-500 text-sm">
+                {validationErrors.quantity}
+              </span>
+            )}
             <input
               type="number"
               name="price"
@@ -240,18 +255,23 @@ const InvoiceModal = () => {
               value={invoiceData.price}
               onChange={handleChange}
             />
-            <span className=" bg-[#bfc1c4] rounded-sm w-[250px] p-3 ">
+            {validationErrors.price && (
+              <span className="text-red-500 text-sm">
+                {validationErrors.price}
+              </span>
+            )}
+            <span className="bg-[#bfc1c4] rounded-sm w-[250px] p-3">
               Rs: {invoiceData.quantity * invoiceData.price}
             </span>
           </div>
 
           {/* Tax, Discount, Total */}
-          <div className="flex flex-col p-2 items-end">
+          <div className="flex flex-col p-3">
             <div className="flex justify-between gap-5 border-b pb-5 items-center mt-5">
               <label className="text-gray-400 text-xl">Tax</label>
               <select
                 name="tax"
-                className="p-3 border rounded-sm w-[250px]"
+                className="p-3 border rounded-sm w-[250px] focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={invoiceData.tax}
                 onChange={handleChange}
               >
@@ -265,7 +285,7 @@ const InvoiceModal = () => {
               <label className="text-gray-400 text-xl">Discount</label>
               <select
                 name="discountType"
-                className="p-3 border rounded-sm w-[250px]"
+                className="p-3 border rounded-sm w-[250px] focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={invoiceData.discountType}
                 onChange={handleChange}
               >
@@ -283,7 +303,7 @@ const InvoiceModal = () => {
 
           {/* Add Note Button */}
           <button
-            className="bg-[#4466f2] p-2 px-4 rounded-md"
+            className="bg-[#4466f2] p-3 rounded-md text-white mt-4"
             onClick={handleAddNoteClick}
           >
             + Add Note
@@ -294,13 +314,13 @@ const InvoiceModal = () => {
             <div className="mt-4">
               <textarea
                 value={note}
-                onChange={handleNoteChange} // Call the new function
-                className="border h-72 p-2 w-full rounded-md"
+                onChange={handleNoteChange}
+                className="border h-40 p-3 w-full rounded-md"
                 rows="4"
               />
 
               <button
-                className="bg-[#fc6510] p-2 px-4 rounded-md mt-2"
+                className="bg-[#fc6510] p-3 rounded-md text-white mt-2"
                 onClick={handleRemoveNoteClick}
               >
                 - Remove Note
@@ -309,15 +329,15 @@ const InvoiceModal = () => {
           )}
 
           {/* Save & Cancel Buttons */}
-          <div className="border-t mt-5 py-5 flex gap-5 items-end justify-end">
+          <div className="border-t mt-5 py-5 flex gap-5 items-center justify-end">
             <button
-              className="bg-[#9397a0] p-2 text-white rounded-md px-5"
+              className="bg-[#9397a0] p-3 text-white rounded-md px-7"
               onClick={closeModal}
             >
               Cancel
             </button>
             <button
-              className="bg-[#4466f2] text-white p-2 rounded-md px-7"
+              className="bg-[#4466f2] text-white p-3 rounded-md px-7"
               onClick={handleSaveInvoice}
             >
               Save

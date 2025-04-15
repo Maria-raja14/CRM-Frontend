@@ -3,18 +3,21 @@ import DatePicker from "react-datepicker";
 import { FaCalendarAlt, FaEdit, FaTrash } from "react-icons/fa";
 import { useModal } from "../../context/ModalContext";
 import LastreasonsModel from "./LastreasonsModel.jsx";
+import EditLostReasonModal from "./EditLostReasonModal.jsx"; // Import the new modal
 import axios from "axios";
+import { FaSearch } from "react-icons/fa";
 
 const Lastreasons = () => {
   const { openModal } = useModal();
   const [startDate, setStartDate] = useState(null);
   const [lostReasons, setLostReasons] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [editName, setEditName] = useState("");
-  const [searchQuery, setSearchQuery] = useState(""); // ✅ Search State
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // ✅ Fetch lost reasons from API
+  // ✅ New state for edit modal
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedReason, setSelectedReason] = useState(null);
+
   const fetchLostReasons = async () => {
     setLoading(true);
     try {
@@ -33,24 +36,7 @@ const Lastreasons = () => {
     fetchLostReasons();
   }, []);
 
-  // ✅ Handle Update (PUT Request)
-  const handleUpdate = async (id) => {
-    if (!editName) return;
-    try {
-      await axios.put(
-        `http://localhost:5000/api/auth/lastname/updateName/${id}`,
-        { name: editName }
-      );
-      setEditingId(null);
-      fetchLostReasons();
-    } catch (error) {
-      console.error("Error updating lost reason:", error);
-    }
-  };
-
-  // ✅ Handle Delete (DELETE Request)
   const handleDelete = async (id) => {
-    // if (!window.confirm("Are you sure you want to delete this item?")) return;
     try {
       await axios.delete(
         `http://localhost:5000/api/auth/lastname/deleteName/${id}`
@@ -61,7 +47,6 @@ const Lastreasons = () => {
     }
   };
 
-  // ✅ Filter lost  reasons  based  on  search  query
   const filteredLostReasons = lostReasons.filter((reason) =>
     reason.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -81,59 +66,66 @@ const Lastreasons = () => {
 
         <LastreasonsModel fetchLostReasons={fetchLostReasons} />
 
-        <div className="flex flex-col lg:flex-row justify-between items-center gap-4 mt-3">
-          <div className="flex items-center gap-2">
-            {/* Date Picker */}
-            <div className="relative">
-              <DatePicker
-                selected={startDate}
-                onChange={(date) => setStartDate(date)}
-                dateFormat="yyyy/MM/dd"
-                className="hidden"
-                isOpen={false}
-              />
-              <button
-                className="px-3 py-2 text-gray-400 shadow-2xl bg-white rounded-lg"
-                onClick={() => setStartDate(null)}
-              >
-                <FaCalendarAlt className="text-xl" />
-              </button>
-            </div>
-
-            {/* Filters */}
-            <button className="px-7 py-2 shadow-2xl text-gray-400 bg-white rounded-3xl">
-              Created by
-            </button>
-            <button className="px-7 py-2 shadow-2xl text-gray-400 bg-white rounded-3xl">
-              Created date
-            </button>
-          </div>
-
-          {/* ✅ Search Input */}
-          <div className="flex items-center">
-            <input
-              type="text"
-              placeholder="Search"
-              className="p-1.5 border rounded-3xl w-[200px] bg-white"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+        {/* Edit Modal */}
+        {selectedReason && (
+          <EditLostReasonModal
+            isOpen={isEditModalOpen}
+            closeModal={() => setIsEditModalOpen(false)}
+            reason={selectedReason}
+            fetchLostReasons={fetchLostReasons}
+          />
+        )}
+        <div className="flex items-center gap-2">
+          {/* Date Picker */}
+          <div className="relative">
+            <DatePicker
+              selected={startDate}
+              onChange={(date) => setStartDate(date)}
+              dateFormat="yyyy/MM/dd"
+              className="hidden"
+              isOpen={false}
             />
+            <button
+              className="px-3 py-2 text-gray-400 shadow-2xl bg-white rounded-lg"
+              onClick={() => setStartDate(null)}
+            >
+              <FaCalendarAlt className="text-xl" />
+            </button>
           </div>
+
+          {/* Filters */}
+          <button className="px-7 py-2 shadow-2xl text-gray-400 bg-white rounded-3xl">
+            Created by
+          </button>
+          <button className="px-7 py-2 shadow-2xl text-gray-400 bg-white rounded-3xl">
+            Created date
+          </button>
         </div>
 
-        {/* Display the count above the table */}
-        <div className="mt-3  p-3 rounded-md ">
-          <h2 className="text-sm font-semibold text-gray-400">
-          Showing 1 To 4 items of: {filteredLostReasons.length}
+        {/* Search Bar */}
+        <div className="  p-3 rounded-md ">
+          <h2 className="text-sm font-semibold text-end items-center text-gray-400">
+            Showing 1 To 4 items of: {filteredLostReasons.length}
           </h2>
         </div>
+        <div className="flex items-center border rounded-3xl w-[250px]  bg-white px-3 py-1.5">
+          <FaSearch className="text-gray-400 mr-2" />
+          <input
+            type="text"
+            placeholder="Search"
+            className="outline-none w-full bg-transparent"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+       
 
         {/* Table Section */}
         {loading ? (
           <p>Loading lost reasons...</p>
         ) : (
           <div className="bg-white w-full mt-1">
-            <div className="pt-5 flex   justify-between items-center px-[50px]">
+            <div className="pt-5 flex justify-between items-center px-[50px]">
               <table className="w-full p-5">
                 <thead>
                   <tr>
@@ -152,39 +144,17 @@ const Lastreasons = () => {
                   {filteredLostReasons.length > 0 ? (
                     filteredLostReasons.map((reason) => (
                       <tr key={reason._id} className="border-b">
-                        <td className="py-3">
-                          {editingId === reason._id ? (
-                            <input
-                              type="text"
-                              value={editName}
-                              onChange={(e) => setEditName(e.target.value)}
-                              className="border p-2 w-full"
-                            />
-                          ) : (
-                            reason.name
-                          )}
-                        </td>
-
+                        <td className="py-3">{reason.name}</td>
                         <td>Zehrila aadmi</td>
-                        <td className="py-3 mr-[0px] flex text-left gap-2">
-                          {editingId === reason._id ? (
-                            <button
-                              className="bg-green-500 text-white px-4 py-1 rounded"
-                              onClick={() => handleUpdate(reason._id)}
-                            >
-                              Save
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => {
-                                setEditingId(reason._id);
-                                setEditName(reason.name);
-                              }}
-                            >
-                              <FaEdit className="text-xl" />
-                            </button>
-                          )}
-
+                        <td className="py-3 flex text-left gap-2">
+                          <button
+                            onClick={() => {
+                              setSelectedReason(reason);
+                              setIsEditModalOpen(true);
+                            }}
+                          >
+                            <FaEdit className="text-xl" />
+                          </button>
                           <button onClick={() => handleDelete(reason._id)}>
                             <FaTrash className="text-xl" />
                           </button>
