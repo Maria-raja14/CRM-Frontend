@@ -9,37 +9,12 @@ const Login = () => {
     const [isError, setIsError] = useState(false);
     const navigate = useNavigate();
 
-    // const handleLogin = async (e) => {
-    //     e.preventDefault();
-    //     try {
-    //         const response = await axios.get("http://localhost:5000/api/auth/adduser/login", {
-    //             email,
-    //             password,
-    //         });
-    
-    //         console.log("Login Response:", response.data); // Debugging log
-    
-    //         if (response.data.token) {
-    //             localStorage.setItem("token", response.data.token); // ✅ Store token
-    //             setMessage(response.data.message);
-    //             setIsError(false);
-    //             setTimeout(() => {
-    //                 navigate("/dashboard");
-    //             }, 1500);
-    //         } else {
-    //             setMessage("Token missing in response");
-    //             setIsError(true);
-    //         }
-    //     } catch (error) {
-    //         console.error("Login Error:", error.response?.data);
-    //         setMessage(error.response?.data?.message || "Login failed");
-    //         setIsError(true);
-    //     }
-    // };
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
+
             const response = await axios.post("http://localhost:5000/api/auth/users/login", {  // ⬅️ Change to POST
+
                 email,
                 password,
             });
@@ -51,7 +26,7 @@ const Login = () => {
                 setMessage(response.data.message);
                 setIsError(false);
                 setTimeout(() => {
-                    navigate("/dashboard");
+                    navigate("/layout");
                 }, 1500);
             } else {
                 setMessage("Token missing in response");

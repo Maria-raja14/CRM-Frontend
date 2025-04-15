@@ -1,3 +1,8 @@
+
+
+
+
+
 import React, { useState } from "react";
 import Sidebar from "../navbar/sidebar";
 import Header from "../navbar/header";
@@ -11,7 +16,7 @@ const Layout = ({ isModalOpen }) => {
   };
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-backgroundLight dark:bg-backgroundDark text-textLight dark:text-textDark transition-all">
       {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
 
@@ -22,7 +27,7 @@ const Layout = ({ isModalOpen }) => {
 
         {/* Page Content */}
         <div
-          className={`p-6 h-full overflow-auto bg-gray-50 transition-all duration-300 ${
+          className={`p-6 h-full overflow-auto transition-all duration-300 ${
             isModalOpen ? "backdrop-blur-md pointer-events-none" : ""
           }`}
         >

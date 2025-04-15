@@ -80,7 +80,7 @@ const handleAddOrUpdatePerson = (newPerson) => {
         {/* Buttons */}
         <div className="flex gap-2">
           <div className="relative">
-            <button className="bg-green-500 text-white px-6 py-2 rounded">
+            <button className="bg-green-500 text-white px-6 py-2 rounded cursor-pointer shadow-2xl">
               Actions{" "}
             </button>
             <div className="absolute mt-2 bg-white shadow-md rounded-md hidden group-hover:block">
@@ -93,12 +93,12 @@ const handleAddOrUpdatePerson = (newPerson) => {
             </div>
           </div>
 
-          {/* Add Organization Button */}
+        
           <button
-            className="bg-blue-500 text-white px-4 py-2 rounded"
+            className="bg-blue-500 text-white px-4 py-2 rounded cursor-pointer"
             onClick={() => setIsModalOpen(true)}
           >
-            Add organization
+            Add Person
           </button>
         </div>
       </div>

@@ -1,10 +1,18 @@
 
+
+
+
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 
-const ModalOrganization = ({ isOpen, onClose,organizationData,addNewOrganization,refreshOrganizations   }) => {
-  
+const ModalOrganization = ({
+  isOpen,
+  onClose,
+  organizationData,
+  addNewOrganization,
+  refreshOrganizations,
+}) => {
   const [isAddressOpen, setIsAddressOpen] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -26,8 +34,9 @@ const ModalOrganization = ({ isOpen, onClose,organizationData,addNewOrganization
       kiona: "",
     },
   });
-  const [leadGroups, setLeadGroups] = useState([]);
 
+  const [leadGroups, setLeadGroups] = useState([]);
+  const [errors, setErrors] = useState({});
 
   const fetchLeadGroups = async () => {
     try {
@@ -39,26 +48,43 @@ const ModalOrganization = ({ isOpen, onClose,organizationData,addNewOrganization
   };
 
   useEffect(() => {
-    fetchLeadGroups(); 
+    fetchLeadGroups();
   }, []);
-  
 
-  
   useEffect(() => {
     if (organizationData) {
-      setFormData(organizationData); 
+      setFormData(organizationData);
       setIsAddressOpen(true);
     }
   }, [organizationData]);
 
   const API_URL = "http://localhost:5000/api/organization";
-  
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.organizationName) newErrors.organizationName = "Organization name is required.";
+    if (!formData.leadGroupId) newErrors.leadGroupId = "Lead group is required.";
+    if (!formData.owner) newErrors.owner = "Owner is required.";
+    if (isAddressOpen) {
+      Object.keys(formData.addressDetails).forEach((field) => {
+        if (!formData.addressDetails[field]) newErrors[`addressDetails.${field}`] = `${field} is required.`;
+      });
+
+      Object.keys(formData.customFields).forEach((field) => {
+        if (!formData.customFields[field]) newErrors[`customFields.${field}`] = `${field} is required.`;
+      });
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
+
     try {
       let response;
-      
+
       if (organizationData) {
         response = await axios.put(`${API_URL}/${organizationData._id}`, formData);
         toast.success("Organization updated successfully!");
@@ -66,28 +92,24 @@ const ModalOrganization = ({ isOpen, onClose,organizationData,addNewOrganization
         response = await axios.post(`${API_URL}/add`, formData);
         toast.success("Organization added successfully!");
       }
-  
-     
-      setLeadGroups((prev) => [...prev, response.data]); 
-  
-      
-      if (fetchLeadGroups) {
-        await fetchLeadGroups(); // Fetch the latest data
-        console.log("Lead Groups refreshed successfully!");
-      } else {
-        console.warn("fetchLeadGroups is not defined!");
+
+      if (!response.data || !response.data._id) {
+        console.error("API response is missing _id:", response.data);
+        toast.error("Error: API response does not contain _id.");
+        return;
       }
-  
-      onClose(); // Close the modal
+
+      if (refreshOrganizations) {
+        await refreshOrganizations();
+      }
+
+      onClose();
     } catch (error) {
       console.error("Error saving organization:", error);
       toast.error("Error saving organization");
     }
   };
-  
-  
-  
-  
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -95,37 +117,33 @@ const ModalOrganization = ({ isOpen, onClose,organizationData,addNewOrganization
       [name]: value,
     }));
   };
+
   if (!isOpen) return null;
-  
 
   return (
     <>
-      {/* Background Overlay */}
       <div
-        className="fixed inset-0 bg-gray-300 bg-opacity-50 backdrop-blur-sm z-50"
+        className="fixed inset-0  bg-opacity-50 backdrop-blur-sm z-50"
         onClick={onClose}
       ></div>
 
-      {/* Modal Content */}
       <div className="fixed inset-0 flex justify-center items-center z-50">
         <div className="bg-white w-[700px] h-[600px] rounded-lg shadow-lg flex flex-col">
-          {/* Modal Header */}
           <div className="flex justify-between items-center border-b p-4">
-          <h2 className="text-lg font-semibold">
-            {organizationData ? "Edit Organization" : "Add Organization"}
-          </h2>
+            <h2 className="text-lg font-semibold">
+              {organizationData ? "Edit Organization" : "Add Organization"}
+            </h2>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-black"
+              className="text-gray-500 hover:text-black cursor-pointer"
             >
               ✖
             </button>
           </div>
 
-          {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto p-8">
             <form onSubmit={handleSubmit}>
-              {/* Name */}
+              {/* Organization Name */}
               <div className="flex items-center gap-4 mb-6">
                 <label className="text-gray-600 w-42">Name</label>
                 <input
@@ -136,6 +154,7 @@ const ModalOrganization = ({ isOpen, onClose,organizationData,addNewOrganization
                   className="flex-1 p-2 border rounded-md"
                   onChange={handleChange}
                 />
+                {errors.organizationName && <span className="text-red-500 text-sm">{errors.organizationName}</span>}
               </div>
 
               {/* Lead group */}
@@ -154,6 +173,7 @@ const ModalOrganization = ({ isOpen, onClose,organizationData,addNewOrganization
                     </option>
                   ))}
                 </select>
+                {errors.leadGroupId && <span className="text-red-500 text-sm">{errors.leadGroupId}</span>}
               </div>
 
               {/* Owner */}
@@ -168,9 +188,9 @@ const ModalOrganization = ({ isOpen, onClose,organizationData,addNewOrganization
                   <option value="">Choose an owner</option>
                   <option value="zebra forest">Zebra Forest</option>
                 </select>
+                {errors.owner && <span className="text-red-500 text-sm">{errors.owner}</span>}
               </div>
 
-              {/* Add Address */}
               <div className="pl-[180px] mb-2">
                 <button
                   type="button"
@@ -183,35 +203,35 @@ const ModalOrganization = ({ isOpen, onClose,organizationData,addNewOrganization
 
               {isAddressOpen && (
                 <>
-                  {["country", "area", "city", "state", "zipCode"].map(
-                    (field) => (
-                      <div key={field} className="flex items-center gap-4 mb-6">
-                        <label className="text-gray-600 w-42">{field}</label>
-                        <input
-                          type="text"
-                          name={`addressDetails.${field}`}
-                          className="flex-1 p-2 border rounded-md"
-                          value={formData.addressDetails[field]}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              addressDetails: {
-                                ...prev.addressDetails,
-                                [field]: e.target.value,
-                              },
-                            }))
-                          }
-                        />
-                      </div>
-                    )
-                  )}
+                  {["country", "area", "city", "state", "zipCode"].map((field) => (
+                    <div key={field} className="flex items-center gap-4 mb-6">
+                      <label className="text-gray-600 w-42">{field}</label>
+                      <input
+                        type="text"
+                        name={`addressDetails.${field}`}
+                        className="flex-1 p-2 border rounded-md"
+                        value={formData.addressDetails[field]}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            addressDetails: {
+                              ...prev.addressDetails,
+                              [field]: e.target.value,
+                            },
+                          }))
+                        }
+                      />
+                      {errors[`addressDetails.${field}`] && (
+                        <span className="text-red-500 text-sm">{errors[`addressDetails.${field}`]}</span>
+                      )}
+                    </div>
+                  ))}
                 </>
               )}
 
               {/* Custom Fields */}
               <h3 className="text-md font-semibold mt-4">Custom fields</h3>
-
-              {["loan", "AAs", "Sites", "testing", "kiona"].map((field) => (
+              {Object.keys(formData.customFields).map((field) => (
                 <div key={field} className="flex items-center gap-4 mb-6">
                   <label className="text-gray-600 w-42">{field}</label>
                   <input
@@ -229,21 +249,26 @@ const ModalOrganization = ({ isOpen, onClose,organizationData,addNewOrganization
                       }))
                     }
                   />
+                  {errors[`customFields.${field}`] && (
+                    <span className="text-red-500 text-sm">{errors[`customFields.${field}`]}</span>
+                  )}
                 </div>
               ))}
 
-              {/* Modal Actions */}
               <div className="border-t p-4 flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2 bg-gray-400 text-white rounded-md"
+                  className="px-4 py-2 bg-gray-400 text-white rounded-md cursor-pointer"
                 >
                   Cancel
                 </button>
-                <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded-md">
-              {organizationData ? "Update" : "Save"}
-            </button>
+                <button
+                  type="submit"
+                  className="bg-blue-500 text-white px-4 py-2 rounded-md cursor-pointer"
+                >
+                  {organizationData ? "Update" : "Save"}
+                </button>
               </div>
             </form>
           </div>
@@ -254,12 +279,3 @@ const ModalOrganization = ({ isOpen, onClose,organizationData,addNewOrganization
 };
 
 export default ModalOrganization;
-
-
-
-
-
-
-
-
-
