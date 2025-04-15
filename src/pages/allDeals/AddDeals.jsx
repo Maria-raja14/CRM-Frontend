@@ -86,7 +86,7 @@ const AddDeals = () => {
           <select className="p-2 shadow rounded-md text-blue-600 bg-white">
             <option>All Pipeline</option>
           </select>
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-wrap gap-3">
             {["Owner", "Lead Group", "Created Date", "Deals with Proposals"].map(
               (item, index) => (
                 <span
@@ -100,7 +100,7 @@ const AddDeals = () => {
           </div>
         </div>
 
-        <div className="relative w-full sm:w-64">
+        <div className="relative w-full sm:w-64 ">
           <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
           <input
             type="text"
@@ -137,11 +137,11 @@ const AddDeals = () => {
         />
       )}
 
-      <div className="mt-6 grid grid-cols-4 gap-4">
-        {filteredDeals.map((deal) => (
-          <CardDeals key={deal._id} deal={deal} onEdit={openEditModal} onDelete={deleteDeal} />
-        ))}
-      </div>
+<div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+  {filteredDeals.map((deal) => (
+    <CardDeals key={deal._id} deal={deal} onEdit={openEditModal} onDelete={deleteDeal} />
+  ))}
+</div>
     </div>
   );
 };
