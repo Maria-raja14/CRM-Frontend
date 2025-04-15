@@ -18,6 +18,11 @@ import AddOrganization from "./pages/organization/addOrganization";
 import UserTop from "./pages/useroles/UserTop";
 import ProfileCard from "./navbar/Myprofile_Topcenter";
 // import MyProfile from "./pages/MyProfile/MyProfile";
+import Pipeline from "./pages/Deals/Pipeline";
+import AddPipeline from "./pages/Deals/Add_Pipeline";
+import Expenses from "./pages/Expenses/Expenses"
+import AreaExpenses from "./pages/Area_Expenses/Area_of_Expenses"
+import PipelineCharts from "./pages/Reports/Pipeline"
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,6 +41,11 @@ function App() {
           <Route path="/person" element={<AddPerson />} />
           <Route path="/user/roles" element={<UserTop />} />
           <Route path="/dashboard/profile" element={<ProfileCard />} />
+          <Route path="/pipeline" element={<Pipeline />} />
+          <Route path="/add-pipeline" element={<AddPipeline />} />
+          <Route path="/expenses" element={<Expenses />} />
+          <Route path="/area-expenses" element={<AreaExpenses />} />
+          <Route path="/pipeline-charts" element={<PipelineCharts />} />
 
           {/* MyProfile Routes with Sidebar and Top Center Always Visible */}
           <Route

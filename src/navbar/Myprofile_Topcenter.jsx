@@ -86,7 +86,7 @@ function App() {
                     </div>
                     <div>
                       <p className="text-gray-500 text-sm mt-2">Contact:</p>
-                      <p className="text-gray-700">+91 82751 37815555</p>
+                      <p className="text-gray-700">+91 82751 37815</p>
                     </div>
                   </div>
 
@@ -113,4 +113,3 @@ function App() {
 }
 
 export default App;
-
