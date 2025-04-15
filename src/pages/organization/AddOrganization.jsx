@@ -13,6 +13,9 @@ const AddOrganization = ({ search, setSearch, addNewOrganization }) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [organizations, setOrganizations] = useState([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [leadGroups, setLeadGroups] = useState([]);
+const [showLeadGroupDropdown, setShowLeadGroupDropdown] = useState(false);
+
 
   const navigate = useNavigate();
 
@@ -30,6 +33,20 @@ const AddOrganization = ({ search, setSearch, addNewOrganization }) => {
   useEffect(() => {
     refreshOrganizations();
   }, []);
+
+
+  useEffect(() => {
+    fetchLeadGroups();
+  }, []);
+
+  const fetchLeadGroups = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/api/leadGroup");
+      setLeadGroups(response.data);
+    } catch (error) {
+      console.error("Error fetching lead groups:", error);
+    }
+  };
   
   return (
     <div>
@@ -42,7 +59,7 @@ const AddOrganization = ({ search, setSearch, addNewOrganization }) => {
           {/* Actions Dropdown */}
           <div className="relative">
             <button
-              className="bg-green-500 text-white px-6 py-2 rounded flex items-center gap-2"
+              className="bg-green-500 text-white px-6 py-2 rounded flex items-center gap-2 cursor-pointer"
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             >
               Actions ▼
@@ -70,7 +87,7 @@ const AddOrganization = ({ search, setSearch, addNewOrganization }) => {
 
           {/* Add Organization Button */}
           <button
-            className="bg-blue-500 text-white px-4 py-2 rounded"
+            className="bg-blue-500 text-white px-4 py-2 rounded cursor-pointer"
             onClick={() => setIsModalOpen(true)}
           >
             Add organization
@@ -107,9 +124,26 @@ const AddOrganization = ({ search, setSearch, addNewOrganization }) => {
           <button className="border border-gray-100 bg-white shadow-lg px-4 py-2 rounded-4xl flex items-center gap-2">
             Owner
           </button>
-          <button className="border border-gray-100 bg-white shadow-lg px-4 py-2 rounded-4xl flex items-center gap-2">
-            Lead group
-          </button>
+          <div className="relative">
+  <button
+    className="border border-gray-100 bg-white shadow-lg px-4 py-2 rounded-4xl flex items-center gap-2"
+    onClick={() => setShowLeadGroupDropdown(!showLeadGroupDropdown)}
+  >
+    Lead group
+  </button>
+
+  {showLeadGroupDropdown && (
+    <div className="absolute z-50 mt-2 max-h-80 overflow-y-auto w-64 bg-white border border-gray-200 shadow-md rounded-md p-2 grid grid-cols-2 gap-2">
+      {leadGroups.map((group, index) => (
+        <label key={index} className="flex items-center space-x-2">
+          <input type="checkbox" />
+          <span>{group.name}</span>
+        </label>
+      ))}
+    </div>
+  )}
+</div>
+
           <button className="border border-gray-100 bg-white shadow-lg px-4 py-2 rounded-4xl flex items-center gap-2">
             Tags
           </button>
@@ -140,3 +174,9 @@ const AddOrganization = ({ search, setSearch, addNewOrganization }) => {
 };
 
 export default AddOrganization;
+
+
+
+
+
+
