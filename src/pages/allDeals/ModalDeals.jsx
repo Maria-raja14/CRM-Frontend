@@ -58,7 +58,7 @@ const ModalDeals = ({ isOpen, onClose,onDealAdded,onEdit,dealToEdit   }) => {
 
   useEffect(() => {
     if (dealToEdit) {
-      setFormData(dealToEdit); // Populate form with existing deal data
+      setFormData(dealToEdit); 
     } else {
       setFormData({
         title: "",
@@ -118,7 +118,7 @@ const ModalDeals = ({ isOpen, onClose,onDealAdded,onEdit,dealToEdit   }) => {
     <>
       {/* Background Overlay */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50"
+        className="fixed inset-0  bg-opacity-50 backdrop-blur-sm z-50"
         onClick={onClose}
       ></div>
 
