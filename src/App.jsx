@@ -1,10 +1,3 @@
-<<<<<<< HEAD
-
-
-
-
-=======
->>>>>>> 3da078d1cd8286b6ab0ac9b84d6974d900bbc886
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import "./App.css";
@@ -13,85 +6,42 @@ import Layout from "./navbar/Layout";
 import LeadsGroup from "./pages/LeadGroup/LeadGroup";
 import AddLeadGroup from "./pages/LeadGroup/AddLeadGroup";
 import AddPerson from "./pages/person/AddPerson";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import PersonTable from "./pages/person/PersonTable";
-import { ModalProvider } from "./context/ModalContext";
 import InvoiceHead from "./pages/invoice/InvoiceHead";
 import OrganizationPage from "./pages/organization/OrganizationPage";
 import DragDropUpload from "./pages/organization/DragAndDrop";
 import AddOrganization from "./pages/organization/addOrganization";
 import UserTop from "./pages/useroles/UserTop";
 import ProfileCard from "./navbar/Myprofile_Topcenter";
-<<<<<<< HEAD
-// import MyProfile from "./pages/MyProfile/MyProfile";
 import Pipeline from "./pages/Deals/Pipeline";
 import AddPipeline from "./pages/Deals/Add_Pipeline";
-import Expenses from "./pages/Expenses/Expenses"
-import AreaExpenses from "./pages/Area_Expenses/Area_of_Expenses"
-import PipelineCharts from "./pages/Reports/Pipeline"
-=======
-<<<<<<< HEAD
-import AddDeals from "./pages/allDeals/addDeals"; // Correct import
+import Expenses from "./pages/Expenses/Expenses";
+import AreaExpenses from "./pages/Area_Expenses/Area_of_Expenses";
+import PipelineCharts from "./pages/Reports/Pipeline";
+import AddDeals from "./pages/allDeals/addDeals";
 import CardDeals from "./pages/allDeals/CardDeals";
 import CalendarView from "./pages/activities/CalendarView";
 import CalendarComponent from "./pages/activities/CalendarComponent";
-import Activity from "./pages/activityList/Activity"
+import Activity from "./pages/activityList/Activity";
 import ListActivity from "./pages/activityList/ListActivity";
 import ReportDeals from "./pages/Reports/ReportDeals";
 import PaymentAdd from "./pages/Payment/PaymentAdd";
->>>>>>> f31f23c63cadf9305ef1a6c8f05fca59018973d5
-
-function App() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  
-
-  return (
-    <BrowserRouter>
-<<<<<<< HEAD
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route element={<Layout isModalOpen={isModalOpen} />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/leadGroup" element={<LeadsGroup />} />
-          <Route path="/AddleadGroup" element={<AddLeadGroup />} />
-          <Route path="/organization" element={<OrganizationPage />} />
-          <Route path="/import-persons" element={<DragDropUpload />} />
-          <Route path="/person" element={<AddPerson />} />
-          <Route path="/user/roles" element={<UserTop />} />
-          <Route path="/dashboard/profile" element={<ProfileCard />} />
-          <Route path="/pipeline" element={<Pipeline />} />
-          <Route path="/add-pipeline" element={<AddPipeline />} />
-          <Route path="/expenses" element={<Expenses />} />
-          <Route path="/area-expenses" element={<AreaExpenses />} />
-          <Route path="/pipeline-charts" element={<PipelineCharts />} />
-=======
-    
-        <Routes>
-          <Route path="/" element={<Login />} />
-          <Route element={<Layout isModalOpen={isModalOpen} />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-=======
 import Lastreasons from "./pages/lostReasons/Lastreasons";
-import AddDeals from "./pages/allDeals/addDeals";
-import CardDeals from "./pages/allDeals/CardDeals";
 import ProposalHead from "./pages/proposal/ProposalHead";
 import TemplateHead from "./pages/proposal/TemplateHead";
 import AddTemplate from "./pages/proposal/AddTemplate";
 import SendProposal from "./pages/proposal/SendProposal";
 import ProposalBoard from "./stage/ProposalBoard";
 import Proposal from "./pages/reports/Proposal";
-import proposalGraf from "./pages/reports/Proposalgraf";
 import Proposalgraf from "./pages/reports/Proposalgraf";
->>>>>>> f31f23c63cadf9305ef1a6c8f05fca59018973d5
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import Useredit from "./pages/useroles/Useredit";
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isDark, setIsDark] = useState(
-    localStorage.getItem("theme") === "dark"
-  );
+  const [isDark, setIsDark] = useState(localStorage.getItem("theme") === "dark");
 
-  // Apply dark mode class on initial load
   useEffect(() => {
     if (isDark) {
       document.documentElement.classList.add("dark");
@@ -107,28 +57,27 @@ function App() {
           <Route path="/" element={<Login />} />
           <Route path="/layout" element={<Layout />} />
           <Route element={<Layout isModalOpen={isModalOpen} />}>
->>>>>>> 3da078d1cd8286b6ab0ac9b84d6974d900bbc886
+            <Route path="/dashboard" element={<PersonTable />} />
             <Route path="/leadGroup" element={<LeadsGroup />} />
             <Route path="/AddleadGroup" element={<AddLeadGroup />} />
             <Route path="/organization" element={<OrganizationPage />} />
             <Route path="/import-persons" element={<DragDropUpload />} />
             <Route path="/person" element={<AddPerson />} />
             <Route path="/user/roles" element={<UserTop />} />
-<<<<<<< HEAD
             <Route path="/dashboard/profile" element={<ProfileCard />} />
+            <Route path="/pipeline" element={<Pipeline />} />
+            <Route path="/add-pipeline" element={<AddPipeline />} />
+            <Route path="/expenses" element={<Expenses />} />
+            <Route path="/area-expenses" element={<AreaExpenses />} />
+            <Route path="/pipeline-charts" element={<PipelineCharts />} />
             <Route path="/deals" element={<AddDeals />} />
             <Route path="/cardDeal" element={<CardDeals />} />
             <Route path="/calendar" element={<CalendarView />} />
             <Route path="/list" element={<Activity />} />
             <Route path="/report" element={<ReportDeals />} />
             <Route path="/payment" element={<PaymentAdd />} />
-          
-=======
             <Route path="/invoice" element={<InvoiceHead />} />
-            <Route path="/dashboard/profile" element={<ProfileCard />} />
             <Route path="/LostReasons" element={<Lastreasons />} />
-            <Route path="/deals" element={<AddDeals />} />
-            <Route path="/cardDeal" element={<CardDeals />} />
             <Route path="/proposal" element={<ProposalHead />} />
             <Route path="/template" element={<TemplateHead />} />
             <Route path="/template/addtemp" element={<AddTemplate />} />
@@ -136,8 +85,7 @@ function App() {
             <Route path="/stage" element={<ProposalBoard />} />
             <Route path="/report/proposal" element={<Proposal />} />
             <Route path="/report/proposalgraf" element={<Proposalgraf />} />
->>>>>>> 3da078d1cd8286b6ab0ac9b84d6974d900bbc886
-
+            <Route path="/User/Edit" element={<Useredit/>}/>
             <Route
               path="/myprofile/*"
               element={
@@ -148,13 +96,8 @@ function App() {
             />
           </Route>
         </Routes>
-<<<<<<< HEAD
-         <ToastContainer position="top-right" autoClose={3000} />
-      
-=======
         <ToastContainer position="top-right" autoClose={3000} />
       </div>
->>>>>>> 3da078d1cd8286b6ab0ac9b84d6974d900bbc886
     </BrowserRouter>
   );
 }

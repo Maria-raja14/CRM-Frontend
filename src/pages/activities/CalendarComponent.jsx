@@ -210,7 +210,7 @@ const CalendarComponent = ({ activities }) => {
           >
             <FaArrowRight />
           </button>
-        </div>
+        </div>   
 
         <Calendar
           selectable

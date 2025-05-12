@@ -14,7 +14,9 @@ const ProposalHead = () => {
   const [proposals, setProposals] = useState([]); // ✅ State for proposals
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [openActionId, setOpenActionId] = useState(null); // For action dropdown
+  const [openActionId, setOpenActionId] = useState(null); // For action dropdown 
+
+    
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const proposalsPerPage = 10; // You can change this
@@ -44,7 +46,7 @@ const filteredProposals = proposals.filter((proposal) => {
 
   return matchesSearch && matchesFilters;
 });
-
+  
 
 
   // ✅ Fetch Proposals from API

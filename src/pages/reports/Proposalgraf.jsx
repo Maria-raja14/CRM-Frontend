@@ -11,7 +11,7 @@ const dummyData = [
   { x: 0.1, value: 5 },
   { x: 0.2, value: 8 },
   { x: 0.3, value: 4 },
-  { x: 0.4, value: 7 },
+  { x: 0.4, value: 7 },     
   { x: 0.5, value: 6 },
   { x: 0.6, value: 3 },
   { x: 0.7, value: 9 },

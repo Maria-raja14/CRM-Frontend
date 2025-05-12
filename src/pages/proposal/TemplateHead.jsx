@@ -11,11 +11,21 @@ const TemplateHead = () => {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [filteredTemplates, setFilteredTemplates] = useState([]);
+  
+  const [filters, setFilters] = useState({
+    createdDate: "",
+    owner: "",
+  });
+  
   const [editData, setEditData] = useState({
     title: "",
     content: "",
     image: "",
   });
+  const [createdDateModal, setCreatedDateModal] = useState(false);
+  const [ownerModal, setOwnerModal] = useState(false);
+
   const editorRef = useRef(null);
 
   // Fetch templates from API
@@ -37,7 +47,6 @@ const TemplateHead = () => {
     } catch (error) {
       console.error("Error deleting template:", error);
       toast.error(" Template Deleted faild!");
-
     }
   };
 
@@ -99,14 +108,21 @@ const TemplateHead = () => {
 
       {/* Filter and Search Section */}
       <div className="flex justify-between items-center mt-8">
-        <div className="flex gap-3">
-          <button className="px-6 py-2 shadow-2xl text-gray-400 bg-white rounded-3xl">
+        <div className="flex gap-3 mt-5">
+          <button
+            className="px-6 py-2 shadow-2xl text-gray-400 bg-white rounded-3xl"
+            onClick={() => setCreatedDateModal(true)}
+          >
             Created Date
           </button>
-          <button className="px-6 py-2 shadow-2xl text-gray-400 bg-white rounded-3xl">
+          <button
+            className="px-6 py-2 shadow-2xl text-gray-400 bg-white rounded-3xl"
+            onClick={() => setOwnerModal(true)}
+          >
             Owner
           </button>
         </div>
+
         <div className="flex items-center border rounded-3xl w-[170px] bg-white px-2">
           <Search className="w-5 h-5 text-gray-500" />
           <input
@@ -192,6 +208,102 @@ const TemplateHead = () => {
             >
               Close
             </button>
+          </div>
+        </div>
+      )}
+
+      {createdDateModal && (
+        <div className="fixed inset-0 bg-transparent bg-opacity-40 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg w-[400px] shadow-xl">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold">Filter by Created Date</h2>
+              <X
+                className="cursor-pointer"
+                onClick={() => setCreatedDateModal(false)}
+              />
+            </div>
+            <input
+              type="text"
+              placeholder="MM/DD/YYYY"
+              value={filters.createdDate}
+              onChange={(e) =>
+                setFilters({ ...filters, createdDate: e.target.value })
+              }
+              className="border rounded px-4 py-2 w-full mb-4"
+            />
+            <div className="flex justify-end gap-3">
+              <button
+                className="bg-gray-300 px-4 py-2 rounded"
+                onClick={() => {
+                  setFilters({ ...filters, createdDate: "" });
+                  setFilteredTemplates(templates);
+                  setCreatedDateModal(false);
+                }}
+              >
+                Clear
+              </button>
+              <button
+                className="bg-blue-500 text-white px-4 py-2 rounded"
+                onClick={() => {
+                  const filtered = templates.filter((t) =>
+                    new Date(t.createdAt)
+                      .toLocaleDateString()
+                      .includes(filters.createdDate)
+                  );
+                  setFilteredTemplates(filtered);
+                  setCreatedDateModal(false);
+                }}
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {ownerModal && (
+        <div className="fixed inset-0 bg-transparent bg-opacity-40 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg w-[400px] shadow-xl">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold">Filter by Owner</h2>
+              <X
+                className="cursor-pointer"
+                onClick={() => setOwnerModal(false)}
+              />
+            </div>
+            <input
+              type="text"
+              placeholder="Owner Name"
+              value={filters.owner}
+              onChange={(e) =>
+                setFilters({ ...filters, owner: e.target.value })
+              }
+              className="border rounded px-4 py-2 w-full mb-4"
+            />
+            <div className="flex justify-end gap-3">
+              <button
+                className="bg-gray-300 px-4 py-2 rounded"
+                onClick={() => {
+                  setFilters({ ...filters, owner: "" });
+                  setFilteredTemplates(templates);
+                  setOwnerModal(false);
+                }}
+              >
+                Clear
+              </button>
+              <button
+                className="bg-blue-500 text-white px-4 py-2 rounded"
+                onClick={() => {
+                  const filtered = templates.filter((t) =>
+                    t.owner?.toLowerCase().includes(filters.owner.toLowerCase())
+                  );
+                  setFilteredTemplates(filtered);
+                  setOwnerModal(false);
+                }}
+              >
+                Apply
+              </button>
+            </div>
           </div>
         </div>
       )}
