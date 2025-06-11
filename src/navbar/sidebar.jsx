@@ -1,4 +1,7 @@
 import React, { useState } from "react";
+<<<<<<< HEAD
+import { Home, Briefcase, ChevronRight, Users, X, User } from "react-feather";
+=======
 import {
   Home,
   Briefcase,
@@ -20,6 +23,7 @@ import {
   Layout,
   FileText,
 } from "react-feather";
+>>>>>>> 12a703ec2fe2d9b162ffb03dbcc7545999855c3d
 import { useNavigate, Link } from "react-router-dom";
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
@@ -99,6 +103,74 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
               <div className="bg-white p-1 rounded-[12px] shadow-md">
                 <User size={18} className="text-gray-500" />
               </div>
+<<<<<<< HEAD
+              <span>HRM</span>
+            </button>
+          )}
+
+          {/* HRM System */}
+          <button
+            className="flex items-center justify-between text-sm space-x-3 p-2 font-semibold text-gray-700 rounded-lg hover:bg-[#008ecc] hover:shadow-[0_4px_10px_0_#99c7db] hover:text-white"
+            onClick={() => setShowHRMSystem(!showHRMSystem)}
+          >
+            <div className="flex items-center space-x-3">
+              <div className="bg-white p-2 rounded-[12px] shadow-lg">
+                <User
+                  size={18}
+                  className="text-gray-600 hover:text-[#008ECC]"
+                />
+              </div>
+              <span>Leads</span>
+            </div>
+            <ChevronRight
+              size={18}
+              className={`ml-auto transition-transform duration-300 ${
+                showHRMSystem ? "rotate-90" : ""
+              }`}
+            />
+          </button>
+
+          {showHRMSystem && (
+            <>
+              <button className="flex ml-2 text-sm items-center space-x-3 p-3 rounded-lg hover:text-[#008ECC]">
+                <div className="bg-white p-1 rounded-[12px] shadow-md">
+                  <Briefcase
+                    size={18}
+                    className="text-gray-500 hover:text-[#008ECC]"
+                  />
+                </div>
+                <span>Persons</span>
+              </button>
+              <Link
+                to="/organization"
+                className="flex ml-2 text-sm items-center space-x-3 p-3 rounded-lg hover:text-[#008ECC]"
+              >
+                <div className="bg-white p-1 rounded-[12px] shadow-md">
+                  <Briefcase
+                    size={18}
+                    className="text-gray-500 hover:text-[#008ECC]"
+                  />
+                </div>
+                <span>Organization</span>
+              </Link>
+              <Link
+                to="/leadGroup"
+                className="flex ml-2 text-sm items-center space-x-3 p-3 rounded-lg hover:text-[#008ECC]"
+              >
+                <div className="bg-white p-1 rounded-[12px] shadow-md"></div>
+                <span>Lead groups</span>
+              </Link>
+            </>
+          )}
+
+          {/* User Management */}
+          <button
+            className="flex items-center justify-between text-sm font-semibold space-x-3 p-3 rounded-lg hover:bg-[#008ECC] hover:shadow-[0_4px_10px_0_#99c7db] hover:text-white text-gray-700"
+            onClick={() => setShowUserManagement(!showUserManagement)}
+          >
+            <div className="flex items-center space-x-3">
+              <div className="bg-white shadow-lg p-1 rounded-[12px]">
+=======
               <span>Persons</span>
             </Link>
             <Link
@@ -106,6 +178,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
               className="flex ml-2 text-sm items-center space-x-3 p-3 rounded-lg hover:text-[#008ECC]"
             >
               <div className="bg-white p-1 rounded-[12px] shadow-md">
+>>>>>>> 12a703ec2fe2d9b162ffb03dbcc7545999855c3d
                 <Users size={18} className="text-gray-500" />
               </div>
               <span>Organization</span>
@@ -166,6 +239,12 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 <XCircle size={18} className="text-gray-500" />
               </div>
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+          <button className="flex items-center justify-between p-3 rounded-lg text-white font-semibold bg-[#008ecc] shadow-[0_5 px_10px_0_#99c7db]">
+=======
+>>>>>>> 33a39b5f4e60712bfca9d89e4a5c3c63742c893c
               <span>Lost reasons</span>
             </Link> */}
             <Link
@@ -182,6 +261,10 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
         <Link to="/invoice">
           <button className="flex items-center justify-between text-sm space-x-3 w-[220px] p-3 font-semibold text-gray-700 rounded-lg hover:bg-[#008ecc] hover:shadow-[0_4px_10px_0_#99c7db] hover:text-white">
+<<<<<<< HEAD
+=======
+>>>>>>> 12a703ec2fe2d9b162ffb03dbcc7545999855c3d
+>>>>>>> 33a39b5f4e60712bfca9d89e4a5c3c63742c893c
             <div className="flex items-center space-x-3 text-sm font-semibold">
               <div className="bg-white p-1 rounded-[12px] shadow-md text-gray-500">
                 <svg
@@ -205,6 +288,37 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           </button>
         </Link>
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+          <button className="flex items-center justify-between p-3 rounded-lg text-white font-semibold bg-[#008ecc] shadow-[0_5 px_10px_0_#99c7db]">
+            <Link to="/pipeline">
+              <div className="flex items-center space-x-3 text-sm font-semibold">
+                <div className="bg-white p-1 rounded-[12px] shadow-md text-gray-500">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    height="20px"
+                    viewBox="0 -960 960 960"
+                    width="20px"
+                    fill="#1f1f1f"
+                  >
+                    <path d="M695-456 576-575l51-51 68 68 153-152 51 50-204 204Zm-311-24q-60 0-102-42t-42-102q0-60 42-102t102-42q60 0 102 42t42 102q0 60-42 102t-102 42ZM96-192v-92q0-25.78 12.5-47.39T143-366q55-32 116-49t125-17q64 0 125 17t116 49q22 13 34.5 34.61T672-284v92H96Zm72-72h432v-20q0-6.47-3.03-11.76-3.02-5.3-7.97-8.24-47-27-99-41.5T384-360q-54 0-106 14.5T179-304q-4.95 2.94-7.98 8.24Q168-290.47 168-284v20Zm216.21-288Q414-552 435-573.21t21-51Q456-654 434.79-675t-51-21Q354-696 333-674.79t-21 51Q312-594 333.21-573t51 21ZM384-312Zm0-312Z" />
+                  </svg>
+                </div>
+                <span>Pipe Line</span>
+              </div>
+            </Link>
+            <ChevronRight
+              size={18}
+              className={`ml-auto transition-transform duration-300 ${
+                showHRM ? "rotate90" : ""
+              }`}
+            />
+          </button>
+        </nav>
+      </div>
+=======
+>>>>>>> 33a39b5f4e60712bfca9d89e4a5c3c63742c893c
         {/* Proposal */}
         <button
           className="flex items-center justify-between text-sm space-x-3 p-2 font-semibold text-gray-700 rounded-lg hover:bg-[#008ecc] hover:shadow-[0_4px_10px_0_#99c7db] hover:text-white"
@@ -223,6 +337,10 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             }`}
           />
         </button>
+<<<<<<< HEAD
+=======
+>>>>>>> 12a703ec2fe2d9b162ffb03dbcc7545999855c3d
+>>>>>>> 33a39b5f4e60712bfca9d89e4a5c3c63742c893c
 
         {proposal && (
           <>

@@ -8,7 +8,12 @@ const Navbar = ({ toggleSidebar }) => {
 
 
   return (
+<<<<<<< HEAD
+    <div className=" bg-white p-2 flex md:justify-between items-center shadow">
+      {/* Toggle Button for Sidebar (Mobile) */}
+=======
     <div className="w-full bg-white dark:bg-gray-900 dark:text-white p-3 flex justify-between items-center shadow-sm">
+>>>>>>> 12a703ec2fe2d9b162ffb03dbcc7545999855c3d
       <button onClick={toggleSidebar} className="lg:hidden">
         <Menu size={24} className="text-gray-600 dark:text-gray-300" />
       </button>
