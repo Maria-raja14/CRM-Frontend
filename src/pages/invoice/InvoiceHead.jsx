@@ -186,7 +186,7 @@ const [searchTerm, setSearchTerm] = useState("");
 
 
   return (
-    <div className="bg-[#f9f9f9]">
+    <div className="">
       <div className="flex flex-col gap-5">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl">Invoices</h1>
@@ -200,21 +200,21 @@ const [searchTerm, setSearchTerm] = useState("");
       </div>
       <InvoiceModal onSubmit={createInvoice} />{" "}
       {/* Pass createInvoice to the modal */}
-      <div className="flex justify-between gap-5 items-center mt-10">
+      <div className="flex justify-between gap-4 items-center mt-10">
         {/* Total Amount */}
-        <div className="bg-[#4466f2] p-6 py-5 pl-9 pr-[250px] text-white rounded-sm">
+        <div className="bg-[#4466f2]  py-5 pl-5 pr-[150px] text-white rounded-sm">
           <h3 className="text-xl">Total Amount</h3>
           <p className="text-sm">Rs.{totalAmount.toFixed(2)}</p>
         </div>
 
         {/* Total Paid */}
-        <div className="bg-[#46c35f] p-5 py-5 pl-9 pr-[250px] text-white rounded-sm">
+        <div className="bg-[#46c35f]  py-5 pl-5 pr-[250px] text-white rounded-sm">
           <h3 className="text-xl">Total Paid</h3>
           <p className="text-sm">Rs.1586952.00</p>
         </div>
 
         {/* Total Due */}
-        <div className="bg-[#fc6510] p-5 py-5 pl-9 pr-[250px] text-white rounded-sm">
+        <div className="bg-[#fc6510]  py-5 pl-5 pr-[250px] text-white rounded-sm">
           <h3 className="text-xl">Total Due</h3>
           <p className="text-sm">Rs.18596952.00</p>
         </div>

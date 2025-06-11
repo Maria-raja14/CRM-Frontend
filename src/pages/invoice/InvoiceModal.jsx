@@ -136,12 +136,12 @@ const InvoiceModal = () => {
 
   return (
     <Dialog open={isOpen} onOpenChange={closeModal}>
-      <DialogContent className="min-w-[1300px] p-5 w-full max-h-screen min-h-[700px] overflow-y-auto">
-        <DialogHeader className="p-5 border-b">
+      <DialogContent className="min-w-[1200px] p-5 w-full max-h-screen min-h-[700px] overflow-y-auto">
+        <DialogHeader className="p-6 border-b">
           <DialogTitle className="text-xl">Add Invoice</DialogTitle>
         </DialogHeader>
 
-        <div className="px-5">
+        <div className="px-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {/* Owner Input */}
             <div className="flex flex-col">
@@ -303,7 +303,7 @@ const InvoiceModal = () => {
 
           {/* Add Note Button */}
           <button
-            className="bg-[#4466f2] p-3 rounded-md text-white mt-4"
+            className="bg-[#4466f2] p-2 rounded-md text-white mt-4"
             onClick={handleAddNoteClick}
           >
             + Add Note
@@ -329,15 +329,15 @@ const InvoiceModal = () => {
           )}
 
           {/* Save & Cancel Buttons */}
-          <div className="border-t mt-5 py-5 flex gap-5 items-center justify-end">
+          <div className="border-t  py-3 flex gap-5 items-center justify-end">
             <button
-              className="bg-[#9397a0] p-3 text-white rounded-md px-7"
+              className="bg-[#9397a0] p-2 text-white rounded-md px-7"
               onClick={closeModal}
             >
               Cancel
             </button>
             <button
-              className="bg-[#4466f2] text-white p-3 rounded-md px-7"
+              className="bg-[#4466f2] text-white p-2 rounded-md px-7"
               onClick={handleSaveInvoice}
             >
               Save

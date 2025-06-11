@@ -132,3 +132,50 @@ body {
 .dark body {
   @apply bg-black text-white;
 }
+
+
+/* Thin scrollbar for WebKit (Chrome, Safari, Edge) */
+.sidebar-scroll {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.sidebar-scroll:hover {
+  scrollbar-color: #888 #f1f1f1;
+}
+
+/* Webkit scrollbar support */
+.sidebar-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background-color: transparent;
+}
+
+.sidebar-scroll:hover::-webkit-scrollbar-thumb {
+  background-color: #888;
+}
+
+
+
+/* Thin scrollbar for WebKit (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 4px; /* Thin vertical scrollbar */
+  height: 6px; /* Thin horizontal scrollbar */
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

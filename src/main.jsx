@@ -9,7 +9,7 @@ import { TemplateProvider } from "./context/TemplateContext"; // Ensure correct 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ModalProvider>
-      <TemplateProvider> {/* Wrap the entire App */}
+      <TemplateProvider> 
         <App />
       </TemplateProvider>
     </ModalProvider>

@@ -1,8 +1,4 @@
 
-
-
-
-
 import React, { useState } from "react";
 import Sidebar from "../navbar/sidebar";
 import Header from "../navbar/header";
@@ -21,19 +17,14 @@ const Layout = ({ isModalOpen }) => {
       <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <Header toggleSidebar={toggleSidebar} />
+      <div className="flex-1 flex flex-col ">
+  <Header toggleSidebar={toggleSidebar} />
 
-        {/* Page Content */}
-        <div
-          className={`p-6 h-full overflow-auto transition-all duration-300 ${
-            isModalOpen ? "backdrop-blur-md pointer-events-none" : ""
-          }`}
-        >
-          <Outlet />
-        </div>
-      </div>
+  <div className={`flex-1 overflow-auto p-6 ${isModalOpen ? "backdrop-blur-md pointer-events-none" : ""}`}>
+    <Outlet />
+  </div>
+</div>
+
     </div>
   );
 };

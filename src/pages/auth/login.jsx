@@ -26,7 +26,7 @@ const Login = () => {
                 setMessage(response.data.message);
                 setIsError(false);
                 setTimeout(() => {
-                    navigate("/layout");
+                    navigate("/dashboard");
                 }, 1500);
             } else {
                 setMessage("Token missing in response");
@@ -50,8 +50,6 @@ const Login = () => {
                     className="w-32 sm:w-45 h-auto mx-auto"
                 />
             </div>
-              
-
             {/* Login Card */}
             <div className="bg-white p-6 sm:p-6 rounded-2xl  shadow-2xl  w-full sm:w-[450px]">
                   {/* Message Display */}
@@ -68,7 +66,7 @@ const Login = () => {
                         <label className="text-gray-700 font-medium">Email</label>
                         <input
                             type="email"
-                            className="w-full border border-gray-300 text-gray-900 rounded-lg px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:text-gray-500 focus:bg-blue-100"
+                            className="w-full border border-gray-300 text-gray-900 rounded-lg px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:text-gray-500 focus:bg-blue-50"
                             placeholder="Enter your email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
@@ -80,7 +78,7 @@ const Login = () => {
                         <label className="text-gray-700 font-medium">Password</label>
                         <input
                             type="password"
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-blue-100"
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-blue-50"
                             placeholder="Enter your password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
