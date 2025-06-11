@@ -6,8 +6,9 @@ import Layout from "./navbar/Layout";
 import LeadsGroup from "./pages/LeadGroup/LeadGroup"
 import AddLeadGroup from "./pages/LeadGroup/AddLeadGroup";
 import AddOrganization from "./pages/organization/addOrganization";
-
 import UserTop from "./pages/useroles/UserTop";
+import Pipeline from "./pages/pipeline/pipeline";
+import Drag from "./pages/pipeline/components/Darg";
 
 function App() {
   return (
@@ -23,6 +24,9 @@ function App() {
           <Route path="/AddleadGroup" element={<AddLeadGroup />} />
           <Route path="/organization" element={<AddOrganization />} />
           <Route path="/user/roles" element={<UserTop />} />
+          <Route path="/pipeline" element={<Pipeline />} />
+          <Route path="/Drag" element={<Drag />} />
+
 
         </Route>
       </Routes>
