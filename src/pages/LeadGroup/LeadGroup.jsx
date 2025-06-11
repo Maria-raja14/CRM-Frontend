@@ -13,6 +13,7 @@ const LeadsGroup = () => {
         setLeadGroups((prev) => [...prev, newLeadGroup]); 
         setIsModalOpen(false);
       }} />}
+      
     </div>
   );
 };
