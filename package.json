@@ -35,7 +35,7 @@
     "badge": "^1.0.3",
     "button": "^1.1.1",
     "card": "^2.5.4",
-    "chart.js": "^4.4.9",
+    "chart.js": "^4.4.8",
     "class-variance-authority": "^0.7.1",
     "ckeditor5": "^44.3.0",
     "ckeditor5-premium-features": "^44.3.0",
@@ -90,8 +90,7 @@
     "tailwindcss-animate": "^1.0.7",
     "textarea": "^0.3.0",
     "victory": "^37.3.6",
-    "xlsx": "^0.18.5",
-    "zod": "^3.24.2"
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
