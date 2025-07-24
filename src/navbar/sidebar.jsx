@@ -539,9 +539,8 @@
 
 
 import React, { useState } from "react";
-<<<<<<< HEAD
-import { Home, Briefcase, ChevronRight, Users, X, User } from "react-feather";
-=======
+
+
 import {
   Home,
   Briefcase,
@@ -563,7 +562,7 @@ import {
   Layout,
   FileText,
 } from "react-feather";
->>>>>>> 12a703ec2fe2d9b162ffb03dbcc7545999855c3d
+
 import { useNavigate, Link } from "react-router-dom";
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
