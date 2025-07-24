@@ -1,29 +1,22 @@
-import React, { useEffect, useState } from "react";
-import { Menu, User, Power, ChevronDown, Sun, Moon } from "react-feather";
+import React, { useState } from "react";
+import { Menu, User, Power, ChevronDown } from "react-feather";
 import { Link } from "react-router-dom";
 
 const Navbar = ({ toggleSidebar }) => {
   const [showDropdown, setShowDropdown] = useState(false);
- 
-
 
   return (
-<<<<<<< HEAD
-    <div className=" bg-white p-2 flex md:justify-between items-center shadow">
-      {/* Toggle Button for Sidebar (Mobile) */}
-=======
     <div className="w-full bg-white dark:bg-gray-900 dark:text-white p-3 flex justify-between items-center shadow-sm">
->>>>>>> 12a703ec2fe2d9b162ffb03dbcc7545999855c3d
+      {/* Sidebar Toggle (Mobile only) */}
       <button onClick={toggleSidebar} className="lg:hidden">
         <Menu size={24} className="text-gray-600 dark:text-gray-300" />
       </button>
 
-     
-
+      {/* User Dropdown */}
       <div className="relative">
         <button
-          className="flex items-center bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 px-1 py-1 shadow-sm hover:shadow transition-all"
           onClick={() => setShowDropdown(!showDropdown)}
+          className="flex items-center bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 px-1 py-1 shadow-sm hover:shadow transition-all"
         >
           <img
             src="https://randomuser.me/api/portraits/men/32.jpg"
@@ -45,10 +38,14 @@ const Navbar = ({ toggleSidebar }) => {
               <User size={18} className="text-gray-600 dark:text-gray-300" />
               <span>Profile</span>
             </Link>
-            <button className="flex items-center space-x-3 w-full p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">
+
+            <Link
+              to="/"
+              className="flex items-center space-x-3 w-full p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+            >
               <Power size={18} className="text-gray-600 dark:text-gray-300" />
-              <Link to="/">Logout</Link>
-            </button>
+              <span>Logout</span>
+            </Link>
           </div>
         )}
       </div>
@@ -57,6 +54,3 @@ const Navbar = ({ toggleSidebar }) => {
 };
 
 export default Navbar;
-
-
-
