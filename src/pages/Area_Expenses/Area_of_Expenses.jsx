@@ -107,23 +107,11 @@ const AreaExpenses = () => {
           <div className="relative">
             <button
               className="border border-gray-200 bg-white shadow px-4 py-2 rounded-full flex items-center gap-2 hover:bg-gray-50 transition-colors"
-              onClick={() => setShowDatePicker(!showDatePicker)}
+            
             >
               Date
             </button>
-            {showDatePicker && (
-              <div className="absolute mt-2 bg-white p-2 shadow-md rounded-md z-10">
-                <DatePicker
-                  selected={selectedDate}
-                  onChange={(date) => {
-                    setSelectedDate(date);
-                    setShowDatePicker(false);
-                  }}
-                  dateFormat="yyyy-MM-dd"
-                  className="border p-2 rounded-md"
-                />
-              </div>
-            )}
+            
           </div>
 
           <button className="border border-gray-200 bg-white shadow px-4 py-2 rounded-full flex items-center gap-2 hover:bg-gray-50 transition-colors">
@@ -232,6 +220,5 @@ const AreaExpenses = () => {
 };
 
 export default AreaExpenses;//fc
-
 
 

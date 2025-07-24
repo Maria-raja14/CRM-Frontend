@@ -796,6 +796,7 @@ export default function PersonalInfoForm() {
             } catch (error) {
                 console.error("Error saving profile:", error);
                 toast.error("Failed to save profile.", { position: "top-right", autoClose: 2000 });
+                onProfileUpdate(formData);
             }
         }
     };
@@ -958,4 +959,7 @@ export default function PersonalInfoForm() {
             </div>
         </div>
     );
-}
+}//ori
+
+
+

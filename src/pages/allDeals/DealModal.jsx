@@ -278,7 +278,7 @@ const DealModal = ({ deal, onClose }) => {
                   <button className="bg-blue-400 text-white px-4 py-1.5 rounded mt-2 shadow-lg">Comment</button>
                 </div>
               </div>
-            </div>
+            </div> 
 
             {/* Right Sidebar */}
             <div className="w-[280px] p-4 overflow-y-auto" style={{ maxHeight: "510px" }}>
