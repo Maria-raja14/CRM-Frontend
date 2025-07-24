@@ -52,7 +52,7 @@ const PersonTable = ({ persons = [], onDelete, onUpdate }) => {
           {paginatedPersons.length > 0 ? (
             paginatedPersons.map((person) => (
               <tr key={person._id} className="text-center border-b border-gray-50">
-                <td className="py-3 px-4">{person.personName || "N/A"}</td>
+                <td className="py-3 px-4">{person.personName || "NA" }</td>
                 <td className="p-3">
                   {person.leadGroup?.name ? (
                     <span
@@ -153,3 +153,4 @@ const PersonTable = ({ persons = [], onDelete, onUpdate }) => {
 };
 
 export default PersonTable;
+

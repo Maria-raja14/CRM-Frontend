@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import AddOrganization from "./AddOrganization";
 
 const ModalOrganization = ({
   isOpen,
@@ -35,6 +36,9 @@ const ModalOrganization = ({
     },
   });
 
+
+
+
   const [leadGroups, setLeadGroups] = useState([]);
   const [errors, setErrors] = useState({});
 
@@ -58,6 +62,35 @@ const ModalOrganization = ({
     }
   }, [organizationData]);
 
+  useEffect(() => {
+    if (organizationData) {
+      setFormData({
+        organizationName: organizationData.organizationName || "",
+        leadGroupId: organizationData.leadGroupId || "",
+        owner: organizationData.owner || "",
+        addressDetails: {
+          country: organizationData.addressDetails?.country || "",
+          area: organizationData.addressDetails?.area || "",
+          city: organizationData.addressDetails?.city || "",
+          state: organizationData.addressDetails?.state || "",
+          zipCode: organizationData.addressDetails?.zipCode || "",
+        },
+        customFields: {
+          loan: organizationData.customFields?.loan || "",
+          AAs: organizationData.customFields?.AAs || "",
+          Sites: organizationData.customFields?.Sites || "",
+          testing: organizationData.customFields?.testing || "",
+          kiona: organizationData.customFields?.kiona || "",
+        },
+      });
+      setIsAddressOpen(true);
+    }
+  }, [organizationData]);
+
+
+  
+  
+
   const API_URL = "http://localhost:5000/api/organization";
 
   const validateForm = () => {
@@ -78,38 +111,49 @@ const ModalOrganization = ({
     return Object.keys(newErrors).length === 0;
   };
 
+ 
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
-
+  
     try {
       let response;
-
+  
       if (organizationData) {
+        // Update mode
         response = await axios.put(`${API_URL}/${organizationData._id}`, formData);
         toast.success("Organization updated successfully!");
       } else {
+        // Add mode
         response = await axios.post(`${API_URL}/add`, formData);
         toast.success("Organization added successfully!");
       }
-
+  
       if (!response.data || !response.data._id) {
         console.error("API response is missing _id:", response.data);
         toast.error("Error: API response does not contain _id.");
         return;
       }
-
-      if (refreshOrganizations) {
-        await refreshOrganizations();
+  
+      // Update frontend immediately with the new organization
+      if (response.data) {
+        addNewOrganization(response.data); // Add the newly created organization to the state
       }
-
-      onClose();
+  
+      if (refreshOrganizations) {
+        await refreshOrganizations(); // Refreshes the table if needed
+      }
+  
+      onClose(); // Close the modal
     } catch (error) {
       console.error("Error saving organization:", error);
       toast.error("Error saving organization");
     }
   };
-
+  
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -273,6 +317,7 @@ const ModalOrganization = ({
             </form>
           </div>
         </div>
+        {/* <AddOrganization leadGroups={leadGroups} /> */}
       </div>
     </>
   );

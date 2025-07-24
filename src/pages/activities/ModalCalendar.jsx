@@ -193,11 +193,11 @@
       <>
         {/* Background Overlay */}
         <div
-          className="fixed inset-0  bg-opacity-50 backdrop-blur-sm z-50"
+          className="fixed inset-0  bg-opacity-50 backdrop-blur-sm z-50 "
           onClick={onClose}
         ></div>
         {/* Modal Content */}
-        <div className="fixed inset-0 flex justify-center items-center z-50">
+        <div className="fixed inset-0 flex justify-center items-center z-50 ">
           <div className="bg-white w-[900px] h-[600px] rounded-lg shadow-lg flex flex-col">
             {/* Modal Header */}
             <div className="flex justify-between items-center border-b p-4">
@@ -211,7 +211,7 @@
               </button>
             </div>
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto p-8">
+            <div className="flex-1  p-8">
               <form onSubmit={handleSubmit}>
                 {/* Activity Type */}
                 <div className="flex items-center gap-28 mb-6 ">

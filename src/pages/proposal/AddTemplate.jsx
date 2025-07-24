@@ -37,10 +37,10 @@ const AddTemplate = () => {
     }
   };
 
-  // Save and Send API Call
+  // Save and Send API Call 
   const saveAndSend = async () => {
     const content = editorRef.current.getContent();
-    try {
+    try {  
       await axios.post("/api/send-template", { title, content });
       alert("Template sent successfully!");
     } catch (error) {

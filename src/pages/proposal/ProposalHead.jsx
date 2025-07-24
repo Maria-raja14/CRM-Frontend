@@ -14,7 +14,9 @@ const ProposalHead = () => {
   const [proposals, setProposals] = useState([]); // ✅ State for proposals
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [openActionId, setOpenActionId] = useState(null); // For action dropdown
+  const [openActionId, setOpenActionId] = useState(null); // For action dropdown 
+
+    
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const proposalsPerPage = 10; // You can change this
@@ -44,7 +46,7 @@ const filteredProposals = proposals.filter((proposal) => {
 
   return matchesSearch && matchesFilters;
 });
-
+  
 
 
   // ✅ Fetch Proposals from API
@@ -179,14 +181,14 @@ const filteredProposals = proposals.filter((proposal) => {
   placeholder="Filter by Email"
   value={filterEmail}
   onChange={(e) => setFilterEmail(e.target.value)}
-  className="px-3 py-3 shadow bg-white rounded-2xl text-sm text-gray-600"
+  className="px-2 py-2 shadow bg-white rounded-2xl text-sm text-gray-600"
 />
 
 {/* Status Filter */}
 <select
   value={filterStatus}
   onChange={(e) => setFilterStatus(e.target.value)}
-  className="px-3 py-3 shadow rounded-2xl bg-white text-sm text-gray-600"
+  className="px-2 py-2 shadow rounded-2xl bg-white text-sm text-gray-600"
 >
   <option value="">All Status</option>
   <option value="draft">Draft</option>
@@ -202,7 +204,7 @@ const filteredProposals = proposals.filter((proposal) => {
   onChange={(date) => setFilterCreatedDate(date)}
   dateFormat="yyyy/MM/dd"
   placeholderText="Created Date"
-  className="px-3 py-3 shadow bg-white rounded-2xl text-sm text-gray-600"
+  className="px-2 py-2 shadow bg-white rounded-2xl text-sm text-gray-600"
 />
 
 {/* Title Filter */}
@@ -211,7 +213,7 @@ const filteredProposals = proposals.filter((proposal) => {
   placeholder="Filter by Title"
   value={filterTitle}
   onChange={(e) => setFilterTitle(e.target.value)}
-  className="px-3 py-3 shadow rounded-2xl bg-white text-sm text-gray-600"
+  className="px-2 py-2 shadow rounded-2xl bg-white text-sm text-gray-600"
 />
 
 {/* Deal Title Filter */}
@@ -220,7 +222,7 @@ const filteredProposals = proposals.filter((proposal) => {
   placeholder="Filter by Deal Title"
   value={filterDealTitle}
   onChange={(e) => setFilterDealTitle(e.target.value)}
-  className="px-3 py-3 shadow bg-white rounded-2xl text-sm text-gray-600"
+  className="px-2 py-2 shadow bg-white rounded-2xl text-sm text-gray-600"
 />
 
         </div>
@@ -232,7 +234,7 @@ const filteredProposals = proposals.filter((proposal) => {
             placeholder="Search"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="p-1.5 pl-10 border rounded-3xl w-[250px] bg-white"
+            className="p-1.5 pl-10 border rounded-3xl w-[150px] bg-white"
           />
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -240,7 +242,7 @@ const filteredProposals = proposals.filter((proposal) => {
             viewBox="0 0 24 24"
             strokeWidth="1.5"
             stroke="currentColor"
-            className="w-5 h-5 text-gray-400 absolute left-3"
+            className="w-3 h-3 text-gray-400 absolute left-3"
           >
             <path
               strokeLinecap="round"

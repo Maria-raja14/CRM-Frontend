@@ -15,9 +15,6 @@ const AddLeadGroup = ({ onClose, onAdd,leadGroupToEdit  }) => {
     }
   }, [leadGroupToEdit]);
 
-
-
-//Add Colours
   const classColors = {
     primary: "bg-blue-500",
     success: "bg-green-500",
@@ -55,8 +52,6 @@ const AddLeadGroup = ({ onClose, onAdd,leadGroupToEdit  }) => {
         });
         toast.success("Leads Added successfully");
       }
-
-      // alert(leadGroupToEdit ? "Lead Group Updated Successfully!" : "Lead Group Added Successfully!");
       onAdd(response.data.data);
       onClose();
     } catch (error) {

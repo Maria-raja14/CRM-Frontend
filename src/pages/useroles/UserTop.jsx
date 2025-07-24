@@ -15,13 +15,18 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
-
+import Useredit from "./Useredit";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const UserTop = () => {
   // State to store form values
+  const [userSearch, setUserSearch] = useState("");
+  const [roleSearch, setRoleSearch] = useState("");
 
+  // const [roleSearch, setRoleSearch] = useState(""); // for search input
+  const [filterType, setFilterType] = useState("all"); // for tab filters
+  const [userSearchuser, setUserSearchuser] = useState("");
   const [showAllUsers, setShowAllUsers] = useState(false);
   const [openAddUserModal, setOpenAddUserModal] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false); // Control modal state
@@ -36,25 +41,13 @@ const UserTop = () => {
   const [address, setAddress] = useState(""); // Add this
   const [profilePhoto, setProfilePhoto] = useState(null); // Add this
   const [search, setSearch] = useState("");
-  const [openEditModal, setOpenEditModal] = useState(false);
+  // const [openEditModal, setOpenEditModal] = useState(false);
   const [roleName, setRoleName] = useState("");
-  const [roleSearch, setRoleSearch] = useState(""); // Fix naming
+  // const [roleSearch, setRoleSearch] = useState(""); // Fix naming
   const [roles, setRoles] = useState([]);
   const [users, setUsers] = useState([]);
   const [openViewModal, setOpenViewModal] = useState(false);
-  // const [selectedRole, setSelectedRole] = useState(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [userData, setUserData] = useState({
-    firstName: "",
-    lastName: "",
-    gender: "",
-    DateOB: "",
-    mobileNumber: "",
-    email: "",
-    address: "",
-  });
   const [profileImage, setProfileImage] = useState(null);
-
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -76,7 +69,9 @@ const UserTop = () => {
     email: "",
   });
   const [openUserModal, setOpenUserModal] = useState(false);
-  const [selectedRoleUsers, setSelectedRoleUsers] = useState([]);
+
+  const [openEditModal, setOpenEditModal] = useState(false); // to open/close the modal
+  const [userToEdit, setUserToEdit] = useState(null); // to hold selected user data
 
   const handleManageUsers = (role) => {
     setSelectedRole(role); // Store the selected role
@@ -103,6 +98,8 @@ const UserTop = () => {
     fetchUsers();
   }, []);
 
+  // Users filter
+
   const fetchRoles = async () => {
     const res = await axios.get("http://localhost:5000/api/auth/roles/getrole");
 
@@ -118,8 +115,11 @@ const UserTop = () => {
   };
 
   const filteredUsers = users.filter((user) =>
-    `${user.email}`.toLowerCase().includes(search.toLowerCase())
+    `${user.firstName} ${user.lastName} ${user.email}`
+      .toLowerCase()
+      .includes(userSearch.toLowerCase())
   );
+
   const filteredRoles =
     roles?.filter((role) =>
       role.name.toLowerCase().includes(roleSearch.toLowerCase())
@@ -201,7 +201,6 @@ const UserTop = () => {
       console.error("Error adding user:", error);
     }
   };
-  // Handle Add Role
 
   const handleAddRole = async () => {
     if (!roleName) {
@@ -226,30 +225,6 @@ const UserTop = () => {
       toast.error("Failed to add role");
     }
   };
-
-  // const handleAddRole = async () => {
-  //   if (!roleName) {
-  //     alert("Role name is required");
-  //     return;
-  //   }
-
-  //   try {
-  //     const res = await axios.post(
-  //       "http://localhost:5000/api/auth/roles/createrole",
-  //       {
-  //         name: roleName, // Make sure this matches your backend model
-  //         permissions: formData.permissions, // Ensure permissions are passed correctly
-  //       }
-  //     );
-  //     setRoles((prevRoles) => [...prevRoles, res.data]);
-  //     setRoleName("");
-  //     alert("Role added successfully");
-  //     setOpen(false);
-  //   } catch (err) {
-  //     console.error(err);
-  //     alert("Failed to add role");
-  //   }
-  // };
 
   const handleAddUserToRole = async (user) => {
     if (!user || !selectedRole) {
@@ -297,41 +272,69 @@ const UserTop = () => {
     setOpenEditModal(true);
   };
 
-  const handleUpdateUser = async () => {
+  const handleUpdateUser = async (e) => {
+    e.preventDefault();
     if (!selectedUser) return;
 
-    const formData = new FormData();
-    formData.append("firstName", firstName);
-    formData.append("lastName", lastName);
-    formData.append("gender", gender);
-    formData.append("DateOB", DateOB);
-    formData.append("mobileNumber", mobileNumber);
-    formData.append("email", email);
-    formData.append("address", address);
+    const formDataToSend = new FormData();
+    formDataToSend.append("firstName", selectedUser.firstName);
+    formDataToSend.append("lastName", selectedUser.lastName);
+    formDataToSend.append("gender", selectedUser.gender);
+    formDataToSend.append("DateOB", selectedUser.DateOB);
+    formDataToSend.append("mobileNumber", selectedUser.mobileNumber);
+    formDataToSend.append("email", selectedUser.email);
+    formDataToSend.append("address", selectedUser.address);
 
-    if (profilePhoto) {
-      formData.append("profilePhoto", profilePhoto);
+    // If profile photo is updated, append it
+    if (formData.profilePhoto) {
+      formDataToSend.append("profilePhoto", formData.profilePhoto);
     }
 
     try {
-      const response = await fetch(
+      const response = await axios.put(
         `http://localhost:5000/api/auth/adduser/update/${selectedUser._id}`,
+        formDataToSend,
         {
-          method: "PUT",
-          body: formData,
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         }
       );
 
-      if (!response.ok) {
-        throw new Error("Failed to update user");
-      }
-
-      alert("User updated successfully!");
+      toast.success("User updated successfully!");
       setOpenEditModal(false);
+      fetchUsers(); // Refresh the users list after update
     } catch (error) {
       console.error("Error updating user:", error);
+      toast.error("Failed to update user");
     }
   };
+
+  const filteredUsers1 = users.filter((user) => {
+    // Search by user name/email
+    const matchesUserSearch = `${user.firstName} ${user.lastName} ${user.email}`
+      .toLowerCase()
+      .includes(userSearch.toLowerCase());
+
+    // Search by role
+    const matchesRoleSearch = user.role
+      ?.toLowerCase()
+      .includes(roleSearch.toLowerCase());
+
+    // Tab Filter (active/inactive/invited)
+    const matchesFilterType =
+      filterType === "all"
+        ? true
+        : filterType === "active"
+        ? user.status === true
+        : filterType === "inactive"
+        ? user.status === false
+        : filterType === "invited"
+        ? user.invited === true
+        : true;
+
+    return matchesUserSearch && matchesRoleSearch && matchesFilterType;
+  });
 
   return (
     <div className="">
@@ -580,7 +583,7 @@ const UserTop = () => {
                   className="w-full sm:w-[300px] h-12 rounded-md px-3 border border-gray-300 focus:ring outline-none"
                   required
                 />
-              </div>  
+              </div>
 
               {/* Buttons */}
               <div className="border-b-2"></div>
@@ -685,7 +688,6 @@ const UserTop = () => {
                   />
                 </div>
               </div>
-
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div className="flex flex-col">
                   <label className="font-medium pb-1.5">Gender:</label>
@@ -722,7 +724,6 @@ const UserTop = () => {
                   />
                 </div>
               </div>
-
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div className="flex flex-col">
                   <label className="font-medium pb-1.5">Mobile Number:</label>
@@ -760,7 +761,6 @@ const UserTop = () => {
                   />
                 </div>
               </div>
-
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div className="flex flex-col">
                   <label className="font-medium pb-1.5">Address:</label>
@@ -779,6 +779,7 @@ const UserTop = () => {
                   />
                 </div>
               </div>
+              note
             </div>
 
             {/* Submit Button */}
@@ -967,31 +968,59 @@ const UserTop = () => {
             <h2 className="text-xl font-semibold mt-3 mb-3">Users</h2>
 
             {/* Search Input */}
-            <div className="relative mt-3  flex flex-row items-center ">
+            <div className="relative mt-3 flex flex-row items-center mr-3">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="absolute left-3 top-[22px] transform -translate-y-1/2 w-7 h-6 text-gray-500"
                 viewBox="0 -960 960 960"
                 fill="#1f1f1f"
               >
-                <path d="M765-144 526-383q-30 22-65.79 34.5-35.79 12.5-76.18 12.5Q284-336 214-406t-70-170q0-100 70-170t170-70q100 0 170 70t70 170.03q0 40.39-12.5 76.18Q599-464 577-434l239 239-51 51ZM384-408q70 0 119-49t49-119q0-70-49-119t-119-49q-70 0-119 49t-49 119q0 70 49 119t119 49Z" />
+                <path d="..." />
               </svg>
               <input
                 type="text"
-                placeholder="Search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-[220px] pl-10 pr-3 py-2 rounded-3xl mb-4 focus:outline-none focus:ring-2 bg-[#f9f9f9] focus:ring-blue-500"
+                placeholder="Search users"
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+                className="w-[190px] pl-10 py-2 rounded-3xl mb-4 focus:outline-none focus:ring-2 bg-[#f9f9f9] focus:ring-blue-500"
               />
             </div>
           </div>
           <div className="border-t"></div>
 
-          <div className="flex gap-3 px-9 text-sm">
-            <p>All user</p>
-            <p>Active</p>
-            <p>Inactive</p>
-            <p>Invited</p>
+          <div className="flex gap-3 px-9 text-sm  text-gray-500 font-medium py-4">
+            <p
+              className={`cursor-pointer ${
+                filterType === "all" ? "text-[#008ecc] font-bold" : ""
+              }`}
+              onClick={() => setFilterType("all")}
+            >
+              All Users
+            </p>
+            <p
+              className={`cursor-pointer ${
+                filterType === "active" ? "text-[#008ecc] font-bold" : ""
+              }`}
+              onClick={() => setFilterType("active")}
+            >
+              Active
+            </p>
+            <p
+              className={`cursor-pointer ${
+                filterType === "inactive" ? "text-[#008ecc] font-bold" : ""
+              }`}
+              onClick={() => setFilterType("inactive")}
+            >
+              Inactive
+            </p>
+            <p
+              className={`cursor-pointer ${
+                filterType === "invited" ? "text-[#008ecc] font-bold" : ""
+              }`}
+              onClick={() => setFilterType("invited")}
+            >
+              Invited
+            </p>
           </div>
 
           {/* User List Section */}
@@ -1095,18 +1124,18 @@ const UserTop = () => {
               <h2 className="text-xl font-semibold mt-3 mb-3">Roles</h2>
 
               {/* Search Input */}
-              <div className="relative flex flex-row mt-3 justify-between items-center ">
+              <div className="relative mt-3 flex flex-row items-center">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="absolute left-3 top-[22px] transform -translate-y-1/2 w-7 h-6 text-gray-500"
                   viewBox="0 -960 960 960"
                   fill="#1f1f1f"
                 >
-                  <path d="M765-144 526-383q-30 22-65.79 34.5-35.79 12.5-76.18 12.5Q284-336 214-406t-70-170q0-100 70-170t170-70q100 0 170 70t70 170.03q0 40.39-12.5 76.18Q599-464 577-434l239 239-51 51ZM384-408q70 0 119-49t49-119q0-70-49-119t-119-49q-70 0-119 49t-49 119q0 70 49 119t119 49Z" />
+                  <path d="..." />
                 </svg>
                 <input
                   type="text"
-                  placeholder="Search"
+                  placeholder="Search by role"
                   value={roleSearch}
                   onChange={(e) => setRoleSearch(e.target.value)}
                   className="w-[190px] pl-10 py-2 rounded-3xl mb-4 focus:outline-none focus:ring-2 bg-[#f9f9f9] focus:ring-blue-500"
