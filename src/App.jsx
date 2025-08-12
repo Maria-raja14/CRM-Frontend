@@ -232,6 +232,10 @@ import ProposalBoard from "./stage/ProposalBoard";
 import Proposal from "./pages/reports/Proposal";
 import Proposalgraf from "./pages/reports/Proposalgraf";
 
+import CreateLeads from "./pages/person/CreateLeads";
+
+import Leads from "./pages/person/Leads";
+
 // Toast
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -279,6 +283,9 @@ function App() {
             <Route path="/report" element={<ReportDeals />} />
             <Route path="/payment" element={<PaymentAdd />} />
             <Route path="/expenses" element={<Expenses />} />
+            <Route path="/leads" element={<Leads />} />
+             <Route path="/createleads" element={<CreateLeads />} />
+
             <Route
               path="/myprofile/*"
               element={

@@ -514,16 +514,29 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         </NavLink>
 
         {/* Leads */}
-        <Collapsible
+        {/* <Collapsible
           label="Leads"
           icon={<User size={18} className="text-gray-700" />}
           open={showLeads}
           onToggle={() => setShowLeads((s) => !s)}
-        >
-          <SmallLink to="/person" icon={<User size={16} />} label="Persons" />
-          <SmallLink to="/organization" icon={<Users size={16} />} label="Organization" />
-          <SmallLink to="/leadGroup" icon={<Layers size={16} />} label="Lead groups" />
-        </Collapsible>
+        > */}
+          {/* <SmallLink to="/person" icon={<User size={16} />} label="Persons" /> */}
+          {/* <SmallLink to="/organization" icon={<Users size={16} />} label="Organization" />
+          <SmallLink to="/leadGroup" icon={<Layers size={16} />} label="Lead groups" /> */}
+        {/* </Collapsible> */}
+
+ <Collapsible
+  label={
+    <Link to="/leads" className="flex items-center gap-2">
+      <User size={18} className="text-gray-700" />
+      Leads
+    </Link>
+  }
+  icon={null} // removes arrow icon
+  open={false} // no dropdown
+  onToggle={() => {}} // no toggle
+/>
+       
 
         {/* Deals */}
         <Collapsible
