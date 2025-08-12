@@ -278,6 +278,7 @@ function App() {
             <Route path="/list" element={<Activity />} />
             <Route path="/report" element={<ReportDeals />} />
             <Route path="/payment" element={<PaymentAdd />} />
+            <Route path="/expenses" element={<Expenses />} />
             <Route
               path="/myprofile/*"
               element={
