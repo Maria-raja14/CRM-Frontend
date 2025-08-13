@@ -232,9 +232,9 @@ import ProposalBoard from "./stage/ProposalBoard";
 import Proposal from "./pages/reports/Proposal";
 import Proposalgraf from "./pages/reports/Proposalgraf";
 
-import CreateLeads from "./pages/person/CreateLeads";
+import CreateLeads from "./pages/Leads/CreateLeads";
 
-import Leads from "./pages/person/Leads";
+import Leads from "./pages/Leads/Leads";
 
 // Toast
 import { ToastContainer } from "react-toastify";

@@ -20,7 +20,7 @@ export default function LeadTable() {
         setLeads(data);
         setLoading(false);
       } catch (error) {
-        toast.error("Failed to fetch leads");
+        //toast.error("Failed to fetch leads");
         setLoading(false);
       }
     };
