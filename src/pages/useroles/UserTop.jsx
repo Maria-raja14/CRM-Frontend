@@ -1252,3 +1252,112 @@ const UserTop = () => {
 };
 
 export default UserTop;
+
+
+
+// import { useState, useEffect } from "react";
+// import axios from "axios";
+
+// export default function CreateUser() {
+//   const [name, setName] = useState("");
+//   const [email, setEmail] = useState("");
+//   const [password, setPassword] = useState("");
+//   const [role, setRole] = useState("");
+//   const [roles, setRoles] = useState([]);
+
+//   // Fetch roles from backend
+//   useEffect(() => {
+//     axios.get("http://localhost:5000/api/roles")
+//       .then((res) => setRoles(res.data))
+//       .catch((err) => console.error(err));
+//   }, []);
+
+//   const handleSubmit = (e) => {
+//     e.preventDefault();
+//     axios.post("http://localhost:5000/api/users", {
+//       name,
+//       email,
+//       password,
+//       role
+//     })
+//       .then((res) => {
+//         alert("User created successfully!");
+//         setName("");
+//         setEmail("");
+//         setPassword("");
+//         setRole("");
+//       })
+//       .catch((err) => console.error(err));
+//   };
+
+//   return (
+//     <div className="max-w-md mx-auto bg-white p-6 rounded-xl shadow-md mt-10">
+//       <h2 className="text-2xl font-semibold mb-6">Create New User</h2>
+//       <form onSubmit={handleSubmit} className="space-y-4">
+
+//         {/* Name */}
+//         <div>
+//           <label className="block text-sm font-medium text-gray-700">Name</label>
+//           <input
+//             type="text"
+//             value={name}
+//             onChange={(e) => setName(e.target.value)}
+//             className="w-full mt-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+//             placeholder="Enter full name"
+//             required
+//           />
+//         </div>
+
+//         {/* Email */}
+//         <div>
+//           <label className="block text-sm font-medium text-gray-700">Email</label>
+//           <input
+//             type="email"
+//             value={email}
+//             onChange={(e) => setEmail(e.target.value)}
+//             className="w-full mt-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+//             placeholder="Enter email"
+//             required
+//           />
+//         </div>
+
+//         {/* Password */}
+//         <div>
+//           <label className="block text-sm font-medium text-gray-700">Password</label>
+//           <input
+//             type="password"
+//             value={password}
+//             onChange={(e) => setPassword(e.target.value)}
+//             className="w-full mt-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+//             placeholder="Enter password"
+//             required
+//           />
+//         </div>
+
+//         {/* Role Dropdown */}
+//         <div>
+//           <label className="block text-sm font-medium text-gray-700">Role</label>
+//           <select
+//             value={role}
+//             onChange={(e) => setRole(e.target.value)}
+//             className="w-full mt-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+//             required
+//           >
+//             <option value="">Select a role</option>
+//             {roles.map((r) => (
+//               <option key={r._id} value={r._id}>{r.name}</option>
+//             ))}
+//           </select>
+//         </div>
+
+//         {/* Submit */}
+//         <button
+//           type="submit"
+//           className="w-full bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition"
+//         >
+//           Create User
+//         </button>
+//       </form>
+//     </div>
+//   );
+// }
