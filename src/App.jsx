@@ -210,7 +210,7 @@ import InvoiceHead from "./pages/invoice/InvoiceHead";
 import OrganizationPage from "./pages/organization/OrganizationPage";
 import DragDropUpload from "./pages/organization/DragAndDrop";
 import AddOrganization from "./pages/organization/addOrganization";
-import UserTop from "./pages/useroles/UserTop";
+//import UserTop from "./pages/useroles/UserTop";
 import ProfileCard from "./navbar/Myprofile_Topcenter";
 import Pipeline from "./pages/Deals/Pipeline";
 import AddPipeline from "./pages/Deals/Add_Pipeline";
@@ -239,6 +239,7 @@ import Leads from "./pages/Leads/Leads";
 // Toast
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import UserManagement from "./pages/useroles/UserManagement";
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -265,7 +266,7 @@ function App() {
             <Route path="/organization" element={<OrganizationPage />} />
             <Route path="/import-persons" element={<DragDropUpload />} />
             <Route path="/person" element={<AddPerson />} />
-            <Route path="/user/roles" element={<UserTop />} />
+            <Route path="/user/roles" element={<UserManagement />} />
             <Route path="/invoice" element={<InvoiceHead />} />
             <Route path="/dashboard/profile" element={<ProfileCard />} />
             <Route path="/LostReasons" element={<Lastreasons />} />
