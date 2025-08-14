@@ -643,20 +643,6 @@ import {
   Layout,
   FileText,
 } from "react-feather";
-<<<<<<< HEAD
-
-import { useNavigate, Link } from "react-router-dom";
-
-const Sidebar = ({ isOpen, toggleSidebar }) => {
-  const [showLeads, setShowLeads] = useState(false);
-  const [showDeals, setShowDeals] = useState(false);
-  const [proposal, setProposal] = useState(false);
-  const [activities, setActivities] = useState(false);
-  const [reports, setReports] = useState(false);
-  const [expenses, setExpenses] = useState(false);
-  const [showHRM, setShowHRM] = useState(false);
-  const [showHRMSystem, setShowHRMSystem] = useState(false);
-=======
 import { NavLink, Link, useLocation } from "react-router-dom";
 
 const IconCircle = ({ children }) => (
@@ -739,7 +725,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   const [showReports, setShowReports] = useState(false);
 
   const location = useLocation();
->>>>>>> e1a1303283a4ceff09fa0baf47b1edae53b7ddb6
 
   return (
     <aside
@@ -772,83 +757,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
              }`
           }
         >
-<<<<<<< HEAD
-          <div className="flex items-center space-x-3">
-            <div className="bg-white p-1 rounded-[12px] shadow-md text-gray-500">
-              <Home size={18} className="text-[#008CD3]" />
-            </div>
-            <span>Dashboard</span>
-          </div>
-        </Link>
-
-        {/* Leads */}
-        <button
-          onClick={() => setShowLeads(!showLeads)}
-          className="sidebar-item"
-        >
-          <div className="flex items-center space-x-3">
-            <div className="bg-white p-2 rounded-[12px] shadow-md">
-              <User size={18} />
-            </div>
-            <span>Leads</span>
-          </div>
-          <ChevronRight
-            size={18}
-            className={`transition-transform duration-300 ${
-              showLeads ? "rotate-90" : ""
-            }`}
-          />
-        </button>
-
-        {showLeads && (
-          <>
-            <Link to="/person" className="sidebar-subitem">
-              <User size={18} />
-              <span>Persons</span>
-            </Link>
-            <Link to="/organization" className="sidebar-subitem">
-              <Briefcase size={18} />
-              <span>Organization</span>
-            </Link>
-            <Link to="/leadGroup" className="sidebar-subitem">
-              <Layers size={18} />
-              <span>Lead groups</span>
-            </Link>
-          </>
-        )}
-
-        {/* Deals */}
-        <button
-          onClick={() => setShowDeals(!showDeals)}
-          className="sidebar-item"
-        >
-          <div className="flex items-center space-x-3">
-            <div className="bg-white p-2 rounded-[12px] shadow-md">
-              <Tag size={18} />
-            </div>
-            <span>Deals</span>
-          </div>
-          <ChevronRight
-            size={18}
-            className={`transition-transform duration-300 ${
-              showDeals ? "rotate-90" : ""
-            }`}
-          />
-        </button>
-
-        {showDeals && (
-          <>
-            <Link to="/deals" className="sidebar-subitem">
-              <Tag size={18} />
-              <span>All deals</span>
-            </Link>
-            <Link to="/pipeline" className="sidebar-subitem">
-              <List size={18} />
-              <span>Pipeline</span>
-            </Link>
-          </>
-        )}
-=======
           <div className="w-10 h-10 flex items-center justify-center rounded-full bg-white">
             <Home
               size={18}
@@ -897,7 +805,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           }
           label="Invoices"
         />
->>>>>>> e1a1303283a4ceff09fa0baf47b1edae53b7ddb6
 
         {/* Proposal */}
         <Collapsible
@@ -906,34 +813,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           open={showProposal}
           onToggle={() => setShowProposal((s) => !s)}
         >
-<<<<<<< HEAD
-          <div className="flex items-center space-x-3">
-            <div className="bg-white p-2 rounded-[12px] shadow-md">
-              <Edit size={18} />
-            </div>
-            <span>Proposal</span>
-          </div>
-          <ChevronRight
-            size={18}
-            className={`transition-transform duration-300 ${
-              proposal ? "rotate-90" : ""
-            }`}
-          />
-        </button>
-
-        {proposal && (
-          <>
-            <Link to="/proposal" className="sidebar-subitem">
-              <FileText size={18} />
-              <span>Proposal list</span>
-            </Link>
-            <Link to="/template" className="sidebar-subitem">
-              <Layout size={18} />
-              <span>Templates</span>
-            </Link>
-          </>
-        )}
-=======
           <SmallLink
             to="/proposal"
             icon={<FileText size={16} />}
@@ -945,7 +824,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             label="Templates"
           />
         </Collapsible>
->>>>>>> e1a1303283a4ceff09fa0baf47b1edae53b7ddb6
 
         {/* Activities */}
         <Collapsible
@@ -959,29 +837,12 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             icon={<Calendar size={16} />}
             label="Calendar View"
           />
-<<<<<<< HEAD
-        </button>
-
-        {activities && (
-          <>
-            <Link to="/calendar" className="sidebar-subitem">
-              <Calendar size={18} />
-              <span>Calendar View</span>
-            </Link>
-            <Link to="/list" className="sidebar-subitem">
-              <List size={18} />
-              <span>Activity list</span>
-            </Link>
-          </>
-        )}
-=======
           <SmallLink
             to="/list"
             icon={<List size={16} />}
             label="Activity list"
           />
         </Collapsible>
->>>>>>> e1a1303283a4ceff09fa0baf47b1edae53b7ddb6
 
         {/* Expenses */}
         <Collapsible
@@ -995,73 +856,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             icon={<DollarSign size={16} />}
             label="Expenses"
           />
-<<<<<<< HEAD
-        </button>
-
-        {expenses && (
-          <>
-            <Link to="/expenses" className="sidebar-subitem">
-              <DollarSign size={18} />
-              <span>Expenses</span>
-            </Link>
-            <Link to="/area-expenses" className="sidebar-subitem">
-              <MapPin size={18} />
-              <span>Area of Expenses</span>
-            </Link>
-          </>
-        )}
-
-        {/* Reports */}
-        <button
-          onClick={() => setReports(!reports)}
-          className="sidebar-item"
-        >
-          <div className="flex items-center space-x-3">
-            <div className="bg-white p-2 rounded-[12px] shadow-md">
-              <Calendar size={18} />
-            </div>
-            <span>Reports</span>
-          </div>
-          <ChevronRight
-            size={18}
-            className={`transition-transform duration-300 ${
-              reports ? "rotate-90" : ""
-            }`}
-          />
-        </button>
-
-        {reports && (
-          <>
-            <Link to="/report" className="sidebar-subitem">
-              <Tag size={18} />
-              <span>Deals</span>
-            </Link>
-            <Link to="/report/proposal" className="sidebar-subitem">
-              <Edit size={18} />
-              <span>Proposal</span>
-            </Link>
-            <Link to="/pipeline-charts" className="sidebar-subitem">
-              <List size={18} />
-              <span>Pipeline</span>
-            </Link>
-            <Link to="/payment" className="sidebar-subitem">
-              <CreditCard size={18} />
-              <span>Payment History</span>
-            </Link>
-          </>
-        )}
-
-        {/* Users & Roles */}
-        <Link to="/user/roles" className="sidebar-item">
-          <div className="flex items-center space-x-3">
-            <div className="bg-white p-2 rounded-[12px] shadow-md">
-              <Shield size={18} />
-            </div>
-            <span>Users & Roles</span>
-          </div>
-          <ChevronRight size={18} />
-        </Link>
-=======
           <SmallLink
             to="/area-expenses"
             icon={<MapPin size={16} />}
@@ -1100,7 +894,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           icon={<Shield size={18} />}
           label="Users & Roles"
         />
->>>>>>> e1a1303283a4ceff09fa0baf47b1edae53b7ddb6
       </nav>
     </aside>
   );
