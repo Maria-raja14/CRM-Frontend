@@ -235,23 +235,33 @@ import Proposalgraf from "./pages/reports/Proposalgraf";
 import CreateLeads from "./pages/Leads/CreateLeads";
 
 import Leads from "./pages/Leads/Leads";
+import { initSocket } from "./utils/socket";
 
 // Toast
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import UserManagement from "./pages/useroles/UserManagement";
+import Notification from "./pages/notification/Notification";
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isDark, setIsDark] = useState(localStorage.getItem("theme") === "dark");
+  // const [isDark, setIsDark] = useState(localStorage.getItem("theme") === "dark");
 
-  useEffect(() => {
-    if (isDark) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [isDark]);
+  // useEffect(() => {
+  //   if (isDark) {
+  //     document.documentElement.classList.add("dark");
+  //   } else {
+  //     document.documentElement.classList.remove("dark");
+  //   }
+  // }, [isDark]);
+
+useEffect(() => {
+  initSocket(); // no need to pass userId anymore
+}, []);
+
+
+
+
 
   return (
     <BrowserRouter>
@@ -298,6 +308,8 @@ function App() {
           </Route>
         </Routes>
         <ToastContainer position="top-right" autoClose={3000} />
+        <Notification/>
+        
       </div>
     </BrowserRouter>
   );
