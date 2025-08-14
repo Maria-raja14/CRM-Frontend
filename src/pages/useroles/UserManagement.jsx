@@ -1,100 +1,100 @@
 
 
 
-// import { useState, useEffect } from "react";
-// import AddUserModal from "./UserTop";
-// import CreateRoleModal from "./CreateRoleModal";
-// import axios from "axios";
-// import { toast } from "react-toastify";
+import { useState, useEffect } from "react";
+import AddUserModal from "./UserTop";
+import CreateRoleModal from "./CreateRoleModal";
+import axios from "axios";
+import { toast } from "react-toastify";
 
-// export default function UserManagement() {
-//   const [roles, setRoles] = useState([]);
-//   const [users, setUsers] = useState([]);
+export default function UserManagement() {
+  const [roles, setRoles] = useState([]);
+  const [users, setUsers] = useState([]);
 
-//   const fetchRoles = async () => {
-//     try {
-//       const token = localStorage.getItem("token");
-//       const { data } = await axios.get("http://localhost:5000/api/roles", {
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-//       setRoles(data);
-//     } catch (err) {
-//       console.error(err);
-//       toast.error("Failed to load roles");
-//     }
-//   };
+  const fetchRoles = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const { data } = await axios.get("http://localhost:5000/api/roles", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setRoles(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load roles");
+    }
+  };
 
-//   const fetchUsers = async () => {
-//     try {
-//       const token = localStorage.getItem("token");
-//       const { data } = await axios.get("http://localhost:5000/api/users", {
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-//       setUsers(data);
-//     } catch (err) {
-//       console.error(err);
-//       toast.error("Failed to load users");
-//     }
-//   };
+  const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const { data } = await axios.get("http://localhost:5000/api/users", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUsers(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load users");
+    }
+  };
 
-//   // Initial data fetch
-//   useEffect(() => {
-//     fetchRoles();
-//     fetchUsers();
-//   }, []);
+  // Initial data fetch
+  useEffect(() => {
+    fetchRoles();
+    fetchUsers();
+  }, []);
 
-//   return (
-//     <div className="space-y-6">
-//       <div className="flex gap-3">
-//         <AddUserModal
-//           roles={roles}
-//           onUserCreated={fetchUsers}
-//           onRolesUpdated={fetchRoles}
-//         />
-//         <CreateRoleModal onRoleCreated={fetchRoles} />
-//       </div>
+  return (
+    <div className="space-y-6">
+      <div className="flex gap-3">
+        <AddUserModal
+          roles={roles}
+          onUserCreated={fetchUsers}
+          onRolesUpdated={fetchRoles}
+        />
+        <CreateRoleModal onRoleCreated={fetchRoles} />
+      </div>
 
-//       {/* Users Table - Outside the modal */}
-//       <div className="mt-6">
-//         <h2 className="text-xl font-bold mb-4">Users List</h2>
-//         <div className="overflow-x-auto">
-//           <table className="min-w-full border-collapse border border-gray-300">
-//             <thead>
-//               <tr className="bg-gray-200">
-//                 <th className="border p-3 text-left">Name</th>
-//                 <th className="border p-3 text-left">Email</th>
-//                 <th className="border p-3 text-left">Role</th>
-//                 <th className="border p-3 text-left">Status</th>
-//               </tr>
-//             </thead>
-//             <tbody>
-//               {users.length > 0 ? (
-//                 users.map((user) => (
-//                   <tr key={user._id} className="hover:bg-gray-50">
-//                     <td className="border p-3">{user.firstName} {user.lastName}</td>
-//                     <td className="border p-3">{user.email}</td>
-//                     <td className="border p-3">{user.role?.name || 'N/A'}</td>
-//                     <td className="border p-3">
-//                       <span className={`px-2 py-1 rounded-full text-xs ${
-//                         user.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-//                       }`}>
-//                         {user.status}
-//                       </span>
-//                     </td>
-//                   </tr>
-//                 ))
-//               ) : (
-//                 <tr>
-//                   <td colSpan="4" className="text-center p-3">No users found</td>
-//                 </tr>
-//               )}
-//             </tbody>
-//           </table>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
+      {/* Users Table - Outside the modal
+      <div className="mt-6">
+        <h2 className="text-xl font-bold mb-4">Users List</h2>
+        <div className="overflow-x-auto">
+          <table className="min-w-full border-collapse border border-gray-300">
+            <thead>
+              <tr className="bg-gray-200">
+                <th className="border p-3 text-left">Name</th>
+                <th className="border p-3 text-left">Email</th>
+                <th className="border p-3 text-left">Role</th>
+                <th className="border p-3 text-left">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.length > 0 ? (
+                users.map((user) => (
+                  <tr key={user._id} className="hover:bg-gray-50">
+                    <td className="border p-3">{user.firstName} {user.lastName}</td>
+                    <td className="border p-3">{user.email}</td>
+                    <td className="border p-3">{user.role?.name || 'N/A'}</td>
+                    <td className="border p-3">
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        user.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {user.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="4" className="text-center p-3">No users found</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div> */}
+    </div>
+  );
+}
 
 // import React, { useState, useEffect } from 'react';
 // import { Table, Space, Button, Modal, Form, Input, Select, message, Popconfirm, Checkbox, Pagination } from 'antd';
@@ -797,237 +797,237 @@
 // export default UserManagement;
 
 
-import React, { useState, useEffect } from 'react';
-import { Table, Button, Card, Space, Avatar, message } from 'antd';
-import { EditOutlined, DeleteOutlined, PlusOutlined, UserOutlined } from '@ant-design/icons';
-import axios from 'axios';
-import UserModal from './UserModal';
-import RoleModal from './RoleModal';
+// import React, { useState, useEffect } from 'react';
+// import { Table, Button, Card, Space, Avatar, message } from 'antd';
+// import { EditOutlined, DeleteOutlined, PlusOutlined, UserOutlined } from '@ant-design/icons';
+// import axios from 'axios';
+// import UserModal from './UserModal';
+// import RoleModal from './RoleModal';
 
-const UserManagement = () => {
-  const [users, setUsers] = useState([]);
-  const [roles, setRoles] = useState([]);
-  const [isUserModalVisible, setIsUserModalVisible] = useState(false);
-  const [isRoleModalVisible, setIsRoleModalVisible] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [currentRole, setCurrentRole] = useState(null);
-  const [loading, setLoading] = useState(false);
+// const UserManagement = () => {
+//   const [users, setUsers] = useState([]);
+//   const [roles, setRoles] = useState([]);
+//   const [isUserModalVisible, setIsUserModalVisible] = useState(false);
+//   const [isRoleModalVisible, setIsRoleModalVisible] = useState(false);
+//   const [currentUser, setCurrentUser] = useState(null);
+//   const [currentRole, setCurrentRole] = useState(null);
+//   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+//   useEffect(() => {
+//     fetchData();
+//   }, []);
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [usersRes, rolesRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/users', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        }),
-        axios.get('http://localhost:5000/api/roles', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        })
-      ]);
+//   const fetchData = async () => {
+//     setLoading(true);
+//     try {
+//       const [usersRes, rolesRes] = await Promise.all([
+//         axios.get('http://localhost:5000/api/users', {
+//           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+//         }),
+//         axios.get('http://localhost:5000/api/roles', {
+//           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+//         })
+//       ]);
       
-      setUsers(usersRes.data);
-      setRoles(rolesRes.data);
-    } catch (error) {
-      message.error('Failed to fetch data');
-    } finally {
-      setLoading(false);
-    }
-  };
+//       setUsers(usersRes.data);
+//       setRoles(rolesRes.data);
+//     } catch (error) {
+//       message.error('Failed to fetch data');
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
 
-  const handleUserCreate = () => {
-    setCurrentUser(null);
-    setIsUserModalVisible(true);
-  };
+//   const handleUserCreate = () => {
+//     setCurrentUser(null);
+//     setIsUserModalVisible(true);
+//   };
 
-  const handleUserEdit = (user) => {
-    setCurrentUser(user);
-    setIsUserModalVisible(true);
-  };
+//   const handleUserEdit = (user) => {
+//     setCurrentUser(user);
+//     setIsUserModalVisible(true);
+//   };
 
-  const handleUserDelete = async (id) => {
-    try {
-      await axios.delete(`http://localhost:5000/api/users/${id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      message.success('User deleted successfully');
-      fetchData();
-    } catch (error) {
-      message.error(error.response?.data?.message || 'Failed to delete user');
-    }
-  };
+//   const handleUserDelete = async (id) => {
+//     try {
+//       await axios.delete(`http://localhost:5000/api/users/${id}`, {
+//         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+//       });
+//       message.success('User deleted successfully');
+//       fetchData();
+//     } catch (error) {
+//       message.error(error.response?.data?.message || 'Failed to delete user');
+//     }
+//   };
 
-  const handleRoleCreate = () => {
-    setCurrentRole(null);
-    setIsRoleModalVisible(true);
-  };
+//   const handleRoleCreate = () => {
+//     setCurrentRole(null);
+//     setIsRoleModalVisible(true);
+//   };
 
-  const handleRoleEdit = (role) => {
-    setCurrentRole(role);
-    setIsRoleModalVisible(true);
-  };
+//   const handleRoleEdit = (role) => {
+//     setCurrentRole(role);
+//     setIsRoleModalVisible(true);
+//   };
 
-  const handleRoleDelete = async (id) => {
-    try {
-      await axios.delete(`http://localhost:5000/api/roles/${id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      message.success('Role deleted successfully');
-      fetchData();
-    } catch (error) {
-      message.error(error.response?.data?.message || 'Failed to delete role');
-    }
-  };
+//   const handleRoleDelete = async (id) => {
+//     try {
+//       await axios.delete(`http://localhost:5000/api/roles/${id}`, {
+//         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+//       });
+//       message.success('Role deleted successfully');
+//       fetchData();
+//     } catch (error) {
+//       message.error(error.response?.data?.message || 'Failed to delete role');
+//     }
+//   };
 
-  const userColumns = [
-    {
-      title: 'Profile',
-      dataIndex: 'profileImage',
-      render: (image) => (
-        <Avatar 
-          src={image ? `http://localhost:5000/${image}` : null} 
-          icon={<UserOutlined />} 
-          size="large"
-        />
-      ),
-    },
-    { 
-      title: 'Name', 
-      render: (_, record) => `${record.firstName} ${record.lastName}`,
-      sorter: (a, b) => `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`),
-    },
-    { 
-      title: 'Email', 
-      dataIndex: 'email',
-      sorter: (a, b) => a.email.localeCompare(b.email),
-    },
-    { 
-      title: 'Role', 
-      render: (_, record) => record.role?.name || 'N/A',
-      sorter: (a, b) => (a.role?.name || '').localeCompare(b.role?.name || ''),
-    },
-    { 
-      title: 'Status', 
-      render: (status) => (
-        <span className={`px-2 py-1 rounded-full text-xs ${
-          status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-        }`}>
-          {status}
-        </span>
-      ),
-      filters: [
-        { text: 'Active', value: 'Active' },
-        { text: 'Inactive', value: 'Inactive' },
-      ],
-      onFilter: (value, record) => record.status === value,
-    },
-    {
-      title: 'Actions',
-      render: (_, record) => (
-        <Space size="middle">
-          <Button 
-            icon={<EditOutlined />} 
-            onClick={() => handleUserEdit(record)}
-          />
-          <Button 
-            danger 
-            icon={<DeleteOutlined />} 
-            onClick={() => handleUserDelete(record._id)}
-          />
-        </Space>
-      ),
-    },
-  ];
+//   const userColumns = [
+//     {
+//       title: 'Profile',
+//       dataIndex: 'profileImage',
+//       render: (image) => (
+//         <Avatar 
+//           src={image ? `http://localhost:5000/${image}` : null} 
+//           icon={<UserOutlined />} 
+//           size="large"
+//         />
+//       ),
+//     },
+//     { 
+//       title: 'Name', 
+//       render: (_, record) => `${record.firstName} ${record.lastName}`,
+//       sorter: (a, b) => `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`),
+//     },
+//     { 
+//       title: 'Email', 
+//       dataIndex: 'email',
+//       sorter: (a, b) => a.email.localeCompare(b.email),
+//     },
+//     { 
+//       title: 'Role', 
+//       render: (_, record) => record.role?.name || 'N/A',
+//       sorter: (a, b) => (a.role?.name || '').localeCompare(b.role?.name || ''),
+//     },
+//     { 
+//       title: 'Status', 
+//       render: (status) => (
+//         <span className={`px-2 py-1 rounded-full text-xs ${
+//           status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+//         }`}>
+//           {status}
+//         </span>
+//       ),
+//       filters: [
+//         { text: 'Active', value: 'Active' },
+//         { text: 'Inactive', value: 'Inactive' },
+//       ],
+//       onFilter: (value, record) => record.status === value,
+//     },
+//     {
+//       title: 'Actions',
+//       render: (_, record) => (
+//         <Space size="middle">
+//           <Button 
+//             icon={<EditOutlined />} 
+//             onClick={() => handleUserEdit(record)}
+//           />
+//           <Button 
+//             danger 
+//             icon={<DeleteOutlined />} 
+//             onClick={() => handleUserDelete(record._id)}
+//           />
+//         </Space>
+//       ),
+//     },
+//   ];
 
-  const roleColumns = [
-    { 
-      title: 'Name', 
-      dataIndex: 'name',
-      sorter: (a, b) => a.name.localeCompare(b.name),
-    },
-    { 
-      title: 'Description', 
-      render: (desc) => desc || 'N/A',
-    },
-    {
-      title: 'Actions',
-      render: (_, record) => (
-        <Space size="middle">
-          <Button 
-            icon={<EditOutlined />} 
-            onClick={() => handleRoleEdit(record)}
-          />
-          <Button 
-            danger 
-            icon={<DeleteOutlined />} 
-            onClick={() => handleRoleDelete(record._id)}
-          />
-        </Space>
-      ),
-    },
-  ];
+//   const roleColumns = [
+//     { 
+//       title: 'Name', 
+//       dataIndex: 'name',
+//       sorter: (a, b) => a.name.localeCompare(b.name),
+//     },
+//     { 
+//       title: 'Description', 
+//       render: (desc) => desc || 'N/A',
+//     },
+//     {
+//       title: 'Actions',
+//       render: (_, record) => (
+//         <Space size="middle">
+//           <Button 
+//             icon={<EditOutlined />} 
+//             onClick={() => handleRoleEdit(record)}
+//           />
+//           <Button 
+//             danger 
+//             icon={<DeleteOutlined />} 
+//             onClick={() => handleRoleDelete(record._id)}
+//           />
+//         </Space>
+//       ),
+//     },
+//   ];
 
-  return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">User & Role Management</h1>
-        <div className="space-x-3">
-          <Button 
-            type="primary" 
-            icon={<PlusOutlined />} 
-            onClick={handleUserCreate}
-          >
-            Add User
-          </Button>
-          <Button 
-            type="primary" 
-            icon={<PlusOutlined />} 
-            onClick={handleRoleCreate}
-          >
-            Add Role
-          </Button>
-        </div>
-      </div>
+//   return (
+//     <div className="p-6">
+//       <div className="flex justify-between items-center mb-6">
+//         <h1 className="text-2xl font-bold">User & Role Management</h1>
+//         <div className="space-x-3">
+//           <Button 
+//             type="primary" 
+//             icon={<PlusOutlined />} 
+//             onClick={handleUserCreate}
+//           >
+//             Add User
+//           </Button>
+//           <Button 
+//             type="primary" 
+//             icon={<PlusOutlined />} 
+//             onClick={handleRoleCreate}
+//           >
+//             Add Role
+//           </Button>
+//         </div>
+//       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card title="Users" loading={loading}>
-          <Table
-            columns={userColumns}
-            dataSource={users}
-            rowKey="_id"
-            pagination={{ pageSize: 5 }}
-          />
-        </Card>
+//       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+//         <Card title="Users" loading={loading}>
+//           <Table
+//             columns={userColumns}
+//             dataSource={users}
+//             rowKey="_id"
+//             pagination={{ pageSize: 5 }}
+//           />
+//         </Card>
 
-        <Card title="Roles" loading={loading}>
-          <Table
-            columns={roleColumns}
-            dataSource={roles}
-            rowKey="_id"
-            pagination={{ pageSize: 5 }}
-          />
-        </Card>
-      </div>
+//         <Card title="Roles" loading={loading}>
+//           <Table
+//             columns={roleColumns}
+//             dataSource={roles}
+//             rowKey="_id"
+//             pagination={{ pageSize: 5 }}
+//           />
+//         </Card>
+//       </div>
 
-      <UserModal
-        visible={isUserModalVisible}
-        onCancel={() => setIsUserModalVisible(false)}
-        onSuccess={fetchData}
-        roles={roles}
-        currentUser={currentUser}
-      />
+//       <UserModal
+//         visible={isUserModalVisible}
+//         onCancel={() => setIsUserModalVisible(false)}
+//         onSuccess={fetchData}
+//         roles={roles}
+//         currentUser={currentUser}
+//       />
 
-      <RoleModal
-        visible={isRoleModalVisible}
-        onCancel={() => setIsRoleModalVisible(false)}
-        onSuccess={fetchData}
-        currentRole={currentRole}
-      />
-    </div>
-  );
-};
+//       <RoleModal
+//         visible={isRoleModalVisible}
+//         onCancel={() => setIsRoleModalVisible(false)}
+//         onSuccess={fetchData}
+//         currentRole={currentRole}
+//       />
+//     </div>
+//   );
+// };
 
-export default UserManagement;
+// export default UserManagement;
