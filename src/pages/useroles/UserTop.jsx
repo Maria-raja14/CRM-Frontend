@@ -242,7 +242,8 @@ export default function AddUserModal() {
                       <td className="border p-2">{user.firstName} {user.lastName}</td>
                       <td className="border p-2">{user.email}</td>
                       <td className="border p-2">{user.role?.name}</td>
-                      <td className="border p-2">{user.status}</td>
+                      <td>{user.status ? "Active" : "Inactive"}</td>
+
                     </tr>
                   ))
                 ) : (
