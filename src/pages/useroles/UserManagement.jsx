@@ -1,141 +1,3 @@
-
-
-
-
-// import { useState, useEffect } from "react";
-// import AddUserModal from "./UserTop";
-// import CreateRoleModal from "./CreateRoleModal";
-// import axios from "axios";
-// import { toast } from "react-toastify";
-
-// export default function UserManagement() {
-//   const [roles, setRoles] = useState([]);
-//   const [users, setUsers] = useState([]);
-
-//   const fetchRoles = async () => {
-//     try {
-//       const token = localStorage.getItem("token");
-//       const { data } = await axios.get("http://localhost:5000/api/roles", {
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-//       setRoles(data);
-//     } catch (err) {
-//       console.error(err);
-//       toast.error("Failed to load roles");
-//     }
-//   };
-
-//   const fetchUsers = async () => {
-//   try {
-//     const token = localStorage.getItem("token");
-//     const { data } = await axios.get("http://localhost:5000/api/users", {
-//       headers: { Authorization: `Bearer ${token}` },
-//     });
-
-//     // Only take the array part
-//     setUsers(data.users || []);
-//     console.log("users", data.users);
-//   } catch (err) {
-//     console.error(err);
-//     toast.error("Failed to load users");
-//   }
-// };
-
-
-//   // Initial data fetch
-//   useEffect(() => {
-//     fetchRoles();
-//     fetchUsers();
-//   }, []);
-
-//   return (
-//     <div className="space-y-6">
-//       {/* Action Buttons */}
-//       <div className="flex gap-3">
-//       <AddUserModal
-//   roles={roles}
-//   onUserCreated={fetchUsers}   // ✅ this is correct
-//   onRolesUpdated={fetchRoles}
-// />
-
-//         <CreateRoleModal onRoleCreated={fetchRoles} />
-//       </div>
-
-//       {/* Users Table */}
-//       <div className="overflow-x-auto rounded-2xl shadow-lg border border-gray-200">
-//         <table className="w-full text-sm text-left text-gray-600">
-//           <thead className="bg-gradient-to-r from-blue-300 to-blue-300 text-white text-sm uppercase">
-//             <tr>
-//               <th className="px-6 py-3">Profile</th>
-//               <th className="px-6 py-3">Name</th>
-//               <th className="px-6 py-3">Email</th>
-//               <th className="px-6 py-3">Mobile</th>
-//               <th className="px-6 py-3">Role</th>
-//               <th className="px-6 py-3">Status</th>
-//               <th className="px-6 py-3 text-center">Actions</th>
-//             </tr>
-//           </thead>
-//           <tbody>
-//           {users.length > 0 ? (
-//   users.map((user) => (
-//     <tr key={user._id} className="border-b hover:bg-gray-50 transition">
-//       <td className="px-6 py-4">
-//         <img
-//           src={
-//             user.profileImage ||
-//             "https://static.vecteezy.com/system/resources/previews/020/429/953/non_2x/admin-icon-vector.jpg"
-//           }
-//           alt="profile"
-//           className="w-10 h-10 rounded-full object-cover border"
-//         />
-//       </td>
-//       <td className="px-6 py-4 font-medium">
-//         {user.firstName} {user.lastName}
-//       </td>
-//       <td className="px-6 py-4">{user.email}</td>
-//       <td className="px-6 py-4">{user.mobileNumber || "-"}</td>
-//       <td className="px-6 py-4">
-//         <span className="px-3 py-1 text-xs rounded-full bg-blue-100 text-blue-600 font-semibold">
-//           {user.role?.name || "N/A"}
-//         </span>
-//       </td>
-//       <td className="px-6 py-4">
-//         <span
-//           className={`px-3 py-1 text-xs rounded-full font-semibold ${
-//             user.status === "Active" || user.status === true
-//               ? "bg-green-100 text-green-600"
-//               : "bg-red-100 text-red-600"
-//           }`}
-//         >
-//           {user.status === true ? "Active" : user.status}
-//         </span>
-//       </td>
-//       <td className="px-6 py-4 text-center">
-//         <button className="px-3 py-1 text-xs bg-yellow-100 text-yellow-600 rounded-md hover:bg-yellow-200 mr-2">
-//           Edit
-//         </button>
-//         <button className="px-3 py-1 text-xs bg-red-100 text-red-600 rounded-md hover:bg-red-200">
-//           Delete
-//         </button>
-//       </td>
-//     </tr>
-//   ))
-// ) : (
-//   <tr>
-//     <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
-//       No users found
-//     </td>
-//   </tr>
-// )}
-
-//           </tbody>
-//         </table>
-//       </div>
-//     </div>
-//   );
-// }
-
-
 import { useState, useEffect } from "react";
 import AddUserModal from "./UserTop";
 import CreateRoleModal from "./CreateRoleModal";
@@ -151,7 +13,7 @@ export default function UserManagement() {
     try {
       const token = localStorage.getItem("token");
       const { data } = await axios.get("http://localhost:5000/api/roles", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token} `},
       });
       setRoles(Array.isArray(data) ? data : data.roles || []);
     } catch (err) {
@@ -165,7 +27,7 @@ export default function UserManagement() {
     try {
       const token = localStorage.getItem("token");
       const { data } = await axios.get("http://localhost:5000/api/users", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token} `},
       });
 
       setUsers(data.users || []);

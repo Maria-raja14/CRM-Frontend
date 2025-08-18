@@ -1,6 +1,3 @@
-
-
-
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../../components/ui/dialog";

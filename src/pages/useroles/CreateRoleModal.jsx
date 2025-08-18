@@ -1,6 +1,3 @@
-
-
-
 import { useState } from "react";
 import axios from "axios";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../../components/ui/dialog";
@@ -31,7 +28,7 @@ export default function CreateRoleModal({ onRoleCreated }) {
       const { data } = await axios.post(
         "http://localhost:5000/api/roles",
         roleData,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token} `} }
       );
 
       toast.success("Role created successfully!");
