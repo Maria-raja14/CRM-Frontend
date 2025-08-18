@@ -117,7 +117,7 @@ export default function AddUserModal({ onUserCreated }) {
           </button>
         </DialogTrigger>
 
-        <DialogContent>
+        <DialogContent className="sm:max-w-3xl ">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold">
               Add New User
