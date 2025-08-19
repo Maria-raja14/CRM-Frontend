@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -20,12 +18,12 @@ export default function CreateLeads() {
     companyName: "",
     industry: "",
     requirement: "",
-    status: "New",
+    status: "Warm",
     assignTo: "",
     address: "",
-    priorityLevel: "Warm",
+
     followUpDate: "",
-    leadStatus: "",
+
     notes: "",
   });
 
@@ -140,13 +138,7 @@ export default function CreateLeads() {
     },
     {
       title: "Lead Management",
-      fields: [
-        "status",
-        "assignTo",
-        "priorityLevel",
-        "followUpDate",
-        "leadStatus",
-      ],
+      fields: ["status", "assignTo", "followUpDate"],
     },
     { title: "Additional Information", fields: ["notes"] },
   ];
@@ -175,8 +167,7 @@ export default function CreateLeads() {
 
   const getFieldOptions = (field) => {
     const options = {
-      status: ["New", "Follow-up", "Converted", "Closed"],
-      priorityLevel: ["Hot", "Warm", "Cold", "Junk"],
+      status: ["Hot", "Warm", "Cold", "Junk"],
       source: [
         "Website",
         "Referral",

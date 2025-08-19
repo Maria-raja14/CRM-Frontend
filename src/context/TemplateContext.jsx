@@ -20,12 +20,12 @@ export const TemplateProvider = ({ children }) => {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
 
-  useEffect(() => {
-    axios
-      .get("http://localhost:5000/api/auth/template/readTemp")
-      .then((response) => setTemplates(response.data))
-      .catch((error) => console.error("Error fetching templates:", error));
-  }, []);
+  // useEffect(() => {
+  //   axios
+  //     .get("http://localhost:5000/api/auth/template/readTemp")
+  //     .then((response) => setTemplates(response.data))
+  //     .catch((error) => console.error("Error fetching templates:", error));
+  // }, []);
 
   return (
     <TemplateContext.Provider

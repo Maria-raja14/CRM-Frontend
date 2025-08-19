@@ -46,9 +46,9 @@ export default function UserManagement() {
   return (
     <div className="space-y-6">
       {/* Top Buttons */}
-      <div className="flex gap-3">
+      <div className="flex gap-4 justify-end">
         <AddUserModal roles={roles} onUserCreated={fetchUsers} />
-        <CreateRoleModal onRoleCreated={fetchRoles} />
+        <CreateRoleModal  onRoleCreated={fetchRoles} />
       </div>
 
       {/* Tables Side by Side */}

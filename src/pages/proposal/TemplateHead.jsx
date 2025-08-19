@@ -29,12 +29,12 @@ const TemplateHead = () => {
   const editorRef = useRef(null);
 
   // Fetch templates from API
-  useEffect(() => {
-    axios
-      .get("http://localhost:5000/api/auth/template/readTemp")
-      .then((response) => setTemplates(response.data))
-      .catch((error) => console.error("Error fetching templates:", error));
-  }, []);
+  // useEffect(() => {
+  //   axios
+  //     .get("http://localhost:5000/api/auth/template/readTemp")
+  //     .then((response) => setTemplates(response.data))
+  //     .catch((error) => console.error("Error fetching templates:", error));
+  // }, []);
 
   // Delete template
   const handleDelete = async (_id) => {
