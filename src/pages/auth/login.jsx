@@ -1,6 +1,7 @@
 // import React, { useState } from "react";
 // import axios from "axios";
 // import { Link, useNavigate } from "react-router-dom";
+// import { initSocket } from "../../utils/socket"; // unga socket file path
 
 // const Login = () => {
 //   const [email, setEmail] = useState("");
@@ -10,30 +11,46 @@
 //   const navigate = useNavigate();
 
 //   const handleLogin = async (e) => {
-//     e.preventDefault();
-//     try {
-//       const response = await axios.post("http://localhost:5000/api/users/login", {
+//   e.preventDefault();
+//   try {
+//     const response = await axios.post(
+//       "http://localhost:5000/api/users/login",
+//       {
 //         email,
 //         password,
-//       });
-
-//       if (response.data.token) {
-//         localStorage.setItem("token", response.data.token); // ✅ Store token
-//         setMessage(response.data.message);
-//         setIsError(false);
-//         setTimeout(() => {
-//           navigate("/layout"); // or "/dashboard" based on your routing
-//         }, 1500);
-//       } else {
-//         setMessage("Token missing in response");
-//         setIsError(true);
 //       }
-//     } catch (error) {
-//       console.error("Login Error:", error.response?.data);
-//       setMessage(error.response?.data?.message || "Login failed");
+//     );
+
+//     if (response.data.token) {
+//       // ✅ Save user & token
+//       const loggedInUser = {
+//         _id: response.data._id,
+//         name: response.data.name,
+//         email: response.data.email,
+//         role: response.data.role,
+//       };
+//       localStorage.setItem("user", JSON.stringify(loggedInUser));
+//       localStorage.setItem("token", response.data.token);
+
+//       // 🔹 Connect socket immediately after login
+//   initSocket(loggedInUser._id);
+
+//       setMessage(response.data.message);
+//       setIsError(false);
+
+//       setTimeout(() => {
+//         navigate("/layout"); // or "/dashboard"
+//       }, 1500);
+//     } else {
+//       setMessage("Token missing in response");
 //       setIsError(true);
 //     }
-//   };
+//   } catch (error) {
+//     console.error("Login Error:", error.response?.data);
+//     setMessage(error.response?.data?.message || "Login failed");
+//     setIsError(true);
+//   }
+// };
 
 //   return (
 //     <div className="flex flex-col justify-center items-center min-h-screen bg-gray-200 px-4 sm:px-6">
@@ -50,7 +67,11 @@
 //       <div className="bg-white p-6 sm:p-6 rounded-2xl shadow-2xl w-full sm:w-[450px]">
 //         {/* Message Display */}
 //         {message && (
-//           <p className={`text-center text-md ${isError ? "text-red-500" : "text-green-500"}`}>
+//           <p
+//             className={`text-center text-md ${
+//               isError ? "text-red-500" : "text-green-500"
+//             }`}
+//           >
 //             {message}
 //           </p>
 //         )}
@@ -113,10 +134,12 @@
 
 // export default Login;
 
+
+
 import React, { useState } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
-import { initSocket } from "../../utils/socket"; // unga socket file path
+import { initSocket } from "../../utils/socket";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -126,46 +149,47 @@ const Login = () => {
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
-  e.preventDefault();
-  try {
-    const response = await axios.post(
-      "http://localhost:5000/api/users/login",
-      {
-        email,
-        password,
+    e.preventDefault();
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/users/login",
+        {
+          email,
+          password,
+        }
+      );
+
+      if (response.data.token) {
+        // ✅ Save user & token
+        const loggedInUser = {
+          _id: response.data._id,
+          name: response.data.name,
+          email: response.data.email,
+          role: response.data.role,
+          permissions: response.data.permissions || {} // Include permissions from backend
+        };
+        localStorage.setItem("user", JSON.stringify(loggedInUser));
+        localStorage.setItem("token", response.data.token);
+
+        // 🔹 Connect socket immediately after login
+        initSocket(loggedInUser._id);
+
+        setMessage(response.data.message);
+        setIsError(false);
+
+        setTimeout(() => {
+          navigate("/layout");
+        }, 1500);
+      } else {
+        setMessage("Token missing in response");
+        setIsError(true);
       }
-    );
-
-    if (response.data.token) {
-      // ✅ Save user & token
-      const loggedInUser = {
-        _id: response.data._id,
-        name: response.data.name,
-        email: response.data.email,
-        role: response.data.role,
-      };
-      localStorage.setItem("user", JSON.stringify(loggedInUser));
-      localStorage.setItem("token", response.data.token);
-
-      // 🔹 Connect socket immediately after login
-  initSocket(loggedInUser._id);
-
-      setMessage(response.data.message);
-      setIsError(false);
-
-      setTimeout(() => {
-        navigate("/layout"); // or "/dashboard"
-      }, 1500);
-    } else {
-      setMessage("Token missing in response");
+    } catch (error) {
+      console.error("Login Error:", error.response?.data);
+      setMessage(error.response?.data?.message || "Login failed");
       setIsError(true);
     }
-  } catch (error) {
-    console.error("Login Error:", error.response?.data);
-    setMessage(error.response?.data?.message || "Login failed");
-    setIsError(true);
-  }
-};
+  };
 
   return (
     <div className="flex flex-col justify-center items-center min-h-screen bg-gray-200 px-4 sm:px-6">
