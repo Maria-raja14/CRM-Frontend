@@ -18,7 +18,7 @@ export default function UserManagement() {
       setRoles(Array.isArray(data) ? data : data.roles || []);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to load roles");
+      //toast.error("Failed to load roles");
     }
   };
 
@@ -33,7 +33,7 @@ export default function UserManagement() {
       setUsers(data.users || []);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to load users");
+      //toast.error("Failed to load users");
     }
   };
 
