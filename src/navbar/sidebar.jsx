@@ -393,6 +393,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   useEffect(() => {
     // Get user permissions from localStorage
     const userData = JSON.parse(localStorage.getItem("user") || "{}");
+    console.log(userData)
     setUserPermissions(userData.permissions || {});
   }, []);
 

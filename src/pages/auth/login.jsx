@@ -134,9 +134,7 @@
 
 // export default Login;
 
-
-
-import React, { useState } from "react";
+import { useState } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { initSocket } from "../../utils/socket";
@@ -153,33 +151,33 @@ const Login = () => {
     try {
       const response = await axios.post(
         "http://localhost:5000/api/users/login",
-        {
-          email,
-          password,
-        }
+        { email, password }
       );
 
-      if (response.data.token) {
-        // ✅ Save user & token
+      const data = response.data;
+
+      if (data.token) {
+        // ✅ Save user & token to localStorage
         const loggedInUser = {
-          _id: response.data._id,
-          name: response.data.name,
-          email: response.data.email,
-          role: response.data.role,
-          permissions: response.data.permissions || {} // Include permissions from backend
+          _id: data._id,
+          name: data.name,
+          email: data.email,
+          role: data.role,
+          permissions: data.permissions || {}
         };
+
         localStorage.setItem("user", JSON.stringify(loggedInUser));
-        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("token", data.token);
 
         // 🔹 Connect socket immediately after login
         initSocket(loggedInUser._id);
 
-        setMessage(response.data.message);
+        setMessage("Login successful!");
         setIsError(false);
 
         setTimeout(() => {
-          navigate("/layout");
-        }, 1500);
+          navigate("/layout"); // Redirect to main layout/dashboard
+        }, 1000);
       } else {
         setMessage("Token missing in response");
         setIsError(true);
@@ -196,33 +194,27 @@ const Login = () => {
       {/* Logo */}
       <div className="mb-6">
         <img
-          src="https://tzi.zaarapp.com//storage/uploads/logo/logo-dark.png?1741399520"
-          alt="TZI Logo"
+          src="https://tzi.zaarapp.com//storage/uploads/logo/logo-dark.png"
+          alt="Logo"
           className="w-32 sm:w-45 h-auto mx-auto"
         />
       </div>
 
       {/* Login Card */}
-      <div className="bg-white p-6 sm:p-6 rounded-2xl shadow-2xl w-full sm:w-[450px]">
-        {/* Message Display */}
+      <div className="bg-white p-6 rounded-2xl shadow-2xl w-full sm:w-[450px]">
         {message && (
-          <p
-            className={`text-center text-md ${
-              isError ? "text-red-500" : "text-green-500"
-            }`}
-          >
+          <p className={`text-center text-md ${isError ? "text-red-500" : "text-green-500"}`}>
             {message}
           </p>
         )}
         <h2 className="text-2xl font-semibold text-gray-800 mb-6">Login</h2>
 
-        {/* Login Form */}
-        <form className="space-y-2" onSubmit={handleLogin}>
-          <div className="mb-4">
+        <form className="space-y-4" onSubmit={handleLogin}>
+          <div>
             <label className="text-gray-700 font-medium">Email</label>
             <input
               type="email"
-              className="w-full border border-gray-300 text-gray-900 rounded-lg px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:text-gray-500 focus:bg-blue-100"
+              className="w-full border border-gray-300 text-gray-900 rounded-lg px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -230,11 +222,11 @@ const Login = () => {
             />
           </div>
 
-          <div className="mb-4">
+          <div>
             <label className="text-gray-700 font-medium">Password</label>
             <input
               type="password"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-blue-100"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -242,19 +234,12 @@ const Login = () => {
             />
           </div>
 
-          {/* Forgot Password */}
-          <div className="mb-8">
-            <p className="text-left">
-              <Link
-                to="/forgot-password"
-                className="text-blue-600 hover:underline text-md mb-2"
-              >
-                Forgot your password?
-              </Link>
-            </p>
+          <div className="text-right mb-4">
+            <Link to="/forgot-password" className="text-blue-600 hover:underline text-sm">
+              Forgot your password?
+            </Link>
           </div>
 
-          {/* Login Button */}
           <button
             type="submit"
             className="w-full text-white py-2 rounded-lg hover:bg-blue-700 transition"
@@ -265,7 +250,6 @@ const Login = () => {
         </form>
       </div>
 
-      {/* Footer */}
       <p className="mt-6 text-gray-600 text-sm">© 2025 TZI</p>
     </div>
   );
