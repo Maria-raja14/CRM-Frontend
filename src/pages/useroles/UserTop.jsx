@@ -1,11 +1,20 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../../components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../../components/ui/dialog";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-export default function AddUserModal({ onUserCreated }) {   // ✅ accept callback
+
+export default function AddUserModal({ onUserCreated }) {
+  // ✅ accept callback
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [dob, setDob] = useState(null);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -108,9 +117,11 @@ export default function AddUserModal({ onUserCreated }) {   // ✅ accept callba
           </button>
         </DialogTrigger>
 
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="sm:max-w-3xl ">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Add New User</DialogTitle>
+            <DialogTitle className="text-lg font-bold">
+              Add New User
+            </DialogTitle>
           </DialogHeader>
 
           {/* Profile Photo Upload */}
@@ -153,72 +164,78 @@ export default function AddUserModal({ onUserCreated }) {   // ✅ accept callba
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="p-5 space-y-5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <input
-                type="text"
-                name="firstName"
-                placeholder="First Name"
-                value={formData.firstName}
-                onChange={handleChange}
-                className="p-2 border rounded-md"
-                required
-              />
-              <input
-                type="text"
-                name="lastName"
-                placeholder="Last Name"
-                value={formData.lastName}
-                onChange={handleChange}
-                className="p-2 border rounded-md"
-                required
-              />
-            </div>
+          <form
+            onSubmit={handleSubmit}
+            className="grid grid-cols-1 sm:grid-cols-2 gap-5 p-5"
+          >
+            {/* First Name */}
+            <input
+              type="text"
+              name="firstName"
+              placeholder="First Name"
+              value={formData.firstName}
+              onChange={handleChange}
+              className="p-2 border rounded-md"
+              required
+            />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <select
-                name="gender"
-                value={formData.gender}
-                onChange={handleChange}
-                className="p-2 border rounded-md"
-                required
-              >
-                <option value="">Select Gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </select>
+            {/* Last Name */}
+            <input
+              type="text"
+              name="lastName"
+              placeholder="Last Name"
+              value={formData.lastName}
+              onChange={handleChange}
+              className="p-2 border rounded-md"
+              required
+            />
 
-              <input
-                type="date"
-                name="dateOfBirth"
-                value={formData.dateOfBirth}
-                onChange={handleChange}
-                className="p-2 border rounded-md"
-              />
-            </div>
+            {/* Gender */}
+            <select
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
+              className="p-2 border rounded-md"
+              required
+            >
+              <option value="">Select Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <input
-                type="text"
-                name="mobileNumber"
-                placeholder="Mobile Number"
-                value={formData.mobileNumber}
-                onChange={handleChange}
-                className="p-2 border rounded-md"
-                required
-              />
-              <input
-                type="email"
-                name="email"
-                placeholder="Email"
-                value={formData.email}
-                onChange={handleChange}
-                className="p-2 border rounded-md"
-                required
-              />
-            </div>
+            {/* DOB */}
+            <input
+              type="date"
+              name="dateOfBirth"
+              value={formData.dateOfBirth}
+              onChange={handleChange}
+              className="p-2 border rounded-md"
+            />
 
+            {/* Mobile Number */}
+            <input
+              type="text"
+              name="mobileNumber"
+              placeholder="Mobile Number"
+              value={formData.mobileNumber}
+              onChange={handleChange}
+              className="p-2 border rounded-md"
+              required
+            />
+
+            {/* Email */}
+            <input
+              type="email"
+              name="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={handleChange}
+              className="p-2 border rounded-md"
+              required
+            />
+
+            {/* Password */}
             <input
               type="text"
               name="password"
@@ -229,15 +246,26 @@ export default function AddUserModal({ onUserCreated }) {   // ✅ accept callba
               required
             />
 
+            {/* Password */}
+            <input
+              type="text"
+              name="password"
+              placeholder="Confirm Password"
+              className="p-2 border rounded-md"
+              required
+            />
+
+            {/* Address (full width row) */}
             <textarea
               name="address"
               placeholder="Address"
               value={formData.address}
               onChange={handleChange}
-              className="p-2 border rounded-md"
+              className="p-2 border rounded-md sm:col-span-2"
               required
             />
 
+            {/* Role */}
             <select
               name="role"
               value={formData.role}
@@ -253,6 +281,7 @@ export default function AddUserModal({ onUserCreated }) {   // ✅ accept callba
               ))}
             </select>
 
+            {/* Status */}
             <select
               name="status"
               value={formData.status}
@@ -264,7 +293,8 @@ export default function AddUserModal({ onUserCreated }) {   // ✅ accept callba
               <option value="Inactive">Inactive</option>
             </select>
 
-            <div className="flex justify-end gap-3 border-t pt-3">
+            {/* Buttons (span full row) */}
+            <div className="flex justify-end gap-3 border-t pt-3 sm:col-span-2">
               <button
                 type="button"
                 onClick={handleCancel}
@@ -284,6 +314,7 @@ export default function AddUserModal({ onUserCreated }) {   // ✅ accept callba
       </Dialog>
     </div>
   );
+
 }//original
 
 
@@ -294,3 +325,4 @@ export default function AddUserModal({ onUserCreated }) {   // ✅ accept callba
 
                                                   
  
+
