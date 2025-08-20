@@ -278,6 +278,7 @@
 // export default Sidebar;//original
 
 
+// components/Sidebar.jsx
 import React, { useState, useEffect } from "react";
 import {
   Home,
@@ -306,8 +307,8 @@ const IconCircle = ({ children }) => (
   </div>
 );
 
-const SidebarItem = ({ to, icon, label, exact = false, onClick, hasAccess = true }) => {
-  if (!hasAccess) return null;
+const SidebarItem = ({ to, icon, label, exact = false, onClick, hasPermission = true }) => {
+  if (!hasPermission) return null;
   
   return (
     <NavLink
@@ -331,8 +332,8 @@ const SidebarItem = ({ to, icon, label, exact = false, onClick, hasAccess = true
   );
 };
 
-const Collapsible = ({ label, icon, open, onToggle, children, hasAccess = true }) => {
-  if (!hasAccess) return null;
+const Collapsible = ({ label, icon, open, onToggle, children, hasPermission = true }) => {
+  if (!hasPermission) return null;
   
   return (
     <div>
@@ -358,8 +359,8 @@ const Collapsible = ({ label, icon, open, onToggle, children, hasAccess = true }
   );
 };
 
-const SmallLink = ({ to, icon, label, hasAccess = true }) => {
-  if (!hasAccess) return null;
+const SmallLink = ({ to, icon, label, hasPermission = true }) => {
+  if (!hasPermission) return null;
   
   return (
     <NavLink
@@ -387,13 +388,40 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   const [showExpenses, setShowExpenses] = useState(false);
   const [showReports, setShowReports] = useState(false);
   const [userPermissions, setUserPermissions] = useState({});
+  const [isAdmin, setIsAdmin] = useState(false);
   
   const location = useLocation();
 
   useEffect(() => {
-    // Get user permissions from localStorage
-    const userData = JSON.parse(localStorage.getItem("user") || "{}");
-    setUserPermissions(userData.permissions || {});
+    // Get user data from localStorage
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    
+    // Check if user is admin (role name is "Admin")
+    if (user.role && user.role.name === "Admin") {
+      setIsAdmin(true);
+      // Admin gets all permissions
+      setUserPermissions({
+        dashboard: true,
+        leads: true,
+        deals: true,
+        pipeline: true,
+        invoice: true,
+        proposal: true,
+        templates: true,
+        calendar: true,
+        activityList: true,
+        expenses: true,
+        areaExpenses: true,
+        dealReports: true,
+        proposalReports: true,
+        pipelineReports: true,
+        paymentHistory: true,
+        usersRoles: true,
+      });
+    } else if (user.role && user.role.permissions) {
+      // Regular users get permissions based on their role
+      setUserPermissions(user.role.permissions);
+    }
   }, []);
 
   return (
@@ -445,7 +473,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           to="/leads"
           icon={<User size={18} className="text-gray-700" />}
           label="Leads"
-          hasAccess={userPermissions.leads}
+          hasPermission={isAdmin || userPermissions.leads}
         />
 
         {/* Deals */}
@@ -454,19 +482,19 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           icon={<Tag size={18} className="text-gray-700" />}
           open={showDeals}
           onToggle={() => setShowDeals((s) => !s)}
-          hasAccess={userPermissions.deals}
+          hasPermission={isAdmin || userPermissions.deals || userPermissions.pipeline}
         >
           <SmallLink 
             to="/deals" 
             icon={<Tag size={16} />} 
             label="All deals" 
-            hasAccess={userPermissions.deals_all}
+            hasPermission={isAdmin || userPermissions.deals}
           />
           <SmallLink 
             to="/pipeline" 
             icon={<List size={16} />} 
             label="Pipeline" 
-            hasAccess={userPermissions.deals_pipeline}
+            hasPermission={isAdmin || userPermissions.pipeline}
           />
         </Collapsible>
 
@@ -486,7 +514,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             </svg>
           }
           label="Invoices"
-          hasAccess={userPermissions.invoices}
+          hasPermission={isAdmin || userPermissions.invoice}
         />
 
         {/* Proposal */}
@@ -495,19 +523,19 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           icon={<Edit size={18} className="text-gray-700" />}
           open={showProposal}
           onToggle={() => setShowProposal((s) => !s)}
-          hasAccess={userPermissions.proposal}
+          hasPermission={isAdmin || userPermissions.proposal || userPermissions.templates}
         >
           <SmallLink
             to="/proposal"
             icon={<FileText size={16} />}
             label="Proposal list"
-            hasAccess={userPermissions.proposal_list}
+            hasPermission={isAdmin || userPermissions.proposal}
           />
           <SmallLink
             to="/template"
             icon={<Layout size={16} />}
             label="Templates"
-            hasAccess={userPermissions.proposal_templates}
+            hasPermission={isAdmin || userPermissions.templates}
           />
         </Collapsible>
 
@@ -517,19 +545,19 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           icon={<Calendar size={18} className="text-gray-700" />}
           open={showActivities}
           onToggle={() => setShowActivities((s) => !s)}
-          hasAccess={userPermissions.activities}
+          hasPermission={isAdmin || userPermissions.calendar || userPermissions.activityList}
         >
           <SmallLink
             to="/calendar"
             icon={<Calendar size={16} />}
             label="Calendar View"
-            hasAccess={userPermissions.activities_calendar}
+            hasPermission={isAdmin || userPermissions.calendar}
           />
           <SmallLink
             to="/list"
             icon={<List size={16} />}
             label="Activity list"
-            hasAccess={userPermissions.activities_list}
+            hasPermission={isAdmin || userPermissions.activityList}
           />
         </Collapsible>
 
@@ -539,19 +567,19 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           icon={<DollarSign size={18} className="text-gray-700" />}
           open={showExpenses}
           onToggle={() => setShowExpenses((s) => !s)}
-          hasAccess={userPermissions.expenses}
+          hasPermission={isAdmin || userPermissions.expenses || userPermissions.areaExpenses}
         >
           <SmallLink
             to="/expenses"
             icon={<DollarSign size={16} />}
             label="Expenses"
-            hasAccess={userPermissions.expenses_all}
+            hasPermission={isAdmin || userPermissions.expenses}
           />
           <SmallLink
             to="/area-expenses"
             icon={<MapPin size={16} />}
             label="Area of Expenses"
-            hasAccess={userPermissions.expenses_area}
+            hasPermission={isAdmin || userPermissions.areaExpenses}
           />
         </Collapsible>
 
@@ -561,40 +589,46 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           icon={<Calendar size={18} className="text-gray-700" />}
           open={showReports}
           onToggle={() => setShowReports((s) => !s)}
-          hasAccess={userPermissions.reports}
+          hasPermission={
+            isAdmin || 
+            userPermissions.dealReports || 
+            userPermissions.proposalReports || 
+            userPermissions.pipelineReports || 
+            userPermissions.paymentHistory
+          }
         >
           <SmallLink 
             to="/report" 
             icon={<Tag size={16} />} 
             label="Deals" 
-            hasAccess={userPermissions.reports_deals}
+            hasPermission={isAdmin || userPermissions.dealReports}
           />
           <SmallLink
             to="/report/proposal"
             icon={<Edit size={16} />}
             label="Proposal"
-            hasAccess={userPermissions.reports_proposal}
+            hasPermission={isAdmin || userPermissions.proposalReports}
           />
           <SmallLink
             to="/pipeline-charts"
             icon={<List size={16} />}
             label="Pipeline"
-            hasAccess={userPermissions.reports_pipeline}
+            hasPermission={isAdmin || userPermissions.pipelineReports}
           />
           <SmallLink
             to="/payment"
             icon={<CreditCard size={16} />}
             label="Payment history"
-            hasAccess={userPermissions.reports_payment}
+            hasPermission={isAdmin || userPermissions.paymentHistory}
           />
         </Collapsible>
 
-        {/* Users & Roles - Only show if user has admin access */}
+        {/* Users & Roles */}
         <SidebarItem
           to="/user/roles"
           icon={<Shield size={18} />}
           label="Users & Roles"
-          hasAccess={userPermissions.admin_access}
+          hasPermission={isAdmin || userPermissions.usersRoles}
         />
       </nav>
     </aside>

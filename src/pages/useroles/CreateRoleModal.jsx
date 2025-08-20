@@ -103,32 +103,44 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+// Import all sidebar icons
+import {
+  Home,
+  Briefcase,
+  Users,
+  Tag,
+  List,
+  Calendar,
+  Shield,
+  DollarSign,
+  MapPin,
+  CreditCard,
+  Edit,
+  Layout,
+  FileText,
+} from "react-feather";
+
 export default function CreateRoleModal({ onRoleCreated }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [roleData, setRoleData] = useState({
     name: "",
     permissions: {
-      dashboard: true,
-      leads: true,
-      deals: true,
-      deals_all: true,
-      deals_pipeline: true,
-      invoices: true,
-      proposal: true,
-      proposal_list: true,
-      proposal_templates: true,
-      activities: true,
-      activities_calendar: true,
-      activities_list: true,
-      expenses: true,
-      expenses_all: true,
-      expenses_area: true,
-      reports: true,
-      reports_deals: true,
-      reports_proposal: true,
-      reports_pipeline: true,
-      reports_payment: true,
-      admin_access: false
+      dashboard: false,
+      leads: false,
+      deals: false,
+      pipeline: false,
+      invoice: false,
+      proposal: false,
+      templates: false,
+      calendar: false,
+      activityList: false,
+      expenses: false,
+      areaExpenses: false,
+      dealReports: false,
+      proposalReports: false,
+      pipelineReports: false,
+      paymentHistory: false,
+      usersRoles: false,
     }
   });
 
@@ -142,36 +154,26 @@ export default function CreateRoleModal({ onRoleCreated }) {
     }));
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setRoleData((prev) => ({ ...prev, [name]: value }));
-  };
-
   const handleCancel = () => {
     setRoleData({
       name: "",
       permissions: {
-        dashboard: true,
-        leads: true,
-        deals: true,
-        deals_all: true,
-        deals_pipeline: true,
-        invoices: true,
-        proposal: true,
-        proposal_list: true,
-        proposal_templates: true,
-        activities: true,
-        activities_calendar: true,
-        activities_list: true,
-        expenses: true,
-        expenses_all: true,
-        expenses_area: true,
-        reports: true,
-        reports_deals: true,
-        reports_proposal: true,
-        reports_pipeline: true,
-        reports_payment: true,
-        admin_access: false
+        dashboard: false,
+        leads: false,
+        deals: false,
+        pipeline: false,
+        invoice: false,
+        proposal: false,
+        templates: false,
+        calendar: false,
+        activityList: false,
+        expenses: false,
+        areaExpenses: false,
+        dealReports: false,
+        proposalReports: false,
+        pipelineReports: false,
+        paymentHistory: false,
+        usersRoles: false,
       }
     });
     setIsDialogOpen(false);
@@ -184,7 +186,7 @@ export default function CreateRoleModal({ onRoleCreated }) {
       const { data } = await axios.post(
         "http://localhost:5000/api/roles",
         roleData,
-        { headers: { Authorization: `Bearer ${token} `} }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       toast.success("Role created successfully!");
@@ -206,9 +208,9 @@ export default function CreateRoleModal({ onRoleCreated }) {
           </button>
         </DialogTrigger>
 
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Create New Role</DialogTitle>
+            <DialogTitle className="text-lg font-bold">Create New Role with Permissions</DialogTitle>
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-4 p-3">
@@ -217,240 +219,189 @@ export default function CreateRoleModal({ onRoleCreated }) {
               name="name"
               placeholder="Role Name"
               value={roleData.name}
-              onChange={handleChange}
+              onChange={(e) => setRoleData({...roleData, name: e.target.value})}
               className="p-2 border rounded-md w-full"
               required
             />
             
             <div className="border rounded-md p-4">
-              <h3 className="font-semibold mb-3">Permissions</h3>
+              <h3 className="font-semibold mb-3">Sidebar Permissions</h3>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {/* Dashboard */}
-                <label className="flex items-center">
+                <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
                   <input
                     type="checkbox"
                     checked={roleData.permissions.dashboard}
                     onChange={() => handlePermissionChange("dashboard")}
-                    className="mr-2"
                   />
-                  Dashboard
+                  <Home size={16} />
+                  <span>Dashboard</span>
                 </label>
                 
                 {/* Leads */}
-                <label className="flex items-center">
+                <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
                   <input
                     type="checkbox"
                     checked={roleData.permissions.leads}
                     onChange={() => handlePermissionChange("leads")}
-                    className="mr-2"
                   />
-                  Leads
+                  <Users size={16} />
+                  <span>Leads</span>
                 </label>
                 
                 {/* Deals */}
-                <div className="col-span-2">
-                  <label className="flex items-center font-medium">
-                    <input
-                      type="checkbox"
-                      checked={roleData.permissions.deals}
-                      onChange={() => handlePermissionChange("deals")}
-                      className="mr-2"
-                    />
-                    Deals
-                  </label>
-                  <div className="pl-6 mt-1 space-y-1">
-                    <label className="flex items-center text-sm">
-                      <input
-                        type="checkbox"
-                        checked={roleData.permissions.deals_all}
-                        onChange={() => handlePermissionChange("deals_all")}
-                        className="mr-2"
-                      />
-                      All Deals
-                    </label>
-                    <label className="flex items-center text-sm">
-                      <input
-                        type="checkbox"
-                        checked={roleData.permissions.deals_pipeline}
-                        onChange={() => handlePermissionChange("deals_pipeline")}
-                        className="mr-2"
-                      />
-                      Pipeline
-                    </label>
-                  </div>
-                </div>
-                
-                {/* Invoices */}
-                <label className="flex items-center">
+                <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
                   <input
                     type="checkbox"
-                    checked={roleData.permissions.invoices}
-                    onChange={() => handlePermissionChange("invoices")}
-                    className="mr-2"
+                    checked={roleData.permissions.deals}
+                    onChange={() => handlePermissionChange("deals")}
                   />
-                  Invoices
+                  <Tag size={16} />
+                  <span>All Deals</span>
+                </label>
+                
+                {/* Pipeline */}
+                <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="checkbox"
+                    checked={roleData.permissions.pipeline}
+                    onChange={() => handlePermissionChange("pipeline")}
+                  />
+                  <List size={16} />
+                  <span>Pipeline</span>
+                </label>
+                
+                {/* Invoice */}
+                <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="checkbox"
+                    checked={roleData.permissions.invoice}
+                    onChange={() => handlePermissionChange("invoice")}
+                  />
+                  <FileText size={16} />
+                  <span>Invoices</span>
                 </label>
                 
                 {/* Proposal */}
-                <div className="col-span-2">
-                  <label className="flex items-center font-medium">
-                    <input
-                      type="checkbox"
-                      checked={roleData.permissions.proposal}
-                      onChange={() => handlePermissionChange("proposal")}
-                      className="mr-2"
-                    />
-                    Proposal
-                  </label>
-                  <div className="pl-6 mt-1 space-y-1">
-                    <label className="flex items-center text-sm">
-                      <input
-                        type="checkbox"
-                        checked={roleData.permissions.proposal_list}
-                        onChange={() => handlePermissionChange("proposal_list")}
-                        className="mr-2"
-                      />
-                      Proposal List
-                    </label>
-                    <label className="flex items-center text-sm">
-                      <input
-                        type="checkbox"
-                        checked={roleData.permissions.proposal_templates}
-                        onChange={() => handlePermissionChange("proposal_templates")}
-                        className="mr-2"
-                      />
-                      Templates
-                    </label>
-                  </div>
-                </div>
-                
-                {/* Activities */}
-                <div className="col-span-2">
-                  <label className="flex items-center font-medium">
-                    <input
-                      type="checkbox"
-                      checked={roleData.permissions.activities}
-                      onChange={() => handlePermissionChange("activities")}
-                      className="mr-2"
-                    />
-                    Activities
-                  </label>
-                  <div className="pl-6 mt-1 space-y-1">
-                    <label className="flex items-center text-sm">
-                      <input
-                        type="checkbox"
-                        checked={roleData.permissions.activities_calendar}
-                        onChange={() => handlePermissionChange("activities_calendar")}
-                        className="mr-2"
-                      />
-                      Calendar View
-                    </label>
-                    <label className="flex items-center text-sm">
-                      <input
-                        type="checkbox"
-                        checked={roleData.permissions.activities_list}
-                        onChange={() => handlePermissionChange("activities_list")}
-                        className="mr-2"
-                      />
-                      Activity List
-                    </label>
-                  </div>
-                </div>
-                
-                {/* Expenses */}
-                <div className="col-span-2">
-                  <label className="flex items-center font-medium">
-                    <input
-                      type="checkbox"
-                      checked={roleData.permissions.expenses}
-                      onChange={() => handlePermissionChange("expenses")}
-                      className="mr-2"
-                    />
-                    Expenses
-                  </label>
-                  <div className="pl-6 mt-1 space-y-1">
-                    <label className="flex items-center text-sm">
-                      <input
-                        type="checkbox"
-                        checked={roleData.permissions.expenses_all}
-                        onChange={() => handlePermissionChange("expenses_all")}
-                        className="mr-2"
-                      />
-                      Expenses
-                    </label>
-                    <label className="flex items-center text-sm">
-                      <input
-                        type="checkbox"
-                        checked={roleData.permissions.expenses_area}
-                        onChange={() => handlePermissionChange("expenses_area")}
-                        className="mr-2"
-                      />
-                      Area of Expenses
-                    </label>
-                  </div>
-                </div>
-                
-                {/* Reports */}
-                <div className="col-span-2">
-                  <label className="flex items-center font-medium">
-                    <input
-                      type="checkbox"
-                      checked={roleData.permissions.reports}
-                      onChange={() => handlePermissionChange("reports")}
-                      className="mr-2"
-                    />
-                    Reports
-                  </label>
-                  <div className="pl-6 mt-1 space-y-1">
-                    <label className="flex items-center text-sm">
-                      <input
-                        type="checkbox"
-                        checked={roleData.permissions.reports_deals}
-                        onChange={() => handlePermissionChange("reports_deals")}
-                        className="mr-2"
-                      />
-                      Deals Reports
-                    </label>
-                    <label className="flex items-center text-sm">
-                      <input
-                        type="checkbox"
-                        checked={roleData.permissions.reports_proposal}
-                        onChange={() => handlePermissionChange("reports_proposal")}
-                        className="mr-2"
-                      />
-                      Proposal Reports
-                    </label>
-                    <label className="flex items-center text-sm">
-                      <input
-                        type="checkbox"
-                        checked={roleData.permissions.reports_pipeline}
-                        onChange={() => handlePermissionChange("reports_pipeline")}
-                        className="mr-2"
-                      />
-                      Pipeline Reports
-                    </label>
-                    <label className="flex items-center text-sm">
-                      <input
-                        type="checkbox"
-                        checked={roleData.permissions.reports_payment}
-                        onChange={() => handlePermissionChange("reports_payment")}
-                        className="mr-2"
-                      />
-                      Payment History
-                    </label>
-                  </div>
-                </div>
-                
-                {/* Admin Access */}
-                <label className="flex items-center">
+                <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
                   <input
                     type="checkbox"
-                    checked={roleData.permissions.admin_access}
-                    onChange={() => handlePermissionChange("admin_access")}
-                    className="mr-2"
+                    checked={roleData.permissions.proposal}
+                    onChange={() => handlePermissionChange("proposal")}
                   />
-                  Admin Access (Users & Roles)
+                  <Edit size={16} />
+                  <span>Proposal List</span>
+                </label>
+                
+                {/* Templates */}
+                <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="checkbox"
+                    checked={roleData.permissions.templates}
+                    onChange={() => handlePermissionChange("templates")}
+                  />
+                  <Layout size={16} />
+                  <span>Templates</span>
+                </label>
+                
+                {/* Calendar */}
+                <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="checkbox"
+                    checked={roleData.permissions.calendar}
+                    onChange={() => handlePermissionChange("calendar")}
+                  />
+                  <Calendar size={16} />
+                  <span>Calendar View</span>
+                </label>
+                
+                {/* Activity List */}
+                <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="checkbox"
+                    checked={roleData.permissions.activityList}
+                    onChange={() => handlePermissionChange("activityList")}
+                  />
+                  <List size={16} />
+                  <span>Activity List</span>
+                </label>
+                
+                {/* Expenses */}
+                <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="checkbox"
+                    checked={roleData.permissions.expenses}
+                    onChange={() => handlePermissionChange("expenses")}
+                  />
+                  <DollarSign size={16} />
+                  <span>Expenses</span>
+                </label>
+                
+                {/* Area Expenses */}
+                <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="checkbox"
+                    checked={roleData.permissions.areaExpenses}
+                    onChange={() => handlePermissionChange("areaExpenses")}
+                  />
+                  <MapPin size={16} />
+                  <span>Area of Expenses</span>
+                </label>
+                
+                {/* Deal Reports */}
+                <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="checkbox"
+                    checked={roleData.permissions.dealReports}
+                    onChange={() => handlePermissionChange("dealReports")}
+                  />
+                  <Tag size={16} />
+                  <span>Deal Reports</span>
+                </label>
+                
+                {/* Proposal Reports */}
+                <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="checkbox"
+                    checked={roleData.permissions.proposalReports}
+                    onChange={() => handlePermissionChange("proposalReports")}
+                  />
+                  <Edit size={16} />
+                  <span>Proposal Reports</span>
+                </label>
+                
+                {/* Pipeline Reports */}
+                <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="checkbox"
+                    checked={roleData.permissions.pipelineReports}
+                    onChange={() => handlePermissionChange("pipelineReports")}
+                  />
+                  <List size={16} />
+                  <span>Pipeline Reports</span>
+                </label>
+                
+                {/* Payment History */}
+                <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="checkbox"
+                    checked={roleData.permissions.paymentHistory}
+                    onChange={() => handlePermissionChange("paymentHistory")}
+                  />
+                  <CreditCard size={16} />
+                  <span>Payment History</span>
+                </label>
+                
+                {/* Users & Roles */}
+                <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="checkbox"
+                    checked={roleData.permissions.usersRoles}
+                    onChange={() => handlePermissionChange("usersRoles")}
+                  />
+                  <Shield size={16} />
+                  <span>Users & Roles</span>
                 </label>
               </div>
             </div>

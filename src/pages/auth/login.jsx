@@ -136,6 +136,7 @@
 
 
 
+// components/Login.jsx
 import React, { useState } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
@@ -160,13 +161,12 @@ const Login = () => {
       );
 
       if (response.data.token) {
-        // ✅ Save user & token
+        // ✅ Save user & token with role permissions
         const loggedInUser = {
           _id: response.data._id,
           name: response.data.name,
           email: response.data.email,
-          role: response.data.role,
-          permissions: response.data.permissions || {} // Include permissions from backend
+          role: response.data.role, // This should include permissions and name
         };
         localStorage.setItem("user", JSON.stringify(loggedInUser));
         localStorage.setItem("token", response.data.token);
@@ -178,7 +178,7 @@ const Login = () => {
         setIsError(false);
 
         setTimeout(() => {
-          navigate("/layout");
+          navigate("/layout"); // or "/dashboard"
         }, 1500);
       } else {
         setMessage("Token missing in response");

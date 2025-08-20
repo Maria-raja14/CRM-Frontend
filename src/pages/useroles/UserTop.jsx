@@ -321,11 +321,6 @@
 
 
 
-
-
-                                                  
- 
-
 import { useEffect, useState } from "react";
 import axios from "axios";
 import {
@@ -355,10 +350,20 @@ export default function AddUserModal({ onUserCreated }) {
     profileImage: null,
   });
   const [roles, setRoles] = useState([]);
+  const [passwordError, setPasswordError] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    
+    // Validate password match
+    // if (name === "confirmPassword" || name === "password") {
+    //   if (formData.password !== value && name === "confirmPassword") {
+    //     setPasswordError("Passwords do not match");
+    //   } else if (formData.password === formData.confirmPassword) {
+    //     setPasswordError("");
+    //   }
+    // }
   };
 
   const handleFileChange = (e) => {
@@ -381,6 +386,7 @@ export default function AddUserModal({ onUserCreated }) {
       status: "Active",
       profileImage: null,
     });
+    setPasswordError("");
     setIsDialogOpen(false);
   };
 
@@ -389,14 +395,14 @@ export default function AddUserModal({ onUserCreated }) {
     
     // Validate passwords match
     if (formData.password !== formData.confirmPassword) {
-      toast.error("Passwords do not match");
+      setPasswordError("Passwords do not match");
       return;
     }
     
     try {
       const payload = new FormData();
       Object.entries(formData).forEach(([key, value]) => {
-        if (key !== "confirmPassword") { // Don't send confirmPassword to backend
+        if (key !== "confirmPassword") { // Don't send confirmPassword
           payload.append(key, value);
         }
       });
@@ -580,6 +586,7 @@ export default function AddUserModal({ onUserCreated }) {
               onChange={handleChange}
               className="p-2 border rounded-md"
               required
+              minLength={6}
             />
 
             {/* Confirm Password */}
@@ -592,6 +599,9 @@ export default function AddUserModal({ onUserCreated }) {
               className="p-2 border rounded-md"
               required
             />
+            {passwordError && (
+              <p className="text-red-500 text-sm col-span-2 -mt-3">{passwordError}</p>
+            )}
 
             {/* Address (full width row) */}
             <textarea
@@ -643,6 +653,7 @@ export default function AddUserModal({ onUserCreated }) {
               <button
                 type="submit"
                 className="px-4 py-2 bg-[#008ecc] text-white rounded-md hover:bg-blue-700"
+                disabled={!!passwordError}
               >
                 Submit
               </button>
@@ -653,3 +664,7 @@ export default function AddUserModal({ onUserCreated }) {
     </div>
   );
 }
+
+                                                  
+ 
+
