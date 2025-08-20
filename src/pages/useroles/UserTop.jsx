@@ -459,7 +459,7 @@ export default function AddUserModal({ onUserCreated }) {
           </button>
         </DialogTrigger>
 
-        <DialogContent className="sm:max-w-3xl ">
+        <DialogContent className="max-w-7xl ">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold">
               Add New User
@@ -467,7 +467,7 @@ export default function AddUserModal({ onUserCreated }) {
           </DialogHeader>
 
           {/* Profile Photo Upload */}
-          <div className="flex justify-center py-5">
+          <div className="flex justify-center py-5 ">
             <div className="relative w-28 h-28 flex items-center justify-center rounded-full border-2">
               <div className="w-24 h-24 overflow-hidden rounded-full border-2 border-gray-300">
                 {formData.profileImage ? (

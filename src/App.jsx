@@ -1,8 +1,5 @@
 // <<<<<<< HEAD
 
-
-
-
 // =======
 // >>>>>>> 3da078d1cd8286b6ab0ac9b84d6974d900bbc886
 // import { BrowserRouter, Route, Routes } from "react-router-dom";
@@ -78,7 +75,7 @@
 //             <Route path="/list" element={<Activity />} />
 //             <Route path="/report" element={<ReportDeals />} />
 //             <Route path="/payment" element={<PaymentAdd />} />
-          
+
 // =======
 //             <Route path="/invoice" element={<InvoiceHead />} />
 //             <Route path="/dashboard/profile" element={<ProfileCard />} />
@@ -194,7 +191,6 @@
 
 // export default App;
 
-
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import "./App.css";
@@ -209,7 +205,6 @@ import AddPerson from "./pages/person/AddPerson";
 import InvoiceHead from "./pages/invoice/InvoiceHead";
 import OrganizationPage from "./pages/organization/OrganizationPage";
 import DragDropUpload from "./pages/organization/DragAndDrop";
-import AddOrganization from "./pages/organization/addOrganization";
 import UserTop from "./pages/useroles/UserTop";
 import ProfileCard from "./navbar/Myprofile_Topcenter";
 import Pipeline from "./pages/Deals/Pipeline";
@@ -235,31 +230,22 @@ import Proposalgraf from "./pages/reports/Proposalgraf";
 import CreateLeads from "./pages/Leads/CreateLeads";
 
 import Leads from "./pages/Leads/Leads";
-import { initSocket } from "./utils/socket";
+
 
 // Toast
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import UserManagement from "./pages/useroles/UserManagement";
 import Notification from "./pages/notification/Notification";
-
+import io from "socket.io-client";
+import { initSocket, /*    */ } from "./utils/socket";
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  // const [isDark, setIsDark] = useState(localStorage.getItem("theme") === "dark");
 
-  // useEffect(() => {
-  //   if (isDark) {
-  //     document.documentElement.classList.add("dark");
-  //   } else {
-  //     document.documentElement.classList.remove("dark");
-  //   }
-  // }, [isDark]);
 
 useEffect(() => {
-  initSocket(); // no need to pass userId anymore
+  initSocket();
 }, []);
-
-
 
 
 
@@ -295,7 +281,7 @@ useEffect(() => {
             <Route path="/payment" element={<PaymentAdd />} />
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/leads" element={<Leads />} />
-             <Route path="/createleads" element={<CreateLeads />} />
+            <Route path="/createleads" element={<CreateLeads />} />
 
             <Route
               path="/myprofile/*"
@@ -308,8 +294,7 @@ useEffect(() => {
           </Route>
         </Routes>
         <ToastContainer position="top-right" autoClose={3000} />
-        <Notification/>
-        
+        <Notification />
       </div>
     </BrowserRouter>
   );
