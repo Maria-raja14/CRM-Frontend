@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-
+// components/Sidebar.jsx
+import React, { useState, useEffect } from "react";
 import {
   Home,
   Briefcase,
@@ -19,7 +19,7 @@ import {
   Layout,
   FileText,
 } from "react-feather";
-import { NavLink, Link, useLocation } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 
 const IconCircle = ({ children }) => (
   <div className="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-md">
@@ -27,7 +27,9 @@ const IconCircle = ({ children }) => (
   </div>
 );
 
-const SidebarItem = ({ to, icon, label, exact = false, onClick }) => {
+const SidebarItem = ({ to, icon, label, exact = false, onClick, hasPermission = true }) => {
+  if (!hasPermission) return null;
+  
   return (
     <NavLink
       to={to}
@@ -50,7 +52,9 @@ const SidebarItem = ({ to, icon, label, exact = false, onClick }) => {
   );
 };
 
-const Collapsible = ({ label, icon, open, onToggle, children }) => {
+const Collapsible = ({ label, icon, open, onToggle, children, hasPermission = true }) => {
+  if (!hasPermission) return null;
+  
   return (
     <div>
       <button
@@ -75,23 +79,27 @@ const Collapsible = ({ label, icon, open, onToggle, children }) => {
   );
 };
 
-const SmallLink = ({ to, icon, label }) => (
-  <NavLink
-    to={to}
-    className={({ isActive }) =>
-      `flex items-center gap-3 p-2 rounded-lg text-sm ${
-        isActive
-          ? "text-[#008ECC] font-semibold"
-          : "text-gray-700 hover:text-[#008ECC]"
-      }`
-    }
-  >
-    <div className="w-7 h-7 flex items-center justify-center rounded-md bg-white shadow-sm">
-      {icon}
-    </div>
-    <span>{label}</span>
-  </NavLink>
-);
+const SmallLink = ({ to, icon, label, hasPermission = true }) => {
+  if (!hasPermission) return null;
+  
+  return (
+    <NavLink
+      to={to}
+      className={({ isActive }) =>
+        `flex items-center gap-3 p-2 rounded-lg text-sm ${
+          isActive
+            ? "text-[#008ECC] font-semibold"
+            : "text-gray-700 hover:text-[#008ECC]"
+        }`
+      }
+    >
+      <div className="w-7 h-7 flex items-center justify-center rounded-md bg-white shadow-sm">
+        {icon}
+      </div>
+      <span>{label}</span>
+    </NavLink>
+  );
+};
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
   const [showDeals, setShowDeals] = useState(false);
@@ -99,8 +107,42 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   const [showActivities, setShowActivities] = useState(false);
   const [showExpenses, setShowExpenses] = useState(false);
   const [showReports, setShowReports] = useState(false);
-
+  const [userPermissions, setUserPermissions] = useState({});
+  const [isAdmin, setIsAdmin] = useState(false);
+  
   const location = useLocation();
+
+  useEffect(() => {
+    // Get user data from localStorage
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    
+    // Check if user is admin (role name is "Admin")
+    if (user.role && user.role.name === "Admin") {
+      setIsAdmin(true);
+      // Admin gets all permissions
+      setUserPermissions({
+        dashboard: true,
+        leads: true,
+        deals: true,
+        pipeline: true,
+        invoice: true,
+        proposal: true,
+        templates: true,
+        calendar: true,
+        activityList: true,
+        expenses: true,
+        areaExpenses: true,
+        dealReports: true,
+        proposalReports: true,
+        pipelineReports: true,
+        paymentHistory: true,
+        usersRoles: true,
+      });
+    } else if (user.role && user.role.permissions) {
+      // Regular users get permissions based on their role
+      setUserPermissions(user.role.permissions);
+    }
+  }, []);
 
   return (
     <aside
@@ -151,6 +193,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           to="/leads"
           icon={<User size={18} className="text-gray-700" />}
           label="Leads"
+          hasPermission={isAdmin || userPermissions.leads}
         />
 
         {/* Deals */}
@@ -159,9 +202,20 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           icon={<Tag size={18} className="text-gray-700" />}
           open={showDeals}
           onToggle={() => setShowDeals((s) => !s)}
+          hasPermission={isAdmin || userPermissions.deals || userPermissions.pipeline}
         >
-          <SmallLink to="/deals" icon={<Tag size={16} />} label="All deals" />
-          <SmallLink to="/pipeline" icon={<List size={16} />} label="Pipeline" />
+          <SmallLink 
+            to="/deals" 
+            icon={<Tag size={16} />} 
+            label="All deals" 
+            hasPermission={isAdmin || userPermissions.deals}
+          />
+          <SmallLink 
+            to="/pipeline" 
+            icon={<List size={16} />} 
+            label="Pipeline" 
+            hasPermission={isAdmin || userPermissions.pipeline}
+          />
         </Collapsible>
 
         {/* Invoices */}
@@ -180,6 +234,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             </svg>
           }
           label="Invoices"
+          hasPermission={isAdmin || userPermissions.invoice}
         />
 
         {/* Proposal */}
@@ -188,16 +243,19 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           icon={<Edit size={18} className="text-gray-700" />}
           open={showProposal}
           onToggle={() => setShowProposal((s) => !s)}
+          hasPermission={isAdmin || userPermissions.proposal || userPermissions.templates}
         >
           <SmallLink
             to="/proposal"
             icon={<FileText size={16} />}
             label="Proposal list"
+            hasPermission={isAdmin || userPermissions.proposal}
           />
           <SmallLink
             to="/template"
             icon={<Layout size={16} />}
             label="Templates"
+            hasPermission={isAdmin || userPermissions.templates}
           />
         </Collapsible>
 
@@ -207,16 +265,19 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           icon={<Calendar size={18} className="text-gray-700" />}
           open={showActivities}
           onToggle={() => setShowActivities((s) => !s)}
+          hasPermission={isAdmin || userPermissions.calendar || userPermissions.activityList}
         >
           <SmallLink
             to="/calendar"
             icon={<Calendar size={16} />}
             label="Calendar View"
+            hasPermission={isAdmin || userPermissions.calendar}
           />
           <SmallLink
             to="/list"
             icon={<List size={16} />}
             label="Activity list"
+            hasPermission={isAdmin || userPermissions.activityList}
           />
         </Collapsible>
 
@@ -226,16 +287,19 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           icon={<DollarSign size={18} className="text-gray-700" />}
           open={showExpenses}
           onToggle={() => setShowExpenses((s) => !s)}
+          hasPermission={isAdmin || userPermissions.expenses || userPermissions.areaExpenses}
         >
           <SmallLink
             to="/expenses"
             icon={<DollarSign size={16} />}
             label="Expenses"
+            hasPermission={isAdmin || userPermissions.expenses}
           />
           <SmallLink
             to="/area-expenses"
             icon={<MapPin size={16} />}
             label="Area of Expenses"
+            hasPermission={isAdmin || userPermissions.areaExpenses}
           />
         </Collapsible>
 
@@ -245,22 +309,37 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           icon={<Calendar size={18} className="text-gray-700" />}
           open={showReports}
           onToggle={() => setShowReports((s) => !s)}
+          hasPermission={
+            isAdmin || 
+            userPermissions.dealReports || 
+            userPermissions.proposalReports || 
+            userPermissions.pipelineReports || 
+            userPermissions.paymentHistory
+          }
         >
-          <SmallLink to="/report" icon={<Tag size={16} />} label="Deals" />
+          <SmallLink 
+            to="/report" 
+            icon={<Tag size={16} />} 
+            label="Deals" 
+            hasPermission={isAdmin || userPermissions.dealReports}
+          />
           <SmallLink
             to="/report/proposal"
             icon={<Edit size={16} />}
             label="Proposal"
+            hasPermission={isAdmin || userPermissions.proposalReports}
           />
           <SmallLink
             to="/pipeline-charts"
             icon={<List size={16} />}
             label="Pipeline"
+            hasPermission={isAdmin || userPermissions.pipelineReports}
           />
           <SmallLink
             to="/payment"
             icon={<CreditCard size={16} />}
             label="Payment history"
+            hasPermission={isAdmin || userPermissions.paymentHistory}
           />
         </Collapsible>
 
@@ -269,11 +348,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           to="/user/roles"
           icon={<Shield size={18} />}
           label="Users & Roles"
+          hasPermission={isAdmin || userPermissions.usersRoles}
         />
       </nav>
     </aside>
   );
 };
 
-export default Sidebar;//original
-
+export default Sidebar;

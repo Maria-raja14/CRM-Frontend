@@ -1,7 +1,8 @@
+//components/Login.jsx
 import React, { useState } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
-import { initSocket } from "../../utils/socket"; // unga socket file path
+import { initSocket } from "../../utils/socket";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -11,46 +12,46 @@ const Login = () => {
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
-  e.preventDefault();
-  try {
-    const response = await axios.post(
-      "http://localhost:5000/api/users/login",
-      {
-        email,
-        password,
+    e.preventDefault();
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/users/login",
+        {
+          email,
+          password,
+        }
+      );
+
+      if (response.data.token) {
+        // ✅ Save user & token with role permissions
+        const loggedInUser = {
+          _id: response.data._id,
+          name: response.data.name,
+          email: response.data.email,
+          role: response.data.role, // This should include permissions and name
+        };
+        localStorage.setItem("user", JSON.stringify(loggedInUser));
+        localStorage.setItem("token", response.data.token);
+
+        // 🔹 Connect socket immediately after login
+        initSocket(loggedInUser._id);
+
+        setMessage(response.data.message);
+        setIsError(false);
+
+        setTimeout(() => {
+          navigate("/layout"); // or "/dashboard"
+        }, 1500);
+      } else {
+        setMessage("Token missing in response");
+        setIsError(true);
       }
-    );
-
-    if (response.data.token) {
-      // ✅ Save user & token
-      const loggedInUser = {
-        _id: response.data._id,
-        name: response.data.name,
-        email: response.data.email,
-        role: response.data.role,
-      };
-      localStorage.setItem("user", JSON.stringify(loggedInUser));
-      localStorage.setItem("token", response.data.token);
-
-      // 🔹 Connect socket immediately after login
-  initSocket(loggedInUser._id);
-
-      setMessage(response.data.message);
-      setIsError(false);
-
-      setTimeout(() => {
-        navigate("/layout"); // or "/dashboard"
-      }, 1500);
-    } else {
-      setMessage("Token missing in response");
+    } catch (error) {
+      console.error("Login Error:", error.response?.data);
+      setMessage(error.response?.data?.message || "Login failed");
       setIsError(true);
     }
-  } catch (error) {
-    console.error("Login Error:", error.response?.data);
-    setMessage(error.response?.data?.message || "Login failed");
-    setIsError(true);
-  }
-};
+  };
 
   return (
     <div className="flex flex-col justify-center items-center min-h-screen bg-gray-200 px-4 sm:px-6">
@@ -133,4 +134,3 @@ const Login = () => {
 };
 
 export default Login;
-
