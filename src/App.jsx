@@ -1,5 +1,3 @@
-
-
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import "./App.css";
@@ -8,20 +6,15 @@ import "./App.css";
 import Login from "./pages/auth/login";
 import Layout from "./navbar/Layout";
 import Dashboard from "./pages/dashboard";
-import LeadsGroup from "./pages/LeadGroup/LeadGroup";
-import AddLeadGroup from "./pages/LeadGroup/AddLeadGroup";
-import AddPerson from "./pages/person/AddPerson";
+
 import InvoiceHead from "./pages/invoice/InvoiceHead";
-import OrganizationPage from "./pages/organization/OrganizationPage";
-import DragDropUpload from "./pages/organization/DragAndDrop";
+
 import UserTop from "./pages/useroles/UserTop";
 import ProfileCard from "./navbar/Myprofile_Topcenter";
-import Pipeline from "./pages/Deals/Pipeline";
-import AddPipeline from "./pages/Deals/Add_Pipeline";
+
 import Expenses from "./pages/Expenses/Expenses";
 import AreaExpenses from "./pages/Area_Expenses/Area_of_Expenses";
-import AddDeals from "./pages/allDeals/addDeals";
-import CardDeals from "./pages/allDeals/CardDeals";
+
 import CalendarView from "./pages/activities/CalendarView";
 import Activity from "./pages/activityList/Activity";
 import ReportDeals from "./pages/Reports/ReportDeals";
@@ -39,25 +32,24 @@ import CreateLeads from "./pages/Leads/CreateLeads";
 
 import Leads from "./pages/Leads/Leads";
 
-
 // Toast
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import UserManagement from "./pages/useroles/UserManagement";
 import Notification from "./pages/notification/Notification";
 import io from "socket.io-client";
-import { initSocket, /*    */ } from "./utils/socket";
+import { initSocket /*    */ } from "./utils/socket";
+import { AllDeals } from "./pages/Deals/allDeals";
+
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-
-useEffect(() => {
-  const user = JSON.parse(localStorage.getItem("user"));
-  if (user?._id) {
-    initSocket(user._id); 
-  }
-}, []); // 👈 VERY IMPORTANT → [] empty dependency array, so only 1 time run
-
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (user?._id) {
+      initSocket(user._id);
+    }
+  }, []); // 👈 VERY IMPORTANT → [] empty dependency array, so only 1 time run
 
   return (
     <BrowserRouter>
@@ -67,17 +59,12 @@ useEffect(() => {
           <Route path="/layout" element={<Layout />} />
           <Route element={<Layout isModalOpen={isModalOpen} />}>
             {/* Routes inside Layout */}
-            <Route path="/leadGroup" element={<LeadsGroup />} />
-            <Route path="/AddleadGroup" element={<AddLeadGroup />} />
-            <Route path="/organization" element={<OrganizationPage />} />
-            <Route path="/import-persons" element={<DragDropUpload />} />
-            <Route path="/person" element={<AddPerson />} />
+
             <Route path="/user/roles" element={<UserManagement />} />
             <Route path="/invoice" element={<InvoiceHead />} />
             <Route path="/dashboard/profile" element={<ProfileCard />} />
             <Route path="/LostReasons" element={<Lastreasons />} />
-            <Route path="/deals" element={<AddDeals />} />
-            <Route path="/cardDeal" element={<CardDeals />} />
+
             <Route path="/proposal" element={<ProposalHead />} />
             <Route path="/template" element={<TemplateHead />} />
             <Route path="/template/addtemp" element={<AddTemplate />} />
@@ -92,6 +79,7 @@ useEffect(() => {
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/leads" element={<Leads />} />
             <Route path="/createleads" element={<CreateLeads />} />
+             <Route path="/deals" element={<AllDeals />} />
 
             <Route
               path="/myprofile/*"

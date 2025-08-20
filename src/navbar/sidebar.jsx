@@ -27,9 +27,16 @@ const IconCircle = ({ children }) => (
   </div>
 );
 
-const SidebarItem = ({ to, icon, label, exact = false, onClick, hasPermission = true }) => {
+const SidebarItem = ({
+  to,
+  icon,
+  label,
+  exact = false,
+  onClick,
+  hasPermission = true,
+}) => {
   if (!hasPermission) return null;
-  
+
   return (
     <NavLink
       to={to}
@@ -52,15 +59,26 @@ const SidebarItem = ({ to, icon, label, exact = false, onClick, hasPermission = 
   );
 };
 
-const Collapsible = ({ label, icon, open, onToggle, children, hasPermission = true }) => {
+const Collapsible = ({
+  label,
+  icon,
+  open,
+  onToggle,
+  children,
+  hasPermission = true,
+}) => {
   if (!hasPermission) return null;
-  
+
   return (
     <div>
       <button
         onClick={onToggle}
         className={`flex items-center justify-between w-full p-3 rounded-lg transition-colors duration-150
-          ${open ? "bg-[#f0fbff] text-gray-900" : "text-gray-700 hover:bg-[#f8f9fb]"}`}
+          ${
+            open
+              ? "bg-[#f0fbff] text-gray-900"
+              : "text-gray-700 hover:bg-[#f8f9fb]"
+          }`}
       >
         <div className="flex items-center space-x-3">
           <IconCircle>{icon}</IconCircle>
@@ -81,7 +99,7 @@ const Collapsible = ({ label, icon, open, onToggle, children, hasPermission = tr
 
 const SmallLink = ({ to, icon, label, hasPermission = true }) => {
   if (!hasPermission) return null;
-  
+
   return (
     <NavLink
       to={to}
@@ -109,13 +127,13 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   const [showReports, setShowReports] = useState(false);
   const [userPermissions, setUserPermissions] = useState({});
   const [isAdmin, setIsAdmin] = useState(false);
-  
+
   const location = useLocation();
 
   useEffect(() => {
     // Get user data from localStorage
     const user = JSON.parse(localStorage.getItem("user") || "{}");
-    
+
     // Check if user is admin (role name is "Admin")
     if (user.role && user.role.name === "Admin") {
       setIsAdmin(true);
@@ -197,26 +215,14 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         />
 
         {/* Deals */}
-        <Collapsible
-          label="Deals"
-          icon={<Tag size={18} className="text-gray-700" />}
-          open={showDeals}
-          onToggle={() => setShowDeals((s) => !s)}
-          hasPermission={isAdmin || userPermissions.deals || userPermissions.pipeline}
-        >
-          <SmallLink 
-            to="/deals" 
-            icon={<Tag size={16} />} 
-            label="All deals" 
-            hasPermission={isAdmin || userPermissions.deals}
-          />
-          <SmallLink 
-            to="/pipeline" 
-            icon={<List size={16} />} 
-            label="Pipeline" 
-            hasPermission={isAdmin || userPermissions.pipeline}
-          />
-        </Collapsible>
+        <SmallLink
+          to="/deals"
+          icon={<Tag size={16} className="text-gray-700" />}
+          label="All Deals"
+          hasPermission={
+            isAdmin || userPermissions.deals || userPermissions.pipeline
+          }
+        />
 
          {/* Pipeline View */}
         <SidebarItem
@@ -251,7 +257,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           icon={<Edit size={18} className="text-gray-700" />}
           open={showProposal}
           onToggle={() => setShowProposal((s) => !s)}
-          hasPermission={isAdmin || userPermissions.proposal || userPermissions.templates}
+          hasPermission={
+            isAdmin || userPermissions.proposal || userPermissions.templates
+          }
         >
           <SmallLink
             to="/proposal"
@@ -273,7 +281,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           icon={<Calendar size={18} className="text-gray-700" />}
           open={showActivities}
           onToggle={() => setShowActivities((s) => !s)}
-          hasPermission={isAdmin || userPermissions.calendar || userPermissions.activityList}
+          hasPermission={
+            isAdmin || userPermissions.calendar || userPermissions.activityList
+          }
         >
           <SmallLink
             to="/calendar"
@@ -295,7 +305,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           icon={<DollarSign size={18} className="text-gray-700" />}
           open={showExpenses}
           onToggle={() => setShowExpenses((s) => !s)}
-          hasPermission={isAdmin || userPermissions.expenses || userPermissions.areaExpenses}
+          hasPermission={
+            isAdmin || userPermissions.expenses || userPermissions.areaExpenses
+          }
         >
           <SmallLink
             to="/expenses"
@@ -318,17 +330,17 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           open={showReports}
           onToggle={() => setShowReports((s) => !s)}
           hasPermission={
-            isAdmin || 
-            userPermissions.dealReports || 
-            userPermissions.proposalReports || 
-            userPermissions.pipelineReports || 
+            isAdmin ||
+            userPermissions.dealReports ||
+            userPermissions.proposalReports ||
+            userPermissions.pipelineReports ||
             userPermissions.paymentHistory
           }
         >
-          <SmallLink 
-            to="/report" 
-            icon={<Tag size={16} />} 
-            label="Deals" 
+          <SmallLink
+            to="/report"
+            icon={<Tag size={16} />}
+            label="Deals"
             hasPermission={isAdmin || userPermissions.dealReports}
           />
           <SmallLink
