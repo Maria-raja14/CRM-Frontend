@@ -218,6 +218,14 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           />
         </Collapsible>
 
+         {/* Pipeline View */}
+        <SidebarItem
+          to="/leads"
+          icon={<User size={18} className="text-gray-700" />}
+          label="Pipeline View"
+          hasPermission={isAdmin || userPermissions.leads}
+        />
+
         {/* Invoices */}
         <SidebarItem
           to="/invoice"
@@ -304,7 +312,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         </Collapsible>
 
         {/* Reports */}
-        <Collapsible
+        {/* <Collapsible
           label="Reports"
           icon={<Calendar size={18} className="text-gray-700" />}
           open={showReports}
@@ -341,7 +349,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             label="Payment history"
             hasPermission={isAdmin || userPermissions.paymentHistory}
           />
-        </Collapsible>
+        </Collapsible> */}
 
         {/* Users & Roles */}
         <SidebarItem
