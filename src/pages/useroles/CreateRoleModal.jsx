@@ -87,7 +87,7 @@ export default function CreateRoleModal({ onRoleCreated }) {
       const { data } = await axios.post(
         "http://localhost:5000/api/roles",
         roleData,
-        { headers: { Authorization: Bearer ${token} } }
+        { headers: { Authorization: `Bearer ${token} `} }
       );
 
       toast.success("Role created successfully!");
