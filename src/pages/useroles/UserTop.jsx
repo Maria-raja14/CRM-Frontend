@@ -1,3 +1,9 @@
+
+
+
+
+
+
 import { useEffect, useState } from "react";
 import axios from "axios";
 import {
@@ -10,11 +16,8 @@ import {
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-
 export default function AddUserModal({ onUserCreated }) {
-  // ✅ accept callback
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [dob, setDob] = useState(null);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -23,21 +26,64 @@ export default function AddUserModal({ onUserCreated }) {
     mobileNumber: "",
     email: "",
     password: "",
+    confirmPassword: "",
     address: "",
     role: "",
     status: "Active",
     profileImage: null,
   });
+  const [previewUrl, setPreviewUrl] = useState(null);
   const [roles, setRoles] = useState([]);
+  const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    
+    // Clear error when field is changed
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: "" }));
+    }
   };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    setFormData((prev) => ({ ...prev, profileImage: file }));
+    if (file) {
+      // Validate file type
+      const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+      if (!validImageTypes.includes(file.type)) {
+        setErrors(prev => ({ ...prev, profileImage: "Only JPEG, JPG, PNG and GIF files are allowed" }));
+        return;
+      }
+      
+      // Validate file size (20MB)
+      if (file.size > 20 * 1024 * 1024) {
+        setErrors(prev => ({ ...prev, profileImage: "File size must be less than 20MB" }));
+        return;
+      }
+      
+      setFormData((prev) => ({ ...prev, profileImage: file }));
+      setPreviewUrl(URL.createObjectURL(file));
+      setErrors(prev => ({ ...prev, profileImage: "" }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.firstName) newErrors.firstName = "First name is required";
+    if (!formData.lastName) newErrors.lastName = "Last name is required";
+    if (!formData.email) newErrors.email = "Email is required";
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "Email is invalid";
+    if (!formData.password) newErrors.password = "Password is required";
+    else if (formData.password.length < 6) newErrors.password = "Password must be at least 6 characters";
+    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Passwords do not match";
+    if (!formData.mobileNumber) newErrors.mobileNumber = "Mobile number is required";
+    if (!formData.role) newErrors.role = "Role is required";
+    if (!formData.gender) newErrors.gender = "Gender is required";
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleCancel = () => {
@@ -49,20 +95,28 @@ export default function AddUserModal({ onUserCreated }) {
       mobileNumber: "",
       email: "",
       password: "",
+      confirmPassword: "",
       address: "",
       role: "",
       status: "Active",
       profileImage: null,
     });
+    setPreviewUrl(null);
+    setErrors({});
     setIsDialogOpen(false);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) return;
+    
     try {
       const payload = new FormData();
       Object.entries(formData).forEach(([key, value]) => {
-        payload.append(key, value);
+        if (value !== null && value !== undefined) {
+          payload.append(key, value);
+        }
       });
 
       const token = localStorage.getItem("token");
@@ -84,7 +138,13 @@ export default function AddUserModal({ onUserCreated }) {
       handleCancel();
     } catch (err) {
       console.error(err);
-      toast.error(err.response?.data?.message || "Failed to create user");
+      const errorMsg = err.response?.data?.message || "Failed to create user";
+      toast.error(errorMsg);
+      
+      // Set server validation errors
+      if (err.response?.data?.errors) {
+        setErrors(err.response.data.errors);
+      }
     }
   };
 
@@ -105,8 +165,10 @@ export default function AddUserModal({ onUserCreated }) {
   };
 
   useEffect(() => {
-    fetchRole();
-  }, []);
+    if (isDialogOpen) {
+      fetchRole();
+    }
+  }, [isDialogOpen]);
 
   return (
     <div>
@@ -117,7 +179,7 @@ export default function AddUserModal({ onUserCreated }) {
           </button>
         </DialogTrigger>
 
-        <DialogContent className="sm:max-w-3xl ">
+        <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold">
               Add New User
@@ -128,10 +190,10 @@ export default function AddUserModal({ onUserCreated }) {
           <div className="flex justify-center py-5">
             <div className="relative w-28 h-28 flex items-center justify-center rounded-full border-2">
               <div className="w-24 h-24 overflow-hidden rounded-full border-2 border-gray-300">
-                {formData.profileImage ? (
+                {previewUrl ? (
                   <img
-                    src={URL.createObjectURL(formData.profileImage)}
-                    alt="Profile"
+                    src={previewUrl}
+                    alt="Profile Preview"
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -162,6 +224,9 @@ export default function AddUserModal({ onUserCreated }) {
               </label>
             </div>
           </div>
+          {errors.profileImage && (
+            <p className="text-red-500 text-sm text-center -mt-3">{errors.profileImage}</p>
+          )}
 
           {/* Form */}
           <form
@@ -169,129 +234,160 @@ export default function AddUserModal({ onUserCreated }) {
             className="grid grid-cols-1 sm:grid-cols-2 gap-5 p-5"
           >
             {/* First Name */}
-            <input
-              type="text"
-              name="firstName"
-              placeholder="First Name"
-              value={formData.firstName}
-              onChange={handleChange}
-              className="p-2 border rounded-md"
-              required
-            />
+            <div>
+              <input
+                type="text"
+                name="firstName"
+                placeholder="First Name"
+                value={formData.firstName}
+                onChange={handleChange}
+                className={`p-2 border rounded-md w-full ${errors.firstName ? 'border-red-500' : ''}`}
+                required
+              />
+              {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}
+            </div>
 
             {/* Last Name */}
-            <input
-              type="text"
-              name="lastName"
-              placeholder="Last Name"
-              value={formData.lastName}
-              onChange={handleChange}
-              className="p-2 border rounded-md"
-              required
-            />
+            <div>
+              <input
+                type="text"
+                name="lastName"
+                placeholder="Last Name"
+                value={formData.lastName}
+                onChange={handleChange}
+                className={`p-2 border rounded-md w-full ${errors.lastName ? 'border-red-500' : ''}`}
+                required
+              />
+              {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
+            </div>
 
             {/* Gender */}
-            <select
-              name="gender"
-              value={formData.gender}
-              onChange={handleChange}
-              className="p-2 border rounded-md"
-              required
-            >
-              <option value="">Select Gender</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
-            </select>
+            <div>
+              <select
+                name="gender"
+                value={formData.gender}
+                onChange={handleChange}
+                className={`p-2 border rounded-md w-full ${errors.gender ? 'border-red-500' : ''}`}
+                required
+              >
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+              {errors.gender && <p className="text-red-500 text-sm mt-1">{errors.gender}</p>}
+            </div>
 
             {/* DOB */}
-            <input
-              type="date"
-              name="dateOfBirth"
-              value={formData.dateOfBirth}
-              onChange={handleChange}
-              className="p-2 border rounded-md"
-            />
+            <div>
+              <input
+                type="date"
+                name="dateOfBirth"
+                value={formData.dateOfBirth}
+                onChange={handleChange}
+                className="p-2 border rounded-md w-full"
+              />
+            </div>
 
             {/* Mobile Number */}
-            <input
-              type="text"
-              name="mobileNumber"
-              placeholder="Mobile Number"
-              value={formData.mobileNumber}
-              onChange={handleChange}
-              className="p-2 border rounded-md"
-              required
-            />
+            <div>
+              <input
+                type="text"
+                name="mobileNumber"
+                placeholder="Mobile Number"
+                value={formData.mobileNumber}
+                onChange={handleChange}
+                className={`p-2 border rounded-md w-full ${errors.mobileNumber ? 'border-red-500' : ''}`}
+                required
+              />
+              {errors.mobileNumber && <p className="text-red-500 text-sm mt-1">{errors.mobileNumber}</p>}
+            </div>
 
             {/* Email */}
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={handleChange}
-              className="p-2 border rounded-md"
-              required
-            />
+            <div>
+              <input
+                type="email"
+                name="email"
+                placeholder="Email"
+                value={formData.email}
+                onChange={handleChange}
+                className={`p-2 border rounded-md w-full ${errors.email ? 'border-red-500' : ''}`}
+                required
+              />
+              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+            </div>
 
             {/* Password */}
-            <input
-              type="text"
-              name="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              className="p-2 border rounded-md"
-              required
-            />
+            <div>
+              <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleChange}
+                className={`p-2 border rounded-md w-full ${errors.password ? 'border-red-500' : ''}`}
+                required
+              />
+              {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+            </div>
 
-            {/* Password */}
-            <input
-              type="text"
-              name="password"
-              placeholder="Confirm Password"
-              className="p-2 border rounded-md"
-              required
-            />
+            {/* Confirm Password */}
+            <div>
+              <input
+                type="password"
+                name="confirmPassword"
+                placeholder="Confirm Password"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className={`p-2 border rounded-md w-full ${errors.confirmPassword ? 'border-red-500' : ''}`}
+                required
+              />
+              {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
+            </div>
 
             {/* Address (full width row) */}
-            <textarea
-              name="address"
-              placeholder="Address"
-              value={formData.address}
-              onChange={handleChange}
-              className="p-2 border rounded-md sm:col-span-2"
-              required
-            />
+            <div className="sm:col-span-2">
+              <textarea
+                name="address"
+                placeholder="Address"
+                value={formData.address}
+                onChange={handleChange}
+                className="p-2 border rounded-md w-full"
+              />
+            </div>
 
             {/* Role */}
-            <select
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              className="p-2 border rounded-md"
-              required
-            >
-              <option value="">Select Role</option>
-              {roles.map((role) => (
-                <option key={role._id} value={role._id}>
-                  {role.name}
-                </option>
-              ))}
-            </select>
+            <div>
+              <select
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                className={`p-2 border rounded-md w-full ${errors.role ? 'border-red-500' : ''}`}
+                required
+              >
+                <option value="">Select Role</option>
+                {roles.map((role) => (
+                  <option key={role._id} value={role._id}>
+                    {role.name}
+                  </option>
+                ))}
+              </select>
+              {errors.role && <p className="text-red-500 text-sm mt-1">{errors.role}</p>}
+            </div>
 
             {/* Status */}
-            <select
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-              className="p-2 border rounded-md"
-              required
-            >
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-            </select>
+            <div>
+              <select
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                className="p-2 border rounded-md w-full"
+                required
+              >
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
 
             {/* Buttons (span full row) */}
             <div className="flex justify-end gap-3 border-t pt-3 sm:col-span-2">
@@ -314,13 +410,4 @@ export default function AddUserModal({ onUserCreated }) {
       </Dialog>
     </div>
   );
-
-}//original
-
-
-
-
-
-
-
-                                                  
+}
