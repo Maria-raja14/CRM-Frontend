@@ -1,9 +1,21 @@
 import React, { useState } from "react";
 import { Menu, User, Power, ChevronDown } from "react-feather";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";  // ⬅️ navigate use panna import pannunga
+import { disconnectSocket } from "../utils/socket";
 
 const Navbar = ({ toggleSidebar }) => {
   const [showDropdown, setShowDropdown] = useState(false);
+  const navigate = useNavigate(); // ⬅️ navigate hook
+
+const handleLogout = () => {
+  const user = JSON.parse(localStorage.getItem("user"));
+  if (user?._id) {
+    disconnectSocket(user._id);
+  }
+  localStorage.clear();
+  navigate("/");
+};
+
 
   return (
     <div className="w-full bg-white dark:bg-gray-900 dark:text-white p-3 flex justify-between items-center shadow-sm">
@@ -39,13 +51,14 @@ const Navbar = ({ toggleSidebar }) => {
               <span>Profile</span>
             </Link>
 
-            <Link
-              to="/"
-              className="flex items-center space-x-3 w-full p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+            {/* Logout Button */}
+            <button
+              onClick={handleLogout}
+              className="flex items-center space-x-3 w-full p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md text-left"
             >
               <Power size={18} className="text-gray-600 dark:text-gray-300" />
               <span>Logout</span>
-            </Link>
+            </button>
           </div>
         )}
       </div>
