@@ -1,3 +1,10 @@
+
+
+
+
+
+
+
 import React, { useMemo, useState, useEffect } from "react";
 import {
   DndContext,
@@ -14,14 +21,6 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-
-/**
- * Sales Pipeline Board
- * - 5 columns: Qualification, Negotiation, Proposal Sent, Closed Won, Closed Lost
- * - Drag & drop deals across columns, with smooth reordering
- * - Clean Tailwind styling, counters, search, and simple localStorage persistence
- * - Single-file component, just drop into your app and render <SalesPipelineBoard />
- */
 
 // ----- Types -----
 const STAGES = [
@@ -65,7 +64,7 @@ export default function SalesPipelineBoard() {
     if (saved) return JSON.parse(saved);
     return SEED;
   });
-  const [activeId, setActiveId] = useState(null); // dragging deal id
+  const [activeId, setActiveId] = useState(null);
   const [query, setQuery] = useState("");
 
   useEffect(() => {
@@ -102,7 +101,6 @@ export default function SalesPipelineBoard() {
     const activeContainer = findContainerByItemId(active.id);
     let overContainer = over.id;
 
-    // If over is an item, map to its container id
     if (typeof over.id === "string" && over.id.startsWith("d-")) {
       overContainer = findContainerByItemId(over.id);
     }
@@ -110,7 +108,6 @@ export default function SalesPipelineBoard() {
     if (!activeContainer || !overContainer) return;
 
     if (activeContainer === overContainer) {
-      // Reorder within the same column
       const oldIndex = columns[activeContainer].findIndex((d) => d.id === active.id);
       const overIndex = columns[overContainer].findIndex((d) => d.id === (over.id.startsWith("d-") ? over.id : active.id));
 
@@ -123,7 +120,6 @@ export default function SalesPipelineBoard() {
       return;
     }
 
-    // Move across columns
     const sourceIdx = columns[activeContainer].findIndex((d) => d.id === active.id);
     const moving = columns[activeContainer][sourceIdx];
 
@@ -131,7 +127,6 @@ export default function SalesPipelineBoard() {
       const next = { ...prev };
       next[activeContainer] = [...prev[activeContainer]];
       next[overContainer] = [...prev[overContainer]];
-
       next[activeContainer].splice(sourceIdx, 1);
 
       if (typeof over.id === "string" && over.id.startsWith("d-")) {
@@ -150,7 +145,7 @@ export default function SalesPipelineBoard() {
     const valueStr = prompt("Value (₹)");
     const value = Number(valueStr || 0) || 0;
     const owner = prompt("Owner");
-    const deal = { id: `d-${uid()}` , title, value, owner: owner || "—", tags: [] };
+    const deal = { id: `d-${uid()}`, title, value, owner: owner || "—", tags: [] };
     setColumns((prev) => ({ ...prev, [stageId]: [deal, ...prev[stageId]] }));
   }
 
@@ -180,10 +175,10 @@ export default function SalesPipelineBoard() {
   return (
     <div className="min-h-screen w-full bg-neutral-50 p-4 md:p-6">
       {/* Toolbar */}
-      <div className="mx-auto max-w-[1400px] mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div className="mx-auto max-w-[1600px] mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">Sales Pipeline</h1>
-          <p className="text-sm text-neutral-500">Drag and drop deals across the 5 stages. Search by title, owner, or tag.</p>
+          <p className="text-sm text-neutral-500">Drag and drop deals across the stages. Search by title, owner, or tag.</p>
         </div>
         <div className="flex gap-2 items-center">
           <input
@@ -209,16 +204,17 @@ export default function SalesPipelineBoard() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="mx-auto max-w-[1400px] grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <div className="mx-auto flex gap-4 overflow-x-auto pb-4">
           {STAGES.map((stage) => (
-            <Column
-              key={stage.id}
-              id={stage.id}
-              title={stage.title}
-              items={filtered[stage.id] || []}
-              totalValue={totals[stage.id] || 0}
-              onAdd={() => addDeal(stage.id)}
-            />
+            <div key={stage.id} className="min-w-[300px] w-[320px]">
+              <Column
+                id={stage.id}
+                title={stage.title}
+                items={filtered[stage.id] || []}
+                totalValue={totals[stage.id] || 0}
+                onAdd={() => addDeal(stage.id)}
+              />
+            </div>
           ))}
         </div>
 
@@ -232,7 +228,7 @@ export default function SalesPipelineBoard() {
   );
 }
 
-// ----- Column (droppable list) -----
+// Column
 function Column({ id, title, items, onAdd, totalValue }) {
   return (
     <div className="flex min-h-[60vh] flex-col rounded-2xl border border-neutral-200 bg-white p-3 shadow-sm">
@@ -254,10 +250,6 @@ function Column({ id, title, items, onAdd, totalValue }) {
         </button>
       </div>
 
-      <div className="h-2 rounded-xl bg-neutral-100 mb-3 overflow-hidden">
-        <div className={`h-full rounded-xl ${progressBarColor(id)}`} style={{ width: progressWidth(items.length) }} />
-      </div>
-
       <SortableContext items={items.map((d) => d.id)} strategy={verticalListSortingStrategy}>
         <div id={id} className="flex flex-1 flex-col gap-3">
           {items.map((deal) => (
@@ -274,14 +266,13 @@ function Column({ id, title, items, onAdd, totalValue }) {
   );
 }
 
-// ----- Deal card (sortable) -----
+// Sortable
 function SortableDeal({ id, deal }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
   };
-
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
       <DealCard deal={deal} dragging={isDragging} />
@@ -289,6 +280,7 @@ function SortableDeal({ id, deal }) {
   );
 }
 
+// Card
 function DealCard({ deal, dragging = false, overlay = false }) {
   return (
     <div className={`rounded-2xl border ${dragging || overlay ? "border-indigo-300 ring-2 ring-indigo-200" : "border-neutral-200"} bg-white p-4 shadow-sm hover:shadow transition`}>
@@ -302,9 +294,7 @@ function DealCard({ deal, dragging = false, overlay = false }) {
       {deal.tags?.length ? (
         <div className="mt-3 flex flex-wrap gap-2">
           {deal.tags.map((t, i) => (
-            <span key={i} className="rounded-lg bg-indigo-50 px-2 py-0.5 text-[11px] text-indigo-700">
-              {t}
-            </span>
+            <span key={i} className="rounded-lg bg-indigo-50 px-2 py-0.5 text-[11px] text-indigo-700">{t}</span>
           ))}
         </div>
       ) : null}
@@ -312,31 +302,6 @@ function DealCard({ deal, dragging = false, overlay = false }) {
   );
 }
 
-// ----- Utilities -----
-function progressWidth(count) {
-  const pct = Math.min(100, 12 + count * 8);
-  return pct + "%";
-}
-function progressBarColor(id) {
-  switch (id) {
-    case "qualification":
-      return "bg-blue-300";
-    case "negotiation":
-      return "bg-amber-300";
-    case "proposal":
-      return "bg-cyan-300";
-    case "won":
-      return "bg-emerald-300";
-    case "lost":
-      return "bg-rose-300";
-    default:
-      return "bg-neutral-200";
-  }
-}
 function formatNumber(n) {
   return new Intl.NumberFormat("en-IN").format(n);
-}//Original
-
-
-
-
+}//ok correct
