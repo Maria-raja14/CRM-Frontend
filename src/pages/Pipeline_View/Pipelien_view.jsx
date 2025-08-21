@@ -14,7 +14,7 @@ const STAGES = [
 
 // ----- Drag types -----
 const ItemTypes = {
-  DEAL: "DEAL",
+  DEAL: "DEAL"
 };
 
 function formatNumber(n) {
@@ -47,6 +47,7 @@ function SalesPipelineBoardPure() {
       setColumns(grouped);
     } catch (err) {
       console.error(err);
+      // Fallback to empty columns if API fails
       const emptyColumns = {};
       STAGES.forEach((s) => (emptyColumns[s.id] = []));
       setColumns(emptyColumns);
@@ -62,7 +63,7 @@ function SalesPipelineBoardPure() {
     if (!title) return;
     const valueStr = prompt("Value (₹)");
     const value = Number(valueStr || 0) || 0;
-    const assignedTo = prompt("Assigned User ID");
+    const assignedTo = prompt("Assigned User ID"); // must be userId from DB
 
     try {
       await axios.post("http://localhost:5000/api/deals/createManual", {
@@ -78,26 +79,44 @@ function SalesPipelineBoardPure() {
     }
   }
 
-  function moveDeal(dealId, fromStage, toStage) {
-    if (fromStage === toStage) return;
 
-    setColumns((prev) => {
-      let deal;
-      const next = { ...prev };
-      next[fromStage] = prev[fromStage].filter((d) => {
-        if (d._id === dealId) {
-          deal = d;
-          return false;
-        }
-        return true;
-      });
-      if (deal) {
-        next[toStage] = [...prev[toStage], deal];
+
+
+  // Simplified moveDeal - local update + API call
+async function moveDeal(dealId, fromStage, toStage) {
+  if (fromStage === toStage) return;
+
+  // 🔹 Local state update for instant UI
+  setColumns(prev => {
+    let deal;
+    const next = { ...prev };
+    next[fromStage] = prev[fromStage].filter(d => {
+      if (d._id === dealId) {
+        deal = d;
+        return false;
       }
-      return next;
+      return true;
     });
-  }
+    if (deal) {
+      next[toStage] = [...prev[toStage], { ...deal, stage: toStage }];
+    }
+    return next;
+  });
 
+  // 🔹 API call to persist change
+  try {
+    await axios.patch(`http://localhost:5000/api/deals/${dealId}`, {
+      stage: toStage,
+    });
+  } catch (err) {
+    console.error("Failed to update deal stage:", err);
+    alert("Failed to save stage change! Please refresh.");
+    // optional: rollback by re-fetching deals
+    fetchDeals();
+  }
+}
+
+  // Filter deals for search query
   const filtered = useMemo(() => {
     if (!query.trim()) return columns;
     const q = query.toLowerCase();
@@ -117,6 +136,7 @@ function SalesPipelineBoardPure() {
     return obj;
   }, [columns, query]);
 
+  // Calculate total values per column
   const totals = useMemo(() => {
     const t = {};
     for (const key of Object.keys(columns)) {
@@ -125,14 +145,16 @@ function SalesPipelineBoardPure() {
     return t;
   }, [columns]);
 
-  // Auto scroll while dragging
+  // Auto horizontal scroll while dragging (optional)
   useEffect(() => {
     function handleDrag(e) {
       const container = scrollRef.current;
       if (!container) return;
+
       const { clientX } = e;
       const { left, right } = container.getBoundingClientRect();
-      const scrollAmount = 40;
+      const scrollAmount = 40; // speed
+
       if (clientX - left < 80) {
         container.scrollLeft -= scrollAmount;
       } else if (right - clientX < 80) {
@@ -168,7 +190,7 @@ function SalesPipelineBoardPure() {
             className="w-72 rounded-2xl border border-neutral-200 bg-white px-4 py-2 shadow-sm outline-none focus:ring-2 focus:ring-indigo-200"
             placeholder="Search deals…"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={e => setQuery(e.target.value)}
           />
           <button
             onClick={fetchDeals}
@@ -182,7 +204,7 @@ function SalesPipelineBoardPure() {
 
       {/* Board */}
       <div ref={scrollRef} className="mx-auto flex gap-4 overflow-x-auto pb-4 max-w-[1600px]">
-        {STAGES.map((stage) => (
+        {STAGES.map(stage => (
           <Column
             key={stage.id}
             id={stage.id}
@@ -206,31 +228,13 @@ function Column({ id, title, deals, onAdd, totalValue, moveDeal }) {
       if (item.from !== id) {
         moveDeal(item.id, item.from, id);
       }
-    },
+    }
   });
 
-  // Get background color based on stage
-  function getColumnBgColor() {
-    switch (id) {
-      case "Qualification":
-        return "bg-blue-50";
-      case "Negotiation":
-        return "bg-amber-50";
-      case "Proposal Sent":
-        return "bg-cyan-50";
-      case "Closed Won":
-        return "bg-emerald-50";
-      case "Closed Lost":
-        return "bg-rose-50";
-      default:
-        return "bg-neutral-50";
-    }
-  }
-
   return (
-    <div
-      ref={dropRef}
-      className={`min-w-[340px] w-[360px] flex min-h-[65vh] flex-col rounded-2xl border border-neutral-200 p-3 shadow-sm ${getColumnBgColor()}`}
+    <div 
+      ref={dropRef} 
+      className="min-w-[340px] w-[360px] flex min-h-[65vh] flex-col rounded-2xl border border-neutral-200 bg-white p-3 shadow-sm"
     >
       <div className="mb-3 flex items-center justify-between">
         <div>
@@ -244,22 +248,25 @@ function Column({ id, title, deals, onAdd, totalValue, moveDeal }) {
         </div>
         <button
           onClick={onAdd}
-          className="rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white shadow hover:bg-indigo-700 transition"
+          className="rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white shadow hover:bg-indigo-700"
         >
           + Add
         </button>
       </div>
-      <div className="flex-1 overflow-y-auto">
-        <div className="flex flex-col gap-3">
-          {deals.map((deal) => (
-            <DealCard key={deal._id} deal={deal} stageId={id} moveDeal={moveDeal} />
-          ))}
-          {deals.length === 0 && (
-            <div className="mt-6 rounded-xl border border-dashed border-neutral-200 p-6 text-center text-sm text-neutral-500">
-              Drop deals here
-            </div>
-          )}
-        </div>
+      <div className="flex flex-1 flex-col gap-3">
+        {deals.map((deal) => (
+          <DealCard
+            key={deal._id}
+            deal={deal}
+            stageId={id}
+            moveDeal={moveDeal}
+          />
+        ))}
+        {deals.length === 0 && (
+          <div className="mt-6 rounded-xl border border-dashed border-neutral-200 p-6 text-center text-sm text-neutral-500">
+            Drop deals here
+          </div>
+        )}
       </div>
     </div>
   );
@@ -270,34 +277,28 @@ function DealCard({ deal, stageId, moveDeal }) {
   const [{ isDragging }, dragRef] = useDrag({
     type: ItemTypes.DEAL,
     item: { id: deal._id, from: stageId },
-    collect: (monitor) => ({ isDragging: monitor.isDragging() }),
+    collect: monitor => ({ isDragging: monitor.isDragging() })
   });
 
   function getColor() {
     switch (stageId) {
-      case "Qualification":
-        return "border-blue-400";
-      case "Negotiation":
-        return "border-amber-400";
-      case "Proposal Sent":
-        return "border-cyan-300";
-      case "Closed Won":
-        return "border-emerald-400";
-      case "Closed Lost":
-        return "border-rose-400";
-      default:
-        return "border-neutral-200";
+      case "Qualification": return "border-blue-200";
+      case "Negotiation": return "border-amber-200";
+      case "Proposal Sent": return "border-cyan-200";
+      case "Closed Won": return "border-emerald-200";
+      case "Closed Lost": return "border-rose-200";
+      default: return "border-neutral-200";
     }
   }
 
-  const ownerName = deal.assignedTo
-    ? `${deal.assignedTo.firstName || ""} ${deal.assignedTo.lastName || ""}`.trim()
+  const ownerName = deal.assignedTo 
+    ? `${deal.assignedTo.firstName || ''} ${deal.assignedTo.lastName || ''}`.trim() 
     : "—";
 
   return (
     <div
       ref={dragRef}
-      className={`rounded-2xl border ${getColor()} bg-white p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-move min-h-[120px] flex flex-col justify-between`}
+      className={`rounded-2xl border ${getColor()} bg-white p-4 shadow-sm hover:shadow transition cursor-move`}
       style={{ opacity: isDragging ? 0.5 : 1, borderWidth: isDragging ? 2 : 1 }}
     >
       <div className="flex items-start justify-between gap-3">
@@ -305,19 +306,12 @@ function DealCard({ deal, stageId, moveDeal }) {
           <div className="text-sm font-semibold leading-5">{deal.dealName}</div>
           <div className="mt-1 text-xs text-neutral-500">Owner: {ownerName}</div>
         </div>
-        <div className="rounded-xl bg-neutral-100 px-2 py-1 text-xs">
-          ₹{formatNumber(deal.value || 0)}
-        </div>
+        <div className="rounded-xl bg-neutral-100 px-2 py-1 text-xs">₹{formatNumber(deal.value || 0)}</div>
       </div>
       {deal.tags?.length ? (
         <div className="mt-3 flex flex-wrap gap-2">
           {deal.tags.map((t, i) => (
-            <span
-              key={i}
-              className="rounded-lg bg-indigo-50 px-2 py-0.5 text-[11px] text-indigo-700"
-            >
-              {t}
-            </span>
+            <span key={i} className="rounded-lg bg-indigo-50 px-2 py-0.5 text-[11px] text-indigo-700">{t}</span>
           ))}
         </div>
       ) : null}
