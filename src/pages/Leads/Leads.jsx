@@ -421,7 +421,7 @@ export default function LeadTable() {
   // Convert Deal Modal state
   const [convertModalOpen, setConvertModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
-  const [dealData, setDealData] = useState({ value: 0, notes: "" });
+  const [dealData, setDealData] = useState({ value: 0, notes: "", followUpDate: "" });
 
   useEffect(() => { initSocket(); }, []);
 
@@ -516,7 +516,11 @@ export default function LeadTable() {
   // Convert Deal Modal handlers
   const openConvertModal = (lead) => {
     setSelectedLead(lead);
-    setDealData({ value: lead.value || 0, notes: lead.notes || "" });
+    setDealData({
+      value: lead.value || 0,
+      notes: lead.notes || "",
+      followUpDate: lead.followUpDate ? new Date(lead.followUpDate).toISOString().slice(0, 16) : "",
+    });
     setConvertModalOpen(true);
     setMenuOpen(null);
   };
@@ -530,10 +534,16 @@ export default function LeadTable() {
     if (!selectedLead) return;
 
     try {
+      const payload = {
+        ...dealData,
+        followUpDate: dealData.followUpDate ? new Date(dealData.followUpDate) : null,
+      };
+
       await axios.patch(
         `http://localhost:5000/api/leads/${selectedLead._id}/convert`,
-        dealData // send value & notes
+        payload
       );
+
       toast.success("Lead converted to deal");
       setLeads(leads.filter(l => l._id !== selectedLead._id));
       setConvertModalOpen(false);
@@ -795,6 +805,17 @@ export default function LeadTable() {
               />
             </div>
 
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Follow-Up Date</label>
+              <input
+                type="datetime-local"
+                name="followUpDate"
+                value={dealData.followUpDate}
+                onChange={handleDealChange}
+                className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => { setConvertModalOpen(false); setSelectedLead(null); }}
@@ -815,3 +836,4 @@ export default function LeadTable() {
     </div>
   );
 }
+
