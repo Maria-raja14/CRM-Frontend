@@ -45,12 +45,13 @@ import Pipeline_view from "./pages/Pipeline_View/Pipelien_view"
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (user?._id) {
-      initSocket(user._id);
-    }
-  }, []); // 👈 VERY IMPORTANT → [] empty dependency array, so only 1 time run
+useEffect(() => {
+  const user = JSON.parse(localStorage.getItem("user"));
+  if (user?._id) {
+    initSocket();   // ✅ just call without param
+  }
+}, []); // only once
+
 
   return (
     <BrowserRouter>

@@ -79,26 +79,42 @@ function SalesPipelineBoardPure() {
     }
   }
 
-  // Simplified moveDeal - immediate local update, no API calls
-  function moveDeal(dealId, fromStage, toStage) {
-    if (fromStage === toStage) return;
 
-    setColumns(prev => {
-      let deal;
-      const next = { ...prev };
-      next[fromStage] = prev[fromStage].filter(d => {
-        if (d._id === dealId) {
-          deal = d;
-          return false;
-        }
-        return true;
-      });
-      if (deal) {
-        next[toStage] = [...prev[toStage], deal];
+
+
+  // Simplified moveDeal - local update + API call
+async function moveDeal(dealId, fromStage, toStage) {
+  if (fromStage === toStage) return;
+
+  // 🔹 Local state update for instant UI
+  setColumns(prev => {
+    let deal;
+    const next = { ...prev };
+    next[fromStage] = prev[fromStage].filter(d => {
+      if (d._id === dealId) {
+        deal = d;
+        return false;
       }
-      return next;
+      return true;
     });
+    if (deal) {
+      next[toStage] = [...prev[toStage], { ...deal, stage: toStage }];
+    }
+    return next;
+  });
+
+  // 🔹 API call to persist change
+  try {
+    await axios.patch(`http://localhost:5000/api/deals/${dealId}`, {
+      stage: toStage,
+    });
+  } catch (err) {
+    console.error("Failed to update deal stage:", err);
+    alert("Failed to save stage change! Please refresh.");
+    // optional: rollback by re-fetching deals
+    fetchDeals();
   }
+}
 
   // Filter deals for search query
   const filtered = useMemo(() => {

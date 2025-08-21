@@ -193,10 +193,8 @@ import { toast } from "react-toastify";
 let socket;
 
 export const initSocket = () => {
-  // Prevent duplicate connection
   if (socket && socket.connected) return socket;
 
-  // 1️⃣ User read from localStorage
   const userStr = localStorage.getItem("user");
   if (!userStr) {
     console.warn("⚠️ No user found in localStorage!");
@@ -216,58 +214,58 @@ export const initSocket = () => {
     return;
   }
 
-  // 2️⃣ Connect to backend (force websocket to avoid polling duplicates)
+  // ✅ Connect with auth
   socket = io("http://localhost:5000", {
     auth: { userId: user._id },
     transports: ["websocket"],
   });
 
-  // 3️⃣ On connect
+  // ✅ On connect
   socket.on("connect", () => {
     console.log("✅ Socket connected:", socket.id, "UserId:", user._id);
-    socket.emit("user_connected", user._id);
   });
 
-  socket.on("disconnect", () => {
-    console.log("⚠️ Socket disconnected");
+  socket.on("disconnect", (reason) => {
+    console.log("⚠️ Socket disconnected:", reason);
   });
 
-  // 4️⃣ Remove old listeners → avoid duplicates when re-init
-  socket.off("followup_reminder");
-  socket.off("missed_followup");
-  socket.off("missed_followup_admin");
+  // ✅ Listen once only
+  if (!socket.hasListeners) {
+    socket.on("followup_reminder", (data) => {
+      console.log("🔔 followup_reminder received:", data);
+      toast.info(data.message || "Follow-up reminder", { autoClose: 5000 });
+    });
 
-  // 5️⃣ Listen Events (toast only for now)
-  socket.on("followup_reminder", (data) => {
-    console.log("🔔 followup_reminder received:", data);
-    toast.info(data.message || "Follow-up reminder", { autoClose: 5000 });
-  });
+    socket.on("missed_followup", (data) => {
+      console.log("⚠️ missed_followup received:", data);
+      toast.error(data.message || "Missed follow-up!", { autoClose: 5000 });
+    });
 
-  socket.on("missed_followup", (data) => {
-    console.log("⚠️ missed_followup received:", data);
-    toast.error(data.message || "Missed follow-up!", { autoClose: 5000 });
-  });
+    socket.on("missed_followup_admin", (data) => {
+      console.log("⚠️ missed_followup_admin received:", data);
+      toast.warning(data.message || "Salesman missed follow-up!", { autoClose: 5000 });
+    });
 
-  socket.on("missed_followup_admin", (data) => {
-    console.log("⚠️ missed_followup_admin received:", data);
-    toast.warning(data.message || "Salesman missed follow-up!", { autoClose: 5000 });
-  });
+    socket.hasListeners = true; // 👈 custom flag to prevent duplicates
+  }
 
   return socket;
 };
+
 export const disconnectSocket = (userId) => {
   if (socket) {
     if (userId) {
-      socket.emit("user_logout", userId); // backend ku inform
+      socket.emit("user_logout", userId);
     }
-    socket.io.opts.reconnection = false; // 👈 prevent auto reconnect
-    socket.disconnect(); 
+    socket.io.opts.reconnection = false;
+    socket.disconnect();
     console.log("🔌 Socket disconnected manually:", socket.id);
     socket = null;
   }
 };
-// Helper to reuse socket anywhere
+
 export const getSocket = () => socket;
+
 
 
 
