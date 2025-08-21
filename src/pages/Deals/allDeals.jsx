@@ -1,8 +1,15 @@
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { MoreVertical, Edit, Trash2, X } from "lucide-react";
+import { MoreVertical, Edit, Trash2, X, Loader2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog";
 
 export const AllDeals = () => {
   const [deals, setDeals] = useState([]);
@@ -11,10 +18,14 @@ export const AllDeals = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [openDropdownId, setOpenDropdownId] = useState(null);
 
-  // 🔹 Modal state
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // Modal states
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [editDeal, setEditDeal] = useState(null);
+  const [deleteDeal, setDeleteDeal] = useState(null);
   const [users, setUsers] = useState([]);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const itemsPerPage = 10;
 
@@ -36,7 +47,6 @@ export const AllDeals = () => {
     }
   };
 
-  // 🔹 Users fetch with Sales filter
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -44,7 +54,6 @@ export const AllDeals = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // 🔹 response.data.users nu check pannitu sales role filter
       const filteredSales = (res.data.users || []).filter(
         (user) =>
           user.role &&
@@ -101,37 +110,50 @@ export const AllDeals = () => {
       ...deal,
       assignedTo: deal.assignedTo?._id || "",
     });
-    setIsModalOpen(true);
+    setIsEditModalOpen(true);
     setOpenDropdownId(null);
   };
 
-  const handleDelete = async (deal) => {
+  const handleDeleteClick = (deal) => {
+    setDeleteDeal(deal);
+    setIsDeleteModalOpen(true);
+    setOpenDropdownId(null);
+  };
+
+  const handleDeleteConfirm = async () => {
     try {
-      await axios.delete(`http://localhost:5000/api/deals/delete/${deal._id}`);
+      setDeleting(true);
+      await axios.delete(`http://localhost:5000/api/deals/delete-deal/${deleteDeal._id}`);
       toast.success("Deal deleted successfully");
       fetchDeals();
-      setOpenDropdownId(null);
     } catch (err) {
       console.error(err);
       toast.error("Failed to delete deal");
+    } finally {
+      setDeleting(false);
+      setIsDeleteModalOpen(false);
+      setDeleteDeal(null);
     }
   };
 
   const handleSave = async () => {
     try {
+      setSaving(true);
       await axios.patch(`http://localhost:5000/api/deals/${editDeal._id}`, {
         assignedTo: editDeal.assignedTo,
         stage: editDeal.stage,
         value: editDeal.value,
         notes: editDeal.notes,
-          followUpDate: editDeal.followUpDate, 
+        followUpDate: editDeal.followUpDate, 
       });
       toast.success("Deal updated successfully");
-      setIsModalOpen(false);
       fetchDeals();
     } catch (err) {
       console.error(err);
       toast.error("Failed to update deal");
+    } finally {
+      setSaving(false);
+      setIsEditModalOpen(false);
     }
   };
 
@@ -205,7 +227,7 @@ export const AllDeals = () => {
                           <Edit size={16} className="mr-2" /> Edit
                         </button>
                         <button
-                          onClick={() => handleDelete(deal)}
+                          onClick={() => handleDeleteClick(deal)}
                           className="flex items-center px-3 py-2 hover:bg-gray-100 w-full text-left text-red-600"
                         >
                           <Trash2 size={16} className="mr-2" /> Delete
@@ -249,34 +271,33 @@ export const AllDeals = () => {
         </div>
       )}
 
-      {/* 🔹 Edit Modal */}
-      {isModalOpen && editDeal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 shadow-lg relative">
-            <button
-              onClick={() => setIsModalOpen(false)}
-              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
-            >
-              <X size={20} />
-            </button>
-            <h3 className="text-lg font-semibold mb-4">Edit Deal</h3>
-
-            <div className="space-y-3">
+      {/* Edit Modal */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Deal</DialogTitle>
+          </DialogHeader>
+          {editDeal && (
+            <div className="space-y-3 mt-4">
               {/* AssignTo */}
-              <select
-                value={editDeal.assignedTo}
-                onChange={(e) =>
-                  setEditDeal({ ...editDeal, assignedTo: e.target.value })
-                }
-                className="mt-1 w-full border rounded p-2"
-              >
-                <option value="">-- Select Salesman --</option>
-                {users.map((u) => (
-                  <option key={u._id} value={u._id}>
-                    {u.firstName} {u.lastName}
-                  </option>
-                ))}
-              </select>
+              <div>
+                <label className="block text-sm font-medium">Assigned To</label>
+                <select
+                  value={editDeal.assignedTo}
+                  onChange={(e) =>
+                    setEditDeal({ ...editDeal, assignedTo: e.target.value })
+                  }
+                  className="mt-1 w-full border rounded p-2"
+                  disabled={saving}
+                >
+                  <option value="">-- Select Salesman --</option>
+                  {users.map((u) => (
+                    <option key={u._id} value={u._id}>
+                      {u.firstName} {u.lastName}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
               {/* Stage */}
               <div>
@@ -287,6 +308,7 @@ export const AllDeals = () => {
                     setEditDeal({ ...editDeal, stage: e.target.value })
                   }
                   className="mt-1 w-full border rounded p-2"
+                  disabled={saving}
                 >
                   <option>Qualification</option>
                   <option>Negotiation</option>
@@ -306,6 +328,7 @@ export const AllDeals = () => {
                     setEditDeal({ ...editDeal, value: e.target.value })
                   }
                   className="mt-1 w-full border rounded p-2"
+                  disabled={saving}
                 />
               </div>
 
@@ -318,45 +341,93 @@ export const AllDeals = () => {
                     setEditDeal({ ...editDeal, notes: e.target.value })
                   }
                   className="mt-1 w-full border rounded p-2"
+                  disabled={saving}
                 />
               </div>
+
+              {/* Follow-Up Date */}
+              <div>
+                <label className="block text-sm font-medium">Follow-Up Date</label>
+                <input
+                  type="datetime-local"
+                  value={
+                    editDeal.followUpDate
+                      ? new Date(editDeal.followUpDate).toISOString().slice(0, 16)
+                      : ""
+                  }
+                  onChange={(e) =>
+                    setEditDeal({ ...editDeal, followUpDate: e.target.value })
+                  }
+                  className="mt-1 w-full border rounded p-2"
+                  disabled={saving}
+                />
+              </div>
+
+              <div className="mt-4 flex justify-end space-x-2">
+                <button
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
+                  disabled={saving}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 flex items-center justify-center"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Save"
+                  )}
+                </button>
+              </div>
             </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
-            {/* Follow-Up Date */}
-<div>
-  <label className="block text-sm font-medium">Follow-Up Date</label>
-  <input
-    type="datetime-local"
-    value={
-      editDeal.followUpDate
-        ? new Date(editDeal.followUpDate).toISOString().slice(0, 16)
-        : ""
-    }
-    onChange={(e) =>
-      setEditDeal({ ...editDeal, followUpDate: e.target.value })
-    }
-    className="mt-1 w-full border rounded p-2"
-  />
-</div>
-
-
-            <div className="mt-4 flex justify-end space-x-2">
+      {/* Delete Confirmation Modal */}
+      <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Delete</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            <p>
+              Are you sure you want to delete the deal "
+              {deleteDeal?.dealName || 'this deal'}"? This action cannot be undone.
+            </p>
+            <div className="mt-6 flex justify-end space-x-3">
               <button
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => setIsDeleteModalOpen(false)}
                 className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
+                disabled={deleting}
               >
                 Cancel
               </button>
               <button
-                onClick={handleSave}
-                className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                onClick={handleDeleteConfirm}
+                disabled={deleting}
+                className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 flex items-center justify-center"
               >
-                Save
+                {deleting ? (
+                  <>
+                    <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete"
+                )}
               </button>
             </div>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
