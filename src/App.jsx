@@ -40,6 +40,7 @@ import Notification from "./pages/notification/Notification";
 import io from "socket.io-client";
 import { initSocket /*    */ } from "./utils/socket";
 import { AllDeals } from "./pages/Deals/allDeals";
+import Pipeline_view from "./pages/Pipeline_View/Pipelien_view"
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -79,7 +80,9 @@ function App() {
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/leads" element={<Leads />} />
             <Route path="/createleads" element={<CreateLeads />} />
-             <Route path="/deals" element={<AllDeals />} />
+            <Route path="/deals" element={<AllDeals />} />
+            
+            <Route path="/Pipelineview" element={<Pipeline_view />} />
 
             <Route
               path="/myprofile/*"
