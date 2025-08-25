@@ -532,23 +532,16 @@ function SalesPipelineBoardPure() {
       {/* Toolbar */}
       <div className="mx-auto mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between max-w-[1600px]">
         <div>
-          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">Sales Pipeline</h1>
-          <p className="text-sm text-neutral-500">Drag and drop deals across the stages. Search by title or owner.</p>
+          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight"> Pipeline</h1>
         </div>
         <div className="flex gap-2 items-center">
           <input
-            className="w-72 border border-neutral-200 bg-white px-4 py-2 shadow-sm outline-none focus:ring-2 focus:ring-indigo-200"
+            className="w-72 border border-neutral-200 bg-white px-4 py-2 rounded-lg shadow-sm outline-none focus:ring-2 focus:ring-indigo-200"
             placeholder="Search deals…"
             value={query}
             onChange={e => setQuery(e.target.value)}
           />
-          <button
-            onClick={fetchDeals}
-            className="border border-neutral-200 bg-white px-4 py-2 shadow-sm hover:shadow transition"
-            title="Refresh data"
-          >
-            Refresh
-          </button>
+       
         </div>
       </div>
 
@@ -585,7 +578,7 @@ function Column({ id, title, titleColor, bgColor, borderColor, deals, moveDeal }
   return (
     <div 
       ref={dropRef} 
-      className={`min-w-[340px] w-[360px] flex min-h-[65vh] flex-col border-2 ${borderColor} bg-white p-3 shadow-sm`}
+      className={`min-w-[340px] w-[360px] flex min-h-[65vh] flex-col border-2 border-gray-200 rounded-md bg-white p-3 shadow-sm`}
     >
       <div className="mb-3">
         <h2 className={`text-base font-semibold flex items-center gap-2 ${titleColor} ${bgColor} p-3`}>
@@ -605,7 +598,7 @@ function Column({ id, title, titleColor, bgColor, borderColor, deals, moveDeal }
           />
         ))}
         {deals.length === 0 && (
-          <div className="mt-6 border border-dashed border-neutral-200 p-6 text-center text-sm text-neutral-500">
+          <div className="mt-6 border border-dashed border-neutral-200  p-6 text-center text-sm text-neutral-500">
             Drop deals here
           </div>
         )}
@@ -640,7 +633,7 @@ function DealCard({ deal, stageId, moveDeal }) {
   return (
     <div
       ref={dragRef}
-      className={`border ${getColor()} bg-white p-4 shadow-sm hover:shadow transition cursor-move min-h-[120px] flex flex-col justify-between`}
+      className={`border ${getColor()} bg-white p-4 rounded-2xl shadow-sm hover:shadow transition cursor-move min-h-[120px] flex flex-col justify-between`}
       style={{ opacity: isDragging ? 0.5 : 1, borderWidth: isDragging ? 2 : 1 }}
     >
       <div className="flex items-start justify-between gap-3">
