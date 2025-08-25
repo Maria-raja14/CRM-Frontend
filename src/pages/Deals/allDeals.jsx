@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { MoreVertical, Edit, Trash2, X } from "lucide-react";
 
+
 export const AllDeals = () => {
   const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
