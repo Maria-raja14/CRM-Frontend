@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import DatePicker from "react-datepicker";
-import { FaCalendarAlt, FaEllipsisV } from "react-icons/fa";
+import { FaEllipsisV } from "react-icons/fa";
 import { useModal } from "../../context/ModalContext.jsx";
 import InvoiceModal from "./InvoiceModal.jsx";
 import axios from "axios";
@@ -8,6 +8,12 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 import "react-datepicker/dist/react-datepicker.css";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog";
 
 const InvoiceHead = () => {
   const { openModal } = useModal();
@@ -15,19 +21,22 @@ const InvoiceHead = () => {
   const [invoices, setInvoices] = useState([]);
   const [filteredInvoices, setFilteredInvoices] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterOwner, setFilterOwner] = useState("");
+  const [filterAssignTo, setFilterAssignTo] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterMethod, setFilterMethod] = useState("");
   const [openIndex, setOpenIndex] = useState(null);
+  const [sendingEmailId, setSendingEmailId] = useState(null);
+
+  // modal state for email sending
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [emailMessage, setEmailMessage] = useState("Sending invoice email...");
+  const [emailStatus, setEmailStatus] = useState("loading"); // loading | success | error
+
   const dropdownRef = useRef(null);
 
   useEffect(() => {
     fetchInvoices();
   }, []);
-
-  useEffect(() => {
-    applyFilters();
-  }, [searchTerm, startDate, filterOwner, filterStatus, filterMethod, invoices]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -39,13 +48,54 @@ const InvoiceHead = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    applyFilters();
+  }, [
+    searchTerm,
+    startDate,
+    filterAssignTo,
+    filterStatus,
+    filterMethod,
+    invoices,
+  ]);
+
   const fetchInvoices = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/auth/invoice/getInvoice");
+      const response = await axios.get(
+        "http://localhost:5000/api/invoice/getInvoice"
+      );
       setInvoices(response.data);
       setFilteredInvoices(response.data);
     } catch (error) {
       console.error("Error fetching invoices:", error);
+    }
+  };
+
+  const handleSendEmail = async (invoiceId) => {
+    try {
+      setSendingEmailId(invoiceId);
+      setEmailModalOpen(true);
+      setEmailStatus("loading");
+      setEmailMessage("📨 Sending invoice email...");
+
+      await axios.post(
+        `http://localhost:5000/api/invoice/sendEmail/${invoiceId}`
+      );
+
+      setEmailStatus("success");
+      setEmailMessage("✅ Invoice sent to customer email!");
+    } catch (error) {
+      console.error("Error sending invoice:", error);
+      setEmailStatus("error");
+      setEmailMessage("❌ Failed to send email. Please try again.");
+    } finally {
+      setSendingEmailId(null);
+      setOpenIndex(null);
+
+      // auto close modal after 2 seconds if success/error
+      setTimeout(() => {
+        setEmailModalOpen(false);
+      }, 2000);
     }
   };
 
@@ -66,8 +116,10 @@ const InvoiceHead = () => {
       });
     }
 
-    if (filterOwner) {
-      filtered = filtered.filter((invoice) => invoice.owner === filterOwner);
+    if (filterAssignTo) {
+      filtered = filtered.filter(
+        (invoice) => invoice.assignTo?._id === filterAssignTo
+      );
     }
 
     if (filterStatus) {
@@ -75,7 +127,9 @@ const InvoiceHead = () => {
     }
 
     if (filterMethod) {
-      filtered = filtered.filter((invoice) => invoice.paymentMethod === filterMethod);
+      filtered = filtered.filter(
+        (invoice) => invoice.paymentMethod === filterMethod
+      );
     }
 
     setFilteredInvoices(filtered);
@@ -83,7 +137,9 @@ const InvoiceHead = () => {
 
   const handleDelete = async (invoiceId) => {
     try {
-      await axios.delete(`http://localhost:5000/api/auth/invoice/delete/${invoiceId}`);
+      await axios.delete(
+        `http://localhost:5000/api/auth/invoice/delete/${invoiceId}`
+      );
       const updated = invoices.filter((invoice) => invoice._id !== invoiceId);
       setInvoices(updated);
     } catch (error) {
@@ -93,7 +149,10 @@ const InvoiceHead = () => {
 
   const createInvoice = async (invoiceData) => {
     try {
-      const response = await axios.post("http://localhost:5000/api/invoices", invoiceData);
+      const response = await axios.post(
+        "http://localhost:5000/api/invoices",
+        invoiceData
+      );
       const updated = [...invoices, response.data];
       setInvoices(updated);
     } catch (error) {
@@ -110,9 +169,13 @@ const InvoiceHead = () => {
     doc.setFontSize(12);
     const details = [
       ["Invoice #", invoice.invoicenumber || "N/A"],
-      ["Owner", invoice.owner || "N/A"],
+      [
+        "Assigned To",
+        invoice.assignTo
+          ? `${invoice.assignTo.firstName} ${invoice.assignTo.lastName}`
+          : "N/A",
+      ],
       ["Status", invoice.status || "N/A"],
-      ["Payment Method", invoice.paymentMethod || "N/A"],
     ];
 
     let y = 50;
@@ -124,7 +187,11 @@ const InvoiceHead = () => {
     autoTable(doc, {
       startY: y + 10,
       head: [["Deal Name", "Amount (Rs.)"]],
-      body: invoice.items?.map((item) => [item.deal || "N/A", item.amount || "0"]) || [],
+      body:
+        invoice.items?.map((item) => [
+          item.deal?.dealName || "N/A",
+          item.amount || "0",
+        ]) || [],
       theme: "grid",
       styles: { halign: "center", fontSize: 10 },
       headStyles: {
@@ -143,11 +210,18 @@ const InvoiceHead = () => {
 
     const footerY = finalY + 25;
     doc.setFontSize(10);
-    doc.text("Company Name | Address | Phone | Email", 105, footerY, { align: "center" });
-    doc.setFontSize(8).setTextColor(169, 169, 169);
-    doc.text("Terms & Conditions: Payment due within 30 days.", 105, footerY + 10, {
+    doc.text("Company Name | Address | Phone | Email", 105, footerY, {
       align: "center",
     });
+    doc.setFontSize(8).setTextColor(169, 169, 169);
+    doc.text(
+      "Terms & Conditions: Payment due within 30 days.",
+      105,
+      footerY + 10,
+      {
+        align: "center",
+      }
+    );
 
     doc.save(`Invoice_${invoice.invoicenumber}.pdf`);
   };
@@ -167,49 +241,62 @@ const InvoiceHead = () => {
     <div className="p-4">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold">Invoices</h1>
-        <button onClick={openModal} className="bg-[#4466f2] p-2 px-4 text-white rounded-sm">
+        <button
+          onClick={openModal}
+          className="bg-[#4466f2] p-2 px-4 text-white rounded-sm"
+        >
           Create invoices
         </button>
       </div>
 
       <InvoiceModal onSubmit={createInvoice} />
 
-      <div className="flex justify-between gap-5 items-center mt-10">
-        <div className="bg-[#4466f2] p-6 py-5 pl-9 pr-[250px] text-white rounded-sm">
-          <h3 className="text-lg">Total Amount</h3>
-          <p className="text-sm">Rs.{totalAmount.toFixed(2)}</p>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
+        <div className="bg-[#4466f2] p-6 rounded-xl text-white shadow-md">
+          <h3 className="text-lg font-medium">Total Amount</h3>
+          <p className="text-2xl font-bold mt-2">₹{totalAmount.toFixed(2)}</p>
         </div>
-        <div className="bg-[#46c35f] py-5 pl-5 pr-[250px] text-white rounded-sm">
-          <h3 className="text-lg">Total Paid</h3>
-          <p className="text-sm">Rs.{totalPaid.toFixed(2)}</p>
+        <div className="bg-[#46c35f] p-6 rounded-xl text-white shadow-md">
+          <h3 className="text-lg font-medium">Total Paid</h3>
+          <p className="text-2xl font-bold mt-2">₹{totalPaid.toFixed(2)}</p>
         </div>
-        <div className="bg-[#fc6510] py-5 pl-5 pr-[250px] text-white rounded-sm">
-          <h3 className="text-lg">Total Due</h3>
-          <p className="text-sm">Rs.{totalDue.toFixed(2)}</p>
+        <div className="bg-[#fc6510] p-6 rounded-xl text-white shadow-md">
+          <h3 className="text-lg font-medium">Total Due</h3>
+          <p className="text-2xl font-bold mt-2">₹{totalDue.toFixed(2)}</p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap justify-between gap-4 mt-10">
-        <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-4 mt-8 items-center justify-between">
+        <div className="flex flex-wrap gap-3">
           <DatePicker
             selected={startDate}
             onChange={(date) => setStartDate(date)}
-            className="text-center py-2 shadow-2xl text-gray-400 bg-white rounded-3xl"
+            className="px-4 py-2 rounded-lg border shadow-sm focus:ring-2 focus:ring-blue-400"
             placeholderText="Filter by Date"
           />
           <select
-            className="px-7 py-2 shadow-2xl text-gray-400 bg-white rounded-3xl"
-            value={filterOwner}
-            onChange={(e) => setFilterOwner(e.target.value)}
+            className="px-4 py-2 rounded-lg border shadow-sm text-gray-600"
+            value={filterAssignTo}
+            onChange={(e) => setFilterAssignTo(e.target.value)}
           >
-            <option value="">All Owners</option>
-            {[...new Set(invoices.map((inv) => inv.owner))].map((owner) => (
-              <option key={owner}>{owner}</option>
-            ))}
+            <option value="">All Users</option>
+            {[...new Set(invoices.map((inv) => inv.assignTo?._id))].map(
+              (userId) => {
+                const user = invoices.find(
+                  (inv) => inv.assignTo?._id === userId
+                )?.assignTo;
+                return (
+                  <option key={userId} value={userId}>
+                    {user ? `${user.firstName} ${user.lastName}` : "Unknown"}
+                  </option>
+                );
+              }
+            )}
           </select>
           <select
-            className="px-7 py-2 shadow-2xl text-gray-400 bg-white rounded-3xl"
+            className="px-4 py-2 rounded-lg border shadow-sm text-gray-600"
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
           >
@@ -217,86 +304,96 @@ const InvoiceHead = () => {
             <option value="paid">Paid</option>
             <option value="unpaid">Unpaid</option>
           </select>
-          <select
-            className="px-7 py-2 shadow-2xl text-gray-400 bg-white rounded-3xl"
-            value={filterMethod}
-            onChange={(e) => setFilterMethod(e.target.value)}
-          >
-            <option value="">All Methods</option>
-            {[...new Set(invoices.map((inv) => inv.paymentMethod))].map((method) => (
-              <option key={method}>{method}</option>
-            ))}
-          </select>
         </div>
 
-        <div className="flex items-center border rounded-3xl bg-white w-[250px] px-2">
+        {/* Search */}
+        <div className="flex items-center border rounded-lg bg-white px-3 shadow-sm w-[250px]">
           <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
           <input
             type="text"
             placeholder="Search Invoice #"
-            className="p-1.5 pl-2 w-full outline-none bg-transparent"
+            className="ml-2 w-full py-2 outline-none text-gray-700"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
 
-      <p className="mt-4 text-gray-500">
-        Showing {filteredInvoices.length} of {invoices.length} invoices
-      </p>
-
       {/* Table */}
-      <div className="bg-white mt-4 rounded-md overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b">
-              <th className="text-left p-3 text-gray-600">Invoice #</th>
-              <th className="text-left p-3 text-gray-600">Deal</th>
-              <th className="text-left p-3 text-gray-600">Status</th>
-              <th className="text-left p-3 text-gray-600">Method</th>
-              <th className="text-left p-3 text-gray-600">Amount</th>
-              <th className="text-left p-3 text-gray-600">Owner</th>
-              <th className="text-left p-3 text-gray-600">Tax</th>
-              <th className="text-left p-3 text-gray-600">Action</th>
+      <div className="bg-white mt-6 rounded-xl shadow-md overflow-x-auto">
+        <table className="w-full text-sm text-left">
+          <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
+            <tr>
+              <th className="px-6 py-3">Invoice #</th>
+              <th className="px-6 py-3">Deal</th>
+              <th className="px-6 py-3">Status</th>
+              <th className="px-6 py-3">Amount</th>
+              <th className="px-6 py-3">Assigned To</th>
+              <th className="px-6 py-3">Tax</th>
+              <th className="px-6 py-3 text-center">Action</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-gray-200">
             {filteredInvoices.map((invoice, index) => (
-              <tr key={invoice._id} className="border-t hover:bg-gray-100">
-                <td className="p-2">{invoice.invoicenumber}</td>
-                <td className="p-2">
-                  {invoice.items?.[0]?.deal || "N/A"}
+              <tr
+                key={invoice._id}
+                className="hover:bg-gray-50 transition-colors"
+              >
+                <td className="px-6 py-4">{invoice.invoicenumber}</td>
+                <td className="px-6 py-4">
+                  {invoice.items?.[0]?.deal?.dealName || "N/A"}
                 </td>
-                <td
-                  className={`text-center px-5 text-white rounded ${
-                    invoice.status === "paid" ? "bg-green-500" : "bg-red-500"
-                  }`}
-                >
-                  {invoice.status}
+                <td className="px-6 py-4">
+                  <span
+                    className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                      invoice.status === "paid"
+                        ? "bg-green-100 text-green-700"
+                        : "bg-red-100 text-red-700"
+                    }`}
+                  >
+                    {invoice.status}
+                  </span>
                 </td>
-                <td className="p-5">{invoice.paymentMethod}</td>
-                <td className="p-2">Rs.{invoice.total}</td>
-                <td className="p-2">{invoice.owner}</td>
-                <td className="py-2">Rs.{invoice.tax}</td>
-                <td className="p-2 relative" ref={dropdownRef}>
+                <td className="px-6 py-4 font-semibold">₹{invoice.total}</td>
+                <td className="px-6 py-4">
+                  {invoice.assignTo
+                    ? `${invoice.assignTo.firstName} ${invoice.assignTo.lastName}`
+                    : "N/A"}
+                </td>
+                <td className="px-6 py-4">₹{invoice.tax}</td>
+                <td className="px-6 py-4 text-center relative">
                   <button
                     onClick={() =>
                       setOpenIndex(openIndex === index ? null : index)
                     }
-                    className="text-gray-600"
+                    className="p-2 rounded-full hover:bg-gray-100 text-gray-500"
                   >
                     <FaEllipsisV />
                   </button>
+
                   {openIndex === index && (
-                    <div className="absolute right-0 bg-white shadow-md rounded border mt-2 z-10">
+                    <div
+                      ref={dropdownRef}
+                      className="absolute right-0 mt-2 w-32 bg-white border rounded-md shadow-lg z-50"
+                    >
                       <button
-                        className="block w-full text-left px-4 py-2 hover:bg-gray-200"
+                        className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                        onClick={() => handleSendEmail(invoice._id)}
+                      >
+                        Send to Email
+                      </button>
+
+                      <button
+                        className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
                         onClick={() => generatePDF(invoice)}
                       >
                         Download
                       </button>
+                      <button className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
+                        Edit
+                      </button>
                       <button
-                        className="block w-full text-left px-4 py-2 hover:bg-gray-200"
+                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                         onClick={() => handleDelete(invoice._id)}
                       >
                         Delete
@@ -306,9 +403,10 @@ const InvoiceHead = () => {
                 </td>
               </tr>
             ))}
+
             {filteredInvoices.length === 0 && (
               <tr>
-                <td colSpan="8" className="text-center py-4 text-gray-400">
+                <td colSpan="7" className="text-center py-6 text-gray-400">
                   No invoices found.
                 </td>
               </tr>
@@ -316,8 +414,31 @@ const InvoiceHead = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Email Sending Modal */}
+      <Dialog open={emailModalOpen} onOpenChange={setEmailModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Email Status</DialogTitle>
+          </DialogHeader>
+          <div className="py-6 text-center">
+            {emailStatus === "loading" && (
+              <p className="text-blue-600 font-medium animate-pulse">
+                {emailMessage}
+              </p>
+            )}
+            {emailStatus === "success" && (
+              <p className="text-green-600 font-semibold">{emailMessage}</p>
+            )}
+            {emailStatus === "error" && (
+              <p className="text-red-600 font-semibold">{emailMessage}</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
 export default InvoiceHead;
+
