@@ -40,7 +40,7 @@ const TemplateHead = () => {
   const handleDelete = async (_id) => {
     try {
       await axios.delete(
-        `http://localhost:5000/api/auth/template/deleteTemp/${_id}`
+        `http://localhost:5000/api/template/deleteTemp/${_id}`
       );
       setTemplates(templates.filter((template) => template._id !== _id));
       toast.success(" Template Deleted successfully!");
@@ -76,7 +76,7 @@ const TemplateHead = () => {
         ? editorRef.current.getContent()
         : editData.content;
       const response = await axios.put(
-        `http://localhost:5000/api/auth/template/updateTemp/${selectedTemplate._id}`,
+        `http://localhost:5000/api/template/updateTemp/${selectedTemplate._id}`,
         { ...editData, content: updatedContent }
       );
 

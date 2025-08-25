@@ -10,7 +10,7 @@ const EditTemplateModal = ({ template, onClose, onUpdate }) => {
 
   const handleSave = async () => {
     try {
-      const response = await axios.put(`http://localhost:5000/api/auth/template/updateTemp/${template._id}`, editData);
+      const response = await axios.put(`http://localhost:5000/api/template/updateTemp/${template._id}`, editData);
       onUpdate(response.data);
       onClose();
          toast.success(" Template Updated successfully!");
