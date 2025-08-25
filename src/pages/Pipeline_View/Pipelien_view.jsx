@@ -91,7 +91,7 @@ function SalesPipelineBoardPure() {
   const allItems = useMemo(() => Object.values(columns).flat(), [columns]);
 
   async function addDeal(stageId) {
-    const title = prompt("Deal title");
+    const title = prompt("Deal title"); 
     if (!title) return;
     const valueStr = prompt("Value (₹)");
     const value = Number(valueStr || 0) || 0;

@@ -2,13 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { MoreVertical, Edit, Trash2 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "../../components/ui/dialog";
+import { MoreVertical, Edit, Trash2, X } from "lucide-react";
 
 export const AllDeals = () => {
   const [deals, setDeals] = useState([]);
@@ -17,7 +11,7 @@ export const AllDeals = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [openDropdownId, setOpenDropdownId] = useState(null);
 
-  // Modal state
+  // 🔹 Modal states
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [editDeal, setEditDeal] = useState(null);
@@ -29,9 +23,7 @@ export const AllDeals = () => {
   const fetchDeals = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        "http://localhost:5000/api/deals/getAll"
-      );
+      const response = await axios.get(`http://localhost:5000/api/deals/getAll`);
       if (response.data) {
         setDeals(response.data);
         setTotalPages(Math.ceil(response.data.length / itemsPerPage));
@@ -44,15 +36,13 @@ export const AllDeals = () => {
     }
   };
 
-  // Users fetch with Sales filter
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get("http://localhost:5000/api/users", {
-        headers: { Authorization: `Bearer ${token} `},
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      // response.data.users nu check pannitu sales role filter
       const filteredSales = (res.data.users || []).filter(
         (user) =>
           user.role &&
@@ -121,7 +111,9 @@ export const AllDeals = () => {
 
   const handleDeleteConfirm = async () => {
     try {
-      await axios.delete(`http://localhost:5000/api/deals/delete-deal/${deleteDeal._id}`);
+      await axios.delete(
+        `http://localhost:5000/api/deals/delete-deal/${deleteDeal._id}`
+      );
       toast.success("Deal deleted successfully");
       fetchDeals();
       setIsDeleteModalOpen(false);
@@ -133,13 +125,16 @@ export const AllDeals = () => {
 
   const handleSave = async () => {
     try {
-      await axios.patch(`http://localhost:5000/api/deals/update-deal/${editDeal._id}`, {
-        assignedTo: editDeal.assignedTo,
-        stage: editDeal.stage,
-        value: editDeal.value,
-        notes: editDeal.notes,
-        followUpDate: editDeal.followUpDate,
-      });
+      await axios.patch(
+        `http://localhost:5000/api/deals/update-deal/${editDeal._id}`,
+        {
+          assignedTo: editDeal.assignedTo,
+          stage: editDeal.stage,
+          value: editDeal.value,
+          notes: editDeal.notes,
+          followUpDate: editDeal.followUpDate,
+        }
+      );
       toast.success("Deal updated successfully");
       setIsEditModalOpen(false);
       fetchDeals();
@@ -207,7 +202,6 @@ export const AllDeals = () => {
                       <MoreVertical size={18} />
                     </button>
 
-                    {/* Dropdown Menu */}
                     {openDropdownId === deal._id && (
                       <div className="absolute right-0 mt-2 w-32 bg-white border rounded shadow-md z-10">
                         <button
@@ -262,34 +256,33 @@ export const AllDeals = () => {
       )}
 
       {/* Edit Modal */}
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Deal</DialogTitle>
-          </DialogHeader>
-         
-          {editDeal && (
-            <div className="space-y-3 mt-4">
-              {/* AssignTo */}
-              <div>
-                <label className="block text-sm font-medium">Assigned To</label>
-                <select
-                  value={editDeal.assignedTo}
-                  onChange={(e) =>
-                    setEditDeal({ ...editDeal, assignedTo: e.target.value })
-                  }
-                  className="mt-1 w-full border rounded p-2"
-                >
-                  <option value="">-- Select Salesman --</option>
-                  {users.map((u) => (
-                    <option key={u._id} value={u._id}>
-                      {u.firstName} {u.lastName}
-                    </option>
-                  ))}
-                </select>
-              </div>
+      {isEditModalOpen && editDeal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 shadow-lg relative">
+            <button
+              onClick={() => setIsEditModalOpen(false)}
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+            >
+              <X size={20} />
+            </button>
+            <h3 className="text-lg font-semibold mb-4">Edit Deal</h3>
 
-              {/* Stage */}
+            <div className="space-y-3">
+              <select
+                value={editDeal.assignedTo}
+                onChange={(e) =>
+                  setEditDeal({ ...editDeal, assignedTo: e.target.value })
+                }
+                className="mt-1 w-full border rounded p-2"
+              >
+                <option value="">-- Select Salesman --</option>
+                {users.map((u) => (
+                  <option key={u._id} value={u._id}>
+                    {u.firstName} {u.lastName}
+                  </option>
+                ))}
+              </select>
+
               <div>
                 <label className="block text-sm font-medium">Stage</label>
                 <select
@@ -307,7 +300,6 @@ export const AllDeals = () => {
                 </select>
               </div>
 
-              {/* Value */}
               <div>
                 <label className="block text-sm font-medium">Value</label>
                 <input
@@ -320,7 +312,6 @@ export const AllDeals = () => {
                 />
               </div>
 
-              {/* Notes */}
               <div>
                 <label className="block text-sm font-medium">Notes</label>
                 <textarea
@@ -332,14 +323,17 @@ export const AllDeals = () => {
                 />
               </div>
 
-              {/* Follow-Up Date */}
               <div>
-                <label className="block text-sm font-medium">Follow-Up Date</label>
+                <label className="block text-sm font-medium">
+                  Follow-Up Date
+                </label>
                 <input
                   type="datetime-local"
                   value={
                     editDeal.followUpDate
-                      ? new Date(editDeal.followUpDate).toISOString().slice(0, 16)
+                      ? new Date(editDeal.followUpDate)
+                          .toISOString()
+                          .slice(0, 16)
                       : ""
                   }
                   onChange={(e) =>
@@ -348,33 +342,31 @@ export const AllDeals = () => {
                   className="mt-1 w-full border rounded p-2"
                 />
               </div>
-
-              <div className="mt-4 flex justify-end space-x-2">
-                <button
-                  onClick={() => setIsEditModalOpen(false)}
-                  className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSave}
-                  className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
-                >
-                  Save
-                </button>
-              </div>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+
+            <div className="mt-4 flex justify-end space-x-2">
+              <button
+                onClick={() => setIsEditModalOpen(false)}
+                className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
-      <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm Delete</DialogTitle>
-          </DialogHeader>
-          <div className="mt-4">
+      {isDeleteModalOpen && deleteDeal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-80 shadow-lg">
+            <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
             <p>Are you sure you want to delete this deal?</p>
             <div className="mt-4 flex justify-end space-x-2">
               <button
@@ -391,8 +383,8 @@ export const AllDeals = () => {
               </button>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
     </div>
   );
 };
