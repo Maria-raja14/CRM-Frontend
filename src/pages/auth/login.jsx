@@ -40,7 +40,7 @@ const Login = () => {
         setIsError(false);
 
         setTimeout(() => {
-          navigate("/layout"); // or "/dashboard"
+          navigate("/adminDashboard"); // or "/dashboard"
         }, 1500);
       } else {
         setMessage("Token missing in response");
