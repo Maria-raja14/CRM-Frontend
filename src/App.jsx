@@ -33,7 +33,7 @@ import Leads from "./pages/Leads/Leads";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import UserManagement from "./pages/useroles/UserManagement";
-import Notification from "./pages/notification/Notification";
+// import Notification from "./pages/notification/Notification";
 import io from "socket.io-client";
 import { initSocket /*    */ } from "./utils/socket";
 import { AllDeals } from "./pages/Deals/allDeals";
@@ -91,7 +91,7 @@ function App() {
           </Route>
         </Routes>
         <ToastContainer position="top-right" autoClose={3000} />
-        <Notification />
+        {/* <Notification /> */}
       </div>
     </BrowserRouter>
   );

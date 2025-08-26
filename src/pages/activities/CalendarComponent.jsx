@@ -47,27 +47,27 @@ const CalendarComponent = ({ activities }) => {
     }));
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const personsRes = await axios.get("http://localhost:5000/api/person");
-        setPersons(personsRes.data);
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const personsRes = await axios.get("http://localhost:5000/api/person");
+  //       setPersons(personsRes.data);
 
-        const organizationsRes = await axios.get(
-          "http://localhost:5000/api/organization"
-        );
-        setOrganizations(organizationsRes.data);
+  //       const organizationsRes = await axios.get(
+  //         "http://localhost:5000/api/organization"
+  //       );
+  //       setOrganizations(organizationsRes.data);
 
-        const dealsRes = await axios.get("http://localhost:5000/api/alldeals");
-        setDeals(dealsRes.data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
+  //       const dealsRes = await axios.get("http://localhost:5000/api/alldeals");
+  //       setDeals(dealsRes.data);
+  //     } catch (error) {
+  //       console.error("Error fetching data:", error);
+  //     }
+  //   };
 
-    fetchData();
-    fetchCalendar();
-  }, []);
+  //   fetchData();
+  //   fetchCalendar();
+  // }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
