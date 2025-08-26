@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from "react";
 import { Search } from "lucide-react";
-import AddActivityModal from './ModalCalender';
+import AddActivityModal from "./ModalCalender";
 import ListActivity from "./ListActivity";
 import axios from "axios";
 
@@ -11,7 +10,7 @@ const CalendarView = () => {
   const [activities, setActivities] = useState([]);
   const [activityToEdit, setActivityToEdit] = useState(null);
   const [dealToEdit, setDealToEdit] = useState(null);
-  const [selectedType, setSelectedType] = useState("Any");  // New state for the type filter
+  const [selectedType, setSelectedType] = useState("Any"); // New state for the type filter
   const [showTypeDropdown, setShowTypeDropdown] = useState(false); // For dropdown visibility
 
   useEffect(() => {
@@ -32,10 +31,12 @@ const CalendarView = () => {
     setActivities([...activities, newActivity]);
   };
 
-  const handleEditActivity = (updatedActivity) => {
+  const handleEditActivity = (updatedActivityFromBackend) => {
     setActivities(
       activities.map((act) =>
-        act._id === updatedActivity._id ? updatedActivity : act
+        act._id === updatedActivityFromBackend._id
+          ? updatedActivityFromBackend
+          : act
       )
     );
     setActivityToEdit(null);
@@ -43,11 +44,13 @@ const CalendarView = () => {
 
   // Filter activities based on search query and selected type
   const filteredActivities = activities.filter((activity) => {
-    const matchesSearchQuery =
-      activity.title?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearchQuery = activity.title
+      ?.toLowerCase()
+      .includes(searchQuery.toLowerCase());
 
     const matchesType =
-      selectedType === "Any" || activity.activityModel?.toLowerCase() === selectedType.toLowerCase();
+      selectedType === "Any" ||
+      activity.activityModel?.toLowerCase() === selectedType.toLowerCase();
 
     return matchesSearchQuery && matchesType;
   });
@@ -76,13 +79,20 @@ const CalendarView = () => {
             >
               {selectedType}
               <svg
-                className={`w-4 h-4 transition-transform duration-200 ${showTypeDropdown ? "rotate-180" : ""}`}
+                className={`w-4 h-4 transition-transform duration-200 ${
+                  showTypeDropdown ? "rotate-180" : ""
+                }`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
                 xmlns="http://www.w3.org/2000/svg"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </button>
 
@@ -96,7 +106,9 @@ const CalendarView = () => {
                       setShowTypeDropdown(false);
                     }}
                     className={`px-4 py-2 cursor-pointer rounded hover:bg-gray-100 ${
-                      selectedType === type ? "text-blue-600 font-semibold" : "text-gray-800"
+                      selectedType === type
+                        ? "text-blue-600 font-semibold"
+                        : "text-gray-800"
                     }`}
                   >
                     {type}
@@ -122,7 +134,10 @@ const CalendarView = () => {
         </div>
 
         <div className="relative w-full sm:w-64 ml-28">
-          <Search className="absolute left-14 top-2.5 text-gray-400" size={16} />
+          <Search
+            className="absolute left-14 top-2.5 text-gray-400"
+            size={16}
+          />
           <input
             type="text"
             placeholder="Search"
@@ -141,7 +156,7 @@ const CalendarView = () => {
             setDealToEdit(null);
           }}
           activityToEdit={activityToEdit}
-          onactivityAdded={handleAddActivity}
+          onActivityAdded={handleAddActivity}
           onEdit={handleEditActivity}
         />
       )}

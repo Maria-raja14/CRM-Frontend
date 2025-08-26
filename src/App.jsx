@@ -12,12 +12,11 @@ import InvoiceHead from "./pages/invoice/InvoiceHead";
 import UserTop from "./pages/useroles/UserTop";
 import ProfileCard from "./navbar/Myprofile_Topcenter";
 
-import Expenses from "./pages/Expenses/Expenses";
-import AreaExpenses from "./pages/Area_Expenses/Area_of_Expenses";
+
 
 import CalendarView from "./pages/activities/CalendarView";
 import Activity from "./pages/activityList/Activity";
-import ReportDeals from "./pages/Reports/ReportDeals";
+
 import PaymentAdd from "./pages/Payment/PaymentAdd";
 import Lastreasons from "./pages/lostReasons/Lastreasons";
 import ProposalHead from "./pages/proposal/ProposalHead";
@@ -25,8 +24,6 @@ import TemplateHead from "./pages/proposal/TemplateHead";
 import AddTemplate from "./pages/proposal/AddTemplate";
 import SendProposal from "./pages/proposal/SendProposal";
 import ProposalBoard from "./stage/ProposalBoard";
-import Proposal from "./pages/reports/Proposal";
-import Proposalgraf from "./pages/reports/Proposalgraf";
 
 import CreateLeads from "./pages/Leads/CreateLeads";
 
@@ -40,18 +37,17 @@ import Notification from "./pages/notification/Notification";
 import io from "socket.io-client";
 import { initSocket /*    */ } from "./utils/socket";
 import { AllDeals } from "./pages/Deals/allDeals";
-import Pipeline_view from "./pages/Pipeline_View/Pipelien_view"
+import Pipeline_view from "./pages/Pipeline_View/Pipelien_view";
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-useEffect(() => {
-  const user = JSON.parse(localStorage.getItem("user"));
-  if (user?._id) {
-    initSocket();   // ✅ just call without param
-  }
-}, []); // only once
-
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (user?._id) {
+      initSocket(); // ✅ just call without param
+    }
+  }, []); // only once
 
   return (
     <BrowserRouter>
@@ -72,17 +68,16 @@ useEffect(() => {
             <Route path="/template/addtemp" element={<AddTemplate />} />
             <Route path="/proposal/sendproposal" element={<SendProposal />} />
             <Route path="/stage" element={<ProposalBoard />} />
-            <Route path="/report/proposal" element={<Proposal />} />
-            <Route path="/report/proposalgraf" element={<Proposalgraf />} />
+
             <Route path="/calendar" element={<CalendarView />} />
             <Route path="/list" element={<Activity />} />
-            <Route path="/report" element={<ReportDeals />} />
+
             <Route path="/payment" element={<PaymentAdd />} />
-            <Route path="/expenses" element={<Expenses />} />
+            
             <Route path="/leads" element={<Leads />} />
             <Route path="/createleads" element={<CreateLeads />} />
             <Route path="/deals" element={<AllDeals />} />
-            
+
             <Route path="/Pipelineview" element={<Pipeline_view />} />
 
             <Route

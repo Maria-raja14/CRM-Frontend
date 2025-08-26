@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -53,7 +52,8 @@ const ListActivity = ({ activities, setActivities }) => {
   }, [isModalOpen]);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this activity?")) return;
+    if (!window.confirm("Are you sure you want to delete this activity?"))
+      return;
     try {
       await axios.delete(`http://localhost:5000/api/activity/delete/${id}`);
       setActivities((prev) => prev.filter((act) => act._id !== id));
@@ -86,7 +86,7 @@ const ListActivity = ({ activities, setActivities }) => {
               <th className="p-3">Done</th>
               <th className="p-3">Activity</th>
               <th className="p-3">Title</th>
-              <th className="p-3">Related to</th>
+              <th className="p-3">Assign to</th>
               <th className="p-3">Starting schedule</th>
               <th className="p-3">Ending schedule</th>
               <th className="p-3">Reminder</th>
@@ -95,22 +95,30 @@ const ListActivity = ({ activities, setActivities }) => {
           </thead>
           <tbody className="text-gray-700">
             {currentItems.map((activity, index) => (
-              <tr key={activity._id} className="border-t hover:bg-gray-50 relative">
-                <td className="p-3 text-center"><input type="checkbox" /></td>
+              <tr
+                key={activity._id}
+                className="border-t hover:bg-gray-50 relative"
+              >
+                <td className="p-3 text-center">
+                  <input type="checkbox" />
+                </td>
                 <td className="p-3">{activity.activityCategory}</td>
                 <td className="p-3 cursor-pointer">{activity.title}</td>
                 <td className="p-3">
-                  <div className="inline-block bg-violet-500 text-white rounded-2xl px-3 py-1 max-w-xs whitespace-nowrap overflow-hidden text-ellipsis">
-                    <span className="text-sm font-medium">{activity.activityModel}</span>
-                  </div>  
+                  {activity.assignedTo
+                    ? `${activity.assignedTo.firstName} ${activity.assignedTo.lastName}`
+                    : "-"}
                 </td>
+
                 <td className="p-3">{formatDateTime(activity.startDate)}</td>
                 <td className="p-3">{formatDateTime(activity.endDate)}</td>
                 <td className="p-3 ">{activity.reminder || "-"}</td>
                 <td className="p-3 text-right relative">
                   <button
                     ref={(el) => (buttonRefs.current[index] = el)}
-                    onClick={() => setOpenMenuIndex(openMenuIndex === index ? null : index)}
+                    onClick={() =>
+                      setOpenMenuIndex(openMenuIndex === index ? null : index)
+                    }
                     className="text-gray-500 mr-8 text-xl hover:text-blue-700"
                   >
                     ⋮
@@ -155,7 +163,9 @@ const ListActivity = ({ activities, setActivities }) => {
               }}
             >
               {[5, 10, 20, 50].map((num) => (
-                <option key={num} value={num}>{num}</option>
+                <option key={num} value={num}>
+                  {num}
+                </option>
               ))}
             </select>
             <span>Items showing per page</span>
@@ -167,7 +177,10 @@ const ListActivity = ({ activities, setActivities }) => {
               type="number"
               value={currentPage}
               onChange={(e) => {
-                const page = Math.min(Math.max(1, Number(e.target.value)), totalPages);
+                const page = Math.min(
+                  Math.max(1, Number(e.target.value)),
+                  totalPages
+                );
                 setCurrentPage(page);
               }}
               className="w-12 border rounded px-2 py-1"
@@ -196,7 +209,9 @@ const ListActivity = ({ activities, setActivities }) => {
             ))}
 
             <button
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
               disabled={currentPage === totalPages}
               className="px-2 text-xl disabled:text-gray-400"
             >
@@ -220,5 +235,3 @@ const ListActivity = ({ activities, setActivities }) => {
 };
 
 export default ListActivity;
-
-
