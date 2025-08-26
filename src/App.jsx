@@ -12,8 +12,6 @@ import InvoiceHead from "./pages/invoice/InvoiceHead";
 import UserTop from "./pages/useroles/UserTop";
 import ProfileCard from "./navbar/Myprofile_Topcenter";
 
-
-
 import CalendarView from "./pages/activities/CalendarView";
 import Activity from "./pages/activityList/Activity";
 
@@ -38,6 +36,7 @@ import io from "socket.io-client";
 import { initSocket /*    */ } from "./utils/socket";
 import { AllDeals } from "./pages/Deals/allDeals";
 import Pipeline_view from "./pages/Pipeline_View/Pipelien_view";
+import AdminDashboard from "./AdminDashboard/dashboard";
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -56,8 +55,8 @@ function App() {
           <Route path="/" element={<Login />} />
           <Route path="/layout" element={<Layout />} />
           <Route element={<Layout isModalOpen={isModalOpen} />}>
-            {/* Routes inside Layout */}
-
+         
+            <Route path="/adminDashboard" element={<AdminDashboard />} />
             <Route path="/user/roles" element={<UserManagement />} />
             <Route path="/invoice" element={<InvoiceHead />} />
             <Route path="/dashboard/profile" element={<ProfileCard />} />
@@ -73,7 +72,7 @@ function App() {
             <Route path="/list" element={<Activity />} />
 
             <Route path="/payment" element={<PaymentAdd />} />
-            
+
             <Route path="/leads" element={<Leads />} />
             <Route path="/createleads" element={<CreateLeads />} />
             <Route path="/deals" element={<AllDeals />} />

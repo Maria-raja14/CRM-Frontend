@@ -165,7 +165,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       <nav className="flex flex-col gap-3 px-2">
         {/* Dashboard */}
         <NavLink
-          to="/dashboard"
+          to="/adminDashboard"
           end
           className={({ isActive }) =>
             `flex items-center gap-3 p-3 rounded-full shadow-[0_6px_18px_rgba(0,140,204,0.18)] w-full text-base font-semibold
@@ -197,6 +197,14 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           hasPermission={isAdmin || userPermissions.leads}
         />
 
+           {/* Pipeline */}
+        <SidebarItem
+          to="/Pipelineview"
+          icon={<User size={18} className="text-gray-700" />}
+          label="Pipeline View"
+          hasPermission={isAdmin || userPermissions.leads}
+        />
+
         {/* Deals (FIXED → using SidebarItem) */}
         <SidebarItem
           to="/deals"
@@ -205,13 +213,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           hasPermission={isAdmin || userPermissions.deals}
         />
 
-        {/* Pipeline */}
-        <SidebarItem
-          to="/Pipelineview"
-          icon={<User size={18} className="text-gray-700" />}
-          label="Pipeline View"
-          hasPermission={isAdmin || userPermissions.leads}
-        />
+     
 
         {/* Invoice */}
         <SidebarItem
