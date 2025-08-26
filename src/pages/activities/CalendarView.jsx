@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import AddActivityModal from "./ModalCalendar";
@@ -35,48 +34,44 @@ const CalendarView = () => {
     }
   };
   const handleSearchFilter = () => {
-    console.log("Before filtering, all activities:", allActivities);  // Log all activities before filtering
+    console.log("Before filtering, all activities:", allActivities); // Log all activities before filtering
     let filtered = [...allActivities];
-  
+
     // Filter by 'done' status if selected
     if (showOnlyDone) {
-      console.log('Filtering by done status...');
+      console.log("Filtering by done status...");
       filtered = filtered.filter((activity) => {
         console.log(`Activity status: ${activity.status}`); // Log status of each activity
-        return activity.status === "done";  // Ensure the status is exactly "done"
+        return activity.status === "done"; // Ensure the status is exactly "done"
       });
     }
-  
+
     // Filter by selected type (Deal, Person, Organization)
     if (selectedType !== "Any") {
       console.log(`Filtering by type: ${selectedType}`);
       filtered = filtered.filter((activity) => {
         // Log the entire activity to check if `activityModel` exists
-        console.log('Activity:', activity);  // Log the full activity to inspect its structure
+        console.log("Activity:", activity); // Log the full activity to inspect its structure
         const activityModel = activity.activityModel || "Unknown"; // Default to "Unknown" if `activityModel` is missing
-        console.log(`Activity model: ${activityModel}`);  // Log the activity model before filtering
+        console.log(`Activity model: ${activityModel}`); // Log the activity model before filtering
         return activityModel.toLowerCase() === selectedType.toLowerCase(); // Compare case-insensitively
       });
     }
-  
+
     // Filter by search query (activity title)
     if (searchQuery.trim()) {
       const lowerSearch = searchQuery.toLowerCase();
       console.log(`Filtering by search query: ${lowerSearch}`);
-      filtered = filtered.filter((activity) =>
-        activity.title && activity.title.toLowerCase().includes(lowerSearch)  // Ensure `title` exists and is compared case-insensitively
+      filtered = filtered.filter(
+        (activity) =>
+          activity.title && activity.title.toLowerCase().includes(lowerSearch) // Ensure `title` exists and is compared case-insensitively
       );
     }
-  
-    console.log("After filtering, activities:", filtered);  // Log filtered activities
-  
+
+    console.log("After filtering, activities:", filtered); // Log filtered activities
+
     setActivities(filtered);
   };
-  
-  
-  
-  
-  
 
   const handleApplyFilter = () => {
     setShowDoneActivityModal(false);
@@ -104,19 +99,11 @@ const CalendarView = () => {
     <div className="p-6">
       <div className="flex flex-wrap justify-between items-center gap-4">
         <h1 className="text-lg font-semibold text-gray-600">Calendar View</h1>
-        <div className="flex flex-wrap gap-4">
-          <button
-            className="bg-blue-600 text-white px-4 py-2 rounded shadow"
-            onClick={() => setIsModalOpen(true)}
-          >
-            Add activity
-          </button>
-        </div>
+        <div className="flex flex-wrap gap-4"></div>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-4 mt-4">
         <div className="flex flex-wrap items-center gap-4">
-
           {/* Type Dropdown */}
           <div className="relative">
             <button
@@ -125,34 +112,22 @@ const CalendarView = () => {
             >
               {selectedType}
               <svg
-                className={`w-4 h-4 transition-transform duration-200 ${showTypeDropdown ? "rotate-180" : ""}`}
+                className={`w-4 h-4 transition-transform duration-200 ${
+                  showTypeDropdown ? "rotate-180" : ""
+                }`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
                 xmlns="http://www.w3.org/2000/svg"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </button>
-
-            {showTypeDropdown && (
-              <div className="absolute z-10 mt-2 w-34 bg-white  shadow-lg p-3">
-                {["Any", "Deal", "Person", "Organization"].map((type) => (
-                  <div
-                    key={type}
-                    onClick={() => {
-                      setSelectedType(type);
-                      setShowTypeDropdown(false);
-                    }}
-                    className={`px-4 py-2 cursor-pointer rounded hover:bg-gray-100 ${
-                      selectedType === type ? "text-blue-600 font-semibold" : "text-gray-800"
-                    }`}
-                  >
-                    {type}
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
 
           {/* Filter Buttons */}
@@ -248,5 +223,3 @@ const CalendarView = () => {
 };
 
 export default CalendarView;
-
-

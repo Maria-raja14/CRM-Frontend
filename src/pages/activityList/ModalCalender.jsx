@@ -372,6 +372,7 @@ const ModalCalendar = ({
               className="w-full p-3 border rounded-lg border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
             >
               <option value="">No reminder</option>
+               <option value="15min">1 minutes before</option>
               <option value="15min">15 minutes before</option>
               <option value="30min">30 minutes before</option>
               <option value="1hour">1 hour before</option>
