@@ -65,7 +65,7 @@ export default function CreateLeads() {
           (user) =>
             user.role &&
             user.role.name &&
-            user.role.name.toLowerCase() === "sales"
+            user.role.name.trim().toLowerCase() === "sales"
         );
 
         setSalesUsers(filteredSales);
