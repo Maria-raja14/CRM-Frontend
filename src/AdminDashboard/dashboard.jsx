@@ -1,14 +1,16 @@
 import React from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+// or if AdminDashboard is in src/AdminDashboard/
+
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
-import 'react-circular-progressbar/dist/styles.css';
 
 const AdminDashboard = () => {
   const summary = [
-    { title: "Total Leads", value: 120, change: "+3.5%", color: "text-blue-500" },
-    { title: "Deals Won", value: 35, change: "+2.7%", color: "text-green-500" },
-    { title: "Revenue", value: "₹1,25,000", change: "+1.5%", color: "text-purple-500" },
+    { title: "Total Leads", value: 120, color: "bg-blue-500" },
+    { title: "Deals Won", value: 35, color: "bg-green-500" },
+    { title: "Revenue", value: "₹1,25,000", color: "bg-purple-500" },
+    { title: "Pending Invoices", value: 12, color: "bg-orange-500" },
   ];
 
   const pipeline = [
@@ -24,84 +26,133 @@ const AdminDashboard = () => {
     { name: "Sara", status: "Qualified", assigned: "Alice" },
   ];
 
+  const pendingDeals = [
+    { deal: "A1", value: "50k", stage: "Qualification" },
+    { deal: "B2", value: "25k", stage: "Negotiation" },
+  ];
+
+  const recentInvoices = [
+    { invoice: "INV-101", total: "12,500", status: "Paid" },
+    { invoice: "INV-102", total: "5,000", status: "Unpaid" },
+  ];
+
   return (
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
-      {/* Top Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {summary.map((item, idx) => (
-          <Card key={idx} className="shadow-lg">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {summary.map((card, idx) => (
+          <Card key={idx} className={`${card.color} text-white`}>
             <CardHeader>
-              <CardTitle>{item.title}</CardTitle>
+              <CardTitle>{card.title}</CardTitle>
             </CardHeader>
-            <CardContent className="flex justify-between items-center">
-              <p className="text-3xl font-bold">{item.value}</p>
-              <p className={`${item.color} font-medium`}>{item.change}</p>
+            <CardContent>
+              <p className="text-3xl font-bold">{card.value}</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Charts + Progress */}
+      {/* Pipeline + Recent Leads */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Pipeline Bar Chart */}
-        <Card className="shadow-lg">
+        {/* Pipeline Chart */}
+        <Card>
           <CardHeader>
             <CardTitle>Pipeline Board</CardTitle>
           </CardHeader>
           <CardContent className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={pipeline} margin={{ top: 20, right: 20, left: 0, bottom: 10 }}>
+              <BarChart data={pipeline} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
                 <XAxis dataKey="stage" />
                 <YAxis allowDecimals={false} />
                 <Tooltip />
-                <Bar dataKey="leads" fill="#3B82F6" barSize={30} radius={[4,4,0,0]} />
+                <Bar dataKey="leads" fill="#008ECC" barSize={30} radius={[4,4,0,0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        {/* Circular Progress Example */}
-        <Card className="shadow-lg flex justify-center items-center p-6">
-          <div style={{ width: 120, height: 120 }}>
-            <CircularProgressbar
-              value={62}
-              text={`1,860 / 3k`}
-              styles={buildStyles({
-                pathColor: "#3B82F6",
-                textColor: "#111827",
-                trailColor: "#E5E7EB",
-              })}
-            />
-          </div>
+        {/* Recent Leads Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Leads</CardTitle>
+          </CardHeader>
+          <CardContent className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Lead</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Assigned</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {recentLeads.map((lead, idx) => (
+                  <TableRow key={idx}>
+                    <TableCell>{lead.name}</TableCell>
+                    <TableCell>{lead.status}</TableCell>
+                    <TableCell>{lead.assigned}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
         </Card>
       </div>
 
-      {/* Recent Leads Table */}
-      <Card className="shadow-lg overflow-x-auto">
-        <CardHeader>
-          <CardTitle>Recent Leads</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <table className="min-w-full table-auto">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-4 py-2 text-left">Lead</th>
-                <th className="px-4 py-2 text-left">Status</th>
-                <th className="px-4 py-2 text-left">Assigned</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentLeads.map((lead, idx) => (
-                <tr key={idx} className="border-b">
-                  <td className="px-4 py-2">{lead.name}</td>
-                  <td className="px-4 py-2">{lead.status}</td>
-                  <td className="px-4 py-2">{lead.assigned}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
+      {/* Pending Deals & Recent Invoices */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Pending Deals</CardTitle>
+          </CardHeader>
+          <CardContent className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Deal</TableHead>
+                  <TableHead>Value</TableHead>
+                  <TableHead>Stage</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pendingDeals.map((deal, idx) => (
+                  <TableRow key={idx}>
+                    <TableCell>{deal.deal}</TableCell>
+                    <TableCell>{deal.value}</TableCell>
+                    <TableCell>{deal.stage}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Invoices</CardTitle>
+          </CardHeader>
+          <CardContent className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Invoice#</TableHead>
+                  <TableHead>Total</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {recentInvoices.map((inv, idx) => (
+                  <TableRow key={idx}>
+                    <TableCell>{inv.invoice}</TableCell>
+                    <TableCell>{inv.total}</TableCell>
+                    <TableCell>{inv.status}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
