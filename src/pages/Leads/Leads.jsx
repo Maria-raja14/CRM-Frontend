@@ -1,7 +1,3 @@
-
-
-
-
 // import React, { useState, useEffect } from "react";
 // import { useNavigate } from "react-router-dom";
 // import { toast } from "react-toastify";
@@ -442,18 +438,22 @@
 //   );
 // }//original
 
-
-
-
-
-
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
-import { MoreVertical, Trash2, Edit, Handshake, Search, Filter, X, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  MoreVertical,
+  Trash2,
+  Edit,
+  Handshake,
+  Search,
+  Filter,
+  X,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { initSocket } from "../../utils/socket";
 import {
   Dialog,
@@ -517,19 +517,24 @@ export default function LeadTable() {
           setLeads(leadsData);
           setAllLeads(leadsData); // Store all leads for client-side filtering
           setTotalPages(response.data.totalPages || 1);
-          setTotalLeads(
-            response.data.totalLeads || response.data.length || 0
-          );
-          
+          setTotalLeads(response.data.totalLeads || response.data.length || 0);
+
           // Extract unique assignees
-          const uniqueAssignees = [...new Set(leadsData
-            .filter(lead => lead.assignTo)
-            .map(lead => {
-              if (typeof lead.assignTo === "object" && lead.assignTo.firstName) {
-                return `${lead.assignTo.firstName} ${lead.assignTo.lastName}`;
-              }
-              return "Assigned User";
-            }))];
+          const uniqueAssignees = [
+            ...new Set(
+              leadsData
+                .filter((lead) => lead.assignTo)
+                .map((lead) => {
+                  if (
+                    typeof lead.assignTo === "object" &&
+                    lead.assignTo.firstName
+                  ) {
+                    return `${lead.assignTo.firstName} ${lead.assignTo.lastName}`;
+                  }
+                  return "Assigned User";
+                })
+            ),
+          ];
           setAssignees(uniqueAssignees);
         }
         setLoading(false);
@@ -544,37 +549,36 @@ export default function LeadTable() {
 
   // Apply filters whenever filter criteria change
   useEffect(() => {
-    const filtered = allLeads.filter(lead => {
+    const filtered = allLeads.filter((lead) => {
       // Search filter
-      const matchesSearch = 
+      const matchesSearch =
         !searchQuery ||
         lead.leadName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         lead.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         lead.phoneNumber?.includes(searchQuery) ||
         lead.companyName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         lead.source?.toLowerCase().includes(searchQuery.toLowerCase());
-      
+
       // Assignee filter
-      const matchesAssignee = 
+      const matchesAssignee =
         !assigneeFilter ||
-        (lead.assignTo && 
-          ((typeof lead.assignTo === "object" && lead.assignTo.firstName && 
-            `${lead.assignTo.firstName} ${lead.assignTo.lastName}` === assigneeFilter) ||
-          (typeof lead.assignTo === "string" && assigneeFilter === "Assigned User")));
-      
+        (lead.assignTo &&
+          ((typeof lead.assignTo === "object" &&
+            lead.assignTo.firstName &&
+            `${lead.assignTo.firstName} ${lead.assignTo.lastName}` ===
+              assigneeFilter) ||
+            (typeof lead.assignTo === "string" &&
+              assigneeFilter === "Assigned User")));
+
       // Status filter
-      const matchesStatus = 
-        !statusFilter || 
-        lead.status === statusFilter;
-      
+      const matchesStatus = !statusFilter || lead.status === statusFilter;
+
       // Source filter
-      const matchesSource = 
-        !sourceFilter || 
-        lead.source === sourceFilter;
-      
+      const matchesSource = !sourceFilter || lead.source === sourceFilter;
+
       return matchesSearch && matchesAssignee && matchesStatus && matchesSource;
     });
-    
+
     setLeads(filtered);
     setCurrentPage(1); // Reset to first page when filters change
   }, [searchQuery, assigneeFilter, statusFilter, sourceFilter, allLeads]);
@@ -625,7 +629,9 @@ export default function LeadTable() {
       const allSuccess = responses.every((res) => res.status === 200);
       if (allSuccess) {
         setLeads(leads.filter((lead) => !selectedLeads.includes(lead._id)));
-        setAllLeads(allLeads.filter((lead) => !selectedLeads.includes(lead._id)));
+        setAllLeads(
+          allLeads.filter((lead) => !selectedLeads.includes(lead._id))
+        );
         setSelectedLeads([]);
         toast.success(`${selectedLeads.length} leads deleted successfully`);
         if (leads.length === selectedLeads.length && currentPage > 1)
@@ -640,9 +646,7 @@ export default function LeadTable() {
 
   const handleSelectLead = (id) => {
     setSelectedLeads((prev) =>
-      prev.includes(id)
-        ? prev.filter((leadId) => leadId !== id)
-        : [...prev, id]
+      prev.includes(id) ? prev.filter((leadId) => leadId !== id) : [...prev, id]
     );
   };
 
@@ -764,11 +768,8 @@ export default function LeadTable() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Leads</h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Manage and track your leads in one place
-          </p>
         </div>
-        
+
         <div className="flex flex-wrap gap-3 items-center">
           {selectedLeads.length > 0 && (
             <button
@@ -792,160 +793,52 @@ export default function LeadTable() {
       </div>
 
       {/* Search and Filters - Moved to top right */}
-      <div className="mb-6 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-        <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
-          {/* Moved search and filter to the right */}
-          <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto md:ml-auto">
-            <div className="flex gap-2">
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50 bg-white shadow-sm"
-              >
-                <Filter className="w-4 h-4" />
-                Filters
-                {showFilters ? (
-                  <ChevronUp className="w-4 h-4" />
-                ) : (
-                  <ChevronDown className="w-4 h-4" />
-                )}
-                {(assigneeFilter || statusFilter || sourceFilter) && (
-                  <span className="bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                    {[assigneeFilter, statusFilter, sourceFilter].filter(Boolean).length}
-                  </span>
-                )}
-              </button>
-              
-              {(searchQuery || assigneeFilter || statusFilter || sourceFilter) && (
-                <button 
-                  onClick={clearFilters}
-                  className="flex items-center gap-1 px-3 py-2 text-sm text-red-600 hover:text-red-800 font-medium"
-                >
-                  <X className="w-4 h-4" /> Clear all
-                </button>
-              )}
-            </div>
-            
-            <div className="relative w-full md:w-64">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search leads..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+      <div className="mb-6 ">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          {/* Assignee */}
+          <div>
+            <select
+              value={assigneeFilter}
+              onChange={(e) => setAssigneeFilter(e.target.value)}
+              className="w-full p-2 border shadow-lg  rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            >
+              <option value="">All Assignees</option>
+              {assignees.map((assignee, index) => (
+                <option key={index} value={assignee}>
+                  {assignee}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Status */}
+          <div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full p-2 border shadow-2xl rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            >
+              <option value="">All Statuses</option>
+              <option value="Hot">Hot</option>
+              <option value="Warm">Warm</option>
+              <option value="Cold">Cold</option>
+              <option value="Junk">Junk</option>
+              <option value="Converted">Converted</option>
+            </select>
+          </div>
+
+          {/* Search */}
+          <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg ml-64">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Search leads..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-8 pr-4 py-2 border rounded-full shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
         </div>
-
-        {showFilters && (
-          <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Assignee
-              </label>
-              <select
-                value={assigneeFilter}
-                onChange={(e) => setAssigneeFilter(e.target.value)}
-                className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-              >
-                <option value="">All Assignees</option>
-                {assignees.map((assignee, index) => (
-                  <option key={index} value={assignee}>
-                    {assignee}
-                  </option>
-                ))}
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Status
-              </label>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-              >
-                <option value="">All Statuses</option>
-                <option value="Hot">Hot</option>
-                <option value="Warm">Warm</option>
-                <option value="Cold">Cold</option>
-                <option value="Junk">Junk</option>
-                <option value="Converted">Converted</option>
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Source
-              </label>
-              <select
-                value={sourceFilter}
-                onChange={(e) => setSourceFilter(e.target.value)}
-                className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-              >
-                <option value="">All Sources</option>
-                <option value="Website">Website</option>
-                <option value="Referral">Referral</option>
-                <option value="Social Media">Social Media</option>
-                <option value="Email Campaign">Email Campaign</option>
-                <option value="Cold Call">Cold Call</option>
-                <option value="Event">Event</option>
-              </select>
-            </div>
-          </div>
-        )}
-
-        {(searchQuery || assigneeFilter || statusFilter || sourceFilter) && (
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <span className="text-sm text-gray-600">Active filters:</span>
-            {searchQuery && (
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                Search: {searchQuery}
-                <button 
-                  onClick={() => setSearchQuery("")}
-                  className="ml-1 text-blue-600 hover:text-blue-800"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )}
-            {assigneeFilter && (
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                Assignee: {assigneeFilter}
-                <button 
-                  onClick={() => setAssigneeFilter("")}
-                  className="ml-1 text-green-600 hover:text-green-800"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )}
-            {statusFilter && (
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                Status: {statusFilter}
-                <button 
-                  onClick={() => setStatusFilter("")}
-                  className="ml-1 text-purple-600 hover:text-purple-800"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )}
-            {sourceFilter && (
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                Source: {sourceFilter}
-                <button 
-                  onClick={() => setSourceFilter("")}
-                  className="ml-1 text-orange-600 hover:text-orange-800"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Table */}
@@ -957,19 +850,39 @@ export default function LeadTable() {
                 <input
                   type="checkbox"
                   className="h-4 w-4 text-blue-600 border-gray-300 rounded"
-                  checked={selectedLeads.length === leads.length && leads.length > 0}
+                  checked={
+                    selectedLeads.length === leads.length && leads.length > 0
+                  }
                   onChange={handleSelectAll}
                 />
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Lead</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Contact</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Company</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Source</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Assign To</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Created</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Follow Up</th>
-              <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Lead
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Contact
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Company
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Source
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Assign To
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Created
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Follow Up
+              </th>
+              <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -977,7 +890,9 @@ export default function LeadTable() {
               leads.map((lead, idx) => (
                 <tr
                   key={lead._id}
-                  className={`hover:bg-gray-50 ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}`}
+                  className={`hover:bg-gray-50 ${
+                    idx % 2 === 0 ? "bg-white" : "bg-gray-50"
+                  }`}
                 >
                   <td className="px-6 py-4">
                     <input
@@ -1004,22 +919,25 @@ export default function LeadTable() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-gray-800">{lead.phoneNumber || "-"}</td>
-                  <td className="px-6 py-4 text-gray-600">{lead.companyName || "-"}</td>
-                  <td className="px-6 py-4 text-gray-600">{lead.source || "-"}</td>
+                  <td className="px-6 py-4 text-gray-800">
+                    {lead.phoneNumber || "-"}
+                  </td>
+                  <td className="px-6 py-4 text-gray-600">
+                    {lead.companyName || "-"}
+                  </td>
+                  <td className="px-6 py-4 text-gray-600">
+                    {lead.source || "-"}
+                  </td>
                   <td className="px-6 py-4">{getStatusBadge(lead.status)}</td>
                   <td className="px-6 py-4 text-gray-700">
-                    {lead.assignTo ? (
-                      typeof lead.assignTo === "object" && lead.assignTo.firstName ? (
-                        `${lead.assignTo.firstName} ${lead.assignTo.lastName}`
-                      ) : typeof lead.assignTo === "string" ? (
-                        "Assigned User"
-                      ) : (
-                        "-"
-                      )
-                    ) : (
-                      "-"
-                    )}
+                    {lead.assignTo
+                      ? typeof lead.assignTo === "object" &&
+                        lead.assignTo.firstName
+                        ? `${lead.assignTo.firstName} ${lead.assignTo.lastName}`
+                        : typeof lead.assignTo === "string"
+                        ? "Assigned User"
+                        : "-"
+                      : "-"}
                   </td>
                   <td className="px-6 py-4 text-gray-600">
                     {formatDate(lead.createdAt)}
@@ -1038,21 +956,31 @@ export default function LeadTable() {
                       {menuOpen === lead._id && (
                         <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-20 py-1">
                           <button
-                            onClick={(e) => { e.stopPropagation(); handleEdit(lead._id); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEdit(lead._id);
+                            }}
                             className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           >
                             <Edit className="w-4 h-4 mr-2" /> Edit Lead
                           </button>
                           {lead.status !== "Converted" && (
                             <button
-                              onClick={(e) => { e.stopPropagation(); openConvertModal(lead); }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openConvertModal(lead);
+                              }}
                               className="flex items-center w-full px-4 py-2 text-sm text-green-600 hover:bg-gray-100"
                             >
-                              <Handshake className="w-4 h-4 mr-2" /> Convert to Deal
+                              <Handshake className="w-4 h-4 mr-2" /> Convert to
+                              Deal
                             </button>
                           )}
                           <button
-                            onClick={(e) => { e.stopPropagation(); handleDeleteClick(lead._id); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteClick(lead._id);
+                            }}
                             className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                           >
                             <Trash2 className="w-4 h-4 mr-2" /> Delete
@@ -1092,9 +1020,15 @@ export default function LeadTable() {
         <div className="flex flex-col sm:flex-row items-center justify-between mt-6 px-4 py-3 bg-white border-t border-gray-200 rounded-b-xl">
           <div className="mb-4 sm:mb-0">
             <p className="text-sm text-gray-700">
-              Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to{" "}
-              <span className="font-medium">{Math.min(currentPage * itemsPerPage, totalLeads)}</span> of{" "}
-              <span className="font-medium">{totalLeads}</span> results
+              Showing{" "}
+              <span className="font-medium">
+                {(currentPage - 1) * itemsPerPage + 1}
+              </span>{" "}
+              to{" "}
+              <span className="font-medium">
+                {Math.min(currentPage * itemsPerPage, totalLeads)}
+              </span>{" "}
+              of <span className="font-medium">{totalLeads}</span> results
             </p>
           </div>
           <div className="flex gap-2">
@@ -1107,7 +1041,9 @@ export default function LeadTable() {
             </button>
             <div className="flex items-center">
               <span className="px-2 py-2 text-gray-600">Page</span>
-              <span className="px-2 py-1 border rounded bg-gray-50 font-medium">{currentPage}</span>
+              <span className="px-2 py-1 border rounded bg-gray-50 font-medium">
+                {currentPage}
+              </span>
               <span className="px-2 py-2 text-gray-600">of {totalPages}</span>
             </div>
             <button
@@ -1131,8 +1067,11 @@ export default function LeadTable() {
             </DialogTitle>
           </DialogHeader>
           <p className="mb-6 text-gray-700">
-            Are you sure you want to delete {leadToDelete ? "this lead" : `${selectedLeads.length} selected leads`}?
-            This action cannot be undone.
+            Are you sure you want to delete{" "}
+            {leadToDelete
+              ? "this lead"
+              : `${selectedLeads.length} selected leads`}
+            ? This action cannot be undone.
           </p>
           <div className="flex justify-end gap-3">
             <button
@@ -1146,7 +1085,9 @@ export default function LeadTable() {
             </button>
             <button
               onClick={() =>
-                leadToDelete ? handleDeleteLead(leadToDelete) : handleBulkDelete()
+                leadToDelete
+                  ? handleDeleteLead(leadToDelete)
+                  : handleBulkDelete()
               }
               className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 flex items-center gap-2"
             >
@@ -1171,7 +1112,8 @@ export default function LeadTable() {
               <div className="mb-4 p-3 bg-blue-50 rounded-lg">
                 <p className="text-sm text-blue-800">
                   Converting: <strong>{selectedLead.leadName}</strong>
-                  {selectedLead.companyName && ` from ${selectedLead.companyName}`}
+                  {selectedLead.companyName &&
+                    ` from ${selectedLead.companyName}`}
                 </p>
               </div>
               <div className="mb-4">
@@ -1179,7 +1121,9 @@ export default function LeadTable() {
                   Deal Value
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-gray-500">$</span>
+                  <span className="absolute left-3 top-2.5 text-gray-500">
+                    $
+                  </span>
                   <input
                     type="number"
                     name="value"
@@ -1192,7 +1136,9 @@ export default function LeadTable() {
                 </div>
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Notes
+                </label>
                 <textarea
                   name="notes"
                   value={dealData.notes}
@@ -1203,7 +1149,9 @@ export default function LeadTable() {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Follow-Up Date & Time</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Follow-Up Date & Time
+                </label>
                 <input
                   type="datetime-local"
                   name="followUpDate"
@@ -1214,7 +1162,10 @@ export default function LeadTable() {
               </div>
               <div className="flex justify-end gap-3">
                 <button
-                  onClick={() => { setConvertModalOpen(false); setSelectedLead(null); }}
+                  onClick={() => {
+                    setConvertModalOpen(false);
+                    setSelectedLead(null);
+                  }}
                   className="px-4 py-2 rounded-lg border hover:bg-gray-100 text-gray-700"
                 >
                   Cancel

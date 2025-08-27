@@ -1,270 +1,3 @@
-// import React, { useRef, useState, useEffect } from "react";
-// import { Link, useLocation } from "react-router-dom";
-// import { Editor } from "@tinymce/tinymce-react";
-// import axios from "axios";
-// import { ToastContainer, toast } from "react-toastify";
-// import "react-toastify/dist/ReactToastify.css";
-
-
-// const SendProposal = () => {
-//   const editorRef = useRef(null);
-//   const location = useLocation();
-
-//   const proposalData = location.state?.proposal || null;
-
-//   const [title, setTitle] = useState("");
-//   const [dealTitle, setDealTitle] = useState("");
-//   const [email, setEmail] = useState("");
-//   const [loading, setLoading] = useState(false);
-//   const [message, setMessage] = useState("");
-
-//   // Populate form when editing
-
-//   useEffect(() => {
-//     if (proposalData) {
-//       setTitle(proposalData.title);
-//       setDealTitle(proposalData.dealTitle);
-//       setEmail(proposalData.email);
-//       if (editorRef.current) {
-//         editorRef.current.setContent(proposalData.content || "");
-//       }
-//     }
-//   }, [proposalData]);
-  
-
-//   // useEffect(() => {
-//   //   if (proposalData) {
-//   //     setTitle(proposalData.title || "");
-//   //     setDealTitle(proposalData.dealTitle || "");
-//   //     setEmail(proposalData.email || "");
-//   //     setTimeout(() => {
-//   //       if (editorRef.current) {
-//   //         editorRef.current.setContent(proposalData.content || "");
-//   //       }
-//   //     }, 500); // Ensure editor loads first
-//   //   }
-//   // }, [proposalData]);
-
-//   // Function to insert text at cursor position
-//   const insertText = (text) => {
-//     if (editorRef.current) {
-//       editorRef.current.execCommand("mceInsertContent", false, text);
-//     }
-//   };
-
-//   // 📌 Handle Submit (Create or Update)
-//   const handleSubmit = async () => {
-//     setLoading(true);
-  
-//     const proposalPayload = {
-//       title,
-//       dealTitle,
-//       email,
-//       content: editorRef.current.getContent(),
-//     };
-  
-//     try {
-//       if (proposalData?._id) {
-//         await axios.put(
-//           `http://localhost:5000/api/auth/proposal/proposal/updatepro/${proposalData._id}`,
-//           proposalPayload
-//         );
-//         toast.success(" Proposal updated successfully!");
-//       } else {
-//         await axios.post(
-//           "http://localhost:5000/api/auth/proposal/mailsend",
-//           proposalPayload
-//         );
-//         toast.success(" Proposal sent successfully!");
-//       }
-//     } catch (error) {
-//       console.error("Error submitting proposal:", error);
-//       toast.error("Failed to send or update proposal.");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-  
-//   // const handleSubmit = async () => {
-//   //   if (proposalData) {
-//   //     await axios.put(
-//   //       `http://localhost:5000/api/auth/proposal/proposal/updatepro/${proposalData._id}`,
-//   //       {
-//   //         title,
-//   //         dealTitle,
-//   //         email,
-//   //         content: editorRef.current.getContent(),
-//   //       }
-//   //     );
-//   //     setMessage("✅ Proposal updated successfully!");
-//   //   } else {
-//   //     await axios.post("http://localhost:5000/api/auth/proposal/mailsend", {
-//   //       title,
-//   //       dealTitle,
-//   //       email,
-//   //       content: editorRef.current.getContent(),
-//   //     });
-//   //     setMessage("✅ Proposal sent successfully!");
-//   //   }
-    
-
-//   //   setLoading(true);
-//   //   setMessage("");
-
-//   //   const proposalPayload = {
-//   //     title,
-//   //     dealTitle,
-//   //     email,
-//   //     content: editorRef.current.getContent(),
-//   //   };
-
-//   //   try {
-//   //     if (proposalData?._id) {
-//   //       // ✏️ Update existing proposal
-//   //       await axios.put(
-//   //         `http://localhost:5000/api/auth/proposal/proposal/updatepro/${proposalData._id}`,
-//   //         proposalPayload
-//   //       );
-//   //       setMessage("✅ Proposal updated successfully!");
-//   //     } else {
-//   //       // 📩 Send new proposal
-//   //       await axios.post(
-//   //         "http://localhost:5000/api/auth/proposal/mailsend",
-//   //         proposalPayload
-//   //       );
-//   //       setMessage("✅ Proposal sent successfully!");
-//   //     }
-//   //   } catch (error) {
-//   //     console.error("Error submitting proposal:", error);
-//   //     setMessage("❌ Failed to send or update proposal.");
-//   //   } finally {
-//   //     setLoading(false);
-//   //   }
-//   // };
-
-//   return (
-//     <div className="p-6">
-//       {/* Header Section */}
-//       <div className="flex items-center gap-2">
-//         <h1 className="text-2xl font-semibold">
-//           {proposalData ? "Edit Proposal" : "Send Proposal"}
-//         </h1>
-//         <p className="text-xl">|</p>
-//         <Link to="/proposal">
-//           <p className="text-base text-blue-600 hover:underline">Back</p>
-//         </Link>
-//       </div>
-
-//       {/* Form Section */}
-//       <div className="bg-white p-8 mt-10 h-screen shadow-md rounded-lg">
-//         {/* Proposal Title */}
-//         <div className="flex flex-col sm:flex-row items-center justify-between mb-4">
-//           <label htmlFor="proposal-title" className="font-medium">
-//             Proposal Title
-//           </label>
-//           <input
-//             id="proposal-title"
-//             className="w-full max-w-[700px] p-2 border border-gray-300 rounded-md focus:outline-blue-500"
-//             placeholder="Type your Proposal Title"
-//             value={title}
-//             onChange={(e) => setTitle(e.target.value)}
-//           />
-//           {/* <button className="bg-[#4466f2] text-white p-2 px-4 rounded-md hover:bg-blue-700">
-//             Choose Template
-//           </button> */}
-//         </div>
-
-//         {/* Deal Title */}
-//         <div className="flex flex-col sm:flex-row items-center justify-between mb-4">
-//           <label htmlFor="deal-title" className="font-medium">
-//             Deal Title
-//           </label>
-//           <input
-//             id="deal-title"
-//             className="w-full max-w-[700px] p-2 border border-gray-300 rounded-md focus:outline-blue-500"
-//             placeholder="Type your Deal Title"
-//             value={dealTitle}
-//             onChange={(e) => setDealTitle(e.target.value)}
-//           />
-//         </div>
-
-//         {/* Email */}
-//         <div className="flex flex-col sm:flex-row items-center justify-between mb-4">
-//           <label htmlFor="email" className="font-medium">
-//             Email
-//           </label>
-//           <input
-//             id="email"
-//             type="email"
-//             className="w-full max-w-[700px] p-2 border border-gray-300 rounded-md focus:outline-blue-500"
-//             placeholder="Enter recipient email"
-//             value={email}
-//             onChange={(e) => setEmail(e.target.value)}
-//           />
-//         </div>
-
-//         {/* Text Editor */}
-//         <div className="mt-6">
-//           <Editor
-//             apiKey="a413g7ope5qfyodp0u0e5d042r8jwy9vf6b162kjnnmgj5us"
-//             onInit={(evt, editor) => (editorRef.current = editor)}
-//             initialValue=""
-//             init={{
-//               height: 500,
-//               menubar: true,
-//               plugins: "lists link image code media table",
-//               toolbar:
-//                 "undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent | image media table code",
-//             }}
-//           />
-//         </div>
-
-//         {/* Buttons to Insert Text */}
-//         <div className="flex gap-2 justify-center items-center mt-10">
-//           <button
-//             onClick={() => insertText("{{App_Name}}")}
-//             className="bg-[#4466f2] text-white p-1 rounded-sm px-3"
-//           >
-//             App_Name
-//           </button>
-//           <button
-//             onClick={() => insertText("{{App_Logo}}")}
-//             className="bg-[#4466f2] text-white p-1 rounded-sm px-3"
-//           >
-//             App_Logo
-//           </button>
-//         </div>
-
-//         {/* Submit Button */}
-//         <div className="mt-10 flex gap-3 items-center">
-//           <button
-//             className="bg-[#4466f2] text-white p-2 rounded-sm px-3"
-//             onClick={handleSubmit}
-//             disabled={loading}
-//           >
-//             {loading
-//               ? proposalData
-//                 ? "Updating..."
-//                 : "Sending..."
-//               : proposalData
-//               ? "Update Proposal"
-//               : "Send Proposal"}
-//           </button>
-//         </div>
-
-//         {/* Message */}
-//         {message && <p className="mt-4 text-center text-red-500">{message}</p>}
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default SendProposal;//original
-
-
-
-
-
 import React, { useRef, useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Editor } from "@tinymce/tinymce-react";
@@ -276,134 +9,137 @@ const SendProposal = () => {
   const editorRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   const proposalData = location.state?.proposal || null;
   const isEditing = location.state?.isEditing || false;
 
   const [title, setTitle] = useState("");
-  const [dealTitle, setDealTitle] = useState("");
+  const [dealName, setDealName] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [leads, setLeads] = useState([]);
-  const [selectedLeadId, setSelectedLeadId] = useState("");
+  const [deals, setDeals] = useState([]);
+  const [selectedDealId, setSelectedDealId] = useState("");
   const [isDealDropdownOpen, setIsDealDropdownOpen] = useState(false);
   const [isEmailDropdownOpen, setIsEmailDropdownOpen] = useState(false);
-  const [filteredLeads, setFilteredLeads] = useState([]);
+  const [filteredDeals, setFilteredDeals] = useState([]);
   const [filteredEmails, setFilteredEmails] = useState([]);
   const [editorContent, setEditorContent] = useState("");
 
-  // Fetch all leads
+  // Fetch all deals
   useEffect(() => {
-    const fetchLeads = async () => {
+    const fetchDeals = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/leads/getAllLead");
+        const response = await axios.get("http://localhost:5000/api/deals/getAll");
+        console.log(response);
+        
         if (response.data) {
-          setLeads(response.data.leads || response.data);
+          setDeals(response.data.deals || response.data);
         }
       } catch (error) {
-        console.error("Error fetching leads:", error);
-        toast.error("Failed to fetch leads");
+        console.error("Error fetching deals:", error);
+        toast.error("Failed to fetch deals");
       }
     };
 
-    fetchLeads();
+    fetchDeals();
   }, []);
 
   // Populate form when editing
   useEffect(() => {
     if (proposalData && isEditing) {
       setTitle(proposalData.title || "");
-      setDealTitle(proposalData.dealTitle || "");
+      setDealName(proposalData.dealName || "");
       setEmail(proposalData.email || "");
       setEditorContent(proposalData.content || "");
-      
-      // Find the corresponding lead ID
-      if (proposalData.dealTitle && leads.length > 0) {
-        const matchingLead = leads.find(lead => 
-          lead.leadName === proposalData.dealTitle || lead.email === proposalData.email
+
+      if (proposalData.dealName && deals.length > 0) {
+        const matchingDeal = deals.find(
+          (d) =>
+            d.dealName === proposalData.dealName || d.email === proposalData.email
         );
-        if (matchingLead) {
-          setSelectedLeadId(matchingLead._id);
+        if (matchingDeal) {
+          setSelectedDealId(matchingDeal._id);
         }
       }
     }
-  }, [proposalData, leads, isEditing]);
+  }, [proposalData, deals, isEditing]);
 
-  // Filter leads based on input
+  // Filter deals
   useEffect(() => {
-    if (dealTitle) {
-      const filtered = leads.filter(lead => 
-        lead.leadName && lead.leadName.toLowerCase().includes(dealTitle.toLowerCase())
+    if (dealName) {
+      const filtered = deals.filter(
+        (d) =>
+          d.dealName &&
+          d.dealName.toLowerCase().includes(dealName.toLowerCase())
       );
-      setFilteredLeads(filtered);
+      setFilteredDeals(filtered);
     } else {
-      setFilteredLeads(leads);
+      setFilteredDeals(deals);
     }
-  }, [dealTitle, leads]);
+  }, [dealName, deals]);
 
-  // Filter emails based on input
+  // Filter emails
   useEffect(() => {
     if (email) {
-      const emailFiltered = leads.filter(lead => 
-        lead.email && lead.email.toLowerCase().includes(email.toLowerCase())
+      const emailFiltered = deals.filter(
+        (d) => d.email && d.email.toLowerCase().includes(email.toLowerCase())
       );
       setFilteredEmails(emailFiltered);
     } else {
-      setFilteredEmails(leads);
+      setFilteredEmails(deals);
     }
-  }, [email, leads]);
+  }, [email, deals]);
 
-  // Handle lead selection from dropdown
-  const handleLeadSelect = (leadId) => {
-    setSelectedLeadId(leadId);
-    const selectedLead = leads.find(lead => lead._id === leadId);
-    if (selectedLead) {
-      setDealTitle(selectedLead.leadName || "");
-      setEmail(selectedLead.email || "");
+  // Handle deal selection
+  const handleDealSelect = (dealId) => {
+    setSelectedDealId(dealId);
+    const selectedDeal = deals.find((d) => d._id === dealId);
+    if (selectedDeal) {
+      setDealName(selectedDeal.dealName || "");
+      setEmail(selectedDeal.leadId?.email || "");
     }
   };
 
-  // Handle lead selection from input dropdown
-  const handleLeadSelectFromDropdown = (lead) => {
-    setDealTitle(lead.leadName || "");
-    setEmail(lead.email || "");
-    setSelectedLeadId(lead._id);
+  const handleDealSelectFromDropdown = (deal) => {
+    setDealName(deal.dealName || "");
+    setEmail(deal.leadId?.email || "");
+    setSelectedDealId(deal._id);
     setIsDealDropdownOpen(false);
   };
 
-  // Handle email selection from dropdown
-  const handleEmailSelectFromDropdown = (lead) => {
-    setEmail(lead.email || "");
-    setDealTitle(lead.leadName || "");
-    setSelectedLeadId(lead._id);
+  const handleEmailSelectFromDropdown = (deal) => {
+    setEmail(deal.leadId?.email || "");
+    setDealName(deal.dealName || "");
+    setSelectedDealId(deal._id);
     setIsEmailDropdownOpen(false);
   };
 
-  // Function to insert text at cursor position
   const insertText = (text) => {
     if (editorRef.current) {
       editorRef.current.execCommand("mceInsertContent", false, text);
     }
   };
 
-  // Handle editor content change
   const handleEditorChange = (content) => {
     setEditorContent(content);
   };
 
-  // Handle Save as Draft
+  // Save Draft
   const handleSaveDraft = async () => {
     setLoading(true);
-  
+
     const proposalPayload = {
       title,
-      dealTitle,
+      dealName,
+      dealId: selectedDealId,
       email,
-      content: editorRef.current ? editorRef.current.getContent() : editorContent,
-      status: "draft"
+      content: editorRef.current
+        ? editorRef.current.getContent()
+        : editorContent,
+      status: "draft",
     };
-  
+
     try {
       if (isEditing && proposalData?._id) {
         await axios.put(
@@ -418,8 +154,7 @@ const SendProposal = () => {
         );
         toast.success("Draft saved successfully!");
       }
-      
-      // Wait for toast to show before navigating
+
       setTimeout(() => {
         navigate("/proposal");
       }, 2000);
@@ -431,42 +166,41 @@ const SendProposal = () => {
     }
   };
 
-  // Handle Submit (Send Email)
+  // Send Proposal
   const handleSubmit = async () => {
     setLoading(true);
-  
+
     const proposalPayload = {
       title,
-      dealTitle,
+      dealName,
+      dealId: selectedDealId,
       email,
-      content: editorRef.current ? editorRef.current.getContent() : editorContent,
+      content: editorRef.current
+        ? editorRef.current.getContent()
+        : editorContent,
     };
-  
+
     try {
       if (isEditing && proposalData?._id) {
-        // Update and send existing proposal
         await axios.put(
           `http://localhost:5000/api/proposal/update/${proposalData._id}`,
-          {...proposalPayload, status: "sent"}
+          { ...proposalPayload, status: "sent" }
         );
-        
-        // Send email
+
         await axios.post(
           "http://localhost:5000/api/proposal/mailsend",
-          {...proposalPayload, id: proposalData._id}
+          { ...proposalPayload, id: proposalData._id }
         );
-        
+
         toast.success("Proposal updated and sent successfully!");
       } else {
-        // Create and send new proposal
-        const response = await axios.post(
+        await axios.post(
           "http://localhost:5000/api/proposal/mailsend",
           proposalPayload
         );
         toast.success("Proposal sent successfully!");
       }
-      
-      // Wait for toast to show before navigating
+
       setTimeout(() => {
         navigate("/proposal");
       }, 2000);
@@ -480,7 +214,7 @@ const SendProposal = () => {
 
   return (
     <div className="p-6">
-      {/* Header Section */}
+      {/* Header */}
       <div className="flex items-center gap-2">
         <h1 className="text-2xl font-semibold">
           {isEditing ? "Edit Proposal" : "Send Proposal"}
@@ -491,15 +225,12 @@ const SendProposal = () => {
         </Link>
       </div>
 
-      {/* Form Section */}
+      {/* Form */}
       <div className="bg-white p-8 mt-10 shadow-md rounded-lg">
         {/* Proposal Title */}
         <div className="flex flex-col sm:flex-row items-center justify-between mb-4">
-          <label htmlFor="proposal-title" className="font-medium">
-            Proposal Title
-          </label>
+          <label className="font-medium">Proposal Title</label>
           <input
-            id="proposal-title"
             className="w-full max-w-[700px] p-2 border border-gray-300 rounded-md focus:outline-blue-500"
             placeholder="Type your Proposal Title"
             value={title}
@@ -507,50 +238,44 @@ const SendProposal = () => {
           />
         </div>
 
-        {/* Lead Selection */}
+        {/* Deal Selection */}
         <div className="flex flex-col sm:flex-row items-center justify-between mb-4">
-          <label htmlFor="lead-select" className="font-medium">
-            Select Lead
-          </label>
+          <label className="font-medium">Select Deal</label>
           <select
-            id="lead-select"
             className="w-full max-w-[700px] p-2 border border-gray-300 rounded-md focus:outline-blue-500"
-            value={selectedLeadId}
-            onChange={(e) => handleLeadSelect(e.target.value)}
+            value={selectedDealId}
+            onChange={(e) => handleDealSelect(e.target.value)}
           >
-            <option value="">-- Select a Lead --</option>
-            {leads.map((lead) => (
-              <option key={lead._id} value={lead._id}>
-                {lead.leadName || `Lead #${lead._id.substring(0, 8)}`}
+            <option value="">-- Select a Deal --</option>
+            {deals.map((deal) => (
+              <option key={deal._id} value={deal._id}>
+                {deal.dealName || `Deal #${deal._id.substring(0, 8)}`} 
               </option>
             ))}
           </select>
         </div>
 
-        {/* Deal Title with Dropdown */}
+        {/* Deal Name with dropdown */}
         <div className="flex flex-col sm:flex-row items-center justify-between mb-4 relative">
-          <label htmlFor="deal-title" className="font-medium">
-            Lead Name
-          </label>
+          <label className="font-medium">Deal Name</label>
           <div className="w-full max-w-[700px] relative">
             <input
-              id="deal-title"
               className="w-full p-2 border border-gray-300 rounded-md focus:outline-blue-500"
-              placeholder="Type or select a Lead Name"
-              value={dealTitle}
-              onChange={(e) => setDealTitle(e.target.value)}
+              placeholder="Type or select a Deal Name"
+              value={dealName}
+              onChange={(e) => setDealName(e.target.value)}
               onFocus={() => setIsDealDropdownOpen(true)}
               onBlur={() => setTimeout(() => setIsDealDropdownOpen(false), 200)}
             />
-            {isDealDropdownOpen && filteredLeads.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                {filteredLeads.map((lead) => (
+            {isDealDropdownOpen && filteredDeals.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-y-auto">
+                {filteredDeals.map((deal) => (
                   <div
-                    key={lead._id}
+                    key={deal._id}
                     className="p-2 hover:bg-gray-100 cursor-pointer"
-                    onClick={() => handleLeadSelectFromDropdown(lead)}
+                    onClick={() => handleDealSelectFromDropdown(deal)}
                   >
-                    {lead.leadName || "Untitled Lead"}
+                    {deal.dealName || "Untitled Deal"} 
                   </div>
                 ))}
               </div>
@@ -558,14 +283,11 @@ const SendProposal = () => {
           </div>
         </div>
 
-        {/* Email with Dropdown */}
+        {/* Email with dropdown */}
         <div className="flex flex-col sm:flex-row items-center justify-between mb-4 relative">
-          <label htmlFor="email" className="font-medium">
-            Email
-          </label>
+          <label className="font-medium">Email</label>
           <div className="w-full max-w-[700px] relative">
             <input
-              id="email"
               type="email"
               className="w-full p-2 border border-gray-300 rounded-md focus:outline-blue-500"
               placeholder="Enter or select recipient email"
@@ -575,14 +297,14 @@ const SendProposal = () => {
               onBlur={() => setTimeout(() => setIsEmailDropdownOpen(false), 200)}
             />
             {isEmailDropdownOpen && filteredEmails.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                {filteredEmails.map((lead) => (
+              <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-y-auto">
+                {filteredEmails.map((deal) => (
                   <div
-                    key={lead._id}
+                    key={deal._id}
                     className="p-2 hover:bg-gray-100 cursor-pointer"
-                    onClick={() => handleEmailSelectFromDropdown(lead)}
+                    onClick={() => handleEmailSelectFromDropdown(deal)}
                   >
-                    {lead.email || "No email"}
+                   {deal.leadId?.email || "No Email"}
                   </div>
                 ))}
               </div>
@@ -590,13 +312,12 @@ const SendProposal = () => {
           </div>
         </div>
 
-        {/* Text Editor */}
+        {/* Editor */}
         <div className="mt-6">
           <Editor
             apiKey="a413g7ope5qfyodp0u0e5d042r8jwy9vf6b162kjnnmgj5us"
             onInit={(evt, editor) => {
               editorRef.current = editor;
-              // Set initial content when editing
               if (proposalData?.content) {
                 editor.setContent(proposalData.content);
               }
@@ -609,28 +330,11 @@ const SendProposal = () => {
               plugins: "lists link image code media table",
               toolbar:
                 "undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent | image media table code",
-              images_upload_handler: function (blobInfo, success, failure) {
-                const formData = new FormData();
-                formData.append("image", blobInfo.blob(), blobInfo.filename());
-                
-                axios.post("http://localhost:5000/api/proposal/upload-image", formData, {
-                  headers: {
-                    "Content-Type": "multipart/form-data",
-                  },
-                })
-                .then(response => {
-                  success(response.data.imageUrl);
-                })
-                .catch(error => {
-                  failure("Image upload failed");
-                  console.error("Image upload error:", error);
-                });
-              },
             }}
           />
         </div>
 
-        {/* Buttons to Insert Text */}
+        {/* Insert Vars */}
         <div className="flex gap-2 justify-center items-center mt-10">
           <button
             onClick={() => insertText("{{App_Name}}")}
@@ -668,22 +372,10 @@ const SendProposal = () => {
           </button>
         </div>
 
-        {/* Message */}
         {message && <p className="mt-4 text-center text-red-500">{message}</p>}
       </div>
-      
-      {/* Toast Container should be placed at the root level outside of any conditional rendering */}
-      <ToastContainer 
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss={false} // This prevents toasts from closing when the window loses focus
-        draggable
-        pauseOnHover
-      />
+
+      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 };
