@@ -1,3 +1,5 @@
+
+
 import React, { useRef, useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Editor } from "@tinymce/tinymce-react";
@@ -14,7 +16,7 @@ const SendProposal = () => {
   const isEditing = location.state?.isEditing || false;
 
   const [title, setTitle] = useState("");
-  const [dealName, setDealName] = useState("");
+  const [dealTitle, setDealTitle] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -31,8 +33,6 @@ const SendProposal = () => {
     const fetchDeals = async () => {
       try {
         const response = await axios.get("http://localhost:5000/api/deals/getAll");
-        console.log(response);
-        
         if (response.data) {
           setDeals(response.data.deals || response.data);
         }
@@ -49,14 +49,14 @@ const SendProposal = () => {
   useEffect(() => {
     if (proposalData && isEditing) {
       setTitle(proposalData.title || "");
-      setDealName(proposalData.dealName || "");
+      setDealTitle(proposalData.dealTitle || "");
       setEmail(proposalData.email || "");
       setEditorContent(proposalData.content || "");
 
-      if (proposalData.dealName && deals.length > 0) {
+      if (proposalData.dealTitle && deals.length > 0) {
         const matchingDeal = deals.find(
           (d) =>
-            d.dealName === proposalData.dealName || d.email === proposalData.email
+            d.dealName === proposalData.dealTitle || d.email === proposalData.email
         );
         if (matchingDeal) {
           setSelectedDealId(matchingDeal._id);
@@ -67,17 +67,17 @@ const SendProposal = () => {
 
   // Filter deals
   useEffect(() => {
-    if (dealName) {
+    if (dealTitle) {
       const filtered = deals.filter(
         (d) =>
           d.dealName &&
-          d.dealName.toLowerCase().includes(dealName.toLowerCase())
+          d.dealName.toLowerCase().includes(dealTitle.toLowerCase())
       );
       setFilteredDeals(filtered);
     } else {
       setFilteredDeals(deals);
     }
-  }, [dealName, deals]);
+  }, [dealTitle, deals]);
 
   // Filter emails
   useEffect(() => {
@@ -96,21 +96,21 @@ const SendProposal = () => {
     setSelectedDealId(dealId);
     const selectedDeal = deals.find((d) => d._id === dealId);
     if (selectedDeal) {
-      setDealName(selectedDeal.dealName || "");
-      setEmail(selectedDeal.leadId?.email || "");
+      setDealTitle(selectedDeal.dealName || "");
+      setEmail(selectedDeal.leadId?.email || selectedDeal.email || "");
     }
   };
 
   const handleDealSelectFromDropdown = (deal) => {
-    setDealName(deal.dealName || "");
-    setEmail(deal.leadId?.email || "");
+    setDealTitle(deal.dealName || "");
+    setEmail(deal.leadId?.email || deal.email || "");
     setSelectedDealId(deal._id);
     setIsDealDropdownOpen(false);
   };
 
   const handleEmailSelectFromDropdown = (deal) => {
-    setEmail(deal.leadId?.email || "");
-    setDealName(deal.dealName || "");
+    setEmail(deal.leadId?.email || deal.email || "");
+    setDealTitle(deal.dealName || "");
     setSelectedDealId(deal._id);
     setIsEmailDropdownOpen(false);
   };
@@ -131,8 +131,7 @@ const SendProposal = () => {
 
     const proposalPayload = {
       title,
-      dealName,
-      dealId: selectedDealId,
+      dealTitle,
       email,
       content: editorRef.current
         ? editorRef.current.getContent()
@@ -172,8 +171,7 @@ const SendProposal = () => {
 
     const proposalPayload = {
       title,
-      dealName,
-      dealId: selectedDealId,
+      dealTitle,
       email,
       content: editorRef.current
         ? editorRef.current.getContent()
@@ -182,11 +180,13 @@ const SendProposal = () => {
 
     try {
       if (isEditing && proposalData?._id) {
+        // Update proposal first
         await axios.put(
           `http://localhost:5000/api/proposal/update/${proposalData._id}`,
           { ...proposalPayload, status: "sent" }
         );
 
+        // Then send email
         await axios.post(
           "http://localhost:5000/api/proposal/mailsend",
           { ...proposalPayload, id: proposalData._id }
@@ -194,6 +194,7 @@ const SendProposal = () => {
 
         toast.success("Proposal updated and sent successfully!");
       } else {
+        // Create new proposal and send email
         await axios.post(
           "http://localhost:5000/api/proposal/mailsend",
           proposalPayload
@@ -262,8 +263,8 @@ const SendProposal = () => {
             <input
               className="w-full p-2 border border-gray-300 rounded-md focus:outline-blue-500"
               placeholder="Type or select a Deal Name"
-              value={dealName}
-              onChange={(e) => setDealName(e.target.value)}
+              value={dealTitle}
+              onChange={(e) => setDealTitle(e.target.value)}
               onFocus={() => setIsDealDropdownOpen(true)}
               onBlur={() => setTimeout(() => setIsDealDropdownOpen(false), 200)}
             />
@@ -304,7 +305,7 @@ const SendProposal = () => {
                     className="p-2 hover:bg-gray-100 cursor-pointer"
                     onClick={() => handleEmailSelectFromDropdown(deal)}
                   >
-                   {deal.leadId?.email || "No Email"}
+                   {deal.leadId?.email || deal.email || "No Email"}
                   </div>
                 ))}
               </div>
