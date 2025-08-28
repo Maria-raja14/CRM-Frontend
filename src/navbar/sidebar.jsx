@@ -235,7 +235,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         />
 
         {/* Proposal */}
-        <Collapsible
+        {/* <Collapsible
           label="Proposal"
           icon={<Edit size={18} className="text-gray-700" />}
           open={showProposal}
@@ -254,7 +254,14 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             label="Templates"
             hasPermission={isAdmin || userPermissions.templates}
           />
-        </Collapsible>
+        </Collapsible> */}
+
+         <SidebarItem
+          to="/proposal"
+          icon={<Tag size={18} className="text-gray-700" />}
+          label="Proposal"
+          hasPermission={isAdmin || userPermissions.deals}
+        />
 
         {/* Activities */}
         <Collapsible
