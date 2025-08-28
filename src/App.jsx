@@ -37,6 +37,7 @@ import { initSocket /*    */ } from "./utils/socket";
 import { AllDeals } from "./pages/Deals/allDeals";
 import Pipeline_view from "./pages/Pipeline_View/Pipelien_view";
 import AdminDashboard from "./AdminDashboard/dashboard";
+import CreateDeal from "./pages/Deals/CreateDeal";
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -76,6 +77,7 @@ function App() {
             <Route path="/leads" element={<Leads />} />
             <Route path="/createleads" element={<CreateLeads />} />
             <Route path="/deals" element={<AllDeals />} />
+              <Route path="/createDeal" element={<CreateDeal />} />
 
             <Route path="/Pipelineview" element={<Pipeline_view />} />
 

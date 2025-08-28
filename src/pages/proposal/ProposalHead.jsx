@@ -217,7 +217,7 @@ const ProposalHead = () => {
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-indigo-100"
+          className="px-4 py-3 border border-gray-200 rounded-lg text-sm focus:ring-indigo-100 shadow-md"
         >
           <option value="">All Status</option>
           <option value="draft">Draft</option>
@@ -232,7 +232,7 @@ const ProposalHead = () => {
             onChange={(date) => setFilterCreatedDate(date)}
             dateFormat="yyyy/MM/dd"
             placeholderText="Created Date"
-            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-indigo-100 w-full"
+            className="px-3 py-3 border border-gray-200 rounded-lg text-sm focus:ring-indigo-100 w-full shadow-md"
           />
           <FaCalendarAlt className="absolute right-3 text-gray-400" />
         </div>
@@ -243,7 +243,7 @@ const ProposalHead = () => {
             placeholder="Search..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-indigo-100 w-full pl-10"
+            className="px-3 py-3 border shadow-md border-gray-200 rounded-full text-sm focus:ring-indigo-100 w-full pl-10"
           />
           <svg
             xmlns="http://www.w3.org/2000/svg"
