@@ -27,6 +27,8 @@ import CreateLeads from "./pages/Leads/CreateLeads";
 
 import Leads from "./pages/Leads/Leads";
 
+import DraftsPage from "./pages/proposal/DraftsPage";
+
 // Toast
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -78,6 +80,8 @@ function App() {
             <Route path="/deals" element={<AllDeals />} />
 
             <Route path="/Pipelineview" element={<Pipeline_view />} />
+
+            <Route path="/proposal/drafts" element={<DraftsPage />} />
 
             <Route
               path="/myprofile/*"
