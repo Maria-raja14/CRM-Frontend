@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -23,6 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../../components/ui/dialog";
+import { Eye } from "lucide-react";
 
 export default function LeadTable() {
   const navigate = useNavigate();
@@ -54,8 +53,18 @@ export default function LeadTable() {
   const [dealData, setDealData] = useState({
     value: 0,
     notes: "",
-      stage: "Qualification", // ✅ default stage
+    stage: "Qualification", // ✅ default stage
   });
+  // At the top with other useStates
+  const [attachmentsModalOpen, setAttachmentsModalOpen] = useState(false);
+  const [selectedAttachments, setSelectedAttachments] = useState([]);
+  const [selectedLeadName, setSelectedLeadName] = useState("");
+
+  const openAttachmentsModal = (attachments, leadName) => {
+    setSelectedAttachments(attachments || []);
+    setSelectedLeadName(leadName || "Attachments");
+    setAttachmentsModalOpen(true);
+  };
 
   useEffect(() => {
     initSocket();
@@ -74,6 +83,7 @@ export default function LeadTable() {
         const response = await axios.get(
           `http://localhost:5000/api/leads/getAllLead?${params.toString()}`
         );
+        console.log("leadResponse", response);
         if (response.data) {
           const leadsData = response.data.leads || response.data;
           setLeads(leadsData);
@@ -223,9 +233,6 @@ export default function LeadTable() {
     setDealData({
       value: lead.value || 0,
       notes: lead.notes || "",
-      // followUpDate: lead.followUpDate
-      //   ? new Date(lead.followUpDate).toISOString().slice(0, 16)
-      //   : "",
     });
     setConvertModalOpen(true);
     setMenuOpen(null);
@@ -241,9 +248,6 @@ export default function LeadTable() {
     try {
       const payload = {
         ...dealData,
-        // followUpDate: dealData.followUpDate
-        //   ? new Date(dealData.followUpDate)
-        //   : null,
       };
       await axios.patch(
         `http://localhost:5000/api/leads/${selectedLead._id}/convert`,
@@ -404,11 +408,12 @@ export default function LeadTable() {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm bg-white">
-        <table className="min-w-full text-sm text-gray-700">
+
+      <div className="overflow-x-auto">
+        <table className="min-w-max w-full table-auto divide-y divide-gray-200">
           <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-4">
+            <tr className="whitespace-nowrap">
+              <th className="px-4 py-3">
                 <input
                   type="checkbox"
                   className="h-4 w-4 text-blue-600 border-gray-300 rounded"
@@ -418,35 +423,43 @@ export default function LeadTable() {
                   onChange={handleSelectAll}
                 />
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
                 Lead
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
                 Contact
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
                 Company
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                Country
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
                 Source
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
                 Status
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Assign To
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                Assignee
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
                 Created
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Follow Up
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                Follow-Up
               </th>
-              <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                Attachments
+              </th>
+
+              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">
                 Actions
               </th>
             </tr>
           </thead>
+
           <tbody className="divide-y divide-gray-200">
             {leads.length > 0 ? (
               leads.map((lead, idx) => (
@@ -454,9 +467,9 @@ export default function LeadTable() {
                   key={lead._id}
                   className={`hover:bg-gray-50 ${
                     idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-                  }`}
+                  } whitespace-nowrap`}
                 >
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3">
                     <input
                       type="checkbox"
                       className="h-4 w-4 text-blue-600 border-gray-300 rounded"
@@ -464,50 +477,63 @@ export default function LeadTable() {
                       onChange={() => handleSelectLead(lead._id)}
                     />
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                        <span className="text-blue-600 font-semibold">
-                          {lead.leadName?.charAt(0).toUpperCase() || "L"}
-                        </span>
-                      </div>
-                      <div>
-                        <div className="font-medium text-gray-900">
-                          {lead.leadName || "Unnamed Lead"}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {lead.email || "No email"}
-                        </div>
-                      </div>
+
+                  <td className="px-4 py-3 flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
+                      {lead.leadName?.charAt(0) || "L"}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-gray-900 text-sm">
+                        {lead.leadName || "Unnamed Lead"}
+                      </span>
+                      <span className="text-gray-400 text-xs">
+                        {lead.email || "-"}
+                      </span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-gray-800">
+
+                  <td className="px-4 py-3 text-sm text-gray-700">
                     {lead.phoneNumber || "-"}
                   </td>
-                  <td className="px-6 py-4 text-gray-600">
+                  <td className="px-4 py-3 text-sm text-gray-700">
                     {lead.companyName || "-"}
                   </td>
-                  <td className="px-6 py-4 text-gray-600">
+                  <td className="px-4 py-3 text-sm text-gray-700">
+                    {lead.country || "-"}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-700">
                     {lead.source || "-"}
                   </td>
-                  <td className="px-6 py-4">{getStatusBadge(lead.status)}</td>
-                  <td className="px-6 py-4 text-gray-700">
+                  <td className="px-4 py-3">{getStatusBadge(lead.status)}</td>
+                  <td className="px-4 py-3 text-sm text-gray-700">
                     {lead.assignTo
-                      ? typeof lead.assignTo === "object" &&
-                        lead.assignTo.firstName
+                      ? typeof lead.assignTo === "object"
                         ? `${lead.assignTo.firstName} ${lead.assignTo.lastName}`
-                        : typeof lead.assignTo === "string"
-                        ? "Assigned User"
-                        : "-"
+                        : "Assigned User"
                       : "-"}
                   </td>
-                  <td className="px-6 py-4 text-gray-600">
+                  <td className="px-4 py-3 text-sm text-gray-700">
                     {formatDate(lead.createdAt)}
                   </td>
-                  <td className="px-6 py-4 text-gray-700">
-                    {formatDateTime(lead.followUpDate)}
+                  <td className="px-4 py-3 text-sm text-gray-700">
+                    {formatDate(lead.followUpDate)}
                   </td>
-                  <td className="px-6 py-4 text-right relative">
+                  <td className="px-4 py-3 text-sm text-gray-700">
+                    {lead.attachments && lead.attachments.length > 0 ? (
+                      <button
+                        onClick={() =>
+                          openAttachmentsModal(lead.attachments, lead.leadName)
+                        }
+                        className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                      >
+                        <Eye className="w-5 h-5" /> View
+                      </button>
+                    ) : (
+                      "-"
+                    )}
+                  </td>
+
+                  <td className="px-4 py-3 text-right relative">
                     <div className="relative inline-block text-left">
                       <button
                         className="p-2 rounded-lg hover:bg-gray-200 transition-colors"
@@ -516,15 +542,15 @@ export default function LeadTable() {
                         <MoreVertical className="w-5 h-5 text-gray-600" />
                       </button>
                       {menuOpen === lead._id && (
-                        <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-20 py-1">
+                        <div className="absolute right-0 mt-1 w-40 bg-white rounded-md shadow-lg border border-gray-200 z-20 py-1">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleEdit(lead._id);
                             }}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           >
-                            <Edit className="w-4 h-4 mr-2" /> Edit Lead
+                            <Edit className="w-4 h-4 mr-2" /> Edit
                           </button>
                           {lead.status !== "Converted" && (
                             <button
@@ -532,10 +558,9 @@ export default function LeadTable() {
                                 e.stopPropagation();
                                 openConvertModal(lead);
                               }}
-                              className="flex items-center w-full px-4 py-2 text-sm text-green-600 hover:bg-gray-100"
+                              className="flex items-center w-full px-3 py-2 text-sm text-green-600 hover:bg-gray-100"
                             >
-                              <Handshake className="w-4 h-4 mr-2" /> Convert to
-                              Deal
+                              <Handshake className="w-4 h-4 mr-2" /> Convert
                             </button>
                           )}
                           <button
@@ -543,7 +568,7 @@ export default function LeadTable() {
                               e.stopPropagation();
                               handleDeleteClick(lead._id);
                             }}
-                            className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                            className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-gray-100"
                           >
                             <Trash2 className="w-4 h-4 mr-2" /> Delete
                           </button>
@@ -556,20 +581,10 @@ export default function LeadTable() {
             ) : (
               <tr>
                 <td
-                  colSpan="10"
-                  className="px-6 py-12 text-center text-gray-500 text-sm"
+                  colSpan="11"
+                  className="px-4 py-12 text-center text-gray-500 text-sm"
                 >
-                  {searchQuery || assigneeFilter || statusFilter || sourceFilter
-                    ? "No leads match your filters. Try adjusting your search criteria."
-                    : "No leads found. Create your first lead!"}
-                  <div className="mt-4">
-                    <button
-                      className="text-blue-600 hover:text-blue-800 font-medium"
-                      onClick={clearFilters}
-                    >
-                      Clear all filters
-                    </button>
-                  </div>
+                  No leads found.
                 </td>
               </tr>
             )}
@@ -659,6 +674,56 @@ export default function LeadTable() {
           </div>
         </DialogContent>
       </Dialog>
+      {/* Attachments Modal */}
+      <Dialog
+        open={attachmentsModalOpen}
+        onOpenChange={setAttachmentsModalOpen}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-blue-600">
+              <Eye className="w-5 h-5" /> {selectedLeadName} - Attachments
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-2">
+            {selectedAttachments.length > 0 ? (
+              <ul className="list-disc ml-5">
+                {selectedAttachments.map((filePath, idx) => {
+                  // Convert backslash to slash for URLs and prepend server URL
+                  const fileUrl = `http://localhost:5000/${filePath.replace(
+                    /\\/g,
+                    "/"
+                  )}`;
+                  const fileName = filePath.split("\\").pop(); // get file name from path
+
+                  return (
+                    <li key={idx} className="mb-2">
+                      <a
+                        href={fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline"
+                      >
+                        {fileName}
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="text-gray-500">No attachments uploaded.</p>
+            )}
+          </div>
+          <div className="flex justify-end mt-4">
+            <button
+              onClick={() => setAttachmentsModalOpen(false)}
+              className="px-4 py-2 rounded-lg border hover:bg-gray-100 text-gray-700"
+            >
+              Close
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Convert Deal Modal */}
       <Dialog open={convertModalOpen} onOpenChange={setConvertModalOpen}>
@@ -698,22 +763,22 @@ export default function LeadTable() {
                 </div>
               </div>
               <div className="mb-4">
-  <label className="block text-sm font-medium text-gray-700 mb-1">
-    Stage
-  </label>
-  <select
-    name="stage"
-    value={dealData.stage || "Qualification"}
-    onChange={handleDealChange}
-    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-  >
-    <option value="Qualification">Qualification</option>
-    <option value="Proposal">Proposal</option>
-    <option value="Negotiation">Negotiation</option>
-    <option value="Closed Won">Closed Won</option>
-    <option value="Closed Lost">Closed Lost</option>
-  </select>
-</div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Stage
+                </label>
+                <select
+                  name="stage"
+                  value={dealData.stage || "Qualification"}
+                  onChange={handleDealChange}
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="Qualification">Qualification</option>
+                  <option value="Proposal">Proposal</option>
+                  <option value="Negotiation">Negotiation</option>
+                  <option value="Closed Won">Closed Won</option>
+                  <option value="Closed Lost">Closed Lost</option>
+                </select>
+              </div>
 
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -728,7 +793,7 @@ export default function LeadTable() {
                   placeholder="Add any additional details about this deal..."
                 />
               </div>
-            
+
               <div className="flex justify-end gap-3">
                 <button
                   onClick={() => {

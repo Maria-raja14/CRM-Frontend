@@ -41,17 +41,30 @@ import Pipeline_view from "./pages/Pipeline_View/Pipelien_view";
 import AdminDashboard from "./AdminDashboard/dashboard";
 import CreateDeal from "./pages/Deals/CreateDeal";
 
+import { NotificationProvider } from "./context/NotificationContext";
+import NotificationsPage from "./pages/notification/NotificationsPage";
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (user?._id) {
-      initSocket(); // ✅ just call without param
-    }
-  }, []); // only once
+  // useEffect(() => {
+  //   const user = JSON.parse(localStorage.getItem("user"));
+  //   if (user?._id) {
+  //     initSocket(); // ✅ just call without param
+  //   }
+  // }, []); // only once
+useEffect(() => {
+  const user = JSON.parse(localStorage.getItem("user"));
+  if (user?._id) {
+    const socket = initSocket(user._id);
+
+    socket.on("new_notification", (notif) => {
+      console.log("🔔 Notification received:", notif);
+    });
+  }
+}, []); // ✅ empty array
 
   return (
+    <NotificationProvider>
     <BrowserRouter>
       <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white transition-all">
         <Routes>
@@ -84,6 +97,7 @@ function App() {
             <Route path="/Pipelineview" element={<Pipeline_view />} />
 
             <Route path="/proposal/drafts" element={<DraftsPage />} />
+            <Route path="/dashboard/notifications" element={<NotificationsPage />} />
 
             <Route
               path="/myprofile/*"
@@ -96,9 +110,10 @@ function App() {
           </Route>
         </Routes>
         <ToastContainer position="top-right" autoClose={3000} />
-        {/* <Notification /> */}
+   
       </div>
     </BrowserRouter>
+    </NotificationProvider>
   );
 }
 
