@@ -2,6 +2,14 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import axios from "axios";
+import {
+  ArrowLeft,
+  User,
+  DollarSign,
+  Briefcase,
+  UserCheck,
+  StickyNote,
+} from "lucide-react";
 import "react-toastify/dist/ReactToastify.css";
 
 export default function CreateDeal() {
@@ -10,35 +18,31 @@ export default function CreateDeal() {
   const [formData, setFormData] = useState({
     leadId: "",
     dealValue: "",
-    stage: "Qualification", // default
+    stage: "Qualification",
     assignTo: "",
     notes: "",
   });
 
-  const [errors, setErrors] = useState({
-    leadId: false,
-    dealValue: false,
-  });
-
+  const [errors, setErrors] = useState({});
   const [leads, setLeads] = useState([]);
   const [salesUsers, setSalesUsers] = useState([]);
 
-  // Fetch Leads for dropdown
+  // Fetch Leads
   useEffect(() => {
     const fetchLeads = async () => {
       try {
         const response = await axios.get(
           "http://localhost:5000/api/leads/getAllLead"
         );
-        setLeads(response.data);
-      } catch (error) {
+        setLeads(response.data || []);
+      } catch {
         toast.error("Failed to fetch leads");
       }
     };
     fetchLeads();
   }, []);
 
-  // Fetch sales users
+  // Fetch Sales Users
   useEffect(() => {
     const fetchSalesUsers = async () => {
       try {
@@ -46,33 +50,26 @@ export default function CreateDeal() {
         const response = await axios.get("http://localhost:5000/api/users", {
           headers: { Authorization: `Bearer ${token}` },
         });
-
         const filteredSales = (response.data.users || []).filter(
           (user) =>
             user.role &&
             user.role.name &&
             user.role.name.trim().toLowerCase() === "sales"
         );
-
         setSalesUsers(filteredSales);
-      } catch (error) {
+      } catch {
         toast.error("Failed to fetch sales users");
       }
     };
-
     fetchSalesUsers();
   }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-
-    if ((name === "leadId" || name === "dealValue") && value.trim() !== "") {
-      setErrors({ ...errors, [name]: false });
-    }
+    if (value.trim() !== "") setErrors({ ...errors, [name]: false });
   };
 
-  
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -85,213 +82,208 @@ export default function CreateDeal() {
     if (!newErrors.leadId && !newErrors.dealValue) {
       try {
         const payload = {
-          leadId: formData.leadId, // ✅ send leadId (required by schema)
+          leadId: formData.leadId,
           value: formData.dealValue,
           stage: formData.stage,
           assignedTo: formData.assignTo,
           notes: formData.notes,
         };
 
-        await axios.post(
-          "http://localhost:5000/api/deals/createManual",
-          payload,
-          {
-            headers: { "Content-Type": "application/json" },
-          }
-        );
+        await axios.post("http://localhost:5000/api/deals/createManual", payload, {
+          headers: { "Content-Type": "application/json" },
+        });
 
-        toast.success("Deal created successfully");
+        toast.success("🎉 Deal created successfully");
         navigate("/deals");
-      } catch (error) {
+      } catch {
         toast.error("Failed to create deal");
       }
     }
   };
 
-  const handleBackClick = () => {
-    navigate(-1);
-  };
+  const handleBackClick = () => navigate(-1);
 
   const fieldGroups = [
     {
       title: "Deal Information",
-      fields: ["leadId", "dealValue", "stage"],
+      color: "text-blue-600",
+      fields: [
+        {
+          name: "leadId",
+          label: "Select Lead",
+          icon: <User size={16} />,
+          type: "select",
+          options: leads.map((lead) => ({
+            label: `${lead.leadName} - ${lead.companyName}`,
+            value: lead._id,
+          })),
+        },
+        {
+          name: "dealValue",
+          label: "Deal Value",
+          icon: <DollarSign size={16} />,
+          type: "number",
+        },
+        {
+          name: "stage",
+          label: "Stage",
+          icon: <Briefcase size={16} />,
+          type: "select",
+          options: [
+            "Qualification",
+            "Proposal",
+            "Negotiation",
+            "Closed Won",
+            "Closed Lost",
+          ],
+        },
+      ],
     },
     {
       title: "Management",
-      fields: ["assignTo",],
+      color: "text-green-600",
+      fields: [
+        {
+          name: "assignTo",
+          label: "Assign To",
+          icon: <UserCheck size={16} />,
+          type: "select",
+          options: salesUsers.map((u) => ({
+            label: `${u.firstName} ${u.lastName}`,
+            value: u._id,
+          })),
+        },
+      ],
     },
-    { title: "Additional Information", fields: ["notes"] },
+    {
+      title: "Additional Information",
+      color: "text-purple-600",
+      fields: [
+        {
+          name: "notes",
+          label: "Notes",
+          icon: <StickyNote size={16} />,
+          type: "textarea",
+        },
+      ],
+    },
   ];
 
-  const getFieldType = (field) => {
-    if (field.includes("Date")) return "datetime-local";
-    if (field === "dealValue") return "number";
-    if (field === "notes") return "textarea";
-    return "text";
-  };
-
-  const getFieldPlaceholder = (field) => {
-    const placeholders = {
-      dealValue: "Enter deal value",
-      notes: "Enter notes",
-    };
-    return placeholders[field] || "";
-  };
-
-  const getFieldOptions = (field) => {
-    if (field === "leadId") {
-      return leads.map((lead) => ({
-        label: `${lead.leadName} - ${lead.companyName}`,
-        value: lead._id,
-      }));
-    }
-    if (field === "stage") {
-      return [
-        "Qualification",
-        "Proposal",
-        "Negotiation",
-        "Closed Won",
-        "Closed Lost",
-      ];
-    }
-    if (field === "assignTo") {
-      return salesUsers.map((user) => ({
-        label: `${user.firstName} ${user.lastName}`,
-        value: user._id,
-      }));
-    }
-    return null;
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="bg-white px-6 py-4 border-b border-gray-200">
-            <div className="flex items-center">
-              <button
-                onClick={handleBackClick}
-                className="text-gray-600 hover:text-gray-900 transition-colors mr-4"
+    <div className="min-h-screen flex items-start justify-center py-10">
+      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-lg border border-gray-200">
+        {/* Header */}
+           <div className="flex items-center gap-3 px-6 py-5 border-b rounded-t-2xl">
+      {/* Back Button */}
+      <button
+        onClick={handleBackClick}
+        className="p-2 rounded-lg hover:bg-gray-100 transition"
+      >
+        <ArrowLeft size={20} className="text-gray-700" />
+      </button>
+
+      {/* Title */}
+      <h1 className="text-2xl font-bold text-gray-800">Create New Deal</h1>
+    </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="p-8 space-y-10">
+          {fieldGroups.map((group) => (
+            <div key={group.title} className="space-y-6 p-6 border rounded-xl">
+              <h2
+                className={`text-lg font-semibold border-b pb-2 ${group.color}`}
               >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                  />
-                </svg>
-              </button>
-              <h1 className="text-2xl font-semibold text-gray-800">
-                Create New Deal
-              </h1>
-            </div>
-          </div>
+                {group.title}
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {group.fields.map((field) => (
+                  <div
+                    key={field.name}
+                    className={`${
+                      field.type === "textarea" ? "md:col-span-3" : ""
+                    }`}
+                  >
+                    <label className="block text-sm font-medium text-gray-600 mb-2 flex items-center gap-2">
+                      {field.icon} {field.label}
+                      {(field.name === "leadId" ||
+                        field.name === "dealValue") && (
+                        <span className="text-red-500">*</span>
+                      )}
+                    </label>
 
-          <div className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-8">
-              {fieldGroups.map((group) => (
-                <div key={group.title} className="space-y-6">
-                  <h2 className="text-lg font-medium text-gray-800 border-b pb-2">
-                    {group.title}
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {group.fields.map((field) => (
-                      <div
-                        key={field}
-                        className={`space-y-2 ${
-                          field === "notes" ? "md:col-span-2 lg:col-span-3" : ""
-                        }`}
+                    {field.type === "select" ? (
+                      <select
+                        name={field.name}
+                        value={formData[field.name]}
+                        onChange={handleChange}
+                        className="w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-400 outline-none transition h-10"
                       >
-                        <label className="block text-sm font-medium text-gray-700 capitalize">
-                          {field.replace(/([A-Z])/g, " $1").trim()}
-                          {(field === "leadId" || field === "dealValue") && (
-                            <span className="text-red-500 ml-1">*</span>
-                          )}
-                        </label>
-                        {getFieldOptions(field) ? (
-                          <select
-                            name={field}
-                            value={formData[field]}
-                            onChange={handleChange}
-                            className={`block w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                              errors[field]
-                                ? "border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500"
-                                : "border-gray-300"
-                            }`}
-                          >
-                            <option value="">
-                              Select {field.replace(/([A-Z])/g, " $1").trim()}
+                        <option value="">Select {field.label}</option>
+                        {field.options.map((opt) =>
+                          typeof opt === "string" ? (
+                            <option key={opt} value={opt}>
+                              {opt}
                             </option>
-                            {getFieldOptions(field).map((option) =>
-                              typeof option === "string" ? (
-                                <option key={option} value={option}>
-                                  {option}
-                                </option>
-                              ) : (
-                                <option key={option.value} value={option.value}>
-                                  {option.label}
-                                </option>
-                              )
-                            )}
-                          </select>
-                        ) : getFieldType(field) === "textarea" ? (
-                          <textarea
-                            name={field}
-                            value={formData[field]}
-                            onChange={handleChange}
-                            rows={6}
-                            placeholder={getFieldPlaceholder(field)}
-                            className="block w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300"
-                          />
-                        ) : (
-                          <input
-                            type={getFieldType(field)}
-                            name={field}
-                            value={formData[field]}
-                            onChange={handleChange}
-                            placeholder={getFieldPlaceholder(field)}
-                            className="block w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300"
-                          />
+                          ) : (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          )
                         )}
-                        {errors[field] && (
-                          <p className="mt-1 text-sm text-red-600">
-                            {field === "leadId"
-                              ? "Lead is required"
-                              : "Deal value is required"}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
+                      </select>
+                    ) : field.type === "textarea" ? (
+                      <textarea
+                        name={field.name}
+                        rows={5}
+                        value={formData[field.name]}
+                        onChange={handleChange}
+                        placeholder={`Enter ${field.label}...`}
+                        className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white shadow-sm text-sm text-gray-700 placeholder-gray-400 transition resize-none"
+                      />
+                    ) : (
+                      <input
+                        type={field.type || "text"}
+                        name={field.name}
+                        value={formData[field.name]}
+                        onChange={handleChange}
+                        placeholder={`Enter ${field.label}`}
+                        className="w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-400 outline-none transition h-10"
+                        required={
+                          field.name === "leadId" || field.name === "dealValue"
+                        }
+                      />
+                    )}
 
-              <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={handleBackClick}
-                  className="inline-flex items-center px-6 py-3 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="inline-flex items-center px-6 py-3 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-                >
-                  Save Deal
-                </button>
+                    {errors[field.name] && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {field.label} is required
+                      </p>
+                    )}
+                  </div>
+                ))}
               </div>
-            </form>
+            </div>
+          ))}
+
+          {/* Buttons */}
+          <div className="flex justify-end gap-4 pt-6 border-t">
+            <button
+              type="button"
+              onClick={handleBackClick}
+              className="px-6 py-2 rounded-lg border bg-white hover:bg-gray-100 text-gray-700 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-md transition"
+            >
+              Save Deal
+            </button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );
 }
+
