@@ -1,5 +1,3 @@
-
-
 // import React, { useRef, useState, useEffect } from "react";
 // import { Link, useLocation, useNavigate } from "react-router-dom";
 // import { Editor } from "@tinymce/tinymce-react";
@@ -28,11 +26,19 @@
 //   const [filteredEmails, setFilteredEmails] = useState([]);
 //   const [editorContent, setEditorContent] = useState("");
 
-//   // Fetch all deals
 //   useEffect(() => {
 //     const fetchDeals = async () => {
 //       try {
-//         const response = await axios.get("http://localhost:5000/api/deals/getAll");
+//         const token = localStorage.getItem("token"); // get token from localStorage
+//         const response = await axios.get(
+//           "http://localhost:5000/api/deals/getAll",
+//           {
+//             headers: {
+//               Authorization: `Bearer ${token}`, // send token in Authorization header
+//             },
+//           }
+//         );
+
 //         if (response.data) {
 //           setDeals(response.data.deals || response.data);
 //         }
@@ -56,7 +62,8 @@
 //       if (proposalData.dealTitle && deals.length > 0) {
 //         const matchingDeal = deals.find(
 //           (d) =>
-//             d.dealName === proposalData.dealTitle || d.email === proposalData.email
+//             d.dealName === proposalData.dealTitle ||
+//             d.email === proposalData.email
 //         );
 //         if (matchingDeal) {
 //           setSelectedDealId(matchingDeal._id);
@@ -90,8 +97,6 @@
 //       setFilteredEmails(deals);
 //     }
 //   }, [email, deals]);
-
-  
 
 //   // Handle deal selection
 //   const handleDealSelect = (dealId) => {
@@ -189,10 +194,10 @@
 //         );
 
 //         // Then send email
-//         await axios.post(
-//           "http://localhost:5000/api/proposal/mailsend",
-//           { ...proposalPayload, id: proposalData._id }
-//         );
+//         await axios.post("http://localhost:5000/api/proposal/mailsend", {
+//           ...proposalPayload,
+//           id: proposalData._id,
+//         });
 
 //         toast.success("Proposal updated and sent successfully!");
 //       } else {
@@ -297,7 +302,9 @@
 //               value={email}
 //               onChange={(e) => setEmail(e.target.value)}
 //               onFocus={() => setIsEmailDropdownOpen(true)}
-//               onBlur={() => setTimeout(() => setIsEmailDropdownOpen(false), 200)}
+//               onBlur={() =>
+//                 setTimeout(() => setIsEmailDropdownOpen(false), 200)
+//               }
 //             />
 //             {isEmailDropdownOpen && filteredEmails.length > 0 && (
 //               <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-y-auto">
@@ -307,7 +314,7 @@
 //                     className="p-2 hover:bg-gray-100 cursor-pointer"
 //                     onClick={() => handleEmailSelectFromDropdown(deal)}
 //                   >
-//                    {deal.leadId?.email || deal.email || "No Email"}
+//                     {deal.leadId?.email || deal.email || "No Email"}
 //                   </div>
 //                 ))}
 //               </div>
@@ -383,8 +390,7 @@
 //   );
 // };
 
-// export default SendProposal;//original
-
+// export default SendProposal;
 
 import React, { useRef, useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -392,6 +398,7 @@ import { Editor } from "@tinymce/tinymce-react";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import SuperEditor from "./SuperEditor";
 
 const SendProposal = () => {
   const editorRef = useRef(null);
@@ -414,11 +421,19 @@ const SendProposal = () => {
   const [filteredEmails, setFilteredEmails] = useState([]);
   const [editorContent, setEditorContent] = useState("");
 
-  // Fetch all deals
   useEffect(() => {
     const fetchDeals = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/deals/getAll");
+        const token = localStorage.getItem("token"); // get token from localStorage
+        const response = await axios.get(
+          "http://localhost:5000/api/deals/getAll",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // send token in Authorization header
+            },
+          }
+        );
+
         if (response.data) {
           setDeals(response.data.deals || response.data);
         }
@@ -442,7 +457,8 @@ const SendProposal = () => {
       if (proposalData.dealTitle && deals.length > 0) {
         const matchingDeal = deals.find(
           (d) =>
-            d.dealName === proposalData.dealTitle || d.email === proposalData.email
+            d.dealName === proposalData.dealTitle ||
+            d.email === proposalData.email
         );
         if (matchingDeal) {
           setSelectedDealId(matchingDeal._id);
@@ -573,10 +589,10 @@ const SendProposal = () => {
         );
 
         // Then send email
-        await axios.post(
-          "http://localhost:5000/api/proposal/mailsend",
-          { ...proposalPayload, id: proposalData._id }
-        );
+        await axios.post("http://localhost:5000/api/proposal/mailsend", {
+          ...proposalPayload,
+          id: proposalData._id,
+        });
 
         toast.success("Proposal updated and sent successfully!");
       } else {
@@ -636,7 +652,7 @@ const SendProposal = () => {
             <option value="">-- Select a Deal --</option>
             {deals.map((deal) => (
               <option key={deal._id} value={deal._id}>
-                {deal.dealName || `Deal #${deal._id.substring(0, 8)}`} 
+                {deal.dealName || `Deal #${deal._id.substring(0, 8)}`}
               </option>
             ))}
           </select>
@@ -662,7 +678,7 @@ const SendProposal = () => {
                     className="p-2 hover:bg-gray-100 cursor-pointer"
                     onClick={() => handleDealSelectFromDropdown(deal)}
                   >
-                    {deal.dealName || "Untitled Deal"} 
+                    {deal.dealName || "Untitled Deal"}
                   </div>
                 ))}
               </div>
@@ -681,7 +697,9 @@ const SendProposal = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onFocus={() => setIsEmailDropdownOpen(true)}
-              onBlur={() => setTimeout(() => setIsEmailDropdownOpen(false), 200)}
+              onBlur={() =>
+                setTimeout(() => setIsEmailDropdownOpen(false), 200)
+              }
             />
             {isEmailDropdownOpen && filteredEmails.length > 0 && (
               <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-y-auto">
@@ -691,7 +709,7 @@ const SendProposal = () => {
                     className="p-2 hover:bg-gray-100 cursor-pointer"
                     onClick={() => handleEmailSelectFromDropdown(deal)}
                   >
-                   {deal.leadId?.email || deal.email || "No Email"}
+                    {deal.leadId?.email || deal.email || "No Email"}
                   </div>
                 ))}
               </div>
@@ -701,24 +719,12 @@ const SendProposal = () => {
 
         {/* Editor */}
         <div className="mt-6">
-          <Editor
-            apiKey="a413g7ope5qfyodp0u0e5d042r8jwy9vf6b162kjnnmgj5us"
-            onInit={(evt, editor) => {
-              editorRef.current = editor;
-              if (proposalData?.content) {
-                editor.setContent(proposalData.content);
-              }
-            }}
-            initialValue={editorContent}
-            onEditorChange={handleEditorChange}
-            init={{
-              height: 500,
-              menubar: true,
-              plugins: "lists link image code media table",
-              toolbar:
-                "undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent | image media table code",
-            }}
-          />
+          <label className="block text-gray-700 font-medium mb-2">
+            Proposal Content
+          </label>
+          <div className="border border-gray-300 rounded-lg shadow-sm bg-white">
+            <SuperEditor value={editorContent} setValue={setEditorContent} />
+          </div>
         </div>
 
         {/* Insert Vars */}
