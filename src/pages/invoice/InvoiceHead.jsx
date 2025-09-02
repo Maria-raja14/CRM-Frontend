@@ -295,21 +295,55 @@ const InvoiceHead = () => {
         editingInvoice={editingInvoice}
       />
 
-      {/* Summary Cards (show decimals) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
-        <div className="bg-[#4466f2] p-6 rounded-xl text-white shadow-md">
-          <h3 className="text-lg font-medium">Total Amount</h3>
-          <p className="text-2xl font-bold mt-2">₹{totalAmount.toFixed(2)}</p>
+  {/* Total Amount Card */}
+  <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-md border border-blue-200 relative overflow-hidden">
+    <div className="absolute top-0 right-0 w-24 h-24 -mr-6 -mt-6 bg-blue-200 rounded-full opacity-30"></div>
+    <div className="relative z-10">
+      <div className="flex items-center mb-4">
+        <div className="p-2 rounded-lg bg-blue-100 mr-3">
+          <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
         </div>
-        <div className="bg-[#46c35f] p-6 rounded-xl text-white shadow-md">
-          <h3 className="text-lg font-medium">Total Paid</h3>
-          <p className="text-2xl font-bold mt-2">₹{totalPaid.toFixed(2)}</p>
-        </div>
-        <div className="bg-[#fc6510] p-6 rounded-xl text-white shadow-md">
-          <h3 className="text-lg font-medium">Total Due</h3>
-          <p className="text-2xl font-bold mt-2">₹{totalDue.toFixed(2)}</p>
-        </div>
+        <h3 className="text-lg font-medium text-blue-800">Total Amount</h3>
       </div>
+      <p className="text-2xl font-bold text-blue-900">₹{totalAmount.toFixed(2)}</p>
+    </div>
+  </div>
+
+  {/* Total Paid Card */}
+  <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-md border border-green-200 relative overflow-hidden">
+    <div className="absolute top-0 right-0 w-24 h-24 -mr-6 -mt-6 bg-green-200 rounded-full opacity-30"></div>
+    <div className="relative z-10">
+      <div className="flex items-center mb-4">
+        <div className="p-2 rounded-lg bg-green-100 mr-3">
+          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h3 className="text-lg font-medium text-green-800">Total Paid</h3>
+      </div>
+      <p className="text-2xl font-bold text-green-900">₹{totalPaid.toFixed(2)}</p>
+    </div>
+  </div>
+
+  {/* Total Due Card */}
+  <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl shadow-md border border-orange-200 relative overflow-hidden">
+    <div className="absolute top-0 right-0 w-24 h-24 -mr-6 -mt-6 bg-orange-200 rounded-full opacity-30"></div>
+    <div className="relative z-10">
+      <div className="flex items-center mb-4">
+        <div className="p-2 rounded-lg bg-orange-100 mr-3">
+          <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        <h3 className="text-lg font-medium text-orange-800">Total Due</h3>
+      </div>
+      <p className="text-2xl font-bold text-orange-900">₹{totalDue.toFixed(2)}</p>
+    </div>
+  </div>
+</div>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-4 mt-8 items-center justify-between">
