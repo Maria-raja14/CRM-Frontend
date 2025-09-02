@@ -18,8 +18,7 @@ import Activity from "./pages/activityList/Activity";
 import PaymentAdd from "./pages/Payment/PaymentAdd";
 import Lastreasons from "./pages/lostReasons/Lastreasons";
 import ProposalHead from "./pages/proposal/ProposalHead";
-import TemplateHead from "./pages/proposal/TemplateHead";
-import AddTemplate from "./pages/proposal/AddTemplate";
+
 import SendProposal from "./pages/proposal/SendProposal";
 import ProposalBoard from "./stage/ProposalBoard";
 
@@ -80,8 +79,7 @@ useEffect(() => {
             <Route path="/LostReasons" element={<Lastreasons />} />
 
             <Route path="/proposal" element={<ProposalHead />} />
-            <Route path="/template" element={<TemplateHead />} />
-            <Route path="/template/addtemp" element={<AddTemplate />} />
+       
             <Route path="/proposal/sendproposal" element={<SendProposal />} />
             <Route path="/stage" element={<ProposalBoard />} />
 
