@@ -95,16 +95,7 @@ export const AllDeals = () => {
           year: "numeric",
         })
       : "-";
-  const formatFollowUpDate = (date) =>
-    date
-      ? new Date(date).toLocaleString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-      : "-";
+ 
 
   // Pagination
   const handlePageChange = (newPage) => {
@@ -258,7 +249,7 @@ export const AllDeals = () => {
               <th className="px-6 py-3 text-left">Stage</th>
               <th className="px-6 py-3 text-left">Value</th>
               <th className="px-6 py-3 text-left">Created At</th>
-              <th className="px-6 py-3 text-left">Follow-Up Date</th>
+             
               <th className="px-6 py-3 text-left">Actions</th>
             </tr>
           </thead>
@@ -287,9 +278,7 @@ export const AllDeals = () => {
                   <td className="px-6 py-4">{deal.stage || "-"}</td>
                   <td className="px-6 py-4">{deal.value || "-"}</td>
                   <td className="px-6 py-4">{formatDate(deal.createdAt)}</td>
-                  <td className="px-6 py-4">
-                    {formatFollowUpDate(deal.followUpDate)}
-                  </td>
+                  
                   <td className="px-6 py-4 relative">
                     <button
                       onClick={() => toggleDropdown(deal._id)}
@@ -418,18 +407,7 @@ export const AllDeals = () => {
                 className="w-full border rounded p-2"
                 placeholder="Notes"
               />
-              <input
-                type="datetime-local"
-                value={
-                  editDeal.followUpDate
-                    ? new Date(editDeal.followUpDate).toISOString().slice(0, 16)
-                    : ""
-                }
-                onChange={(e) =>
-                  setEditDeal({ ...editDeal, followUpDate: e.target.value })
-                }
-                className="w-full border rounded p-2"
-              />
+           
               <div className="flex justify-end space-x-3">
                 <button
                   onClick={() => setIsEditModalOpen(false)}

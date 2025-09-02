@@ -825,6 +825,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
+
 import {
   MoreVertical,
   Trash2,
@@ -868,7 +869,7 @@ export default function LeadTable() {
   const [sourceFilter, setSourceFilter] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [assignees, setAssignees] = useState([]);
-
+  const [converting, setConverting] = useState(false);
   const itemsPerPage = 10;
 
   // Convert Deal Modal state
@@ -879,10 +880,11 @@ export default function LeadTable() {
     notes: "",
     stage: "Qualification", // ✅ default stage
   });
-  
+
   const [attachmentsModalOpen, setAttachmentsModalOpen] = useState(false);
   const [selectedAttachments, setSelectedAttachments] = useState([]);
   const [selectedLeadName, setSelectedLeadName] = useState("");
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 1 });
 
   // Get user role from localStorage
   useEffect(() => {
@@ -920,7 +922,7 @@ export default function LeadTable() {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        
+
         if (response.data) {
           const leadsData = response.data.leads || response.data;
           setLeads(leadsData);
@@ -991,10 +993,18 @@ export default function LeadTable() {
     setLeads(filtered);
     setCurrentPage(1); // Reset to first page when filters change
   }, [searchQuery, assigneeFilter, statusFilter, sourceFilter, allLeads]);
-
   const handleMenuToggle = (leadId, e) => {
     e.stopPropagation();
-    setMenuOpen(menuOpen === leadId ? null : leadId);
+    if (menuOpen === leadId) {
+      setMenuOpen(null);
+    } else {
+      const rect = e.currentTarget.getBoundingClientRect();
+      setMenuPosition({
+        top: rect.bottom + window.scrollY + 4, // small gap below
+        left: rect.right + window.scrollX - 160, // align menu width (~160px)
+      });
+      setMenuOpen(leadId);
+    }
   };
 
   const handleEdit = (leadId) => {
@@ -1090,10 +1100,10 @@ export default function LeadTable() {
   const handleConvertDeal = async () => {
     if (!selectedLead) return;
     try {
+      setConverting(true); // 🔵 Start loading
       const token = localStorage.getItem("token");
-      const payload = {
-        ...dealData,
-      };
+      const payload = { ...dealData };
+
       await axios.patch(
         `http://localhost:5000/api/leads/${selectedLead._id}/convert`,
         payload,
@@ -1101,13 +1111,16 @@ export default function LeadTable() {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      toast.success("Lead converted to deal ✅");
+
+      toast.success("✅ Lead converted to deal");
       setLeads(leads.filter((l) => l._id !== selectedLead._id));
       setAllLeads(allLeads.filter((l) => l._id !== selectedLead._id));
       setConvertModalOpen(false);
       setSelectedLead(null);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Conversion failed");
+      toast.error(err.response?.data?.message || "❌ Conversion failed");
+    } finally {
+      setConverting(false); // 🔴 Stop loading
     }
   };
 
@@ -1360,7 +1373,7 @@ export default function LeadTable() {
                     {lead.source || "-"}
                   </td>
                   <td className="px-4 py-3">{getStatusBadge(lead.status)}</td>
-                  
+
                   {/* Only show Assignee column for admin */}
                   {userRole === "Admin" && (
                     <td className="px-4 py-3 text-sm text-gray-700">
@@ -1371,7 +1384,7 @@ export default function LeadTable() {
                         : "-"}
                     </td>
                   )}
-                  
+
                   <td className="px-4 py-3 text-sm text-gray-700">
                     {formatDate(lead.createdAt)}
                   </td>
@@ -1395,46 +1408,57 @@ export default function LeadTable() {
 
                   <td className="px-4 py-3 text-right relative">
                     <div className="relative inline-block text-left">
+                      {/* Trigger Button */}
                       <button
                         className="p-2 rounded-lg hover:bg-gray-200 transition-colors"
                         onClick={(e) => handleMenuToggle(lead._id, e)}
                       >
                         <MoreVertical className="w-5 h-5 text-gray-600" />
                       </button>
-                      {menuOpen === lead._id && (
-                        <div className="absolute right-0 mt-1 w-40 bg-white rounded-md shadow-lg border border-gray-200 z-20 py-1">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEdit(lead._id);
-                            }}
-                            className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            <Edit className="w-4 h-4 mr-2" /> Edit
-                          </button>
-                          {lead.status !== "Converted" && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                openConvertModal(lead);
-                              }}
-                              className="flex items-center w-full px-3 py-2 text-sm text-green-600 hover:bg-gray-100"
-                            >
-                              <Handshake className="w-4 h-4 mr-2" /> Convert
-                            </button>
-                          )}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteClick(lead._id);
-                            }}
-                            className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-gray-100"
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" /> Delete
-                          </button>
-                        </div>
-                      )}
                     </div>
+
+                    {/* Dropdown Menu outside table (using fixed) */}
+                    {menuOpen === lead._id && (
+                      <div
+                        className="fixed z-50 w-40 bg-white rounded-lg shadow-lg border border-gray-200 py-1"
+                        style={{
+                          top: `${menuPosition.top}px`,
+                          left: `${menuPosition.left}px`,
+                        }}
+                      >
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEdit(lead._id);
+                          }}
+                          className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          <Edit className="w-4 h-4 mr-2" /> Edit
+                        </button>
+
+                        {lead.status !== "Converted" && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openConvertModal(lead);
+                            }}
+                            className="flex items-center w-full px-3 py-2 text-sm text-green-600 hover:bg-gray-100"
+                          >
+                            <Handshake className="w-4 h-4 mr-2" /> Convert
+                          </button>
+                        )}
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteClick(lead._id);
+                          }}
+                          className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-gray-100"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" /> Delete
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))
@@ -1534,7 +1558,7 @@ export default function LeadTable() {
           </div>
         </DialogContent>
       </Dialog>
-      
+
       {/* Attachments Modal */}
       <Dialog
         open={attachmentsModalOpen}
@@ -1656,21 +1680,58 @@ export default function LeadTable() {
               </div>
 
               <div className="flex justify-end gap-3">
+                {/* Cancel Button */}
                 <button
                   onClick={() => {
                     setConvertModalOpen(false);
                     setSelectedLead(null);
                   }}
-                  className="px-4 py-2 rounded-lg border hover:bg-gray-100 text-gray-700"
+                  className="px-4 py-2 rounded-lg border text-gray-700 hover:bg-gray-100"
+                  disabled={converting} // disable while converting
                 >
                   Cancel
                 </button>
+
+                {/* Convert Button */}
                 <button
                   onClick={handleConvertDeal}
-                  className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 flex items-center gap-2"
+                  disabled={converting}
+                  className={`flex items-center px-4 py-2 rounded-lg text-white transition ${
+                    converting
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-green-600 hover:bg-green-700"
+                  }`}
                 >
-                  <Handshake className="w-4 h-4" />
-                  Convert to Deal
+                  {converting ? (
+                    <div className="flex items-center gap-2">
+                      <svg
+                        className="animate-spin h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 100 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z"
+                        ></path>
+                      </svg>
+                      <span>Converting...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Handshake className="w-4 h-4" />
+                      <span>Convert</span>
+                    </div>
+                  )}
                 </button>
               </div>
             </>
@@ -1679,6 +1740,4 @@ export default function LeadTable() {
       </Dialog>
     </div>
   );
-}//sales and admin deatils come correctly..
-
-
+} //sales and admin deatils come correctly..
