@@ -26,7 +26,7 @@ export default function CreateLeads() {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const leadId = queryParams.get("id");
-  
+
   const [userRole, setUserRole] = useState("");
 
   const [formData, setFormData] = useState({
@@ -43,14 +43,15 @@ export default function CreateLeads() {
     country: "",
     followUpDate: "",
     notes: "",
-    attachments: [],
+    attachments: [], // files to upload
   });
 
   const [errors, setErrors] = useState({});
   const [salesUsers, setSalesUsers] = useState([]);
   const [countries] = useState(getNames());
+  const [existingAttachments, setExistingAttachments] = useState([]);
 
-  // Get user role from localStorage
+  // ✅ Load user role
   useEffect(() => {
     const userData = localStorage.getItem("user");
     if (userData) {
@@ -59,7 +60,7 @@ export default function CreateLeads() {
     }
   }, []);
 
-  // Fetch lead if editing
+  // ✅ Fetch lead if editing
   useEffect(() => {
     if (leadId) {
       const fetchLead = async () => {
@@ -71,13 +72,27 @@ export default function CreateLeads() {
               headers: { Authorization: `Bearer ${token}` },
             }
           );
+
           const leadData = response.data;
-          if (leadData.followUpDate) {
-            leadData.followUpDate = new Date(leadData.followUpDate)
-              .toISOString()
-              .split("T")[0];
-          }
-          setFormData({ ...leadData, attachments: [] });
+          setExistingAttachments(leadData.attachments || []);
+          setFormData({
+            leadName: leadData.leadName || "",
+            companyName: leadData.companyName || "",
+            phoneNumber: leadData.phoneNumber || "",
+            email: leadData.email || "",
+            source: leadData.source || "",
+            industry: leadData.industry || "",
+            requirement: leadData.requirement || "",
+            status: leadData.status || "Warm",
+            assignTo: leadData.assignTo?._id || "", // ✅ only store _id
+            address: leadData.address || "",
+            country: leadData.country || "",
+            followUpDate: leadData.followUpDate
+              ? new Date(leadData.followUpDate).toISOString().split("T")[0]
+              : "",
+            notes: leadData.notes || "",
+            attachments: [], // ✅ reset uploads (can later extend to show existing files)
+          });
         } catch {
           toast.error("Failed to fetch lead data");
         }
@@ -86,22 +101,23 @@ export default function CreateLeads() {
     }
   }, [leadId]);
 
-  // Fetch sales users (only for admin)
+  // ✅ Fetch sales users (only for admin)
   useEffect(() => {
     const fetchSalesUsers = async () => {
       try {
         const token = localStorage.getItem("token");
         const userData = localStorage.getItem("user");
         const user = userData ? JSON.parse(userData) : null;
-        
-        // Only fetch sales users if user is admin
+
         if (user && user.role?.name === "Admin") {
           const response = await axios.get("http://localhost:5000/api/users", {
             headers: { Authorization: `Bearer ${token}` },
           });
+
           const filteredSales = (response.data.users || []).filter(
             (user) => user.role?.name?.trim().toLowerCase() === "sales"
           );
+
           setSalesUsers(filteredSales);
         }
       } catch {
@@ -111,6 +127,7 @@ export default function CreateLeads() {
     fetchSalesUsers();
   }, []);
 
+  // ✅ Handlers
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -119,6 +136,17 @@ export default function CreateLeads() {
 
   const handleFileChange = (e) => {
     setFormData({ ...formData, attachments: Array.from(e.target.files) });
+  };
+
+  const handleRemoveFile = (idx, type = "new") => {
+    if (type === "new") {
+      setFormData((prev) => ({
+        ...prev,
+        attachments: prev.attachments.filter((_, i) => i !== idx),
+      }));
+    } else {
+      setExistingAttachments((prev) => prev.filter((_, i) => i !== idx));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -131,10 +159,15 @@ export default function CreateLeads() {
     };
     setErrors(newErrors);
 
-    if (!newErrors.leadName && !newErrors.companyName && !newErrors.phoneNumber) {
+    if (
+      !newErrors.leadName &&
+      !newErrors.companyName &&
+      !newErrors.phoneNumber
+    ) {
       try {
         const token = localStorage.getItem("token");
         const dataToSend = new FormData();
+
         for (let key in formData) {
           if (key === "attachments") {
             formData.attachments.forEach((file) =>
@@ -144,6 +177,12 @@ export default function CreateLeads() {
             dataToSend.append(key, formData[key]);
           }
         }
+
+        // send existing files also
+        dataToSend.append(
+          "existingAttachments",
+          JSON.stringify(existingAttachments)
+        );
 
         const config = {
           headers: {
@@ -158,7 +197,7 @@ export default function CreateLeads() {
             dataToSend,
             config
           );
-          toast.success("Lead updated successfully");
+          toast.success("✅ Lead updated successfully");
         } else {
           await axios.post(
             "http://localhost:5000/api/leads/create",
@@ -167,161 +206,399 @@ export default function CreateLeads() {
           );
           toast.success("🎉 Lead created successfully");
         }
-        setTimeout(() => navigate("/leads"), 1500);
+
+        // wait a bit so toast shows before redirect
+        setTimeout(() => navigate("/leads"), 2000);
       } catch (err) {
-        toast.error(leadId ? "Failed to update lead" : "Failed to create lead");
+        console.error(err);
+        toast.error(
+          err.response?.data?.message ||
+            (leadId ? "❌ Failed to update lead" : "❌ Failed to create lead")
+        );
       }
     }
   };
 
   const handleBackClick = () => navigate(-1);
 
+  // ✅ Field Groups
   const fieldGroups = [
     {
       title: "Basic Information",
       color: "text-blue-600",
       fields: [
         { name: "leadName", label: "Lead Name", icon: <User size={16} /> },
-        { name: "companyName", label: "Company Name", icon: <Building2 size={16} /> },
-        { name: "phoneNumber", label: "Phone Number", icon: <Phone size={16} /> },
+        {
+          name: "companyName",
+          label: "Company Name",
+          icon: <Building2 size={16} />,
+        },
+        {
+          name: "phoneNumber",
+          label: "Phone Number",
+          icon: <Phone size={16} />,
+        },
         { name: "email", label: "Email", icon: <Mail size={16} /> },
         { name: "address", label: "Address", icon: <MapPin size={16} /> },
-        { name: "country", label: "Country", icon: <Globe size={16} />, type: "select", options: countries },
+        {
+          name: "country",
+          label: "Country",
+          icon: <Globe size={16} />,
+          type: "select",
+          options: countries,
+        },
       ],
     },
     {
       title: "Business Details",
       color: "text-green-600",
       fields: [
-        { name: "industry", label: "Industry", icon: <Briefcase size={16} />, type: "select", options: ["IT","Finance","Healthcare","Education","Manufacturing","Retail","Other"] },
-        { name: "source", label: "Source", icon: <Globe size={16} />, type: "select", options: ["Website","Referral","Social Media","Email","Phone","Other"] },
-        { name: "requirement", label: "Requirement", icon: <FileText size={16} /> },
+        {
+          name: "industry",
+          label: "Industry",
+          icon: <Briefcase size={16} />,
+          type: "select",
+          options: [
+            "IT",
+            "Finance",
+            "Healthcare",
+            "Education",
+            "Manufacturing",
+            "Retail",
+            "Other",
+          ],
+        },
+        {
+          name: "source",
+          label: "Source",
+          icon: <Globe size={16} />,
+          type: "select",
+          options: [
+            "Website",
+            "Referral",
+            "Social Media",
+            "Email",
+            "Phone",
+            "Other",
+          ],
+        },
+        {
+          name: "requirement",
+          label: "Requirement",
+          icon: <FileText size={16} />,
+        },
       ],
     },
     {
       title: "Lead Management",
       color: "text-yellow-600",
       fields: [
-        { name: "status", label: "Status", icon: <UserCheck size={16} />, type: "select", options: ["Hot","Warm","Cold","Junk"] },
-        // Only show assignTo field for admin users
-        ...(userRole === "Admin" ? [
-          { name: "assignTo", label: "Assign To", icon: <User size={16} />, type: "select", options: salesUsers.map((u) => ({ label: `${u.firstName} ${u.lastName}`, value: u._id })) }
-        ] : []),
-        { name: "followUpDate", label: "Follow-up Date", icon: <Calendar size={16} />, type: "date" },
+        {
+          name: "status",
+          label: "Status",
+          icon: <UserCheck size={16} />,
+          type: "select",
+          options: ["Hot", "Warm", "Cold", "Junk"],
+        },
+        ...(userRole === "Admin"
+          ? [
+              {
+                name: "assignTo",
+                label: "Assign To",
+                icon: <User size={16} />,
+                type: "select",
+                options: salesUsers.map((u) => ({
+                  label: `${u.firstName} ${u.lastName}`,
+                  value: u._id,
+                })),
+              },
+            ]
+          : []),
+        {
+          name: "followUpDate",
+          label: "Follow-up Date",
+          icon: <Calendar size={16} />,
+          type: "date",
+        },
       ],
     },
     {
       title: "Additional Information",
       color: "text-purple-600",
       fields: [
-        { name: "notes", label: "Notes", icon: <StickyNote size={16} />, type: "textarea" },
+        {
+          name: "notes",
+          label: "Notes",
+          icon: <StickyNote size={16} />,
+          type: "textarea",
+        },
       ],
     },
   ];
-
   return (
-    <div className="min-h-screen flex items-start justify-center py-10">
-      <div className="w-full max-w-6xl bg-white rounded-2xl shadow-lg border border-gray-200">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between px-6 py-5 border-b rounded-t-2xl">
-          <h1 className="text-2xl font-bold text-gray-800">{leadId ? "Edit Lead" : "Create New Lead"}</h1>
-          <button onClick={handleBackClick} className="mt-3 md:mt-0 flex items-center gap-2 px-4 py-2 rounded-lg border text-gray-600 hover:bg-gray-100 transition">
-            <ArrowLeft size={16} /> Back
-          </button>
-        </div>
+    <>
+      <div className="min-h-screen flex items-start justify-center  py-10 px-4">
+        <div className="w-full max-w-6xl bg-white rounded-2xl shadow-xl border border-gray-100">
+          {/* ---- Header ---- */}
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between px-6 py-5 border-b rounded-t-2xl">
+            <div className="flex items-center gap-3">
+              {/* Back Button - Only Icon */}
+              <button
+                onClick={handleBackClick}
+                className="p-2 rounded-lg bg-white text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition"
+              >
+                <ArrowLeft size={20} />
+              </button>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-8 space-y-10">
-          {fieldGroups.map((group) => (
-            <div key={group.title} className="space-y-6 p-6 border rounded-xl">
-              <h2 className={`text-lg font-semibold border-b pb-2 ${group.color}`}>{group.title}</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {group.fields.map((field) => (
-                  <div key={field.name} className={`${field.type === "textarea" ? "md:col-span-3" : ""}`}>
-                    <label className="block text-sm font-medium text-gray-600 mb-2 flex items-center gap-2">
-                      {field.icon} {field.label}
-                      {(field.name === "leadName" || field.name === "companyName" || field.name === "phoneNumber") && (
-                        <span className="text-red-500">*</span>
-                      )}
-                    </label>
+              {/* Title */}
+              <h1 className="text-2xl font-bold text-gray-800">
+                {leadId ? "Edit Lead" : "Create New Lead"}
+              </h1>
+            </div>
+          </div>
 
-                    {field.name === "phoneNumber" ? (
-                      <div className="relative w-full">
-                        <PhoneInput
-                          country={"in"}
-                          value={formData.phoneNumber}
-                          onChange={(phone) => setFormData({ ...formData, phoneNumber: phone })}
-                          specialLabel=""
-                          inputStyle={{ width: "100%", height: "40px", fontSize: "14px", paddingLeft: "55px", borderRadius: "0.5rem", border: "1px solid #d1d5db", boxSizing: "border-box" }}
-                          buttonStyle={{ border: "1px solid #d1d5db", borderRadius: "0.5rem 0 0 0.5rem", height: "40px", background: "white" }}
-                          containerStyle={{ width: "100%" }}
-                          dropdownStyle={{ borderRadius: "0.5rem" }}
-                        />
-                      </div>
-                    ) : field.type === "select" ? (
-                      <select name={field.name} value={formData[field.name]} onChange={handleChange} className="w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-400 outline-none transition h-10">
-                        <option value="">Select {field.label}</option>
-                        {field.options.map((opt) => typeof opt === "string" ? <option key={opt} value={opt}>{opt}</option> : <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                      </select>
-                    ) : field.type === "textarea" ? (
-                      <div className="relative w-full">
-                        <span className="absolute left-3 top-3 text-gray-400 pointer-events-none"><FileText size={18} /></span>
-                        <textarea
+          {/* ---- Form ---- */}
+          <form onSubmit={handleSubmit} className="p-8 space-y-10">
+            {fieldGroups.map((group) => (
+              <div
+                key={group.title}
+                className="space-y-6 p-6  border border-gray-200 rounded-xl shadow-sm"
+              >
+                <h2
+                  className={`text-lg font-semibold border-b pb-2 ${group.color}`}
+                >
+                  {group.title}
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {group.fields.map((field) => (
+                    <div
+                      key={field.name}
+                      className={`${
+                        field.type === "textarea" ? "md:col-span-3" : ""
+                      }`}
+                    >
+                      {/* Label */}
+                      <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                        {field.icon} {field.label}
+                        {(field.name === "leadName" ||
+                          field.name === "companyName" ||
+                          field.name === "phoneNumber") && (
+                          <span className="text-red-500">*</span>
+                        )}
+                      </label>
+
+                      {/* Phone Input */}
+                      {field.name === "phoneNumber" ? (
+                        <div className="relative w-full">
+                          <PhoneInput
+                            country={"in"}
+                            value={formData.phoneNumber}
+                            onChange={(phone) =>
+                              setFormData({ ...formData, phoneNumber: phone })
+                            }
+                            specialLabel=""
+                            inputStyle={{
+                              width: "100%",
+                              height: "42px",
+                              fontSize: "14px",
+                              paddingLeft: "55px",
+                              borderRadius: "0.5rem",
+                              border: "1px solid #d1d5db",
+                              boxSizing: "border-box",
+                            }}
+                            buttonStyle={{
+                              border: "1px solid #d1d5db",
+                              borderRadius: "0.5rem 0 0 0.5rem",
+                              height: "42px",
+                              background: "white",
+                            }}
+                            containerStyle={{ width: "100%" }}
+                            dropdownStyle={{ borderRadius: "0.5rem" }}
+                          />
+                        </div>
+                      ) : field.type === "select" ? (
+                        <select
                           name={field.name}
-                          rows={5}
-                          value={formData[field.name]}
+                          value={formData[field.name] || ""}
                           onChange={handleChange}
-                          placeholder={`Enter ${field.label}...`}
-                          className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 bg-white shadow-sm text-sm text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400 transition resize-none"
+                          className="w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 outline-none transition h-11"
+                        >
+                          <option value="">Select {field.label}</option>
+                          {field.options.map((opt) =>
+                            typeof opt === "string" ? (
+                              <option key={opt} value={opt}>
+                                {opt}
+                              </option>
+                            ) : (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            )
+                          )}
+                        </select>
+                      ) : field.type === "textarea" ? (
+                        <div className="relative w-full">
+                          <span className="absolute left-3 top-3 text-gray-400 pointer-events-none">
+                            <FileText size={18} />
+                          </span>
+                          <textarea
+                            name={field.name}
+                            rows={5}
+                            value={formData[field.name] || ""}
+                            onChange={handleChange}
+                            placeholder={`Enter ${field.label}...`}
+                            className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 bg-white shadow-sm text-sm text-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 placeholder-gray-400 transition resize-none"
+                          />
+                          <p className="text-xs text-gray-400 mt-1">
+                            Max 500 characters
+                          </p>
+                        </div>
+                      ) : (
+                        <input
+                          type={field.type || "text"}
+                          name={field.name}
+                          value={formData[field.name] || ""}
+                          onChange={handleChange}
+                          placeholder={`Enter ${field.label}`}
+                          className="w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 outline-none transition h-11"
+                          required={
+                            field.name === "leadName" ||
+                            field.name === "companyName" ||
+                            field.name === "phoneNumber"
+                          }
                         />
-                        <p className="text-xs text-gray-400 mt-1">Max 500 characters</p>
-                      </div>
-                    ) : (
-                      <input
-                        type={field.type || "text"}
-                        name={field.name}
-                        value={formData[field.name]}
-                        onChange={handleChange}
-                        placeholder={`Enter ${field.label}`}
-                        className="w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-400 outline-none transition h-10"
-                        required={field.name === "leadName" || field.name === "companyName" || field.name === "phoneNumber"}
-                      />
-                    )}
+                      )}
 
-                    {errors[field.name] && <p className="text-sm text-red-500 mt-1">{field.label} is required</p>}
-                  </div>
-                ))}
+                      {/* Error */}
+                      {errors[field.name] && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {field.label} is required
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            {/* ---- Attachments Section ---- */}
+            <div className="p-6 border rounded-xl bg-gray-50 shadow-sm">
+              <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">
+                Attachments
+              </h2>
+
+              {/* Existing Files */}
+              {existingAttachments.length > 0 && (
+                <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {existingAttachments.map((file, idx) => (
+                    <div
+                      key={idx}
+                      className="flex flex-col items-center justify-center w-full bg-white border rounded-xl shadow-sm p-3"
+                    >
+                      <a
+                        href={`http://localhost:5000/${file}`} // 🔑 adjust if backend gives full URL
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-indigo-600 hover:underline truncate w-full text-center"
+                      >
+                        {file.split("/").pop()}
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFile(idx, "existing")}
+                        className="text-[12px] text-red-600 hover:underline mt-1"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Upload New Files */}
+              <div className="mt-4">
+                <label
+                  htmlFor="attachments"
+                  className="flex flex-col items-center justify-center w-full min-h-32 border-2 border-dashed border-indigo-300 rounded-xl cursor-pointer hover:border-indigo-500 hover:bg-indigo-50 transition p-6"
+                >
+                  {formData.attachments.length === 0 ? (
+                    <>
+                      <svg
+                        className="w-8 h-8 text-gray-400 mb-2"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M7 16V8m0 0l-4 4m4-4l4 4M17 8v8m0 0l4-4m-4 4l-4-4"
+                        />
+                      </svg>
+                      <span className="text-sm text-gray-600">
+                        Click or drag new files here
+                      </span>
+                    </>
+                  ) : (
+                    <div className="w-full flex flex-wrap gap-4">
+                      {formData.attachments.map((file, idx) => (
+                        <div
+                          key={idx}
+                          className="flex flex-col items-center justify-center w-28 h-28 bg-white border rounded-xl shadow-sm"
+                        >
+                          <div className="w-12 h-12 flex items-center justify-center bg-indigo-100 rounded-md mb-1">
+                            <span className="text-xs font-semibold text-indigo-600">
+                              {file.name.split(".").pop().toUpperCase()}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            {(file.size / 1024).toFixed(1)} KB
+                          </p>
+                          <p className="text-[10px] text-gray-700 truncate w-full text-center">
+                            {file.name}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveFile(idx, "new")}
+                            className="text-[12px] text-red-600 hover:underline mt-1"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <input
+                    id="attachments"
+                    type="file"
+                    multiple
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                </label>
               </div>
             </div>
-          ))}
 
-          {/* Attachments Section (Independent) */}
-          <div className="p-6 border rounded-xl">
-            <h2 className="text-lg font-semibold border-b pb-2 text-gray-800">Attachments</h2>
-            <div className="mt-4">
-              <input
-                type="file"
-                multiple
-                onChange={handleFileChange}
-                className="w-full border rounded-lg px-3 py-2 text-sm bg-white"
-              />
-              {formData.attachments.length > 0 && (
-                <ul className="mt-2 text-sm text-gray-700">
-                  {formData.attachments.map((file, idx) => (
-                    <li key={idx}>{file.name}</li>
-                  ))}
-                </ul>
-              )}
+            {/* ---- Buttons ---- */}
+            <div className="flex justify-end gap-4 pt-6 border-t">
+              <button
+                type="button"
+                onClick={handleBackClick}
+                className="px-6 py-2 rounded-lg border bg-white hover:bg-gray-100 text-gray-700 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-6 py-2 rounded-lg bg-blue-600  text-white shadow-md transition"
+              >
+                {leadId ? "Update Lead" : "Save Lead"}
+              </button>
             </div>
-          </div>
-
-          {/* Buttons */}
-          <div className="flex justify-end gap-4 pt-6 border-t">
-            <button type="button" onClick={handleBackClick} className="px-6 py-2 rounded-lg border bg-white hover:bg-gray-100 text-gray-700 transition">Cancel</button>
-            <button type="submit" className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-md transition">{leadId ? "Update Lead" : "Save Lead"}</button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
-    </div>
+    </>
   );
-}//sales and admin deatils come correctly..
+} //sales and admin deatils come correctly..
