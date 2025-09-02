@@ -38,6 +38,7 @@ import io from "socket.io-client";
 import { initSocket /*    */ } from "./utils/socket";
 import { AllDeals } from "./pages/Deals/allDeals";
 import Pipeline_view from "./pages/Pipeline_View/Pipelien_view";
+import Pipeline_modal_view from "./pages/Pipeline_View/Pipeline_modal_view";
 import AdminDashboard from "./AdminDashboard/dashboard";
 import CreateDeal from "./pages/Deals/CreateDeal";
 
@@ -95,6 +96,7 @@ useEffect(() => {
               <Route path="/createDeal" element={<CreateDeal />} />
 
             <Route path="/Pipelineview" element={<Pipeline_view />} />
+            <Route path="/PipelineviewModal" element={<Pipeline_modal_view />} />
 
             <Route path="/proposal/drafts" element={<DraftsPage />} />
             <Route path="/dashboard/notifications" element={<NotificationsPage />} />
