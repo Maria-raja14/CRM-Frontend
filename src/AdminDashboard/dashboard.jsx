@@ -1,119 +1,1007 @@
-import React, { useEffect, useState } from "react";
+// import React, { useEffect, useState, useCallback, useRef } from "react";
+// import {
+//   Card,
+//   CardContent,
+//   CardHeader,
+//   CardTitle,
+// } from "../components/ui/card";
+// import {
+//   BarChart,
+//   Bar,
+//   XAxis,
+//   YAxis,
+//   Tooltip,
+//   ResponsiveContainer,
+//   PieChart,
+//   Pie,
+//   Cell,
+//   Legend,
+//   LineChart,
+//   Line,
+// } from "recharts";
+// import axios from "axios";
+
+// /* ---------- Helpers ---------- */
+// const formatDate = (d) => {
+//   const yyyy = d.getFullYear();
+//   const mm = String(d.getMonth() + 1).padStart(2, "0");
+//   const dd = String(d.getDate()).padStart(2, "0");
+//   return `${yyyy}-${mm}-${dd}`;
+// };
+
+// const todayRange = () => {
+//   const now = new Date();
+//   return { start: formatDate(now), end: formatDate(now) };
+// };
+
+// const lastNDaysRange = (n) => {
+//   const end = new Date();
+//   const start = new Date();
+//   start.setDate(end.getDate() - (n - 1));
+//   return { start: formatDate(start), end: formatDate(end) };
+// };
+
+// const yearRange = () => {
+//   const now = new Date();
+//   const start = new Date(now.getFullYear(), 0, 1);
+//   const end = new Date(now.getFullYear(), 11, 31);
+//   return { start: formatDate(start), end: formatDate(end) };
+// };
+
+// /* debounce helper */
+// const useDebouncedCallback = (fn, delay = 400) => {
+//   const timer = useRef(null);
+//   const call = useCallback(
+//     (...args) => {
+//       if (timer.current) clearTimeout(timer.current);
+//       timer.current = setTimeout(() => {
+//         fn(...args);
+//       }, delay);
+//     },
+//     [fn, delay]
+//   );
+//   useEffect(() => {
+//     return () => {
+//       if (timer.current) clearTimeout(timer.current);
+//     };
+//   }, []);
+//   return call;
+// };
+
+// const COLORS = ["#3B82F6", "#10B981", "#EF4444", "#8B5CF6"]; // Blue, Green, Red, Purple
+
+// /* ---------- Component ---------- */
+// const AdminDashboard = () => {
+//   const [summary, setSummary] = useState([]);
+//   const [pipeline, setPipeline] = useState([]);
+//   const [recentInvoices, setRecentInvoices] = useState([]);
+//   const [loading, setLoading] = useState(true);
+
+//   const [startDate, setStartDate] = useState(() => {
+//     const range = yearRange(); // default full year
+//     return range.start;
+//   });
+//   const [endDate, setEndDate] = useState(() => {
+//     const range = yearRange(); // default full year
+//     return range.end;
+//   });
+
+//   const [activePreset, setActivePreset] = useState("custom");
+//   const [error, setError] = useState(null);
+//   const [dealsData, setDealsData] = useState([]);
+//   const [totalDeals, setTotalDeals] = useState(0);
+//   const [statusCounts, setStatusCounts] = useState({
+//     open: 0,
+//     won: 0,
+//     lost: 0,
+//   });
+
+//   /* ---------- Fetch Deals ---------- */
+//   const fetchDeals = async (params) => {
+//     try {
+//       const res = await axios.get("http://localhost:5000/api/deals/getAll", {
+//         params,
+//       });
+
+//       const deals = res.data || [];
+//       const counts = { open: 0, won: 0, lost: 0 };
+
+//       deals.forEach((deal) => {
+//         if (deal.stage === "Qualification" || deal.stage === "Open") {
+//           counts.open += 1;
+//         } else if (deal.stage === "Closed Won") {
+//           counts.won += 1;
+//         } else if (deal.stage === "Closed Lost") {
+//           counts.lost += 1;
+//         }
+//       });
+
+//       setTotalDeals(deals.length);
+//       setStatusCounts(counts);
+
+//       // group by month
+//       const monthlyData = {};
+//       deals.forEach((deal) => {
+//         const month = new Date(deal.createdAt).toLocaleString("default", {
+//           month: "short",
+//         });
+//         if (!monthlyData[month]) {
+//           monthlyData[month] = { month, open: 0, won: 0, lost: 0, total: 0 };
+//         }
+//         if (deal.stage === "Qualification" || deal.stage === "Open") {
+//           monthlyData[month].open += 1;
+//         } else if (deal.stage === "Closed Won") {
+//           monthlyData[month].won += 1;
+//         } else if (deal.stage === "Closed Lost") {
+//           monthlyData[month].lost += 1;
+//         }
+//         monthlyData[month].total += 1;
+//       });
+
+//       setDealsData(Object.values(monthlyData));
+//     } catch (err) {
+//       console.error("Error fetching deals:", err);
+//     }
+//   };
+
+//   /* ---------- Fetch Dashboard Data ---------- */
+//   const buildParams = (s, e) => {
+//     const p = {};
+//     if (s) p.start = s;
+//     if (e) p.end = e;
+//     return p;
+//   };
+
+//   const fetchAll = async (params) => {
+//     setLoading(true);
+//     setError(null);
+//     try {
+//       const [resSummary, resPipeline, resInvoices] = await Promise.all([
+//         axios.get("http://localhost:5000/api/dashboard/summary", { params }),
+//         axios.get("http://localhost:5000/api/dashboard/pipeline", { params }),
+//         axios.get("http://localhost:5000/api/invoice/recent", { params }),
+//       ]);
+
+//       setSummary([
+//         {
+//           title: "Total Leads",
+//           value: resSummary.data.totalLeads,
+//           color: "bg-blue-500",
+//         },
+//         {
+//           title: "Deals Won",
+//           value: resSummary.data.totalDealsWon,
+//           color: "bg-green-500",
+//         },
+//         {
+//           title: "Revenue",
+//           value: `₹${resSummary.data.totalRevenue}`,
+//           color: "bg-purple-500",
+//         },
+//         {
+//           title: "Pending Invoices",
+//           value: resSummary.data.pendingInvoices,
+//           color: "bg-orange-500",
+//         },
+//       ]);
+
+//       setPipeline(resPipeline.data || []);
+//       setRecentInvoices(resInvoices.data || []);
+//     } catch (err) {
+//       console.error("Dashboard fetch error:", err);
+//       setError("Failed to load dashboard data.");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   /* ---------- Debounced Fetch (summary + deals) ---------- */
+//   const debouncedFetch = useDebouncedCallback((params) => {
+//     fetchAll(params);
+//     fetchDeals(params);
+//   }, 300);
+
+//   /* ---------- Filters ---------- */
+//   const applyPreset = (preset) => {
+//     setActivePreset(preset);
+//     let range;
+//     if (preset === "today") range = todayRange();
+//     else if (preset === "7days") range = lastNDaysRange(7);
+//     else return;
+
+//     setStartDate(range.start);
+//     setEndDate(range.end);
+//     const params = buildParams(range.start, range.end);
+//     debouncedFetch(params);
+//   };
+
+//   const applyCustomRange = () => {
+//     if (!startDate || !endDate) {
+//       setError("Start and End date are required.");
+//       return;
+//     }
+//     if (new Date(startDate) > new Date(endDate)) {
+//       setError("Start date cannot be after End date.");
+//       return;
+//     }
+//     setError(null);
+//     setActivePreset("custom");
+//     const params = buildParams(startDate, endDate);
+//     debouncedFetch(params);
+//   };
+
+//   const clearFilters = () => {
+//     const range = yearRange(); // full year
+//     setStartDate(range.start);
+//     setEndDate(range.end);
+//     setActivePreset("custom");
+//     const params = buildParams(range.start, range.end);
+//     debouncedFetch(params);
+//   };
+
+//   /* ---------- Initial Fetch ---------- */
+//   useEffect(() => {
+//     const range = { start: startDate, end: endDate };
+//     const params = buildParams(range.start, range.end);
+//     fetchAll(params);
+//     fetchDeals(params);
+//   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+//   /* ---------- Invoice Chart Data ---------- */
+//   const groupedInvoices = recentInvoices.reduce((acc, inv) => {
+//     acc[inv.status] = (acc[inv.status] || 0) + (inv.total || 0);
+//     return acc;
+//   }, {});
+//   const invoiceChartData = Object.entries(groupedInvoices).map(
+//     ([status, total]) => ({
+//       status,
+//       total,
+//     })
+//   );
+
+//   const pieData = [
+//     { name: `Open ${statusCounts.open}`, value: statusCounts.open },
+//     { name: `Won ${statusCounts.won}`, value: statusCounts.won },
+//     { name: `Lost ${statusCounts.lost}`, value: statusCounts.lost },
+//   ];
+//   const months = [
+//     "Jan",
+//     "Feb",
+//     "Mar",
+//     "Apr",
+//     "May",
+//     "Jun",
+//     "Jul",
+//     "Aug",
+//     "Sep",
+//     "Oct",
+//     "Nov",
+//     "Dec",
+//   ];
+
+//   // Merge dealsData with full months
+//   const mergedDealsData = months.map((m) => {
+//     const found = dealsData.find((d) => d.month === m);
+//     return {
+//       month: m,
+//       open: found ? found.open : 0,
+//       won: found ? found.won : 0,
+//       lost: found ? found.lost : 0,
+//       total: found ? found.total : 0,
+//     };
+//   });
+
+//   if (loading) {
+//     return (
+//       <div className="p-6 text-center text-gray-600">Loading Dashboard...</div>
+//     );
+//   }
+
+//   return (
+//     <div className="p-6 space-y-6  min-h-screen">
+//       {/* Filter Controls */}
+//       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+//         <div className="flex items-center gap-2 flex-wrap">
+//           {["today", "7days"].map((preset) => (
+//             <button
+//               key={preset}
+//               onClick={() => applyPreset(preset)}
+//               className={`px-3 py-1 rounded-md text-sm font-medium ${
+//                 activePreset === preset
+//                   ? "bg-indigo-600 text-white"
+//                   : "bg-white border"
+//               }`}
+//             >
+//               {preset === "today" ? "Today" : "7 Days"}
+//             </button>
+//           ))}
+//         </div>
+
+//         <div className="flex items-center gap-3">
+//           <label className="text-sm text-gray-600">From</label>
+//           <input
+//             type="date"
+//             value={startDate}
+//             onChange={(e) => setStartDate(e.target.value)}
+//             className="px-3 py-1 border rounded-md bg-white"
+//           />
+//           <label className="text-sm text-gray-600">To</label>
+//           <input
+//             type="date"
+//             value={endDate}
+//             onChange={(e) => setEndDate(e.target.value)}
+//             className="px-3 py-1 border rounded-md bg-white"
+//           />
+
+//           <button
+//             onClick={applyCustomRange}
+//             className="px-3 py-1 rounded-md bg-indigo-600 text-white text-sm font-medium"
+//           >
+//             Apply
+//           </button>
+//           <button
+//             onClick={clearFilters}
+//             className="px-3 py-1 rounded-md bg-white border text-sm"
+//           >
+//             Clear
+//           </button>
+//         </div>
+//       </div>
+
+//       {error && <div className="text-red-600 text-sm">{error}</div>}
+
+//       {/* ---- Summary Cards ---- */}
+//       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+//         {summary.map((card, idx) => (
+//           <div
+//             key={idx}
+//             className={`relative overflow-hidden rounded-2xl p-6 shadow-xl transform transition duration-500 hover:scale-105 ${card.color} text-white`}
+//           >
+//             <div className="absolute -top-10 -right-10 w-32 h-32 bg-white opacity-20 rounded-full"></div>
+//             <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white opacity-20 rounded-full"></div>
+
+//             <CardHeader className="relative z-10">
+//               <CardTitle className="text-lg font-semibold tracking-wide">
+//                 {card.title}
+//               </CardTitle>
+//             </CardHeader>
+//             <CardContent className="relative z-10 mt-4">
+//               <p className="text-4xl font-extrabold">{card.value}</p>
+//             </CardContent>
+//           </div>
+//         ))}
+//       </div>
+
+//       {/* ---- Pipeline + Recent Invoices ---- */}
+//       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+//         <div className="relative overflow-hidden rounded-2xl shadow-xl bg-white p-6">
+//           <CardHeader>
+//             <CardTitle className="text-gray-800 text-lg font-semibold">
+//               Pipeline Board
+//             </CardTitle>
+//           </CardHeader>
+//           <CardContent className="h-72">
+//             {pipeline.length > 0 ? (
+//               <ResponsiveContainer width="100%" height="100%">
+//                 <BarChart
+//                   data={pipeline}
+//                   margin={{ top: 20, right: 20, left: 0, bottom: 20 }}
+//                 >
+//                   <XAxis
+//                     dataKey="stage"
+//                     stroke="#6B7280"
+//                     tick={{ fontSize: 12, fill: "#374151" }}
+//                   />
+//                   <YAxis
+//                     allowDecimals={false}
+//                     stroke="#6B7280"
+//                     tick={{ fontSize: 12, fill: "#374151" }}
+//                   />
+//                   <Tooltip
+//                     cursor={{ fill: "rgba(243,244,246,0.5)" }}
+//                     contentStyle={{
+//                       backgroundColor: "white",
+//                       borderRadius: "12px",
+//                       border: "1px solid #e5e7eb",
+//                       boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+//                     }}
+//                     formatter={(value) => [`${value} Deals`, "Deals"]}
+//                   />
+//                   <defs>
+//                     <linearGradient
+//                       id="pipelineGradient"
+//                       x1="0"
+//                       y1="0"
+//                       x2="0"
+//                       y2="1"
+//                     >
+//                       <stop offset="0%" stopColor="#6366F1" stopOpacity={0.9} />
+//                       <stop
+//                         offset="100%"
+//                         stopColor="#3B82F6"
+//                         stopOpacity={0.9}
+//                       />
+//                     </linearGradient>
+//                   </defs>
+//                   <Bar
+//                     dataKey="leads" // adjust if backend sends "deals"
+//                     fill="url(#pipelineGradient)"
+//                     barSize={40}
+//                     radius={[8, 8, 0, 0]}
+//                     label={{
+//                       position: "top",
+//                       fill: "#374151",
+//                       fontSize: 12,
+//                       fontWeight: 600,
+//                       formatter: (val) => `${val} Deals`,
+//                     }}
+//                   />
+//                 </BarChart>
+//               </ResponsiveContainer>
+//             ) : (
+//               <p className="text-gray-500 text-center">No pipeline data</p>
+//             )}
+//           </CardContent>
+//         </div>
+
+//         <div className="relative overflow-hidden rounded-2xl shadow-xl bg-white p-6">
+//           <CardHeader>
+//             <CardTitle className="text-gray-800 text-lg font-semibold">
+//               Recent Invoices
+//             </CardTitle>
+//           </CardHeader>
+//           <CardContent className="h-72">
+//             {invoiceChartData.length > 0 ? (
+//               <ResponsiveContainer width="100%" height="100%">
+//                 <BarChart
+//                   data={invoiceChartData}
+//                   margin={{ top: 20, right: 20, left: 0, bottom: 20 }}
+//                 >
+//                   <XAxis
+//                     dataKey="status"
+//                     stroke="#6B7280"
+//                     tick={{ fontSize: 12, fill: "#374151" }}
+//                   />
+//                   <YAxis
+//                     allowDecimals={false}
+//                     stroke="#6B7280"
+//                     tick={{ fontSize: 12, fill: "#374151" }}
+//                   />
+//                   <Tooltip
+//                     formatter={(value, name) => [
+//                       `₹${value.toLocaleString()}`,
+//                       name,
+//                     ]}
+//                     cursor={{ fill: "rgba(243,244,246,0.5)" }}
+//                     contentStyle={{
+//                       backgroundColor: "white",
+//                       borderRadius: "12px",
+//                       border: "1px solid #e5e7eb",
+//                       boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+//                     }}
+//                   />
+//                   <Bar dataKey="total" barSize={40} radius={[8, 8, 0, 0]}>
+//                     {invoiceChartData.map((entry, index) => {
+//                       const colors = {
+//                         paid: "#34D399",
+//                         unpaid: "#3B82F6",
+//                         Pending: "#FBBF24",
+//                         Overdue: "#EF4444",
+//                       };
+//                       return (
+//                         <Cell
+//                           key={`cell-${index}`}
+//                           fill={colors[entry.status] || "#6366F1"}
+//                         />
+//                       );
+//                     })}
+//                   </Bar>
+//                 </BarChart>
+//               </ResponsiveContainer>
+//             ) : (
+//               <p className="text-gray-500 text-center">No invoice data</p>
+//             )}
+//           </CardContent>
+//         </div>
+//       </div>
+
+//       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+//         {/* Deals Overview */}
+//         <div className="relative overflow-hidden rounded-2xl shadow-xl bg-white p-6">
+//           <CardHeader className="flex justify-between items-center">
+//             <CardTitle className="text-gray-800 text-lg font-semibold">
+//               Deals Overview
+//             </CardTitle>
+//           </CardHeader>
+//           <CardContent className="h-80">
+//             <ResponsiveContainer width="100%" height="100%">
+//               <LineChart
+//                 data={mergedDealsData}
+//                 margin={{ top: 20, right: 20, left: 0, bottom: 20 }}
+//               >
+//                 <XAxis dataKey="month" stroke="#6B7280" />
+//                 <YAxis allowDecimals={false} stroke="#6B7280" />
+//                 <Tooltip
+//                   contentStyle={{
+//                     backgroundColor: "white",
+//                     borderRadius: "12px",
+//                     border: "1px solid #e5e7eb",
+//                   }}
+//                 />
+//                 <Line
+//                   type="monotone"
+//                   dataKey="open"
+//                   stroke="#3B82F6"
+//                   strokeWidth={2}
+//                   dot
+//                   name="Open"
+//                 />
+//                 <Line
+//                   type="monotone"
+//                   dataKey="won"
+//                   stroke="#10B981"
+//                   strokeWidth={2}
+//                   dot
+//                   name="Won"
+//                 />
+//                 <Line
+//                   type="monotone"
+//                   dataKey="lost"
+//                   stroke="#EF4444"
+//                   strokeWidth={2}
+//                   dot
+//                   name="Lost"
+//                 />
+//                 <Line
+//                   type="monotone"
+//                   dataKey="total"
+//                   stroke="#8B5CF6"
+//                   strokeWidth={2}
+//                   dot
+//                   name="Total"
+//                 />
+//               </LineChart>
+//             </ResponsiveContainer>
+//           </CardContent>
+//         </div>
+
+//         {/* Total Deals */}
+//         <div className="relative overflow-hidden rounded-2xl shadow-xl bg-white p-6 flex flex-col items-center">
+//           <CardHeader>
+//             <CardTitle className="text-gray-800 text-lg font-semibold">
+//               Total Deals
+//             </CardTitle>
+//           </CardHeader>
+//           <div className="h-72 w-full flex justify-center items-center">
+//             <ResponsiveContainer>
+//               <PieChart>
+//                 <Pie
+//                   data={pieData}
+//                   dataKey="value"
+//                   cx="50%"
+//                   cy="50%"
+//                   innerRadius={60}
+//                   outerRadius={100}
+//                   paddingAngle={5}
+//                 >
+//                   {pieData.map((entry, index) => (
+//                     <Cell key={`cell-${index}`} fill={COLORS[index]} />
+//                   ))}
+//                 </Pie>
+//                 <Legend />
+//               </PieChart>
+//             </ResponsiveContainer>
+//           </div>
+//           <div className="absolute top-10 right-10 bg-indigo-50 text-indigo-600 font-bold rounded-full px-4 py-2">
+//             {totalDeals}
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default AdminDashboard;
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
-  Card, CardContent, CardHeader, CardTitle,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
 } from "../components/ui/card";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "../components/ui/table";
-import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+  LineChart,
+  Line,
 } from "recharts";
-import { User, Clock, ArrowRight } from "lucide-react"; // icons
 import axios from "axios";
 
+/* ---------- Helpers ---------- */
+const formatDate = (d) => {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
+
+const todayRange = () => {
+  const now = new Date();
+  return { start: formatDate(now), end: formatDate(now) };
+};
+
+const lastNDaysRange = (n) => {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(end.getDate() - (n - 1));
+  return { start: formatDate(start), end: formatDate(end) };
+};
+
+const months = [
+  { label: "January", value: 0 },
+  { label: "February", value: 1 },
+  { label: "March", value: 2 },
+  { label: "April", value: 3 },
+  { label: "May", value: 4 },
+  { label: "June", value: 5 },
+  { label: "July", value: 6 },
+  { label: "August", value: 7 },
+  { label: "September", value: 8 },
+  { label: "October", value: 9 },
+  { label: "November", value: 10 },
+  { label: "December", value: 11 },
+];
+
+/* Debounce helper */
+const useDebouncedCallback = (fn, delay = 400) => {
+  const timer = useRef(null);
+  const call = useCallback(
+    (...args) => {
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = setTimeout(() => fn(...args), delay);
+    },
+    [fn, delay]
+  );
+  useEffect(() => () => timer.current && clearTimeout(timer.current), []);
+  return call;
+};
+
+const COLORS = ["#3B82F6", "#10B981", "#EF4444", "#8B5CF6"];
+
+/* ---------- Component ---------- */
 const AdminDashboard = () => {
   const [summary, setSummary] = useState([]);
   const [pipeline, setPipeline] = useState([]);
-  const [recentLeads, setRecentLeads] = useState([]);
-  const [pendingDeals, setPendingDeals] = useState([]);
   const [recentInvoices, setRecentInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Fetch data from backend
+  const [dealsData, setDealsData] = useState([]);
+  const [totalDeals, setTotalDeals] = useState(0);
+  const [statusCounts, setStatusCounts] = useState({
+    open: 0,
+    won: 0,
+    lost: 0,
+  });
+
+  const [activePreset, setActivePreset] = useState("today");
+  const [showMonthDropdown, setShowMonthDropdown] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+
+  /* ---------- Month Range ---------- */
+  const getMonthRange = (monthIndex) => {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), monthIndex, 1);
+    const end = new Date(now.getFullYear(), monthIndex + 1, 0);
+    return { start: formatDate(start), end: formatDate(end) };
+  };
+
+  const applyMonthFilter = (monthIndex) => {
+    setSelectedMonth(monthIndex);
+    const range = getMonthRange(monthIndex);
+    debouncedFetch(range);
+  };
+
+  /* ---------- Fetch Deals ---------- */
+  const fetchDeals = async (params) => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/deals/getAll", {
+        params,
+      });
+      const deals = res.data || [];
+      const counts = { open: 0, won: 0, lost: 0 };
+
+      deals.forEach((deal) => {
+        if (deal.stage === "Qualification" || deal.stage === "Open")
+          counts.open += 1;
+        else if (deal.stage === "Closed Won") counts.won += 1;
+        else if (deal.stage === "Closed Lost") counts.lost += 1;
+      });
+
+      setTotalDeals(deals.length);
+      setStatusCounts(counts);
+
+      const monthlyData = {};
+      deals.forEach((deal) => {
+        const month = new Date(deal.createdAt).toLocaleString("default", {
+          month: "short",
+        });
+        if (!monthlyData[month])
+          monthlyData[month] = { month, open: 0, won: 0, lost: 0, total: 0 };
+        if (deal.stage === "Qualification" || deal.stage === "Open")
+          monthlyData[month].open += 1;
+        else if (deal.stage === "Closed Won") monthlyData[month].won += 1;
+        else if (deal.stage === "Closed Lost") monthlyData[month].lost += 1;
+        monthlyData[month].total += 1;
+      });
+
+      setDealsData(Object.values(monthlyData));
+    } catch (err) {
+      console.error("Error fetching deals:", err);
+    }
+  };
+
+  /* ---------- Fetch Dashboard Data ---------- */
+  const buildParams = (range) => ({ start: range.start, end: range.end });
+
+  const fetchAll = async (params) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [resSummary, resPipeline, resInvoices] = await Promise.all([
+        axios.get("http://localhost:5000/api/dashboard/summary", { params }),
+        axios.get("http://localhost:5000/api/dashboard/pipeline", { params }),
+        axios.get("http://localhost:5000/api/invoice/recent", { params }),
+      ]);
+
+      setSummary([
+        {
+          title: "Total Leads",
+          value: resSummary.data.totalLeads,
+          color: "bg-blue-100",
+          textColor: "text-blue-800",
+          icon: (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          )
+        },
+        {
+          title: "Deals Won",
+          value: resSummary.data.totalDealsWon,
+          color: "bg-green-100",
+          textColor: "text-green-800",
+          icon: (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          )
+        },
+        {
+          title: "Revenue",
+          value: `₹${resSummary.data.totalRevenue}`,
+          color: "bg-purple-100",
+          textColor: "text-purple-800",
+          icon: (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          )
+        },
+        {
+          title: "Pending Invoices",
+          value: resSummary.data.pendingInvoices,
+          color: "bg-amber-100",
+          textColor: "text-amber-800",
+          icon: (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+          )
+        },
+      ]);
+
+      setPipeline(resPipeline.data || []);
+      setRecentInvoices(resInvoices.data || []);
+    } catch (err) {
+      console.error("Dashboard fetch error:", err);
+      setError("Failed to load dashboard data.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const debouncedFetch = useDebouncedCallback((range) => {
+    fetchAll(buildParams(range));
+    fetchDeals(buildParams(range));
+  }, 300);
+
+  /* ---------- Filter Presets ---------- */
+  const applyPreset = (preset) => {
+    setActivePreset(preset);
+    setShowMonthDropdown(preset === "month");
+    let range;
+    if (preset === "today") range = todayRange();
+    else if (preset === "7days") range = lastNDaysRange(7);
+    else if (preset === "month") range = getMonthRange(selectedMonth);
+    else range = todayRange();
+
+    debouncedFetch(range);
+  };
+
+  /* ---------- Initial Fetch ---------- */
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // 1. Dashboard Summary
-        const resSummary = await axios.get("http://localhost:5000/api/dashboard/summary");
-        setSummary([
-          { title: "Total Leads", value: resSummary.data.totalLeads, color: "bg-blue-500" },
-          { title: "Deals Won", value: resSummary.data.totalDealsWon, color: "bg-green-500" },
-          { title: "Revenue", value: `₹${resSummary.data.totalRevenue}`, color: "bg-purple-500" },
-          { title: "Pending Invoices", value: resSummary.data.pendingInvoices, color: "bg-orange-500" },
-        ]);
+    applyPreset(activePreset);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-        // 2. Pipeline
-        const resPipeline = await axios.get("http://localhost:5000/api/dashboard/pipeline");
-        setPipeline(resPipeline.data);
-
-        // 3. Recent Leads
-        const resLeads = await axios.get("http://localhost:5000/api/leads/recent");
-        setRecentLeads(resLeads.data);
-
-        // 4. Pending Deals
-        const resDeals = await axios.get("http://localhost:5000/api/deals/pending");
-        setPendingDeals(resDeals.data);
-
-        // 5. Recent Invoices
-        const resInvoices = await axios.get("http://localhost:5000/api/invoice/recent");
-        setRecentInvoices(resInvoices.data);
-
-      } catch (err) {
-        console.error("Dashboard fetch error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  if (loading) {
-    return <div className="p-6 text-center text-gray-600">Loading Dashboard...</div>;
-  }
-
-  // Group invoices by status for chart
+  /* ---------- Invoice Chart Data ---------- */
   const groupedInvoices = recentInvoices.reduce((acc, inv) => {
-    acc[inv.status] = (acc[inv.status] || 0) + inv.total;
+    acc[inv.status] = (acc[inv.status] || 0) + (inv.total || 0);
     return acc;
   }, {});
-  const invoiceChartData = Object.entries(groupedInvoices).map(([status, total]) => ({
-    status,
-    total,
-  }));
+  const invoiceChartData = Object.entries(groupedInvoices).map(
+    ([status, total]) => ({ status, total })
+  );
+
+  const pieData = [
+    { name: `Open ${statusCounts.open}`, value: statusCounts.open },
+    { name: `Won ${statusCounts.won}`, value: statusCounts.won },
+    { name: `Lost ${statusCounts.lost}`, value: statusCounts.lost },
+  ];
+
+  const mergedDealsData = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ].map((m) => {
+    const found = dealsData.find((d) => d.month === m);
+    return {
+      month: m,
+      open: found ? found.open : 0,
+      won: found ? found.won : 0,
+      lost: found ? found.lost : 0,
+      total: found ? found.total : 0,
+    };
+  });
+
+  if (loading)
+    return (
+      <div className="p-6 text-center text-gray-600">Loading Dashboard...</div>
+    );
 
   return (
-    <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
+    <div className="p-6 space-y-6 min-h-screen bg-gray-50">
+      {/* Filter Buttons */}
+      <div className="flex items-center justify-end gap-2 flex-wrap">
+        {["today", "7days", "month"].map((preset) => (
+          <div key={preset} className="relative">
+            <button
+              onClick={() => applyPreset(preset)}
+              className={`px-3 py-1 rounded-md text-sm font-medium ${
+                activePreset === preset
+                  ? "bg-indigo-600 text-white"
+                  : "bg-white border"
+              }`}
+            >
+              {preset === "today"
+                ? "Today"
+                : preset === "7days"
+                ? "Last 7 Days"
+                : "Month"}
+            </button>
+
+            {/* Month Dropdown */}
+            {preset === "month" &&
+              activePreset === "month" &&
+              showMonthDropdown && (
+                <div className="absolute mt-1 w-40 bg-white border rounded shadow z-10">
+                  {months.map((m) => (
+                    <div
+                      key={m.value}
+                      onClick={() => {
+                        applyMonthFilter(m.value);
+                        setShowMonthDropdown(false);
+                      }}
+                      className={`px-3 py-1 cursor-pointer hover:bg-indigo-100 ${
+                        selectedMonth === m.value
+                          ? "bg-indigo-200 font-semibold"
+                          : ""
+                      }`}
+                    >
+                      {m.label}
+                    </div>
+                  ))}
+                </div>
+              )}
+          </div>
+        ))}
+      </div>
+
+      {error && <div className="text-red-600 text-sm">{error}</div>}
+
       {/* ---- Summary Cards ---- */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {summary.map((card, idx) => (
           <div
             key={idx}
-            className={`relative overflow-hidden rounded-2xl p-6 shadow-xl transform transition duration-500 hover:scale-105 ${card.color} text-white`}
+            className={`relative overflow-hidden rounded-2xl p-6 shadow-md transition-all duration-300 hover:shadow-lg ${card.color}`}
           >
-            {/* Decorative Circles */}
-            <div className="absolute -top-10 -right-10 w-32 h-32 bg-white opacity-20 rounded-full"></div>
-            <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white opacity-20 rounded-full"></div>
-
-            <CardHeader className="relative z-10">
-              <CardTitle className="text-lg font-semibold tracking-wide">
-                {card.title}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="relative z-10 mt-4">
-              <p className="text-4xl font-extrabold">{card.value}</p>
-            </CardContent>
+            <div className="flex justify-between items-start">
+              <div>
+                <p className={`text-sm font-medium ${card.textColor} mb-2`}>
+                  {card.title}
+                </p>
+                <p className={`text-3xl font-bold ${card.textColor}`}>
+                  {card.value}
+                </p>
+              </div>
+              <div className={`p-2 rounded-full ${card.textColor} bg-opacity-20`}>
+                {card.icon}
+              </div>
+            </div>
+            <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent to-transparent via-current opacity-20"></div>
           </div>
         ))}
       </div>
 
-      {/* ---- Pipeline + Recent Leads ---- */}
+      {/* Pipeline + Recent Invoices */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Pipeline Chart */}
-        <div className="relative overflow-hidden rounded-2xl shadow-xl bg-white p-6">
+        <div className="relative overflow-hidden rounded-2xl shadow-md bg-white p-6">
           <CardHeader>
             <CardTitle className="text-gray-800 text-lg font-semibold">
               Pipeline Board
             </CardTitle>
           </CardHeader>
-          <CardContent className="h-64">
+          <CardContent className="h-72">
             {pipeline.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={pipeline}>
-                  <XAxis dataKey="stage" stroke="#4B5563" />
-                  <YAxis allowDecimals={false} stroke="#4B5563" />
-                  <Tooltip contentStyle={{ backgroundColor: "#f3f4f6", borderRadius: "8px" }} />
-                  <Bar dataKey="leads" fill="#3B82F6" barSize={30} radius={[6, 6, 0, 0]} />
+                <BarChart
+                  data={pipeline}
+                  margin={{ top: 20, right: 20, left: 0, bottom: 20 }}
+                >
+                  <XAxis
+                    dataKey="stage"
+                    stroke="#6B7280"
+                    tick={{ fontSize: 12, fill: "#374151" }}
+                  />
+                  <YAxis
+                    allowDecimals={false}
+                    stroke="#6B7280"
+                    tick={{ fontSize: 12, fill: "#374151" }}
+                  />
+                  <Tooltip
+                    cursor={{ fill: "rgba(243,244,246,0.5)" }}
+                    contentStyle={{
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      border: "1px solid #e5e7eb",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                    }}
+                    formatter={(value) => [`${value} Deals`, "Deals"]}
+                  />
+                  <Bar
+                    dataKey="leads"
+                    fill="#3B82F6"
+                    barSize={40}
+                    radius={[8, 8, 0, 0]}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -122,113 +1010,156 @@ const AdminDashboard = () => {
           </CardContent>
         </div>
 
-        {/* Recent Leads - Modern Card */}
-        <div className="relative overflow-hidden rounded-2xl shadow-lg bg-gradient-to-br from-indigo-50 to-white">
-          <div className="flex items-center justify-between px-6 py-4 border-b">
-            <h2 className="text-xl font-bold text-gray-800">Recent Leads</h2>
-            <span className="text-sm text-indigo-600 font-medium cursor-pointer hover:underline">
-              View All
-            </span>
-          </div>
-          <div className="divide-y">
-            {recentLeads.length > 0 ? (
-              recentLeads.map((lead, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between px-6 py-4 hover:bg-indigo-50 transition-all"
-                >
-                  {/* Left Side */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
-                      <User className="w-5 h-5 text-indigo-600" />
-                    </div>
-                    <div>
-                      <p className="text-gray-800 font-semibold">{lead.name}</p>
-                      <p className="text-gray-500 text-sm flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {lead.assigned || "Unassigned"}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Status Badge */}
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm ${
-                      lead.status === "New"
-                        ? "bg-green-100 text-green-700"
-                        : lead.status === "Pending"
-                        ? "bg-yellow-100 text-yellow-700"
-                        : "bg-gray-100 text-gray-700"
-                    }`}
-                  >
-                    {lead.status}
-                  </span>
-
-                  {/* Arrow */}
-                  <ArrowRight className="w-4 h-4 text-gray-400" />
-                </div>
-              ))
-            ) : (
-              <p className="text-gray-500 px-6 py-6 text-center">No recent leads</p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* ---- Pending Deals & Recent Invoices ---- */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Pending Deals */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Pending Deals</CardTitle>
-          </CardHeader>
-          <CardContent className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Deal</TableHead>
-                  <TableHead>Value</TableHead>
-                  <TableHead>Stage</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {pendingDeals.length > 0 ? pendingDeals.map((deal, idx) => (
-                  <TableRow key={idx}>
-                    <TableCell>{deal.deal}</TableCell>
-                    <TableCell>{deal.value}</TableCell>
-                    <TableCell>{deal.stage}</TableCell>
-                  </TableRow>
-                )) : (
-                  <TableRow>
-                    <TableCell colSpan="3" className="text-center text-gray-500">No pending deals</TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
-        {/* Recent Invoices Chart */}
-        <div className="relative overflow-hidden rounded-2xl shadow-xl bg-white p-6">
+        <div className="relative overflow-hidden rounded-2xl shadow-md bg-white p-6">
           <CardHeader>
             <CardTitle className="text-gray-800 text-lg font-semibold">
-              Recent Invoices Summary
+              Recent Invoices
             </CardTitle>
           </CardHeader>
-          <CardContent className="h-64 flex items-center justify-center">
+          <CardContent className="h-72">
             {invoiceChartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart layout="vertical" data={invoiceChartData}>
-                  <XAxis type="number" stroke="#4B5563" />
-                  <YAxis dataKey="status" type="category" stroke="#4B5563" />
-                  <Tooltip contentStyle={{ backgroundColor: "#f3f4f6", borderRadius: "8px" }} />
-                  <Bar dataKey="total" fill="#6366F1" barSize={30} radius={[0, 12, 12, 0]} />
+                <BarChart
+                  data={invoiceChartData}
+                  margin={{ top: 20, right: 20, left: 0, bottom: 20 }}
+                >
+                  <XAxis
+                    dataKey="status"
+                    stroke="#6B7280"
+                    tick={{ fontSize: 12, fill: "#374151" }}
+                  />
+                  <YAxis
+                    allowDecimals={false}
+                    stroke="#6B7280"
+                    tick={{ fontSize: 12, fill: "#374151" }}
+                  />
+                  <Tooltip
+                    formatter={(value, name) => [
+                      `₹${value.toLocaleString()}`,
+                      name,
+                    ]}
+                    cursor={{ fill: "rgba(243,244,246,0.5)" }}
+                    contentStyle={{
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      border: "1px solid #e5e7eb",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                    }}
+                  />
+                  <Bar dataKey="total" barSize={40} radius={[8, 8, 0, 0]}>
+                    {invoiceChartData.map((entry, index) => {
+                      const colors = {
+                        paid: "#34D399",
+                        unpaid: "#3B82F6",
+                        Pending: "#FBBF24",
+                        Overdue: "#EF4444",
+                      };
+                      return (
+                        <Cell
+                          key={index}
+                          fill={colors[entry.status] || "#6366F1"}
+                        />
+                      );
+                    })}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-gray-500">No invoices</p>
+              <p className="text-gray-500 text-center">No invoice data</p>
             )}
           </CardContent>
+        </div>
+      </div>
+
+      {/* Deals Overview + Pie */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="relative overflow-hidden rounded-2xl shadow-md bg-white p-6">
+          <CardHeader className="flex justify-between items-center">
+            <CardTitle className="text-gray-800 text-lg font-semibold">
+              Deals Overview
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={mergedDealsData}
+                margin={{ top: 20, right: 20, left: 0, bottom: 20 }}
+              >
+                <XAxis dataKey="month" stroke="#6B7280" />
+                <YAxis allowDecimals={false} stroke="#6B7280" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    border: "1px solid #e5e7eb",
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="open"
+                  stroke="#3B82F6"
+                  strokeWidth={2}
+                  dot
+                  name="Open"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="won"
+                  stroke="#10B981"
+                  strokeWidth={2}
+                  dot
+                  name="Won"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="lost"
+                  stroke="#EF4444"
+                  strokeWidth={2}
+                  dot
+                  name="Lost"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="total"
+                  stroke="#8B5CF6"
+                  strokeWidth={2}
+                  dot
+                  name="Total"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </div>
+
+        <div className="relative overflow-hidden rounded-2xl shadow-md bg-white p-6 flex flex-col items-center">
+          <CardHeader>
+            <CardTitle className="text-gray-800 text-lg font-semibold">
+              Total Deals
+            </CardTitle>
+          </CardHeader>
+          <div className="h-72 w-full flex justify-center items-center">
+            <ResponsiveContainer>
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  dataKey="value"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={5}
+                >
+                  {pieData.map((entry, index) => (
+                    <Cell key={index} fill={COLORS[index]} />
+                  ))}
+                </Pie>
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="absolute top-10 right-10 bg-indigo-50 text-indigo-600 font-bold rounded-full px-4 py-2">
+            {totalDeals}
+          </div>
         </div>
       </div>
     </div>
@@ -236,760 +1167,3 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
-
-
-
-// import React, { useEffect, useMemo, useState } from "react";
-// import { motion } from "framer-motion";
-// import {
-//   Card,
-//   CardContent,
-//   CardHeader,
-//   CardTitle,
-// } from "../components/ui/card";
-// import { Button } from "../components/ui/button";
-// import {
-//   Select,
-//   SelectContent,
-//   SelectItem,
-//   SelectTrigger,
-//   SelectValue,
-// } from "../components/ui/select";
-// import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-// import { Input } from "../components/ui/input";
-// import { Badge } from "../components/ui/badge";
-// import { Separator } from "../components/ui/separator";
-// import {
-//   BarChart,
-//   Bar,
-//   XAxis,
-//   YAxis,
-//   CartesianGrid,
-//   Tooltip,
-//   ResponsiveContainer,
-//   LineChart,
-//   Line,
-//   PieChart,
-//   Pie,
-//   Cell,
-//   Legend,
-//   AreaChart,
-//   Area,
-// } from "recharts";
-// import { CalendarClock, Filter, RefreshCw, TrendingUp, Users2, Target, CheckCircle, AlertCircle } from "lucide-react";
-
-// // ------------------------------------------------------------
-// // 🔧 Quick Hookup Guide
-// // - Replace the fetchDashboard() function with real API calls to your backend.
-// // - Ensure shadcn/ui is configured and TailwindCSS is enabled.
-// // - Drop this component anywhere in your CRM routes (e.g., /dashboard)
-// // ------------------------------------------------------------
-
-// const SALESPEOPLE = [
-//   { id: "all", name: "All Team" },
-//   { id: "sara", name: "Sara" },
-//   { id: "arun", name: "Arun" },
-//   { id: "meera", name: "Meera" },
-//   { id: "danish", name: "Danish" },
-// ];
-
-// const DATE_RANGES = [
-//   { id: "7d", label: "Last 7 days" },
-//   { id: "30d", label: "Last 30 days" },
-//   { id: "qtd", label: "Quarter to date" },
-//   { id: "ytd", label: "Year to date" },
-// ];
-
-// // Mock fetcher (replace with your real endpoints)
-// async function fetchDashboard({ range, salesperson, search }) {
-//   // Example: const res = await axios.get(`/api/dashboard/summary`, { params: { range, salesperson, q: search } })
-//   // return res.data
-//   await new Promise((r) => setTimeout(r, 400));
-
-//   // Generate playful demo data that changes with filters
-//   const seed = (range.length + salesperson.length + (search?.length || 0)) % 9;
-//   const base = 100 + seed * 7;
-
-//   const monthly = Array.from({ length: 12 }, (_, i) => ({
-//     month: new Date(0, i).toLocaleString("en", { month: "short" }),
-//     revenue: Math.round(base * (0.6 + Math.sin((i + seed) / 1.8) + Math.random() * 0.3) * 10),
-//     deals: Math.round(10 + ((i + seed) % 6) + Math.random() * 8),
-//   }));
-
-//   const stages = [
-//     { name: "Qualification", value: 24 + seed },
-//     { name: "Proposal", value: 18 + (seed % 4) },
-//     { name: "Negotiation", value: 12 + (seed % 6) },
-//     { name: "Won", value: 9 + (seed % 5) },
-//     { name: "Lost", value: 7 + (seed % 3) },
-//   ];
-
-//   const team = SALESPEOPLE.filter((s) => s.id !== "all").map((m, i) => ({
-//     name: m.name,
-//     won: 6 + ((i + seed) % 5),
-//     revenue: Math.round(30000 + (i + seed) * 5000 + Math.random() * 20000),
-//     conversion: Number((0.18 + ((i + seed) % 5) * 0.03).toFixed(2)),
-//   }));
-
-//   const activities = Array.from({ length: 8 }, (_, i) => ({
-//     id: `${Date.now()}-${i}`,
-//     title: ["Call", "Demo", "Email", "Meeting"][i % 4] + " with client",
-//     owner: SALESPEOPLE[(i + 1) % SALESPEOPLE.length].name,
-//     due: new Date(Date.now() + (i + 1) * 86400000).toLocaleDateString(),
-//     status: ["Due", "Scheduled", "Overdue"][i % 3],
-//   }));
-
-//   const kpis = {
-//     leads: 320 + seed * 3,
-//     activeDeals: 87 + seed,
-//     revenue: monthly.reduce((s, m) => s + m.revenue, 0),
-//     pendingFollowups: activities.filter((a) => a.status !== "Scheduled").length,
-//     conversionRate: Number((team.reduce((s, x) => s + x.conversion, 0) / team.length).toFixed(2)),
-//     avgDealCycle: 21 - (seed % 7),
-//   };
-
-//   return { monthly, stages, team, activities, kpis };
-// }
-
-// const StatCard = ({ icon: Icon, label, value, help }) => (
-//   <Card className="rounded-2xl shadow-sm">
-//     <CardContent className="p-4">
-//       <div className="flex items-start gap-3">
-//         <div className="p-2 rounded-xl bg-muted">
-//           <Icon className="h-5 w-5" />
-//         </div>
-//         <div className="flex-1">
-//           <p className="text-sm text-muted-foreground">{label}</p>
-//           <p className="text-2xl font-semibold leading-tight">{value}</p>
-//           {help && <p className="text-xs text-muted-foreground mt-1">{help}</p>}
-//         </div>
-//       </div>
-//     </CardContent>
-//   </Card>
-// );
-
-// export default function BusinessInteractiveDashboard() {
-//   const [range, setRange] = useState("30d");
-//   const [salesperson, setSalesperson] = useState("all");
-//   const [search, setSearch] = useState("");
-//   const [loading, setLoading] = useState(false);
-//   const [data, setData] = useState({ monthly: [], stages: [], team: [], activities: [], kpis: {} });
-
-//   const load = async () => {
-//     setLoading(true);
-//     const res = await fetchDashboard({ range, salesperson, search });
-//     setData(res);
-//     setLoading(false);
-//   };
-
-//   useEffect(() => {
-//     load();
-//     // eslint-disable-next-line react-hooks/exhaustive-deps
-//   }, [range, salesperson]);
-
-//   const COLORS = useMemo(() => [
-//     "#6366F1", // indigo
-//     "#22C55E", // green
-//     "#F59E0B", // amber
-//     "#EF4444", // red
-//     "#0EA5E9", // sky
-//   ], []);
-
-//   const handleDrill = (payload) => {
-//     // Example: open a modal or navigate to a filtered list page
-//     // navigate(`/deals?stage=${payload?.activeLabel || payload?.name}`)
-//     // For demo, just alert
-//     if (payload?.activeLabel) alert(`Drill-down: ${payload.activeLabel}`);
-//   };
-
-//   return (
-//     <div className="p-4 md:p-6 space-y-5">
-//       {/* Header */}
-//       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-//         <div>
-//           <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">CRM Business Dashboard</h1>
-//           <p className="text-sm text-muted-foreground">Interactive insights for pipeline, revenue & team performance</p>
-//         </div>
-//         <div className="flex flex-col sm:flex-row gap-2">
-//           <div className="flex items-center gap-2">
-//             <Select value={range} onValueChange={setRange}>
-//               <SelectTrigger className="w-[160px]">
-//                 <SelectValue placeholder="Date Range" />
-//               </SelectTrigger>
-//               <SelectContent>
-//                 {DATE_RANGES.map((r) => (
-//                   <SelectItem key={r.id} value={r.id}>{r.label}</SelectItem>
-//                 ))}
-//               </SelectContent>
-//             </Select>
-//             <Select value={salesperson} onValueChange={setSalesperson}>
-//               <SelectTrigger className="w-[160px]">
-//                 <SelectValue placeholder="Salesperson" />
-//               </SelectTrigger>
-//               <SelectContent>
-//                 {SALESPEOPLE.map((p) => (
-//                   <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-//                 ))}
-//               </SelectContent>
-//             </Select>
-//           </div>
-//           <div className="flex items-center gap-2">
-//             <div className="relative">
-//               <Input
-//                 value={search}
-//                 onChange={(e) => setSearch(e.target.value)}
-//                 placeholder="Search accounts / deals"
-//                 className="pr-10"
-//               />
-//               <Filter className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
-//             </div>
-//             <Button variant="secondary" onClick={load} disabled={loading}>
-//               <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} /> Refresh
-//             </Button>
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* KPI Cards */}
-//       <motion.div
-//         initial={{ opacity: 0, y: 10 }}
-//         animate={{ opacity: 1, y: 0 }}
-//         transition={{ duration: 0.25 }}
-//         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
-//       >
-//         <StatCard icon={Users2} label="Total Leads" value={data.kpis.leads || "-"} help="Captured in selected period" />
-//         <StatCard icon={Target} label="Active Deals" value={data.kpis.activeDeals || "-"} help="Open opportunities" />
-//         <StatCard icon={TrendingUp} label="Revenue" value={data.kpis.revenue ? `₹${(data.kpis.revenue/1000).toFixed(1)}k` : "-"} help="Sum of closed + forecast" />
-//         <StatCard icon={CalendarClock} label="Pending Follow-ups" value={data.kpis.pendingFollowups || "-"} help="Due & overdue" />
-//       </motion.div>
-
-//       {/* Charts Row 1 */}
-//       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-//         <Card className="rounded-2xl shadow-sm lg:col-span-2">
-//           <CardHeader>
-//             <div className="flex items-center justify-between">
-//               <CardTitle>Monthly Revenue & Deals</CardTitle>
-//               <Badge variant="secondary">Drill-down enabled</Badge>
-//             </div>
-//           </CardHeader>
-//           <CardContent className="h-[320px]">
-//             <ResponsiveContainer width="100%" height="100%">
-//               <ComposedRevenueChart data={data.monthly} onDrill={handleDrill} />
-//             </ResponsiveContainer>
-//           </CardContent>
-//         </Card>
-
-//         <Card className="rounded-2xl shadow-sm">
-//           <CardHeader>
-//             <CardTitle>Leads by Stage</CardTitle>
-//           </CardHeader>
-//           <CardContent className="h-[320px]">
-//             <ResponsiveContainer width="100%" height="100%">
-//               <PieChart>
-//                 <Tooltip />
-//                 <Legend verticalAlign="bottom" height={24} />
-//                 <Pie
-//                   data={data.stages}
-//                   dataKey="value"
-//                   nameKey="name"
-//                   outerRadius={95}
-//                   onClick={(e) => handleDrill(e)}
-//                 >
-//                   {data.stages?.map((_, idx) => (
-//                     <Cell key={`c-${idx}`} fill={COLORS[idx % COLORS.length]} />
-//                   ))}
-//                 </Pie>
-//               </PieChart>
-//             </ResponsiveContainer>
-//           </CardContent>
-//         </Card>
-//       </div>
-
-//       {/* Tabs: Team & Activities */}
-//       <Tabs defaultValue="team" className="w-full">
-//         <TabsList className="grid w-full grid-cols-2 md:w-auto">
-//           <TabsTrigger value="team">Team Performance</TabsTrigger>
-//           <TabsTrigger value="activities">Upcoming Activities</TabsTrigger>
-//         </TabsList>
-//         <TabsContent value="team">
-//           <Card className="rounded-2xl shadow-sm">
-//             <CardHeader>
-//               <CardTitle>Top Performing Employees</CardTitle>
-//             </CardHeader>
-//             <CardContent>
-//               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-//                 <div className="h-[300px]">
-//                   <ResponsiveContainer width="100%" height="100%">
-//                     <BarChart data={data.team}>
-//                       <CartesianGrid strokeDasharray="3 3" />
-//                       <XAxis dataKey="name" />
-//                       <YAxis />
-//                       <Tooltip />
-//                       <Legend />
-//                       <Bar dataKey="won" name="Deals Won" fill="#22C55E" radius={[6,6,0,0]} />
-//                       <Bar dataKey="revenue" name="Revenue" fill="#6366F1" radius={[6,6,0,0]} />
-//                     </BarChart>
-//                   </ResponsiveContainer>
-//                 </div>
-//                 <div className="h-[300px]">
-//                   <ResponsiveContainer width="100%" height="100%">
-//                     <LineChart data={data.team}>
-//                       <CartesianGrid strokeDasharray="3 3" />
-//                       <XAxis dataKey="name" />
-//                       <YAxis domain={[0, 1]} tickFormatter={(v) => `${Math.round(v * 100)}%`} />
-//                       <Tooltip formatter={(v) => `${Math.round(v * 100)}%`} />
-//                       <Legend />
-//                       <Line type="monotone" dataKey="conversion" name="Conversion Rate" stroke="#F59E0B" strokeWidth={2} dot={false} />
-//                     </LineChart>
-//                   </ResponsiveContainer>
-//                 </div>
-//               </div>
-//             </CardContent>
-//           </Card>
-//         </TabsContent>
-//         <TabsContent value="activities">
-//           <Card className="rounded-2xl shadow-sm">
-//             <CardHeader className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-//               <CardTitle>Upcoming Follow-ups</CardTitle>
-//               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-//                 <AlertCircle className="h-4 w-4" />
-//                 Click a row to open the related lead/deal
-//               </div>
-//             </CardHeader>
-//             <CardContent>
-//               <div className="overflow-x-auto">
-//                 <table className="w-full text-sm">
-//                   <thead>
-//                     <tr className="text-left text-muted-foreground">
-//                       <th className="py-2 font-medium">Title</th>
-//                       <th className="py-2 font-medium">Owner</th>
-//                       <th className="py-2 font-medium">Due</th>
-//                       <th className="py-2 font-medium">Status</th>
-//                     </tr>
-//                   </thead>
-//                   <tbody>
-//                     {data.activities.map((a) => (
-//                       <tr
-//                         key={a.id}
-//                         className="border-t hover:bg-muted/40 cursor-pointer"
-//                         onClick={() => alert(`Open activity ${a.id}`)}
-//                       >
-//                         <td className="py-2">{a.title}</td>
-//                         <td className="py-2">{a.owner}</td>
-//                         <td className="py-2">{a.due}</td>
-//                         <td className="py-2">
-//                           {a.status === "Due" && (
-//                             <Badge variant="secondary" className="gap-1"><AlertCircle className="h-3 w-3"/> Due</Badge>
-//                           )}
-//                           {a.status === "Scheduled" && (
-//                             <Badge className="gap-1" variant="outline"><CalendarClock className="h-3 w-3"/> Scheduled</Badge>
-//                           )}
-//                           {a.status === "Overdue" && (
-//                             <Badge className="gap-1" variant="destructive"><AlertCircle className="h-3 w-3"/> Overdue</Badge>
-//                           )}
-//                         </td>
-//                       </tr>
-//                     ))}
-//                   </tbody>
-//                 </table>
-//               </div>
-//             </CardContent>
-//           </Card>
-//         </TabsContent>
-//       </Tabs>
-
-//       {/* Secondary KPIs */}
-//       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//         <Card className="rounded-2xl shadow-sm">
-//           <CardHeader>
-//             <CardTitle>Funnel Health</CardTitle>
-//           </CardHeader>
-//           <CardContent className="h-[260px]">
-//             <ResponsiveContainer width="100%" height="100%">
-//               <AreaChart data={data.monthly}>
-//                 <defs>
-//                   <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
-//                     <stop offset="5%" stopColor="#6366F1" stopOpacity={0.7}/>
-//                     <stop offset="95%" stopColor="#6366F1" stopOpacity={0.05}/>
-//                   </linearGradient>
-//                 </defs>
-//                 <CartesianGrid strokeDasharray="3 3" />
-//                 <XAxis dataKey="month" />
-//                 <YAxis />
-//                 <Tooltip />
-//                 <Area type="monotone" dataKey="revenue" stroke="#6366F1" fillOpacity={1} fill="url(#g1)" />
-//               </AreaChart>
-//             </ResponsiveContainer>
-//           </CardContent>
-//         </Card>
-//         <Card className="rounded-2xl shadow-sm">
-//           <CardHeader>
-//             <CardTitle>Quick Insights</CardTitle>
-//           </CardHeader>
-//           <CardContent className="grid grid-cols-2 gap-4">
-//             <div>
-//               <p className="text-sm text-muted-foreground">Avg Deal Cycle</p>
-//               <p className="text-2xl font-semibold">{data.kpis.avgDealCycle || "-"} days</p>
-//               <Separator className="my-3" />
-//               <p className="text-sm text-muted-foreground">Conversion Rate</p>
-//               <p className="text-2xl font-semibold">{data.kpis.conversionRate ? `${Math.round(data.kpis.conversionRate * 100)}%` : "-"}</p>
-//             </div>
-//             <div className="flex flex-col gap-3">
-//               <Button className="justify-start" variant="secondary" onClick={() => alert("Export CSV triggered")}>Export CSV</Button>
-//               <Button className="justify-start" variant="outline" onClick={() => alert("Export PDF triggered")}>Export PDF</Button>
-//               <Button className="justify-start" onClick={() => alert("Create Report wizard")}>Create Report</Button>
-//             </div>
-//           </CardContent>
-//         </Card>
-//       </div>
-
-//       <p className="text-center text-xs text-muted-foreground">Tip: Click chart items to drill into details (hook into your routes/modals).</p>
-//     </div>
-//   );
-// }
-
-// function ComposedRevenueChart({ data, onDrill }) {
-//   return (
-//     <BarChart data={data} onClick={(e) => onDrill?.(e)}>
-//       <CartesianGrid strokeDasharray="3 3" />
-//       <XAxis dataKey="month" />
-//       <YAxis yAxisId="left" />
-//       <YAxis yAxisId="right" orientation="right" />
-//       <Tooltip />
-//       <Legend />
-//       <Bar yAxisId="left" dataKey="revenue" name="Revenue" fill="#0EA5E9" radius={[6,6,0,0]} />
-//       <Line yAxisId="right" type="monotone" dataKey="deals" name="Deals" stroke="#22C55E" strokeWidth={2} dot={false} />
-//     </BarChart>
-//   );
-// }
-
-
-// import React, { useEffect, useState } from "react";
-// import axios from "axios";
-// import { motion } from "framer-motion";
-// import {
-//   Card,
-//   CardContent,
-//   CardHeader,
-//   CardTitle,
-// } from "../components/ui/card";
-// import { Input } from "../components/ui/input";
-// import {
-//   Select,
-//   SelectContent,
-//   SelectItem,
-//   SelectTrigger,
-//   SelectValue,
-// } from "../components/ui/select";
-// import { Button } from "../components/ui/button";
-// import {
-//   Table,
-//   TableBody,
-//   TableCell,
-//   TableHead,
-//   TableHeader,
-//   TableRow,
-// } from "../components/ui/table";
-// import {
-//   BarChart,
-//   Bar,
-//   LineChart,
-//   Line,
-//   XAxis,
-//   YAxis,
-//   CartesianGrid,
-//   Tooltip,
-//   Legend,
-//   ResponsiveContainer,
-//   PieChart,
-//   Pie,
-//   Cell,
-// } from "recharts";
-// import {
-//   Users2,
-//   Target,
-//   TrendingUp,
-//   CalendarClock,
-//   RefreshCw,
-//   Filter,
-// } from "lucide-react";
-// import { toast } from "react-toastify";
-
-// const DATE_RANGES = [
-//   { id: "7d", label: "Last 7 Days" },
-//   { id: "30d", label: "Last 30 Days" },
-//   { id: "qtd", label: "Quarter To Date" },
-//   { id: "ytd", label: "Year To Date" },
-// ];
-
-// const StatCard = ({ icon: Icon, label, value }) => (
-//   <Card className="rounded-2xl shadow-sm">
-//     <CardContent className="p-4">
-//       <div className="flex items-center gap-3">
-//         <div className="p-2 bg-muted rounded-xl">
-//           <Icon className="w-5 h-5" />
-//         </div>
-//         <div>
-//           <p className="text-sm text-muted-foreground">{label}</p>
-//           <p className="text-2xl font-semibold">{value}</p>
-//         </div>
-//       </div>
-//     </CardContent>
-//   </Card>
-// );
-
-// export default function AdminDashboard() {
-//   const [range, setRange] = useState("30d");
-//   const [salesperson, setSalesperson] = useState("all");
-//   const [search, setSearch] = useState("");
-//   const [loading, setLoading] = useState(true);
-
-//   const [summary, setSummary] = useState([]);
-//   const [monthlyData, setMonthlyData] = useState([]);
-//   const [pipeline, setPipeline] = useState([]);
-//   const [recentLeads, setRecentLeads] = useState([]);
-//   const [pendingDeals, setPendingDeals] = useState([]);
-//   const [recentInvoices, setRecentInvoices] = useState([]);
-//   const [salesUsers, setSalesUsers] = useState([]);
-
-//   const COLORS = ["#6366F1", "#22C55E", "#F59E0B", "#EF4444", "#0EA5E9"];
-
-//   // Fetch sales users dynamically
-//   useEffect(() => {
-//     const fetchSalesUsers = async () => {
-//       try {
-//         const token = localStorage.getItem("token");
-//         const response = await axios.get("http://localhost:5000/api/users", {
-//           headers: { Authorization: `Bearer ${token}` },
-//         });
-
-//         const filteredSales = (response.data.users || []).filter(
-//           (user) =>
-//             user.role &&
-//             user.role.name &&
-//             user.role.name.trim().toLowerCase() === "sales"
-//         );
-
-//         console.log("filter",filteredSales);
-        
-
-//         setSalesUsers(filteredSales);
-//       } catch (error) {
-//         console.error(error);
-//         toast.error("Failed to fetch sales users");
-//       }
-//     };
-
-//     fetchSalesUsers();
-//   }, []);
-
-//   const loadDashboard = async () => {
-//     try {
-//       setLoading(true);
-
-//       // Summary
-//       const resSummary = await axios.get(
-//         "http://localhost:5000/api/dashboard/summary"
-//       );
-//       setSummary([
-//         { label: "Total Leads", value: resSummary.data.totalLeads },
-//         { label: "Deals Won", value: resSummary.data.totalDealsWon },
-//         { label: "Revenue", value: `₹${resSummary.data.totalRevenue}` },
-//         { label: "Pending Invoices", value: resSummary.data.pendingInvoices },
-//       ]);
-
-//       // Monthly revenue & deals
-//       const resMonthly = await axios.get(
-//         "http://localhost:5000/api/dashboard/monthly"
-//       );
-//       setMonthlyData(resMonthly.data);
-
-//       // Pipeline
-//       const resPipeline = await axios.get(
-//         "http://localhost:5000/api/dashboard/pipeline"
-//       );
-//       setPipeline(resPipeline.data);
-
-//       // Recent leads
-//       const resLeads = await axios.get(
-//         "http://localhost:5000/api/leads/recent"
-//       );
-//       setRecentLeads(resLeads.data);
-
-//       // Pending deals
-//       const resDeals = await axios.get(
-//         "http://localhost:5000/api/deals/pending"
-//       );
-//       setPendingDeals(resDeals.data);
-
-//       // Recent invoices
-//       const resInvoices = await axios.get(
-//         "http://localhost:5000/api/invoice/recent"
-//       );
-//       setRecentInvoices(resInvoices.data);
-//     } catch (err) {
-//       console.error("Dashboard fetch error:", err);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   useEffect(() => {
-//     loadDashboard();
-//   }, [range, salesperson]);
-
-//   if (loading)
-//     return (
-//       <div className="p-6 text-center text-gray-600">Loading Dashboard...</div>
-//     );
-
-//   return (
-//     <div className="p-4 md:p-6 space-y-5">
-//       {/* Header */}
-//       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
-//         <div>
-//           <h1 className="text-2xl md:text-3xl font-semibold">CRM Dashboard</h1>
-//           <p className="text-sm text-muted-foreground">
-//             Overview of leads, deals & revenue
-//           </p>
-//         </div>
-//         <div className="flex flex-col sm:flex-row gap-2">
-//           <Select value={range} onValueChange={setRange}>
-//             <SelectTrigger className="w-[160px]">
-//               <SelectValue placeholder="Date Range" />
-//             </SelectTrigger>
-//             <SelectContent>
-//               {DATE_RANGES.map((r) => (
-//                 <SelectItem key={r.id} value={r.id}>
-//                   {r.label}
-//                 </SelectItem>
-//               ))}
-//             </SelectContent>
-//           </Select>
-
-//           <Select value={salesperson} onValueChange={setSalesperson}>
-//             <SelectTrigger className="w-[160px]">
-//               <SelectValue placeholder="Salesperson" />
-//             </SelectTrigger>
-//             <SelectContent>
-//               <SelectItem key="all" value="all">
-//                 All Team
-//               </SelectItem>
-//               {salesUsers.map((p) => (
-//                 <SelectItem key={p._id} value={p._id}>
-//                   {p.firstName}
-//                 </SelectItem>
-//               ))}
-//             </SelectContent>
-//           </Select>
-
-//           <div className="relative">
-//             <Input
-//               value={search}
-//               onChange={(e) => setSearch(e.target.value)}
-//               placeholder="Search"
-//               className="pr-10"
-//             />
-//             <Filter className="absolute top-2 right-3 w-4 h-4 text-muted-foreground" />
-//           </div>
-
-//           <Button variant="secondary" onClick={loadDashboard}>
-//             <RefreshCw className="w-4 h-4 mr-2" /> Refresh
-//           </Button>
-//         </div>
-//       </div>
-
-//       {/* KPI Cards */}
-//       <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-//         {summary.map((s, i) => (
-//           <StatCard
-//             key={i}
-//             icon={[Users2, Target, TrendingUp, CalendarClock][i]}
-//             label={s.label}
-//             value={s.value}
-//           />
-//         ))}
-//       </motion.div>
-
-//       {/* Charts */}
-//       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-//         <Card className="p-4">
-//           <CardHeader>
-//             <CardTitle>Revenue & Deals</CardTitle>
-//           </CardHeader>
-//           <CardContent>
-//             <ResponsiveContainer width="100%" height={250}>
-//               <LineChart data={monthlyData}>
-//                 <CartesianGrid strokeDasharray="3 3" />
-//                 <XAxis dataKey="month" />
-//                 <YAxis />
-//                 <Tooltip />
-//                 <Legend />
-//                 <Line type="monotone" dataKey="revenue" stroke="#0EA5E9" />
-//                 <Line type="monotone" dataKey="deals" stroke="#22C55E" />
-//               </LineChart>
-//             </ResponsiveContainer>
-//           </CardContent>
-//         </Card>
-
-//         <Card className="p-4">
-//           <CardHeader>
-//             <CardTitle>Invoice Status</CardTitle>
-//           </CardHeader>
-//           <CardContent>
-//             <ResponsiveContainer width="100%" height={250}>
-//               <PieChart>
-//                 <Pie
-//                   data={recentInvoices}
-//                   dataKey="total"
-//                   nameKey="status"
-//                   outerRadius={80}
-//                 >
-//                   {recentInvoices.map((entry, index) => (
-//                     <Cell
-//                       key={index}
-//                       fill={COLORS[index % COLORS.length]}
-//                     />
-//                   ))}
-//                 </Pie>
-//                 <Tooltip />
-//                 <Legend />
-//               </PieChart>
-//             </ResponsiveContainer>
-//           </CardContent>
-//         </Card>
-//       </div>
-
-//       {/* Recent Leads Table */}
-//       <Card>
-//         <CardHeader>
-//           <CardTitle>Recent Leads</CardTitle>
-//         </CardHeader>
-//         <CardContent>
-//           <Table>
-//             <TableHeader>
-//               <TableRow>
-//                 <TableHead>Name</TableHead>
-//                 <TableHead>Email</TableHead>
-//                 <TableHead>Status</TableHead>
-//                 <TableHead>Created At</TableHead>
-//               </TableRow>
-//             </TableHeader>
-//             <TableBody>
-//               {recentLeads.map((lead) => (
-//                 <TableRow key={lead._id}>
-//                   <TableCell>{lead.name}</TableCell>
-//                   <TableCell>{lead.email}</TableCell>
-//                   <TableCell>{lead.status}</TableCell>
-//                   <TableCell>
-//                     {new Date(lead.createdAt).toLocaleDateString()}
-//                   </TableCell>
-//                 </TableRow>
-//               ))}
-//             </TableBody>
-//           </Table>
-//         </CardContent>
-//       </Card>
-//     </div>
-//   );
-// }

@@ -13,9 +13,9 @@ export const NotificationProvider = ({ children }) => {
 
     // fetch existing notifications
     fetch(`http://localhost:5000/api/notification/${user._id}`)
-      .then(res => res.json())
-      .then(data => setNotifications(data))
-      .catch(err => console.error(err));
+      .then((res) => res.json())
+      .then((data) => setNotifications(data))
+      .catch((err) => console.error(err));
 
     // init socket
     const socket = initSocket();
@@ -23,14 +23,14 @@ export const NotificationProvider = ({ children }) => {
 
     const handleFollowup = (data) => {
       const notif = { id: Date.now(), text: data.message };
-      setNotifications(prev => [notif, ...prev]);
+      setNotifications((prev) => [notif, ...prev]);
       toast.info(data.message, { autoClose: 5000 });
     };
 
     const handleActivity = (data) => {
-      const notif = { id: Date.now(), text: data.message };
-      setNotifications(prev => [notif, ...prev]);
-      toast.info(data.message, { autoClose: 5000 });
+      // data should be the full notification object from backend
+      setNotifications((prev) => [data, ...prev]);
+      toast.info(data.text, { autoClose: 5000 });
     };
 
     socket.on("followup_reminder", handleFollowup);
