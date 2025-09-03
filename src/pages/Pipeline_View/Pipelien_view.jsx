@@ -1,6 +1,3 @@
-
-
-
 import React, { useMemo, useState, useEffect, useRef } from "react";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -587,8 +584,8 @@ function SalesPipelineBoardPure() {
           />
           {userRole === "Admin" && (
             <button
-              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm"
-              onClick={() => addDeal("Qualification")}
+              className=" bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm"
+              onClick={() =>navigate("/createDeal")}
             >
               + Add Deal
             </button>
