@@ -18,8 +18,7 @@ import Activity from "./pages/activityList/Activity";
 import PaymentAdd from "./pages/Payment/PaymentAdd";
 import Lastreasons from "./pages/lostReasons/Lastreasons";
 import ProposalHead from "./pages/proposal/ProposalHead";
-import TemplateHead from "./pages/proposal/TemplateHead";
-import AddTemplate from "./pages/proposal/AddTemplate";
+
 import SendProposal from "./pages/proposal/SendProposal";
 import ProposalBoard from "./stage/ProposalBoard";
 
@@ -44,6 +43,7 @@ import CreateDeal from "./pages/Deals/CreateDeal";
 
 import { NotificationProvider } from "./context/NotificationContext";
 import NotificationsPage from "./pages/notification/NotificationsPage";
+import ViewProposal from "./pages/proposal/ViewProposal";
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -80,8 +80,7 @@ useEffect(() => {
             <Route path="/LostReasons" element={<Lastreasons />} />
 
             <Route path="/proposal" element={<ProposalHead />} />
-            <Route path="/template" element={<TemplateHead />} />
-            <Route path="/template/addtemp" element={<AddTemplate />} />
+       
             <Route path="/proposal/sendproposal" element={<SendProposal />} />
             <Route path="/stage" element={<ProposalBoard />} />
 
@@ -101,6 +100,7 @@ useEffect(() => {
 
             <Route path="/proposal/drafts" element={<DraftsPage />} />
             <Route path="/dashboard/notifications" element={<NotificationsPage />} />
+            <Route path="/proposal/view/:id" element={<ViewProposal />} />
 
             <Route
               path="/myprofile/*"
