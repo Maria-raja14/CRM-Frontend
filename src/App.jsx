@@ -96,7 +96,8 @@ useEffect(() => {
               <Route path="/createDeal" element={<CreateDeal />} />
 
             <Route path="/Pipelineview" element={<Pipeline_view />} />
-            <Route path="/PipelineviewModal" element={<Pipeline_modal_view />} />
+              {/* <Route path="/PipelineviewModal" element={<Pipeline_modal_view />} /> */}
+              <Route path="/Pipelineview/:dealId?" element={<Pipeline_modal_view />} />
 
             <Route path="/proposal/drafts" element={<DraftsPage />} />
             <Route path="/dashboard/notifications" element={<NotificationsPage />} />

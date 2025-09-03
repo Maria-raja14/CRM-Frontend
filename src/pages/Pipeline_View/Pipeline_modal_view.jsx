@@ -1,82 +1,101 @@
+
+
+
 import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const Pipeline_view = () => {
-  const [leads, setLeads] = useState([]);
-  const [deals, setDeals] = useState([]);
-  const [selectedDeal, setSelectedDeal] = useState(null);
+function Pipeline_modal_view() {
+  const { dealId } = useParams();
+  const navigate = useNavigate();
+  const [deal, setDeal] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("leads"); // "leads" or "deals"
+  const [activeTab, setActiveTab] = useState("details");
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (dealId) {
+      fetchDealDetails();
+    }
+  }, [dealId]);
 
-  const fetchData = async () => {
+  const fetchDealDetails = async () => {
     try {
       setIsLoading(true);
       const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `http://localhost:5000/api/deals/getAll/${dealId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      console.log("getAll",response);
       
-    //   // Fetch leads
-    //   const leadsResponse = await axios.get("http://localhost:5000/api/leads/getAll", {
-    //     headers: { Authorization: `Bearer ${token}` }
-    //   });
-    //   setLeads(leadsResponse.data);
-      
-      // Fetch deals
-      const dealsResponse = await axios.get("http://localhost:5000/api/deals/getAll", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setDeals(dealsResponse.data);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      toast.error("Failed to fetch data");
+      setDeal(response.data);
+    } catch (err) {
+      console.error("Failed to fetch deal details:", err);
+      toast.error("Failed to load deal details");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const fetchDealDetails = async (dealId) => {
+  const downloadFile = async (filePath) => {
     try {
-      setDetailLoading(true);
       const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `http://localhost:5000/api/files/download?filePath=${encodeURIComponent(filePath)}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: "blob",
+        }
+      );
+
+      // Create a blob from the response
+      const blob = new Blob([response.data]);
       
-      const response = await axios.get(`http://localhost:5000/api/deals/getAll/${dealId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // Create a URL for the blob
+      const url = window.URL.createObjectURL(blob);
       
-      setSelectedDeal(response.data);
-    } catch (error) {
-      console.error("Error fetching deal details:", error);
-      toast.error("Failed to fetch deal details");
-    } finally {
-      setDetailLoading(false);
+      // Create a temporary anchor element
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filePath.split("/").pop() || "download";
+      document.body.appendChild(a);
+      a.click();
+      
+      // Clean up
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error("Download failed:", err);
+      toast.error("Failed to download file");
     }
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return "—";
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric"
-    }).format(date);
-  };
-
-  const formatNumber = (n) => {
-    return new Intl.NumberFormat("en-IN").format(n);
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen w-full bg-gray-50 p-4 md:p-6 flex items-center justify-center">
+      <div className="min-h-screen w-full bg-gray-50 p-6 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading data...</p>
+          <p className="mt-4 text-gray-600">Loading deal details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!deal) {
+    return (
+      <div className="min-h-screen w-full bg-gray-50 p-6 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">Deal not found</p>
+          <button
+            onClick={() => navigate(-1)}
+            className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+          >
+            Go Back
+          </button>
         </div>
       </div>
     );
@@ -86,299 +105,294 @@ const Pipeline_view = () => {
     <div className="min-h-screen w-full bg-gray-50 p-4 md:p-6">
       <ToastContainer position="top-right" autoClose={3000} />
       
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-6">
-          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">Pipeline Overview</h1>
-          <p className="text-sm text-gray-500 mt-1">Comprehensive view of all leads and deals</p>
-        </div>
-        
-        {/* Tabs */}
-        <div className="mb-6 border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
+      {/* Header */}
+      <div className="max-w-6xl mx-auto mb-6">
+        <div className="flex items-center justify-between">
+          <div>
             <button
-              onClick={() => setActiveTab("leads")}
-              className={`py-4 px-1 text-sm font-medium border-b-2 ${
-                activeTab === "leads"
+              onClick={() => navigate(-1)}
+              className="flex items-center text-indigo-600 hover:text-indigo-800 mb-4"
+            >
+              <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Back to Pipeline
+            </button>
+            <h1 className="text-2xl md:text-3xl font-semibold text-gray-800">{deal.dealName}</h1>
+            <p className="text-gray-600 mt-1">{deal.companyName}</p>
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+              deal.stage === "Closed Won" ? "bg-green-100 text-green-800" :
+              deal.stage === "Closed Lost" ? "bg-red-100 text-red-800" :
+              "bg-blue-100 text-blue-800"
+            }`}>
+              {deal.stage}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-6xl mx-auto bg-white rounded-xl shadow-sm p-4 md:p-6">
+        {/* Tabs */}
+        <div className="border-b border-gray-200 mb-6">
+          <nav className="flex space-x-8">
+            <button
+              onClick={() => setActiveTab("details")}
+              className={`py-2 px-1 font-medium text-sm border-b-2 ${
+                activeTab === "details"
                   ? "border-indigo-500 text-indigo-600"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              Leads ({leads.length})
+              Details
             </button>
             <button
-              onClick={() => setActiveTab("deals")}
-              className={`py-4 px-1 text-sm font-medium border-b-2 ${
-                activeTab === "deals"
+              onClick={() => setActiveTab("attachments")}
+              className={`py-2 px-1 font-medium text-sm border-b-2 ${
+                activeTab === "attachments"
                   ? "border-indigo-500 text-indigo-600"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              Deals ({deals.length})
+              Attachments ({deal.attachments?.length || 0})
+            </button>
+            <button
+              onClick={() => setActiveTab("activity")}
+              className={`py-2 px-1 font-medium text-sm border-b-2 ${
+                activeTab === "activity"
+                  ? "border-indigo-500 text-indigo-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Activity
             </button>
           </nav>
         </div>
-        
-        {/* Leads Table */}
-        {activeTab === "leads" && (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Company Name
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Contact Person
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Email
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Phone
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Created Date
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {leads.length > 0 ? (
-                    leads.map((lead) => (
-                      <tr key={lead._id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {lead.companyName || "—"}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {lead.contactPerson || "—"}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {lead.email || "—"}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {lead.phone || "—"}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                            ${lead.status === "New" ? "bg-blue-100 text-blue-800" : 
-                              lead.status === "Contacted" ? "bg-yellow-100 text-yellow-800" : 
-                              lead.status === "Qualified" ? "bg-green-100 text-green-800" : 
-                              "bg-gray-100 text-gray-800"}`}>
-                            {lead.status || "—"}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatDate(lead.createdAt)}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500">
-                        No leads found
-                      </td>
-                    </tr>
+
+        {/* Tab Content */}
+        {activeTab === "details" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Deal Information */}
+            <div>
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Deal Information</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Deal Name</label>
+                  <p className="mt-1 text-sm text-gray-900">{deal.dealName}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Value</label>
+                  <p className="mt-1 text-sm text-gray-900">₹{new Intl.NumberFormat("en-IN").format(deal.value || 0)}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Stage</label>
+                  <p className="mt-1 text-sm text-gray-900">{deal.stage}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Notes</label>
+                  <p className="mt-1 text-sm text-gray-900">{deal.notes || "No notes"}</p>
+                </div>
+                {deal.followUpDate && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Follow-up Date</label>
+                    <p className="mt-1 text-sm text-gray-900">
+                      {new Date(deal.followUpDate).toLocaleDateString("en-IN", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </p>
+                  </div>
+                )}
+                {deal.followUpStatus && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Follow-up Status</label>
+                    <p className="mt-1 text-sm text-gray-900">{deal.followUpStatus}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Company & Contact Information */}
+            <div>
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Company & Contact Information</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Company Name</label>
+                  <p className="mt-1 text-sm text-gray-900">{deal.companyName || "Not specified"}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Industry</label>
+                  <p className="mt-1 text-sm text-gray-900">{deal.industry || "Not specified"}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Email</label>
+                  <p className="mt-1 text-sm text-gray-900">{deal.email || "Not specified"}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Phone Number</label>
+                  <p className="mt-1 text-sm text-gray-900">{deal.phoneNumber || "Not specified"}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Source</label>
+                  <p className="mt-1 text-sm text-gray-900">{deal.source || "Not specified"}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Requirement</label>
+                  <p className="mt-1 text-sm text-gray-900">{deal.requirement || "Not specified"}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Address</label>
+                  <p className="mt-1 text-sm text-gray-900">{deal.address || "Not specified"}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Country</label>
+                  <p className="mt-1 text-sm text-gray-900">{deal.country || "Not specified"}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Assignment Information */}
+            <div className="md:col-span-2 mt-6 pt-6 border-t border-gray-200">
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Assignment Information</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Assigned To</label>
+                  <p className="mt-1 text-sm text-gray-900">
+                    {deal.assignedTo
+                      ? `${deal.assignedTo.firstName} ${deal.assignedTo.lastName}`
+                      : "Not assigned"}
+                  </p>
+                  {deal.assignedTo && (
+                    <p className="mt-1 text-sm text-gray-500">{deal.assignedTo.email}</p>
                   )}
-                </tbody>
-              </table>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Created Date</label>
+                  <p className="mt-1 text-sm text-gray-900">
+                    {new Date(deal.createdAt).toLocaleDateString("en-IN", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         )}
-        
-        {/* Deals Table */}
-        {activeTab === "deals" && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 bg-white rounded-lg shadow overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Deal Name
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Value
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Stage
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Assigned To
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Created Date
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {deals.length > 0 ? (
-                      deals.map((deal) => (
-                        <tr key={deal._id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {deal.dealName || "—"}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            ₹{formatNumber(deal.value || 0)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                              ${deal.stage === "Qualification" ? "bg-blue-100 text-blue-800" : 
-                                deal.stage === "Negotiation" ? "bg-yellow-100 text-yellow-800" : 
-                                deal.stage === "Proposal Sent" ? "bg-cyan-100 text-cyan-800" : 
-                                deal.stage === "Closed Won" ? "bg-green-100 text-green-800" : 
-                                deal.stage === "Closed Lost" ? "bg-red-100 text-red-800" : 
-                                "bg-gray-100 text-gray-800"}`}>
-                              {deal.stage || "—"}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {deal.assignedTo ? `${deal.assignedTo.firstName || ''} ${deal.assignedTo.lastName || ''}`.trim() : "—"}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {formatDate(deal.createdAt)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button
-                              onClick={() => fetchDealDetails(deal._id)}
-                              className="text-indigo-600 hover:text-indigo-900"
-                            >
-                              View Details
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500">
-                          No deals found
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+
+        {activeTab === "attachments" && (
+          <div>
+            <h2 className="text-lg font-medium text-gray-900 mb-4">Attachments</h2>
+            {deal.attachments && deal.attachments.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {deal.attachments.map((attachment, index) => (
+                  <div
+                    key={index}
+                    className="border border-gray-200 rounded-lg p-4 flex items-center justify-between hover:bg-gray-50"
+                  >
+                    <div className="flex items-center">
+                      <div className="p-2 bg-gray-100 rounded-md mr-3">
+                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 truncate max-w-xs">{attachment.name}</p>
+                        <p className="text-xs text-gray-500 capitalize">{attachment.type}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => downloadFile(attachment.path)}
+                      className="p-2 text-indigo-600 hover:text-indigo-800"
+                      title="Download"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
               </div>
-            </div>
-            
-            {/* Deal Details Panel */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Deal Details</h2>
-              
-              {detailLoading ? (
-                <div className="flex justify-center items-center h-64">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            ) : (
+              <div className="text-center py-8">
+                <svg className="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p className="mt-4 text-gray-500">No attachments found</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "activity" && (
+          <div>
+            <h2 className="text-lg font-medium text-gray-900 mb-4">Activity History</h2>
+            <div className="border-l-2 border-gray-200 ml-4 pb-10">
+              {/* Creation Activity */}
+              <div className="relative mb-6 pl-6">
+                <div className="absolute -left-2.5 mt-1.5 h-4 w-4 rounded-full bg-indigo-600"></div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-sm font-medium text-gray-900">Deal Created</p>
+                  <p className="text-xs text-gray-500">
+                    {new Date(deal.createdAt).toLocaleDateString("en-IN", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
                 </div>
-              ) : selectedDeal ? (
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Deal Name</h3>
-                    <p className="mt-1 text-sm text-gray-900">{selectedDeal.dealName}</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Deal Title</h3>
-                    <p className="mt-1 text-sm text-gray-900">{selectedDeal.dealTitle || "—"}</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Value</h3>
-                    <p className="mt-1 text-sm text-gray-900">₹{formatNumber(selectedDeal.value || 0)}</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Stage</h3>
-                    <p className="mt-1 text-sm text-gray-900">{selectedDeal.stage}</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Assigned To</h3>
-                    <p className="mt-1 text-sm text-gray-900">
-                      {selectedDeal.assignedTo ? 
-                        `${selectedDeal.assignedTo.firstName || ''} ${selectedDeal.assignedTo.lastName || ''}`.trim() : 
-                        "—"}
-                    </p>
-                  </div>
-                  
-                  {selectedDeal.lead && (
-                    <>
-                      <div className="pt-4 border-t border-gray-200">
-                        <h3 className="text-md font-medium text-gray-900">Lead Information</h3>
-                      </div>
-                      
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500">Lead Name</h3>
-                        <p className="mt-1 text-sm text-gray-900">{selectedDeal.lead.leadName || "—"}</p>
-                      </div>
-                      
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500">Company Name</h3>
-                        <p className="mt-1 text-sm text-gray-900">{selectedDeal.lead.companyName || "—"}</p>
-                      </div>
-                      
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500">Contact Person</h3>
-                        <p className="mt-1 text-sm text-gray-900">{selectedDeal.lead.contactPerson || "—"}</p>
-                      </div>
-                      
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500">Email</h3>
-                        <p className="mt-1 text-sm text-gray-900">{selectedDeal.lead.email || "—"}</p>
-                      </div>
-                      
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500">Phone</h3>
-                        <p className="mt-1 text-sm text-gray-900">{selectedDeal.lead.phone || "—"}</p>
-                      </div>
-                      
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500">Status</h3>
-                        <p className="mt-1 text-sm text-gray-900">{selectedDeal.lead.status || "—"}</p>
-                      </div>
-                      
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500">Source</h3>
-                        <p className="mt-1 text-sm text-gray-900">{selectedDeal.lead.source || "—"}</p>
-                      </div>
-                      
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500">Country</h3>
-                        <p className="mt-1 text-sm text-gray-900">{selectedDeal.lead.country || "—"}</p>
-                      </div>
-                      
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500">Lead Assigned To</h3>
-                        <p className="mt-1 text-sm text-gray-900">
-                          {selectedDeal.lead.assignTo ? 
-                            `${selectedDeal.lead.assignTo.firstName || ''} ${selectedDeal.lead.assignTo.lastName || ''}`.trim() : 
-                            "—"}
-                        </p>
-                      </div>
-                    </>
-                  )}
-                  
-                  <div className="pt-4 border-t border-gray-200">
-                    <h3 className="text-sm font-medium text-gray-500">Notes</h3>
-                    <p className="mt-1 text-sm text-gray-900">{selectedDeal.notes || "No notes available"}</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Created Date</h3>
-                    <p className="mt-1 text-sm text-gray-900">{formatDate(selectedDeal.createdAt)}</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Last Updated</h3>
-                    <p className="mt-1 text-sm text-gray-900">{formatDate(selectedDeal.updatedAt)}</p>
-                  </div>
+              </div>
+
+              {/* Last Update Activity */}
+              <div className="relative mb-6 pl-6">
+                <div className="absolute -left-2.5 mt-1.5 h-4 w-4 rounded-full bg-blue-600"></div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-sm font-medium text-gray-900">Deal Updated</p>
+                  <p className="text-xs text-gray-500">
+                    {new Date(deal.updatedAt).toLocaleDateString("en-IN", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
                 </div>
+              </div>
+
+              {/* Stage Change Activity - if available */}
+              {deal.stageHistory && deal.stageHistory.length > 0 ? (
+                deal.stageHistory.map((history, index) => (
+                  <div key={index} className="relative mb-6 pl-6">
+                    <div className="absolute -left-2.5 mt-1.5 h-4 w-4 rounded-full bg-green-600"></div>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-sm font-medium text-gray-900">
+                        Stage changed to {history.stage}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(history.date).toLocaleDateString("en-IN", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                ))
               ) : (
-                <div className="flex justify-center items-center h-64">
-                  <p className="text-sm text-gray-500">Select a deal to view details</p>
+                <div className="relative mb-6 pl-6">
+                  <div className="absolute -left-2.5 mt-1.5 h-4 w-4 rounded-full bg-gray-400"></div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm font-medium text-gray-900">No stage changes recorded</p>
+                  </div>
                 </div>
               )}
             </div>
@@ -387,6 +401,10 @@ const Pipeline_view = () => {
       </div>
     </div>
   );
-};
+}
 
-export default Pipeline_view;//leads and deals data come perfectly...
+export default Pipeline_modal_view;
+
+
+
+
