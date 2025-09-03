@@ -57,7 +57,7 @@ const Layout = ({ isModalOpen }) => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar toggleSidebar={toggleSidebar} />
-        <div className={`flex-1 overflow-auto p-6 ${isModalOpen ? "backdrop-blur-md pointer-events-none" : ""}`}>
+        <div className={`flex-1 overflow-auto bg-gray-50 p-6 ${isModalOpen ? "backdrop-blur-md pointer-events-none" : ""}`}>
           {/* Routes inside Layout render here */}
           <Outlet />
         </div>
