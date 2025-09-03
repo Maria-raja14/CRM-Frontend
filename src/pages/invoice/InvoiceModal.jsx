@@ -578,9 +578,13 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
   // --- Fetch deals ---
   useEffect(() => {
     const fetchDeals = async () => {
+              const token = localStorage.getItem("token");
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/deals/getAll"
+          "http://localhost:5000/api/deals/getAll",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
         );
         if (response.data) {
           setDeals(response.data);

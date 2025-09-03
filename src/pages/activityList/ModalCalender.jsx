@@ -39,28 +39,38 @@ const ModalCalendar = ({
   const endTimeRef = useRef(null);
 
   // Fetch deals and users
-  useEffect(() => {
+ useEffect(() => {
     const fetchData = async () => {
       try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          console.error("No token found. User not authenticated.");
+          return;
+        }
+
+        // ➡️ Fetch all deals with token
         const dealsRes = await axios.get(
-          "http://localhost:5000/api/deals/getAll"
+          "http://localhost:5000/api/deals/getAll",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
         );
         setDeals(dealsRes.data);
 
-        const token = localStorage.getItem("token");
-        const response = await axios.get("http://localhost:5000/api/users", {
+        // ➡️ Fetch all users with token
+        const usersRes = await axios.get("http://localhost:5000/api/users", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        const filteredSales = (response.data.users || []).filter(
+        const filteredSales = (usersRes.data.users || []).filter(
           (user) => user.role?.name?.toLowerCase() === "sales"
         );
-
         setUsers(filteredSales);
       } catch (err) {
         console.error("Error fetching deals/users", err);
       }
     };
+
     fetchData();
   }, []);
 

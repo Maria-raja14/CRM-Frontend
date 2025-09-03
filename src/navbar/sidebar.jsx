@@ -12,15 +12,15 @@ import {
   List,
   Calendar,
   Shield,
-  Edit,
-  Layout,
-  FileText,
 } from "react-feather";
 import { NavLink, useLocation } from "react-router-dom";
 
-const IconCircle = ({ children }) => (
-  <div className="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-md">
-    {children}
+const IconCircle = ({ children, isActive }) => (
+  <div className="w-10 h-10 flex items-center justify-center rounded-full shadow-sm bg-white">
+    {/* Icon color changes based on active state */}
+    {React.cloneElement(children, {
+      color: isActive ? "#008ecc" : "#1f1f1f",
+    })}
   </div>
 );
 
@@ -40,17 +40,19 @@ const SidebarItem = ({
       end={exact}
       onClick={onClick}
       className={({ isActive }) =>
-        `flex items-center justify-between w-full p-3 rounded-lg transition-colors duration-150
-         ${
-           isActive
-             ? "bg-[#008ecc] text-white shadow-[0_6px_18px_rgba(0,140,204,0.18)]"
-             : "text-gray-700 hover:bg-[#f2fbff]"
-         }`
+        `flex items-center justify-between w-full p-3 rounded-full transition-all duration-300
+        ${isActive ? "bg-[#f2fbff]" : "hover:bg-[#f8f9fb]"}`
       }
     >
       <div className="flex items-center space-x-3">
-        <IconCircle>{icon}</IconCircle>
-        <span className="text-base font-medium">{label}</span>
+        <IconCircle isActive={window.location.pathname === to}>{icon}</IconCircle>
+        <span
+          className={`text-base font-medium ${
+            window.location.pathname === to ? "text-[#008ecc]" : "text-gray-700"
+          }`}
+        >
+          {label}
+        </span>
       </div>
     </NavLink>
   );
@@ -70,22 +72,16 @@ const Collapsible = ({
     <div>
       <button
         onClick={onToggle}
-        className={`flex items-center justify-between w-full p-3 rounded-lg transition-colors duration-150
-          ${
-            open
-              ? "bg-[#f0fbff] text-gray-900"
-              : "text-gray-700 hover:bg-[#f8f9fb]"
-          }`}
+        className={`flex items-center justify-between w-full p-3 rounded-full transition-all duration-300
+          ${open ? "bg-[#f0fbff]" : "hover:bg-[#f8f9fb]"}`}
       >
         <div className="flex items-center space-x-3">
-          <IconCircle>{icon}</IconCircle>
+          <IconCircle isActive={open}>{icon}</IconCircle>
           <span className="text-base font-medium">{label}</span>
         </div>
         <ChevronRight
           size={18}
-          className={`ml-2 transition-transform duration-200 ${
-            open ? "rotate-90" : ""
-          }`}
+          className={`ml-2 transition-transform duration-200 ${open ? "rotate-90" : ""}`}
         />
       </button>
 
@@ -101,23 +97,25 @@ const SmallLink = ({ to, icon, label, hasPermission = true }) => {
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `flex items-center gap-3 p-2 rounded-lg text-base ${
-          isActive
-            ? "text-[#008ECC] font-semibold"
-            : "text-gray-700 hover:text-[#008ECC]"
-        }`
+        `flex items-center gap-3 p-2 rounded-full transition-all duration-300
+        ${isActive ? "bg-[#f2fbff]" : "hover:bg-[#f8f9fb]"}`
       }
     >
-      <div className="w-7 h-7 flex items-center justify-center rounded-md bg-white shadow-sm">
-        {icon}
+      <div className="w-7 h-7 flex items-center justify-center rounded-full shadow-sm bg-white">
+        {React.cloneElement(icon, { color: window.location.pathname === to ? "#008ecc" : "#1f1f1f" })}
       </div>
-      <span>{label}</span>
+      <span
+        className={`${
+          window.location.pathname === to ? "text-[#008ecc]" : "text-gray-700"
+        }`}
+      >
+        {label}
+      </span>
     </NavLink>
   );
 };
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
-  const [showProposal, setShowProposal] = useState(false);
   const [showActivities, setShowActivities] = useState(false);
   const [userPermissions, setUserPermissions] = useState({});
   const [isAdmin, setIsAdmin] = useState(false);
@@ -164,56 +162,36 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
       <nav className="flex flex-col gap-3 px-2">
         {/* Dashboard */}
-        <NavLink
+        <SidebarItem
           to="/adminDashboard"
-          end
-          className={({ isActive }) =>
-            `flex items-center gap-3 p-3 rounded-full shadow-[0_6px_18px_rgba(0,140,204,0.18)] w-full text-base font-semibold
-             ${
-               isActive
-                 ? "bg-[#008ecc] text-white"
-                 : "bg-transparent text-gray-700 hover:bg-[#f2fbff]"
-             }`
-          }
-        >
-          <div className="w-10 h-10 flex items-center justify-center rounded-full bg-white">
-            <Home
-              size={18}
-              className={
-                location.pathname === "/dashboard"
-                  ? "text-[#008CD3]"
-                  : "text-gray-700"
-              }
-            />
-          </div>
-          <span>Dashboard</span>
-        </NavLink>
+          icon={<Home size={18} />}
+          label="Dashboard"
+          hasPermission={isAdmin || userPermissions.dashboard}
+        />
 
         {/* Leads */}
         <SidebarItem
           to="/leads"
-          icon={<User size={18} className="text-gray-700" />}
+          icon={<User size={18} />}
           label="Leads"
           hasPermission={isAdmin || userPermissions.leads}
         />
 
-           {/* Pipeline */}
+        {/* Pipeline View */}
         <SidebarItem
           to="/Pipelineview"
-          icon={<User size={18} className="text-gray-700" />}
+          icon={<User size={18} />}
           label="Pipeline View"
           hasPermission={isAdmin || userPermissions.leads}
         />
 
-        {/* Deals (FIXED → using SidebarItem) */}
+        {/* Deals */}
         <SidebarItem
           to="/deals"
-          icon={<Tag size={18} className="text-gray-700" />}
+          icon={<Tag size={18} />}
           label="All Deals"
           hasPermission={isAdmin || userPermissions.deals}
         />
-
-     
 
         {/* Invoice */}
         <SidebarItem
@@ -225,7 +203,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
               height="18px"
               viewBox="0 -960 960 960"
               width="18px"
-              fill="#1f1f1f"
+              fill={window.location.pathname === "/invoice" ? "#008ecc" : "#1f1f1f"}
             >
               <path d="M340-460h280v-64H340v64Zm0 120h280v-64H340v64Zm0 120h174v-64H340v64ZM263.72-96Q234-96 213-117.15T192-168v-624q0-29.7 21.15-50.85Q234.3-864 264-864h312l192 192v504q0 29.7-21.16 50.85Q725.68-96 695.96-96H263.72ZM528-624v-168H264v624h432v-456H528ZM264-792v168-168 624-624Z" />
             </svg>
@@ -235,38 +213,17 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         />
 
         {/* Proposal */}
-        {/* <Collapsible
-          label="Proposal"
-          icon={<Edit size={18} className="text-gray-700" />}
-          open={showProposal}
-          onToggle={() => setShowProposal((s) => !s)}
-          hasPermission={isAdmin || userPermissions.proposal}
-        >
-          <SmallLink
-            to="/proposal"
-            icon={<FileText size={16} />}
-            label="Proposal list"
-            hasPermission={isAdmin || userPermissions.proposal}
-          />
-          <SmallLink
-            to="/template"
-            icon={<Layout size={16} />}
-            label="Templates"
-            hasPermission={isAdmin || userPermissions.templates}
-          />
-        </Collapsible> */}
-
-         <SidebarItem
+        <SidebarItem
           to="/proposal"
-          icon={<Tag size={18} className="text-gray-700" />}
+          icon={<Tag size={18} />}
           label="Proposal"
-          hasPermission={isAdmin || userPermissions.deals}
+          hasPermission={isAdmin || userPermissions.proposal}
         />
 
         {/* Activities */}
         <Collapsible
           label="Activities"
-          icon={<Calendar size={18} className="text-gray-700" />}
+          icon={<Calendar size={18} />}
           open={showActivities}
           onToggle={() => setShowActivities((s) => !s)}
           hasPermission={isAdmin || userPermissions.calendar}
