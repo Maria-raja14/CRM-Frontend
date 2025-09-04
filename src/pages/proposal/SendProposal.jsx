@@ -298,8 +298,6 @@
 
 // export default SendProposal;
 
-
-
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -333,40 +331,38 @@ const SendProposal = () => {
 
   // Fetch deals from backend
   useEffect(() => {
-  const fetchDeals = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(
-        "http://localhost:5000/api/deals/getAll",
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+    const fetchDeals = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get(
+          "http://localhost:5000/api/deals/getAll",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
 
-      const dealsArray = Array.isArray(response.data)
-        ? response.data
-        : Array.isArray(response.data.deals)
-        ? response.data.deals
-        : [];
+        const dealsArray = Array.isArray(response.data)
+          ? response.data
+          : Array.isArray(response.data.deals)
+          ? response.data.deals
+          : [];
 
+        // populate email from leadId if not present
+        const populatedDeals = dealsArray.map((deal) => ({
+          ...deal,
+          email:
+            deal.email ||
+            (deal.leadId && deal.leadId.email ? deal.leadId.email : ""),
+        }));
+        console.log("hello", populatedDeals);
 
-      // populate email from leadId if not present
-      const populatedDeals = dealsArray.map((deal) => ({
-        ...deal,
-        email:
-          deal.email ||
-          (deal.leadId && deal.leadId.email ? deal.leadId.email : ""),
-      }));
-console.log("hello",populatedDeals);
+        setDeals(populatedDeals);
+      } catch (error) {
+        console.error("Error fetching deals:", error);
+        toast.error("Failed to fetch deals");
+      }
+    };
 
-      setDeals(populatedDeals);
-    } catch (error) {
-      console.error("Error fetching deals:", error);
-      toast.error("Failed to fetch deals");
-    }
-  };
-
-  fetchDeals();
-}, []);
-
+    fetchDeals();
+  }, []);
 
   // Auto-fill proposal fields when editing
   useEffect(() => {
@@ -619,4 +615,3 @@ console.log("hello",populatedDeals);
 };
 
 export default SendProposal;
-

@@ -86,7 +86,7 @@ const ViewProposal = () => {
   
   if (!proposal) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center px-4">
+      <div className="min-h-screen  flex items-center justify-center px-4">
         <div className="text-center p-8 bg-white rounded-2xl shadow-lg max-w-md w-full">
           <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <XCircle className="text-rose-600" size={32} />
@@ -269,14 +269,15 @@ const ViewProposal = () => {
                             <User size={18} className="mr-3 text-slate-500" />
                             <div>
                               <p className="text-sm font-medium">Client Name</p>
-                              <p className="text-slate-900">{proposal.clientName || "Not specified"}</p>
+                              <p className="text-slate-900">{proposal.dealTitle || "Not specified"}</p>
                             </div>
                           </div>
                           <div className="flex items-center text-slate-700">
                             <Building size={18} className="mr-3 text-slate-500" />
                             <div>
                               <p className="text-sm font-medium">Company</p>
-                              <p className="text-slate-900">{proposal.company || "Not specified"}</p>
+                             <p className="text-slate-900">{proposal.deal?.companyName || "Not specified"}</p>
+
                             </div>
                           </div>
                           <div className="flex items-center text-slate-700">
@@ -397,6 +398,7 @@ const ViewProposal = () => {
               <div className={`inline-flex items-center px-4 py-2 rounded-full ${statusStyle.bgColor} ${statusStyle.color} border ${statusStyle.borderColor} mb-4`}>
                 <StatusIcon size={16} className="mr-2" />
                 <span className="capitalize font-medium text-sm">{statusStyle.label}</span>
+           
               </div>
               <p className="text-sm text-slate-600 mt-2">Last updated {new Date(proposal.updatedAt || proposal.createdAt).toLocaleDateString()}</p>
             </div>
