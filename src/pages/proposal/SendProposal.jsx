@@ -990,7 +990,6 @@ const SendProposal = () => {
   const [emails, setEmails] = useState("");
   const [ccEmail, setCcEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [savingDraft, setSavingDraft] = useState(false);
   const [editorContent, setEditorContent] = useState("");
   const [deals, setDeals] = useState([]);
   const [selectedDealId, setSelectedDealId] = useState("");
@@ -1010,7 +1009,7 @@ const SendProposal = () => {
         const token = localStorage.getItem("token");
         const response = await axios.get(
           "http://localhost:5000/api/deals/getAll",
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: { Authorization: Bearer ${token} } }
         );
 
         const dealsArray = Array.isArray(response.data)
@@ -1079,78 +1078,52 @@ const SendProposal = () => {
     setAttachments(e.target.files);
   };
 
-  const handleSubmit = async (status = "sent") => {
-    if (status === "sent") {
-      setLoading(true);
-    } else {
-      setSavingDraft(true);
+ const handleSubmit = async () => {
+  setLoading(true);
+
+  const emailArray = emails
+    .split(",")
+    .map((e) => e.trim())
+    .filter((e) => e);
+
+  const formData = new FormData();
+  formData.append("title", title);
+  formData.append("dealTitle", dealTitle);
+  formData.append("selectedDealId", selectedDealId);
+  formData.append("cc", ccEmail);
+  formData.append("content", editorContent || "No content provided");
+  formData.append("emails", emailArray.join(","));
+
+  if (isEditing) formData.append("id", proposalData?._id);
+
+  if (attachments.length > 0) {
+    for (let i = 0; i < attachments.length; i++) {
+      formData.append("attachments", attachments[i]);
     }
+  }
 
-    const emailArray = emails
-      .split(",")
-      .map((e) => e.trim())
-      .filter((e) => e);
+  try {
+    await axios.post("http://localhost:5000/api/proposal/mailsend", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
 
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("dealTitle", dealTitle);
-    formData.append("selectedDealId", selectedDealId);
-    formData.append("cc", ccEmail);
-    formData.append("content", editorContent || "No content provided");
-    formData.append("emails", emailArray.join(","));
-    formData.append("status", status);
+    toast.success(
+      isEditing
+        ? "Proposal updated successfully! (Email is sending...)"
+        : "Proposal sent successfully! (Email is sending...)"
+    );
 
-    if (isEditing) formData.append("id", proposalData?._id);
+    setTimeout(() => {
+      navigate("/proposal");
+    }, 2000);
+  } catch (error) {
+    console.error("Error submitting proposal:", error);
+    toast.error("Failed to send proposal.");
+  } finally {
+    setLoading(false);
+  }
+};
 
-    if (attachments.length > 0) {
-      for (let i = 0; i < attachments.length; i++) {
-        formData.append("attachments", attachments[i]);
-      }
-    }
-
-    try {
-      await axios.post(
-        "http://localhost:5000/api/proposal/mailsend",
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
-
-      if (status === "sent") {
-        toast.success(
-          isEditing
-            ? "Proposal updated and sent successfully!"
-            : "Proposal sent successfully!"
-        );
-      } else {
-        toast.success(
-          isEditing
-            ? "Draft updated successfully!"
-            : "Draft saved successfully!"
-        );
-      }
-
-      setTimeout(() => {
-        if (status === "sent") {
-          navigate("/proposal");
-        } else {
-          navigate("/proposal/drafts");
-        }
-      }, 2000);
-    } catch (error) {
-      console.error("Error submitting proposal:", error);
-      if (status === "sent") {
-        toast.error("Failed to send proposal.");
-      } else {
-        toast.error("Failed to save draft.");
-      }
-    } finally {
-      if (status === "sent") {
-        setLoading(false);
-      } else {
-        setSavingDraft(false);
-      }
-    }
-  };
 
   return (
     <div className="p-6">
@@ -1189,7 +1162,7 @@ const SendProposal = () => {
             <option value="">-- Select a Deal --</option>
             {deals.map((deal) => (
               <option key={deal._id} value={deal._id}>
-                {deal.dealName || `Deal #${deal._id.substring(0, 8)}`}
+                {deal.dealName || Deal #${deal._id.substring(0, 8)}}
               </option>
             ))}
           </select>
@@ -1296,22 +1269,14 @@ const SendProposal = () => {
         <div className="mt-10 flex gap-3 items-center">
           <button
             className="bg-[#4466f2] text-white p-2 rounded-sm px-3"
-            onClick={() => handleSubmit("sent")}
-            disabled={loading || savingDraft}
+            onClick={handleSubmit}
+            disabled={loading}
           >
             {loading
               ? "Sending..."
               : isEditing
               ? "Update and Send"
               : "Send Proposal"}
-          </button>
-          
-          <button
-            className="bg-gray-500 text-white p-2 rounded-sm px-3"
-            onClick={() => handleSubmit("draft")}
-            disabled={loading || savingDraft}
-          >
-            {savingDraft ? "Saving..." : "Save as Draft"}
           </button>
         </div>
       </div>
