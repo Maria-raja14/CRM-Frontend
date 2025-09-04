@@ -19,41 +19,41 @@ const STAGES = [
     title: "Qualification",
     color: "text-blue-600",
     bgColor: "bg-gray-100",
-    borderColor: "border-gray-300"
+    borderColor: "border-gray-300",
   },
   {
     id: "Negotiation",
     title: "Negotiation",
     color: "text-amber-600",
     bgColor: "bg-gray-100",
-    borderColor: "border-gray-300"
+    borderColor: "border-gray-300",
   },
   {
     id: "Proposal Sent",
     title: "Proposal Sent",
     color: "text-cyan-600",
     bgColor: "bg-gray-100",
-    borderColor: "border-gray-300"
+    borderColor: "border-gray-300",
   },
   {
     id: "Closed Won",
     title: "Closed Won",
     color: "text-emerald-600",
     bgColor: "bg-gray-100",
-    borderColor: "border-gray-300"
+    borderColor: "border-gray-300",
   },
   {
     id: "Closed Lost",
     title: "Closed Lost",
     color: "text-rose-600",
     bgColor: "bg-gray-100",
-    borderColor: "border-gray-300"
+    borderColor: "border-gray-300",
   },
 ];
 
 // ----- Drag types -----
 const ItemTypes = {
-  DEAL: "DEAL"
+  DEAL: "DEAL",
 };
 
 function formatNumber(n) {
@@ -66,7 +66,7 @@ function formatDate(dateString) {
   return new Intl.DateTimeFormat("en-IN", {
     day: "2-digit",
     month: "short",
-    year: "numeric"
+    year: "numeric",
   }).format(date);
 }
 
@@ -89,10 +89,10 @@ function SalesPipelineBoardPure() {
     assignedTo: "",
     companyName: "",
     notes: "",
-    followUpDate: ""
+    followUpDate: "",
   });
   const [isUpdating, setIsUpdating] = useState(false);
-  
+
   const navigate = useNavigate();
 
   const scrollRef = useRef(null);
@@ -138,39 +138,48 @@ function SalesPipelineBoardPure() {
     try {
       setIsLoading(true);
       const token = localStorage.getItem("token");
-      
+
       // Fetch deals
-      const dealsRes = await axios.get("http://localhost:5000/api/deals/getAll", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
+      const dealsRes = await axios.get(
+        "http://localhost:5000/api/deals/getAll",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
       // Fetch leads
-      const leadsRes = await axios.get("http://localhost:5000/api/leads/getAllLead", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const leadsRes = await axios.get(
+        "http://localhost:5000/api/leads/getAllLead",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setLeads(leadsRes.data);
-      
+
       // Group deals by stage
       const grouped = {};
       STAGES.forEach((s) => (grouped[s.id] = []));
-      
+
       dealsRes.data.forEach((deal) => {
         if (!grouped[deal.stage]) grouped[deal.stage] = [];
-        
+
         // Find associated lead data
-        const associatedLead = leadsRes.data.find(lead =>
-          lead._id === deal.leadId || lead.companyName === deal.companyName
+        const associatedLead = leadsRes.data.find(
+          (lead) =>
+            lead._id === deal.leadId || lead.companyName === deal.companyName
         );
-        
+
         // Enhance deal with lead information
         const enhancedDeal = {
           ...deal,
-          companyName: deal.companyName || (associatedLead ? associatedLead.companyName : "")
+          companyName:
+            deal.companyName ||
+            (associatedLead ? associatedLead.companyName : ""),
         };
-        
+
         grouped[deal.stage].push(enhancedDeal);
       });
-      
+
       setColumns(grouped);
     } catch (err) {
       console.error(err);
@@ -194,14 +203,18 @@ function SalesPipelineBoardPure() {
 
     try {
       const token = localStorage.getItem("token");
-      await axios.post("http://localhost:5000/api/deals/createManual", {
-        dealName: title,
-        value,
-        assignedTo,
-        stage: stageId,
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.post(
+        "http://localhost:5000/api/deals/createManual",
+        {
+          dealName: title,
+          value,
+          assignedTo,
+          stage: stageId,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       fetchData();
       toast.success("Deal created successfully!");
     } catch (err) {
@@ -221,10 +234,10 @@ function SalesPipelineBoardPure() {
     if (fromStage === toStage) return;
 
     // 🔹 Local state update for instant UI
-    setColumns(prev => {
+    setColumns((prev) => {
       let deal;
       const next = { ...prev };
-      next[fromStage] = prev[fromStage].filter(d => {
+      next[fromStage] = prev[fromStage].filter((d) => {
         if (d._id === dealId) {
           deal = d;
           return false;
@@ -240,11 +253,15 @@ function SalesPipelineBoardPure() {
     // 🔹 API call to persist change
     try {
       const token = localStorage.getItem("token");
-      await axios.patch(`http://localhost:5000/api/deals/update-deal/${dealId}`, {
-        stage: toStage,
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.patch(
+        `http://localhost:5000/api/deals/update-deal/${dealId}`,
+        {
+          stage: toStage,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       // Removed the toast.success message for stage updates
     } catch (err) {
       console.error("Failed to update deal stage:", err);
@@ -269,17 +286,20 @@ function SalesPipelineBoardPure() {
     try {
       const token = localStorage.getItem("token");
       // Update UI immediately
-      setColumns(prev => {
+      setColumns((prev) => {
         const next = { ...prev };
         for (const stage in next) {
-          next[stage] = next[stage].filter(d => d._id !== dealToDelete._id);
+          next[stage] = next[stage].filter((d) => d._id !== dealToDelete._id);
         }
         return next;
       });
-      
-      await axios.delete(`http://localhost:5000/api/deals/delete-deal/${dealToDelete._id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+
+      await axios.delete(
+        `http://localhost:5000/api/deals/delete-deal/${dealToDelete._id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       toast.success("Deal deleted successfully!");
     } catch (err) {
       console.error("Failed to delete deal:", err);
@@ -305,7 +325,9 @@ function SalesPipelineBoardPure() {
       assignedTo: deal.assignedTo?._id || "",
       companyName: deal.companyName || "",
       notes: deal.notes || "",
-      followUpDate: deal.followUpDate ? new Date(deal.followUpDate).toISOString().split('T')[0] : ""
+      followUpDate: deal.followUpDate
+        ? new Date(deal.followUpDate).toISOString().split("T")[0]
+        : "",
     });
     setEditDialogOpen(true);
   };
@@ -318,9 +340,9 @@ function SalesPipelineBoardPure() {
   // Handle form input changes
   const handleEditChange = (e) => {
     const { name, value } = e.target;
-    setEditFormData(prev => ({
+    setEditFormData((prev) => ({
       ...prev,
-      [name]: name === "value" ? Number(value) : value
+      [name]: name === "value" ? Number(value) : value,
     }));
   };
 
@@ -328,23 +350,25 @@ function SalesPipelineBoardPure() {
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     setIsUpdating(true);
-    
+
     try {
       const token = localStorage.getItem("token");
       // Update UI immediately
-      setColumns(prev => {
+      setColumns((prev) => {
         const next = { ...prev };
         for (const stage in next) {
-          next[stage] = next[stage].map(d => {
+          next[stage] = next[stage].map((d) => {
             if (d._id === dealToEdit._id) {
               return {
                 ...d,
                 dealName: editFormData.dealName,
                 value: editFormData.value,
-                assignedTo: users.find(u => u._id === editFormData.assignedTo) || d.assignedTo,
+                assignedTo:
+                  users.find((u) => u._id === editFormData.assignedTo) ||
+                  d.assignedTo,
                 companyName: editFormData.companyName,
                 notes: editFormData.notes,
-                followUpDate: editFormData.followUpDate
+                followUpDate: editFormData.followUpDate,
               };
             }
             return d;
@@ -352,10 +376,14 @@ function SalesPipelineBoardPure() {
         }
         return next;
       });
-      
-      await axios.patch(`http://localhost:5000/api/deals/update-deal/${dealToEdit._id}`, editFormData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+
+      await axios.patch(
+        `http://localhost:5000/api/deals/update-deal/${dealToEdit._id}`,
+        editFormData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setEditDialogOpen(false);
       toast.success("Deal updated successfully!");
     } catch (err) {
@@ -429,7 +457,7 @@ function SalesPipelineBoardPure() {
   return (
     <div className="min-h-screen w-full bg-gray-50 p-4 md:p-6 ">
       <ToastContainer position="top-right" autoClose={3000} />
-      
+
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <DialogContent>
@@ -437,8 +465,13 @@ function SalesPipelineBoardPure() {
             <DialogTitle>Confirm Delete</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <p>Are you sure you want to delete the deal "{dealToDelete?.dealName}"?</p>
-            <p className="text-sm text-gray-500 mt-2">This action cannot be undone.</p>
+            <p>
+              Are you sure you want to delete the deal "{dealToDelete?.dealName}
+              "?
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              This action cannot be undone.
+            </p>
           </div>
           <div className="flex justify-end gap-3">
             <button
@@ -465,7 +498,9 @@ function SalesPipelineBoardPure() {
           </DialogHeader>
           <form onSubmit={handleEditSubmit} className="space-y-4 py-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Deal Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Deal Name
+              </label>
               <input
                 type="text"
                 name="dealName"
@@ -476,7 +511,9 @@ function SalesPipelineBoardPure() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Value (₹)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Value (₹)
+              </label>
               <input
                 type="number"
                 name="value"
@@ -487,7 +524,9 @@ function SalesPipelineBoardPure() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Assigned To</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Assigned To
+              </label>
               <select
                 name="assignedTo"
                 value={editFormData.assignedTo}
@@ -504,11 +543,15 @@ function SalesPipelineBoardPure() {
                 ))}
               </select>
               {userRole !== "Admin" && (
-                <p className="text-xs text-gray-500 mt-1">Only admins can reassign deals</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Only admins can reassign deals
+                </p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Company Name
+              </label>
               <input
                 type="text"
                 name="companyName"
@@ -518,23 +561,15 @@ function SalesPipelineBoardPure() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Notes
+              </label>
               <textarea
                 name="notes"
                 value={editFormData.notes}
                 onChange={handleEditChange}
                 className="w-full border border-gray-300 rounded-md px-3 py-2"
                 rows="3"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Follow-up Date</label>
-              <input
-                type="date"
-                name="followUpDate"
-                value={editFormData.followUpDate}
-                onChange={handleEditChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2"
               />
             </div>
             <div className="flex justify-end gap-3">
@@ -552,9 +587,25 @@ function SalesPipelineBoardPure() {
                 disabled={isUpdating}
               >
                 {isUpdating ? (
-                  <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <svg
+                    className="animate-spin h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
                   </svg>
                 ) : (
                   "Update"
@@ -568,7 +619,9 @@ function SalesPipelineBoardPure() {
       {/* Toolbar */}
       <div className="mx-auto mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between max-w-[1600px]">
         <div>
-          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">Sales Pipeline</h1>
+          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
+            Sales Pipeline
+          </h1>
           <p className="text-sm text-gray-500 mt-1">
             {userRole === "Admin"
               ? "Viewing all deals"
@@ -580,12 +633,12 @@ function SalesPipelineBoardPure() {
             className="w-72 border border-gray-200 bg-white px-4 py-2 rounded-lg shadow-sm outline-none focus:ring-2 focus:ring-indigo-200"
             placeholder="Search deals…"
             value={query}
-            onChange={e => setQuery(e.target.value)}
+            onChange={(e) => setQuery(e.target.value)}
           />
           {userRole === "Admin" && (
             <button
               className=" bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm"
-              onClick={() =>navigate("/createDeal")}
+              onClick={() => navigate("/createDeal")}
             >
               + Add Deal
             </button>
@@ -594,8 +647,11 @@ function SalesPipelineBoardPure() {
       </div>
 
       {/* Board */}
-      <div ref={scrollRef} className="mx-auto flex gap-4 overflow-x-auto pb-4 max-w-[1600px]">
-        {STAGES.map(stage => (
+      <div
+        ref={scrollRef}
+        className="mx-auto flex gap-4 overflow-x-auto pb-4 max-w-[1600px]"
+      >
+        {STAGES.map((stage) => (
           <Column
             key={stage.id}
             id={stage.id}
@@ -618,14 +674,27 @@ function SalesPipelineBoardPure() {
 }
 
 // ----- Column component -----
-function Column({ id, title, titleColor, bgColor, borderColor, deals, moveDeal, onEdit, onDelete, onView, userRole, userId }) {
+function Column({
+  id,
+  title,
+  titleColor,
+  bgColor,
+  borderColor,
+  deals,
+  moveDeal,
+  onEdit,
+  onDelete,
+  onView,
+  userRole,
+  userId,
+}) {
   const [, dropRef] = useDrop({
     accept: ItemTypes.DEAL,
     drop: (item) => {
       if (item.from !== id) {
         moveDeal(item.id, item.from, id);
       }
-    }
+    },
   });
 
   return (
@@ -634,7 +703,9 @@ function Column({ id, title, titleColor, bgColor, borderColor, deals, moveDeal, 
       className={`min-w-[340px] w-[360px] flex flex-col border-2 border-gray-200 rounded-xl bg-white p-3 shadow-sm`}
     >
       <div className="mb-3">
-        <h2 className={`text-base font-bold flex items-center gap-2 ${titleColor} ${bgColor} p-3 rounded-lg`}>
+        <h2
+          className={`text-base font-bold flex items-center gap-2 ${titleColor} ${bgColor} p-3 rounded-lg`}
+        >
           {title}
           <span className="inline-flex items-center justify-center border px-2 py-0.5 text-xs text-gray-600 bg-white rounded-full min-w-[24px]">
             {deals.length}
@@ -668,18 +739,28 @@ function Column({ id, title, titleColor, bgColor, borderColor, deals, moveDeal, 
 }
 
 // ----- Deal Card -----
-function DealCard({ deal, stageId, moveDeal, onEdit, onDelete, onView, userRole, userId }) {
+function DealCard({
+  deal,
+  stageId,
+  moveDeal,
+  onEdit,
+  onDelete,
+  onView,
+  userRole,
+  userId,
+}) {
   const [{ isDragging }, dragRef] = useDrag({
     type: ItemTypes.DEAL,
     item: { id: deal._id, from: stageId },
-    collect: monitor => ({ isDragging: monitor.isDragging() })
+    collect: (monitor) => ({ isDragging: monitor.isDragging() }),
   });
 
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
   // Check if user can edit/delete this deal
-  const canEditDelete = userRole === "Admin" || (deal.assignedTo && deal.assignedTo._id === userId);
+  const canEditDelete =
+    userRole === "Admin" || (deal.assignedTo && deal.assignedTo._id === userId);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -695,18 +776,34 @@ function DealCard({ deal, stageId, moveDeal, onEdit, onDelete, onView, userRole,
     };
   }, []);
 
-  function getStageColor() {
-    return "bg-gray-50 border-gray-200";
+  // Function to get stage badge color based on stageId
+  function getStageBadgeColor() {
+    switch(stageId) {
+      case "Qualification":
+        return "bg-blue-100 text-blue-800";
+      case "Negotiation":
+        return "bg-amber-100 text-amber-800";
+      case "Proposal Sent":
+        return "bg-cyan-100 text-cyan-800";
+      case "Closed Won":
+        return "bg-emerald-100 text-emerald-800";
+      case "Closed Lost":
+        return "bg-rose-100 text-rose-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
   }
 
   const assignedToName = deal.assignedTo
-    ? `${deal.assignedTo.firstName || ''} ${deal.assignedTo.lastName || ''}`.trim()
+    ? `${deal.assignedTo.firstName || ""} ${
+        deal.assignedTo.lastName || ""
+      }`.trim()
     : "—";
 
   return (
     <div
       ref={dragRef}
-      className={`border ${getStageColor()} p-4 rounded-xl shadow-sm hover:shadow-md transition-all cursor-move flex flex-col gap-3 relative`}
+      className="border bg-white border-gray-200 p-4 rounded-xl shadow-sm hover:shadow-md transition-all cursor-move flex flex-col gap-3 relative"
       style={{ opacity: isDragging ? 0.5 : 1 }}
     >
       {/* Three-dot menu - only show if user has permission */}
@@ -716,11 +813,15 @@ function DealCard({ deal, stageId, moveDeal, onEdit, onDelete, onView, userRole,
             className="p-1 rounded hover:bg-gray-100"
             onClick={() => setMenuOpen(!menuOpen)}
           >
-            <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
+            <svg
+              className="w-4 h-4 text-gray-500"
+              fill="currentColor"
+              viewBox="0 0 16 16"
+            >
+              <path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
             </svg>
           </button>
-          
+
           {menuOpen && (
             <div className="absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg py-1 z-10 border border-gray-200">
               <button
@@ -756,95 +857,123 @@ function DealCard({ deal, stageId, moveDeal, onEdit, onDelete, onView, userRole,
       )}
 
       {/* Deal Name - Centered and emphasized */}
-      <div className={`text-center ${canEditDelete ? 'pr-6' : ''}`}>
+      <div className={`text-center ${canEditDelete ? "pr-6" : ""}`}>
         <h3
-          className="text-md font-bold text-gray-800 mb-1 cursor-pointer hover:text-indigo-600 transition-colors"
+          className="text-md font-semibold text-indigo-600 underline underline-offset-2 cursor-pointer hover:text-indigo-800 transition-colors"
           onClick={() => onView(deal)}
         >
           {deal.dealName}
         </h3>
-        <div className="text-xs font-medium text-gray-500 bg-white py-1 px-2 rounded-full inline-block">
+
+        <div className="text-xs text-stone-800 font-medium  bg-indigo-100 py-1 px-2 rounded-full inline-block">
           {deal.companyName || "No company"}
         </div>
       </div>
 
-      {/* Deal Details */}
+      {/* Deal deatils */}
       <div className="bg-white p-3 rounded-lg border border-gray-100">
-        <div className="grid grid-cols-2 gap-3">
-          {/* Value */}
-          <div className="flex items-center">
-            <div className="bg-indigo-100 p-1.5 rounded-md mr-2">
-              <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div>
-              <div className="text-xs text-gray-500">Value</div>
-              <div className="text-sm font-semibold text-gray-800">₹{formatNumber(deal.value || 0)}</div>
-            </div>
-          </div>
+        <div className="grid gap-3">
+          {/* Assigned To (Full width) */}
 
-          {/* Assigned To */}
-          <div className="flex items-center">
+          <div className="flex items-center ml-8">
             <div className="bg-purple-100 p-1.5 rounded-md mr-2">
-              <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              <svg
+                className="w-4 h-4 text-purple-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
               </svg>
             </div>
             <div>
               <div className="text-xs text-gray-500">Assigned To</div>
-              <div className="text-sm font-medium text-gray-800 truncate max-w-[120px]" title={assignedToName}>
+              <div className="text-sm font-medium text-gray-800">
                 {assignedToName}
               </div>
             </div>
           </div>
 
-          {/* Created Date */}
-          <div className="flex items-center col-span-2">
-            <div className="bg-amber-100 p-1.5 rounded-md mr-2">
-              <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
+          {/* Created & Value on the same row */}
+          <div className="flex items-center justify-between">
+            {/* Created */}
+            <div className="flex items-center">
+              <div className="bg-amber-100 p-1.5 rounded-md mr-2">
+                <svg
+                  className="w-4 h-4 text-amber-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <div className="text-xs text-gray-500">Created</div>
+                <div className="text-sm font-medium text-gray-800">
+                  {formatDate(deal.createdAt)}
+                </div>
+              </div>
             </div>
-            <div>
-              <div className="text-xs text-gray-500">Created</div>
-              <div className="text-sm font-medium text-gray-800">{formatDate(deal.createdAt)}</div>
+
+            {/* Value */}
+            <div className="flex items-center">
+              <div className="bg-indigo-100 p-1.5 rounded-md mr-2">
+                <svg
+                  className="w-4 h-4 text-indigo-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <div className="text-xs text-gray-500">Value</div>
+                <div className="text-sm font-semibold text-gray-800">
+                  ₹{formatNumber(deal.value || 0)}
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Notes preview */}
-      {/* {deal.notes && (
-        <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded-md">
-          <div className="font-medium mb-1">Notes:</div>
-          <div className="truncate">{deal.notes}</div>
-        </div>
-      )} */}
-
-      {/* Follow-up date */}
-      {deal.followUpDate && (
-        <div className="flex items-center text-xs text-amber-600 bg-amber-50 p-2 rounded-md">
-          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          Follow-up: {formatDate(deal.followUpDate)}
-        </div>
-      )}
-
       {/* Tags */}
       {deal.tags?.length ? (
         <div className="flex flex-wrap gap-1">
           {deal.tags.map((t, i) => (
-            <span key={i} className="bg-indigo-100 px-2 py-1 text-xs font-medium text-indigo-700 rounded-full">{t}</span>
+            <span
+              key={i}
+              className="bg-indigo-100 px-2 py-1 text-xs font-medium text-indigo-700 rounded-full"
+            >
+              {t}
+            </span>
           ))}
         </div>
       ) : null}
 
-      {/* Stage Indicator */}
+      {/* Stage Indicator with badge design */}
       <div className="flex justify-between items-center text-xs mt-1">
         <span className="text-gray-500">Stage:</span>
-        <span className="font-bold text-gray-700">{stageId}</span>
+        <span className={`font-bold px-2 py-1 rounded-full ${getStageBadgeColor()}`}>
+          {stageId}
+        </span>
       </div>
     </div>
   );
@@ -857,4 +986,6 @@ export default function SalesPipelineBoard() {
       <SalesPipelineBoardPure />
     </DndProvider>
   );
-}
+} //All design come perfectly..
+
+
