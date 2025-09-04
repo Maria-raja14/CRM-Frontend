@@ -184,3 +184,15 @@ body {
   height: 400px;       /* fixed height */
   overflow-y: auto;    /* scroll if content too big */
 }
+
+html,
+body {
+  @apply bg-white text-black transition-colors duration-300;
+  font-family: 'Poppins', sans-serif;
+}
+
+.dark html,
+.dark body {
+  @apply bg-black text-white;
+  font-family: 'Poppins', sans-serif;
+}

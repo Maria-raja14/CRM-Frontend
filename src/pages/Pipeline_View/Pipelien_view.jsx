@@ -630,7 +630,7 @@ function SalesPipelineBoardPure() {
         </div>
         <div className="flex gap-2 items-center">
           <input
-            className="w-72 border border-gray-200 bg-white px-4 py-2 rounded-lg shadow-sm outline-none focus:ring-2 focus:ring-indigo-200"
+            className="w-72 border border-gray-200 bg-white px-4 py-2 mr-12 rounded-full shadow-sm outline-none focus:ring-2 focus:ring-indigo-200"
             placeholder="Search deals…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -859,7 +859,7 @@ function DealCard({
       {/* Deal Name - Centered and emphasized */}
       <div className={`text-center ${canEditDelete ? "pr-6" : ""}`}>
         <h3
-          className="text-md font-semibold text-indigo-600 underline underline-offset-2 cursor-pointer hover:text-indigo-800 transition-colors"
+          className="text-md font-semibold text-indigo-600   cursor-pointer hover:text-indigo-800 transition-colors"
           onClick={() => onView(deal)}
         >
           {deal.dealName}
