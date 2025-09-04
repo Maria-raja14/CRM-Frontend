@@ -334,7 +334,7 @@ const AdminDashboard = () => {
     );
 
   return (
-    <div className="p-6 space-y-6 min-h-screen bg-gray-50">
+    <div className="dashboard p-6 space-y-6 min-h-screen bg-gray-50">
       {/* Filter Buttons */}
       <div className="flex items-center justify-end gap-2 flex-wrap">
         {["today", "7days", "month"].map((preset) => (
@@ -412,7 +412,7 @@ const AdminDashboard = () => {
 
       {/* Pipeline + Recent Invoices */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="relative overflow-hidden rounded-2xl shadow-md bg-white p-6">
+        <div className="leads relative overflow-hidden rounded-2xl shadow-md bg-white p-6">
           <CardHeader>
             <CardTitle className="text-gray-800 text-lg font-semibold">
               Pipeline Board
@@ -522,7 +522,7 @@ const AdminDashboard = () => {
 
       {/* Deals Overview + Pie */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="relative overflow-hidden rounded-2xl shadow-md bg-white p-6">
+        <div className="deals  relative overflow-hidden rounded-2xl shadow-md bg-white p-6">
           <CardHeader className="flex justify-between items-center">
             <CardTitle className="text-gray-800 text-lg font-semibold">
               Deals Overview

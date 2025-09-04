@@ -22,6 +22,10 @@ import {
 } from "react-feather";
 
 export default function CreateRoleModal({ onRoleCreated }) {
+
+const API_URL = import.meta.env.VITE_API_URL;
+
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [roleData, setRoleData] = useState({
     name: "",
@@ -85,7 +89,7 @@ export default function CreateRoleModal({ onRoleCreated }) {
     try {
       const token = localStorage.getItem("token");
       const { data } = await axios.post(
-        "http://localhost:5000/api/roles",
+        `${API_URL}/roles`,
         roleData,
         { headers: { Authorization: `Bearer ${token} `} }
       );

@@ -12,6 +12,8 @@ import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
 
 export const AllDeals = () => {
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const navigate = useNavigate();
   const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -48,7 +50,7 @@ export const AllDeals = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:5000/api/deals/getAll", {
+      const res = await axios.get(`${API_URL}/deals/getAll`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setDeals(res.data || []);
@@ -63,7 +65,7 @@ export const AllDeals = () => {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:5000/api/users", {
+      const res = await axios.get(`${API_URL}/users`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const filteredSales = (res.data.users || []).filter(
@@ -129,7 +131,7 @@ export const AllDeals = () => {
       const token = localStorage.getItem("token");
       await Promise.all(
         selectedDeals.map((id) =>
-          axios.delete(`http://localhost:5000/api/deals/delete-deal/${id}`, {
+          axios.delete(`${API_URL}/deals/delete-deal/${id}`, {
             headers: { Authorization: `Bearer ${token}` },
           })
         )
@@ -159,7 +161,7 @@ export const AllDeals = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.delete(
-        `http://localhost:5000/api/deals/delete-deal/${deleteDeal._id}`,
+        `${API_URL}/deals/delete-deal/${deleteDeal._id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success("Deleted successfully");
@@ -174,7 +176,7 @@ export const AllDeals = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.patch(
-        `http://localhost:5000/api/deals/update-deal/${editDeal._id}`,
+        `${API_URL}/deals/update-deal/${editDeal._id}`,
         editDeal,
         { headers: { Authorization: `Bearer ${token}` } }
       );

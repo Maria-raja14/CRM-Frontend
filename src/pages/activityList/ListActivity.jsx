@@ -14,6 +14,10 @@ const formatDateTime = (dateStr) => {
 };
 
 const ListActivity = ({ activities, setActivities }) => {
+
+const API_URL = import.meta.env.VITE_API_URL;
+
+
   const [openMenuIndex, setOpenMenuIndex] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activityToEdit, setActivityToEdit] = useState(null);
@@ -55,7 +59,7 @@ const ListActivity = ({ activities, setActivities }) => {
     if (!window.confirm("Are you sure you want to delete this activity?"))
       return;
     try {
-      await axios.delete(`http://localhost:5000/api/activity/delete/${id}`);
+      await axios.delete(`${API_URL}/activity/delete/${id}`);
       setActivities((prev) => prev.filter((act) => act._id !== id));
       toast.success("Activity deleted successfully!");
     } catch (error) {

@@ -24,6 +24,10 @@ import {
 } from "lucide-react";
 
 const ViewProposal = () => {
+
+ const API_URL = import.meta.env.VITE_API_URL;
+
+
   const { id } = useParams();
   const [proposal, setProposal] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -32,7 +36,7 @@ const ViewProposal = () => {
   useEffect(() => {
     const fetchProposal = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/proposal/${id}`);
+        const res = await axios.get(`${API_URL}/proposal/${id}`);
         setProposal(res.data);
       } catch (err) {
         console.error("Failed to fetch proposal:", err);
@@ -335,7 +339,7 @@ const ViewProposal = () => {
                               </p>
                               <a
                                 href={`mailto:${proposal.email}`}
-                                className="text-blue-600 hover:underline text-slate-900"
+                                className="text-blue-600 hover:underline "
                               >
                                 {proposal.email}
                               </a>

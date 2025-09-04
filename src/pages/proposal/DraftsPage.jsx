@@ -5,6 +5,10 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const DraftsPage = () => {
+
+  const API_URL = import.meta.env.VITE_API_URL;
+
+
   const [drafts, setDrafts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -17,7 +21,7 @@ const DraftsPage = () => {
       setLoading(true);
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/proposal/getall"
+          `${API_URL}/proposal/getall`
         );
         const draftProposals = response.data.filter(p => p.status === "draft");
         setDrafts(draftProposals);
@@ -35,7 +39,7 @@ const DraftsPage = () => {
   const handleSendDraft = async (id) => {
     setIsUpdating((prev) => ({ ...prev, [id]: true }));
     try {
-      await axios.put(`http://localhost:5000/api/proposal/updatestatus/${id}`, {
+      await axios.put(`${API_URL}/proposal/updatestatus/${id}`, {
         status: "sent",
       });
       

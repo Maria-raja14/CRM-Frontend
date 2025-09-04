@@ -17,6 +17,9 @@ const ModalCalendar = ({
   onActivityAdded,
   onEdit,
 }) => {
+
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const [formData, setFormData] = useState({
     activityCategory: "Call",
     title: "",
@@ -50,7 +53,7 @@ const ModalCalendar = ({
 
         // ➡️ Fetch all deals with token
         const dealsRes = await axios.get(
-          "http://localhost:5000/api/deals/getAll",
+          `${API_URL}/deals/getAll`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -58,7 +61,7 @@ const ModalCalendar = ({
         setDeals(dealsRes.data);
 
         // ➡️ Fetch all users with token
-        const usersRes = await axios.get("http://localhost:5000/api/users", {
+        const usersRes = await axios.get(`${API_URL}/users`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -149,8 +152,8 @@ const ModalCalendar = ({
       };
 
       const url = activityToEdit
-        ? `http://localhost:5000/api/activity/update/${activityToEdit._id}`
-        : "http://localhost:5000/api/activity/add";
+        ? `${API_URL}/activity/update/${activityToEdit._id}`
+        : `{API_URL}/activity/add`;
 
       const method = activityToEdit ? axios.put : axios.post;
 
