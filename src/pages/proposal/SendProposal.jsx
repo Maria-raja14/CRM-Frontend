@@ -405,53 +405,52 @@ const SendProposal = () => {
     setAttachments(e.target.files);
   };
 
-  const handleSubmit = async () => {
-    setLoading(true);
+ const handleSubmit = async () => {
+  setLoading(true);
 
-    const emailArray = emails
-      .split(",")
-      .map((e) => e.trim())
-      .filter((e) => e);
+  const emailArray = emails
+    .split(",")
+    .map((e) => e.trim())
+    .filter((e) => e);
 
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("dealTitle", dealTitle);
-    formData.append("selectedDealId", selectedDealId);
-    formData.append("cc", ccEmail);
-    formData.append("content", editorContent || "No content provided");
-    formData.append("emails", emailArray.join(","));
+  const formData = new FormData();
+  formData.append("title", title);
+  formData.append("dealTitle", dealTitle);
+  formData.append("selectedDealId", selectedDealId);
+  formData.append("cc", ccEmail);
+  formData.append("content", editorContent || "No content provided");
+  formData.append("emails", emailArray.join(","));
 
-    if (isEditing) formData.append("id", proposalData?._id);
+  if (isEditing) formData.append("id", proposalData?._id);
 
-    if (attachments.length > 0) {
-      for (let i = 0; i < attachments.length; i++) {
-        formData.append("attachments", attachments[i]);
-      }
+  if (attachments.length > 0) {
+    for (let i = 0; i < attachments.length; i++) {
+      formData.append("attachments", attachments[i]);
     }
+  }
 
-    try {
-      await axios.post(
-        "http://localhost:5000/api/proposal/mailsend",
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
+  try {
+    await axios.post("http://localhost:5000/api/proposal/mailsend", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
 
-      toast.success(
-        isEditing
-          ? "Proposal updated and sent successfully!"
-          : "Proposal sent successfully!"
-      );
+    toast.success(
+      isEditing
+        ? "Proposal updated successfully! (Email is sending...)"
+        : "Proposal sent successfully! (Email is sending...)"
+    );
 
-      setTimeout(() => {
-        navigate("/proposal");
-      }, 2000);
-    } catch (error) {
-      console.error("Error submitting proposal:", error);
-      toast.error("Failed to send proposal.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    setTimeout(() => {
+      navigate("/proposal");
+    }, 2000);
+  } catch (error) {
+    console.error("Error submitting proposal:", error);
+    toast.error("Failed to send proposal.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="p-6">

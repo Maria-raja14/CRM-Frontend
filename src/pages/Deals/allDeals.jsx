@@ -205,14 +205,14 @@ export const AllDeals = () => {
 
       {/* Top bar: filters + search + create button */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-3">
-        <div className="flex flex-wrap gap-2 items-center">
+        <div className="flex flex-wrap gap-16  items-center">
           {/* Stage Filter */}
           <select
             value={filters.stage}
             onChange={(e) =>
               setFilters((prev) => ({ ...prev, stage: e.target.value }))
             }
-            className="border rounded px-3 py-2 text-sm"
+            className="border rounded-md px-4 py-2 bg-white text-sm"
           >
             <option value="">All Stages</option>
             <option value="Qualification">Qualification</option>
@@ -228,7 +228,7 @@ export const AllDeals = () => {
             onChange={(e) =>
               setFilters((prev) => ({ ...prev, assignedTo: e.target.value }))
             }
-            className="border rounded px-3 py-2 text-sm"
+            className="border rounded-md bg-white px-4 py-2 text-sm"
           >
             <option value="">All Assigned</option>
             {users.map((u) => (
@@ -244,7 +244,7 @@ export const AllDeals = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search Deal Name..."
-            className="border rounded-full px-3 py-2 text-sm"
+            className="border rounded-full px-4 py-2 bg-white text-sm"
           />
         </div>
 

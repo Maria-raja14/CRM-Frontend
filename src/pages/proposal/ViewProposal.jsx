@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
-import { 
-  ArrowLeft, 
-  Calendar, 
-  FileText, 
-  Mail, 
-  Paperclip, 
+import {
+  ArrowLeft,
+  Calendar,
+  FileText,
+  Mail,
+  Paperclip,
   Tag,
   Clock,
   User,
@@ -20,7 +20,7 @@ import {
   ChevronRight,
   Edit,
   MoreVertical,
-  Share
+  Share,
 } from "lucide-react";
 
 const ViewProposal = () => {
@@ -43,34 +43,41 @@ const ViewProposal = () => {
   }, [id]);
 
   const statusConfig = {
-    success: {
-      icon: CheckCircle,
-      color: "text-emerald-700",
-      bgColor: "bg-emerald-50",
-      borderColor: "border-emerald-200",
-      label: "Accepted"
+    draft: {
+      icon: FileText,
+      color: "text-slate-700",
+      bgColor: "bg-slate-100",
+      borderColor: "border-slate-200",
+      label: "Draft",
+    },
+    sent: {
+      icon: Mail,
+      color: "text-blue-700",
+      bgColor: "bg-blue-50",
+      borderColor: "border-blue-200",
+      label: "Sent",
+    },
+    "no reply": {
+      icon: AlertCircle,
+      color: "text-amber-700",
+      bgColor: "bg-amber-50",
+      borderColor: "border-amber-200",
+      label: "No Reply",
     },
     rejection: {
       icon: XCircle,
       color: "text-rose-700",
       bgColor: "bg-rose-50",
       borderColor: "border-rose-200",
-      label: "Rejected"
+      label: "Rejected",
     },
-    pending: {
-      icon: AlertCircle,
-      color: "text-amber-700",
-      bgColor: "bg-amber-50",
-      borderColor: "border-amber-200",
-      label: "Under Review"
+    success: {
+      icon: CheckCircle,
+      color: "text-emerald-700",
+      bgColor: "bg-emerald-50",
+      borderColor: "border-emerald-200",
+      label: "Accepted",
     },
-    draft: {
-      icon: FileText,
-      color: "text-slate-700",
-      bgColor: "bg-slate-100",
-      borderColor: "border-slate-200",
-      label: "Draft"
-    }
   };
 
   if (loading) {
@@ -83,7 +90,7 @@ const ViewProposal = () => {
       </div>
     );
   }
-  
+
   if (!proposal) {
     return (
       <div className="min-h-screen  flex items-center justify-center px-4">
@@ -91,10 +98,15 @@ const ViewProposal = () => {
           <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <XCircle className="text-rose-600" size={32} />
           </div>
-          <h2 className="text-2xl font-bold text-slate-800 mb-3">Proposal Not Found</h2>
-          <p className="text-slate-600 mb-6">The proposal you're looking for doesn't exist or may have been removed.</p>
-          <Link 
-            to="/proposal" 
+          <h2 className="text-2xl font-bold text-slate-800 mb-3">
+            Proposal Not Found
+          </h2>
+          <p className="text-slate-600 mb-6">
+            The proposal you're looking for doesn't exist or may have been
+            removed.
+          </p>
+          <Link
+            to="/proposal"
             className="inline-flex items-center px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
           >
             <ArrowLeft size={18} className="mr-2" />
@@ -106,7 +118,7 @@ const ViewProposal = () => {
   }
 
   const StatusIcon = statusConfig[proposal.status]?.icon || AlertCircle;
-  const statusStyle = statusConfig[proposal.status] || statusConfig.pending;
+  const statusStyle = statusConfig[proposal.status] || statusConfig.draft;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 px-4">
@@ -115,8 +127,8 @@ const ViewProposal = () => {
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
           <div>
             <div className="flex items-center text-slate-600 mb-3">
-              <Link 
-                to="/proposal" 
+              <Link
+                to="/proposal"
                 className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
               >
                 <ArrowLeft size={16} className="mr-1" />
@@ -126,51 +138,62 @@ const ViewProposal = () => {
               <span className="text-slate-500">View Proposal</span>
             </div>
             <div className="flex items-center gap-4">
-              <h1 className="text-3xl md:text-4xl font-bold text-slate-900">{proposal.title}</h1>
-              <div className={`inline-flex items-center px-4 py-2 rounded-full ${statusStyle.bgColor} ${statusStyle.color} border ${statusStyle.borderColor}`}>
+              <h1 className="text-3xl md:text-4xl font-bold text-slate-900">
+                {proposal.title}
+              </h1>
+              <div
+                className={`inline-flex items-center px-4 py-2 rounded-full ${statusStyle.bgColor} ${statusStyle.color} border ${statusStyle.borderColor}`}
+              >
                 <StatusIcon size={16} className="mr-2" />
-                <span className="capitalize font-medium text-sm">{statusStyle.label}</span>
+                <span className="capitalize font-medium text-sm">
+                  {statusStyle.label}
+                </span>
               </div>
             </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <button className="flex items-center px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">
-              <Edit size={16} className="mr-2" />
-              Edit
-            </button>
-            <button className="flex items-center px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">
-              <Share size={16} className="mr-2" />
-              Share
-            </button>
-            <button className="flex items-center p-2 bg-white border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">
-              <MoreVertical size={16} />
-            </button>
           </div>
         </div>
 
         {/* Tab Navigation */}
         <div className="flex border-b border-slate-200 mb-6">
-          <button 
-            className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors ${activeTab === "details" ? "border-blue-500 text-blue-600" : "border-transparent text-slate-600 hover:text-slate-900"}`}
+          <button
+            className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors ${
+              activeTab === "details"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-slate-600 hover:text-slate-900"
+            }`}
             onClick={() => setActiveTab("details")}
           >
             Details
           </button>
-          <button 
-            className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors ${activeTab === "content" ? "border-blue-500 text-blue-600" : "border-transparent text-slate-600 hover:text-slate-900"}`}
+          <button
+            className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors ${
+              activeTab === "content"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-slate-600 hover:text-slate-900"
+            }`}
             onClick={() => setActiveTab("content")}
           >
             Content
           </button>
-          <button 
-            className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors ${activeTab === "attachments" ? "border-blue-500 text-blue-600" : "border-transparent text-slate-600 hover:text-slate-900"}`}
+          <button
+            className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors ${
+              activeTab === "attachments"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-slate-600 hover:text-slate-900"
+            }`}
             onClick={() => setActiveTab("attachments")}
           >
-            Attachments {proposal.attachments && proposal.attachments.length > 0 && `(${proposal.attachments.length})`}
+            Attachments{" "}
+            {proposal.attachments &&
+              proposal.attachments.length > 0 &&
+              `(${proposal.attachments.length})`}
           </button>
-          <button 
-            className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors ${activeTab === "activity" ? "border-blue-500 text-blue-600" : "border-transparent text-slate-600 hover:text-slate-900"}`}
+          <button
+            className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors ${
+              activeTab === "activity"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-slate-600 hover:text-slate-900"
+            }`}
             onClick={() => setActiveTab("activity")}
           >
             Activity
@@ -185,11 +208,9 @@ const ViewProposal = () => {
               <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
                 <div className="p-6 border-b border-slate-100">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-semibold text-slate-900">Proposal Content</h2>
-                    <button className="flex items-center text-sm text-blue-600 font-medium">
-                      <Download size={16} className="mr-1" />
-                      Export PDF
-                    </button>
+                    <h2 className="text-lg font-semibold text-slate-900">
+                      Proposal Content
+                    </h2>
                   </div>
                 </div>
                 <div className="p-6">
@@ -202,89 +223,122 @@ const ViewProposal = () => {
             )}
 
             {/* Attachments Card */}
-            {activeTab === "attachments" && proposal.attachments && proposal.attachments.length > 0 && (
-              <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
-                <div className="p-6 border-b border-slate-100">
-                  <h2 className="text-lg font-semibold text-slate-900">Attachments</h2>
-                  <p className="text-sm text-slate-600 mt-1">Files and documents related to this proposal</p>
-                </div>
-                <div className="p-6">
-                  <ul className="space-y-3">
-                    {proposal.attachments.map((file, idx) => (
-                      <li
-                        key={idx}
-                        className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200 hover:bg-slate-100 transition-colors group"
-                      >
-                        <div className="flex items-center">
-                          <div className="p-3 bg-blue-100 rounded-lg mr-4">
-                            <FileText size={20} className="text-blue-600" />
+            {activeTab === "attachments" &&
+              proposal.attachments &&
+              proposal.attachments.length > 0 && (
+                <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
+                  <div className="p-6 border-b border-slate-100">
+                    <h2 className="text-lg font-semibold text-slate-900">
+                      Attachments
+                    </h2>
+                    <p className="text-sm text-slate-600 mt-1">
+                      Files and documents related to this proposal
+                    </p>
+                  </div>
+                  <div className="p-6">
+                    <ul className="space-y-3">
+                      {proposal.attachments.map((file, idx) => (
+                        <li
+                          key={idx}
+                          className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200 hover:bg-slate-100 transition-colors group"
+                        >
+                          <div className="flex items-center">
+                            <div className="p-3 bg-blue-100 rounded-lg mr-4">
+                              <FileText size={20} className="text-blue-600" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-slate-900">
+                                {file.filename}
+                              </p>
+                              <p className="text-xs text-slate-500 mt-1">
+                                {file.size
+                                  ? `${(file.size / 1024).toFixed(1)} KB`
+                                  : "Size unknown"}{" "}
+                                • Uploaded{" "}
+                                {new Date(
+                                  proposal.createdAt
+                                ).toLocaleDateString()}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm font-medium text-slate-900">{file.filename}</p>
-                            <p className="text-xs text-slate-500 mt-1">
-                              {file.size ? `${(file.size / 1024).toFixed(1)} KB` : 'Size unknown'} • Uploaded {new Date(proposal.createdAt).toLocaleDateString()}
-                            </p>
+                          <div className="flex items-center gap-2">
+                            <a
+                              href={`http://localhost:5000/${file.path}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="Preview"
+                            >
+                              <Eye size={18} />
+                            </a>
+                            <a
+                              href={`http://localhost:5000/${file.path}`}
+                              download
+                              className="p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="Download"
+                            >
+                              <Download size={18} />
+                            </a>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <a
-                            href={`http://localhost:5000/${file.path}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="Preview"
-                          >
-                            <Eye size={18} />
-                          </a>
-                          <a
-                            href={`http://localhost:5000/${file.path}`}
-                            download
-                            className="p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="Download"
-                          >
-                            <Download size={18} />
-                          </a>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Details Card (Default Tab) */}
             {activeTab === "details" && (
               <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
                 <div className="p-6 border-b border-slate-100">
-                  <h2 className="text-lg font-semibold text-slate-900">Proposal Details</h2>
-                  <p className="text-sm text-slate-600 mt-1">Comprehensive information about this proposal</p>
+                  <h2 className="text-lg font-semibold text-slate-900">
+                    Proposal Details
+                  </h2>
+                  <p className="text-sm text-slate-600 mt-1">
+                    Comprehensive information about this proposal
+                  </p>
                 </div>
                 <div className="p-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-5">
                       <div>
-                        <h3 className="text-sm font-medium text-slate-700 mb-3 uppercase tracking-wide">Client Information</h3>
+                        <h3 className="text-sm font-medium text-slate-700 mb-3 uppercase tracking-wide">
+                          Client Information
+                        </h3>
                         <div className="space-y-4">
                           <div className="flex items-center text-slate-700">
                             <User size={18} className="mr-3 text-slate-500" />
                             <div>
                               <p className="text-sm font-medium">Client Name</p>
-                              <p className="text-slate-900">{proposal.dealTitle || "Not specified"}</p>
+                              <p className="text-slate-900">
+                                {proposal.dealTitle || "Not specified"}
+                              </p>
                             </div>
                           </div>
                           <div className="flex items-center text-slate-700">
-                            <Building size={18} className="mr-3 text-slate-500" />
+                            <Building
+                              size={18}
+                              className="mr-3 text-slate-500"
+                            />
                             <div>
                               <p className="text-sm font-medium">Company</p>
-                             <p className="text-slate-900">{proposal.deal?.companyName || "Not specified"}</p>
-
+                              <p className="text-slate-900">
+                                {proposal.deal?.companyName || "Not specified"}
+                              </p>
                             </div>
                           </div>
                           <div className="flex items-center text-slate-700">
                             <Mail size={18} className="mr-3 text-slate-500" />
                             <div>
-                              <p className="text-sm font-medium">Email Address</p>
-                              <a href={`mailto:${proposal.email}`} className="text-blue-600 hover:underline text-slate-900">{proposal.email}</a>
+                              <p className="text-sm font-medium">
+                                Email Address
+                              </p>
+                              <a
+                                href={`mailto:${proposal.email}`}
+                                className="text-blue-600 hover:underline text-slate-900"
+                              >
+                                {proposal.email}
+                              </a>
                             </div>
                           </div>
                         </div>
@@ -293,28 +347,64 @@ const ViewProposal = () => {
 
                     <div className="space-y-5">
                       <div>
-                        <h3 className="text-sm font-medium text-slate-700 mb-3 uppercase tracking-wide">Proposal Information</h3>
+                        <h3 className="text-sm font-medium text-slate-700 mb-3 uppercase tracking-wide">
+                          Proposal Information
+                        </h3>
                         <div className="space-y-4">
                           <div className="flex items-center text-slate-700">
-                            <DollarSign size={18} className="mr-3 text-slate-500" />
+                            <DollarSign
+                              size={18}
+                              className="mr-3 text-slate-500"
+                            />
                             <div>
-                              <p className="text-sm font-medium">Proposed Value</p>
-                              <p className="text-slate-900">{proposal.value ? `$${proposal.value.toLocaleString()}` : "Not specified"}</p>
+                              <p className="text-sm font-medium">
+                                Proposed Value
+                              </p>
+                              <p className="text-slate-900">
+                                {proposal.value
+                                  ? `$${proposal.value.toLocaleString()}`
+                                  : "Not specified"}
+                              </p>
                             </div>
                           </div>
                           <div className="flex items-center text-slate-700">
-                            <Calendar size={18} className="mr-3 text-slate-500" />
+                            <Calendar
+                              size={18}
+                              className="mr-3 text-slate-500"
+                            />
                             <div>
-                              <p className="text-sm font-medium">Created Date</p>
-                              <p className="text-slate-900">{new Date(proposal.createdAt).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</p>
+                              <p className="text-sm font-medium">
+                                Created Date
+                              </p>
+                              <p className="text-slate-900">
+                                {new Date(
+                                  proposal.createdAt
+                                ).toLocaleDateString("en-US", {
+                                  weekday: "short",
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                })}
+                              </p>
                             </div>
                           </div>
                           <div className="flex items-center text-slate-700">
                             <Clock size={18} className="mr-3 text-slate-500" />
                             <div>
-                              <p className="text-sm font-medium">Follow-up Date</p>
+                              <p className="text-sm font-medium">
+                                Follow-up Date
+                              </p>
                               <p className="text-slate-900">
-                                {proposal.followUpDate ? new Date(proposal.followUpDate).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) : "Not scheduled"}
+                                {proposal.followUpDate
+                                  ? new Date(
+                                      proposal.followUpDate
+                                    ).toLocaleDateString("en-US", {
+                                      weekday: "short",
+                                      year: "numeric",
+                                      month: "short",
+                                      day: "numeric",
+                                    })
+                                  : "Not scheduled"}
                               </p>
                             </div>
                           </div>
@@ -325,7 +415,9 @@ const ViewProposal = () => {
 
                   {proposal.notes && (
                     <div className="mt-8 pt-6 border-t border-slate-200">
-                      <h3 className="text-sm font-medium text-slate-700 mb-3 uppercase tracking-wide">Additional Notes</h3>
+                      <h3 className="text-sm font-medium text-slate-700 mb-3 uppercase tracking-wide">
+                        Additional Notes
+                      </h3>
                       <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
                         <p className="text-slate-700">{proposal.notes}</p>
                       </div>
@@ -339,8 +431,12 @@ const ViewProposal = () => {
             {activeTab === "activity" && (
               <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
                 <div className="p-6 border-b border-slate-100">
-                  <h2 className="text-lg font-semibold text-slate-900">Activity Timeline</h2>
-                  <p className="text-sm text-slate-600 mt-1">Recent activities and updates for this proposal</p>
+                  <h2 className="text-lg font-semibold text-slate-900">
+                    Activity Timeline
+                  </h2>
+                  <p className="text-sm text-slate-600 mt-1">
+                    Recent activities and updates for this proposal
+                  </p>
                 </div>
                 <div className="p-6">
                   <div className="relative">
@@ -352,8 +448,15 @@ const ViewProposal = () => {
                         </div>
                       </div>
                       <div className="ml-4">
-                        <h3 className="text-sm font-medium text-slate-900">Proposal created</h3>
-                        <p className="text-sm text-slate-500 mt-1">{new Date(proposal.createdAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</p>
+                        <h3 className="text-sm font-medium text-slate-900">
+                          Proposal created
+                        </h3>
+                        <p className="text-sm text-slate-500 mt-1">
+                          {new Date(proposal.createdAt).toLocaleString(
+                            "en-US",
+                            { dateStyle: "medium", timeStyle: "short" }
+                          )}
+                        </p>
                       </div>
                     </div>
 
@@ -366,8 +469,15 @@ const ViewProposal = () => {
                           </div>
                         </div>
                         <div className="ml-4">
-                          <h3 className="text-sm font-medium text-slate-900">Follow-up scheduled</h3>
-                          <p className="text-sm text-slate-500 mt-1">{new Date(proposal.followUpDate).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</p>
+                          <h3 className="text-sm font-medium text-slate-900">
+                            Follow-up scheduled
+                          </h3>
+                          <p className="text-sm text-slate-500 mt-1">
+                            {new Date(proposal.followUpDate).toLocaleString(
+                              "en-US",
+                              { dateStyle: "medium", timeStyle: "short" }
+                            )}
+                          </p>
                         </div>
                       </div>
                     )}
@@ -380,8 +490,17 @@ const ViewProposal = () => {
                         </div>
                       </div>
                       <div className="ml-4">
-                        <h3 className="text-sm font-medium text-slate-900">Status changed to {statusStyle.label}</h3>
-                        <p className="text-sm text-slate-500 mt-1">{new Date(proposal.updatedAt || proposal.createdAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</p>
+                        <h3 className="text-sm font-medium text-slate-900">
+                          Status changed to {statusStyle.label}
+                        </h3>
+                        <p className="text-sm text-slate-500 mt-1">
+                          {new Date(
+                            proposal.updatedAt || proposal.createdAt
+                          ).toLocaleString("en-US", {
+                            dateStyle: "medium",
+                            timeStyle: "short",
+                          })}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -394,52 +513,48 @@ const ViewProposal = () => {
           <div className="space-y-6">
             {/* Status Card */}
             <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200 p-5">
-              <h3 className="text-sm font-medium text-slate-700 mb-3 uppercase tracking-wide">Proposal Status</h3>
-              <div className={`inline-flex items-center px-4 py-2 rounded-full ${statusStyle.bgColor} ${statusStyle.color} border ${statusStyle.borderColor} mb-4`}>
+              <h3 className="text-sm font-medium text-slate-700 mb-3 uppercase tracking-wide">
+                Proposal Status
+              </h3>
+              <div
+                className={`inline-flex items-center px-4 py-2 rounded-full ${statusStyle.bgColor} ${statusStyle.color} border ${statusStyle.borderColor} mb-4`}
+              >
                 <StatusIcon size={16} className="mr-2" />
-                <span className="capitalize font-medium text-sm">{statusStyle.label}</span>
-           
+                <span className="capitalize font-medium text-sm">
+                  {statusStyle.label}
+                </span>
               </div>
-              <p className="text-sm text-slate-600 mt-2">Last updated {new Date(proposal.updatedAt || proposal.createdAt).toLocaleDateString()}</p>
-            </div>
-
-            {/* Actions Card */}
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200 p-5">
-              <h3 className="text-sm font-medium text-slate-700 mb-4 uppercase tracking-wide">Actions</h3>
-              <div className="space-y-2">
-                <button className="w-full flex items-center justify-between p-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg transition-colors">
-                  <span>Download PDF</span>
-                  <Download size={16} />
-                </button>
-                <button className="w-full flex items-center justify-between p-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg transition-colors">
-                  <span>Share proposal</span>
-                  <Share size={16} />
-                </button>
-                <button className="w-full flex items-center justify-between p-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg transition-colors">
-                  <span>Send reminder</span>
-                  <Mail size={16} />
-                </button>
-                <button className="w-full flex items-center justify-between p-3 text-sm font-medium text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
-                  <span>Archive proposal</span>
-                  <XCircle size={16} />
-                </button>
-              </div>
+              <p className="text-sm text-slate-600 mt-2">
+                Last updated{" "}
+                {new Date(
+                  proposal.updatedAt || proposal.createdAt
+                ).toLocaleDateString()}
+              </p>
             </div>
 
             {/* Client Card */}
             <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200 p-5">
-              <h3 className="text-sm font-medium text-slate-700 mb-4 uppercase tracking-wide">Client</h3>
+              <h3 className="text-sm font-medium text-slate-700 mb-4 uppercase tracking-wide">
+                Client
+              </h3>
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center mr-3">
                   <User size={20} className="text-slate-600" />
                 </div>
                 <div>
-                  <h4 className="font-medium text-slate-900">{proposal.clientName || "Unknown Client"}</h4>
-                  <p className="text-sm text-slate-600">{proposal.company || "No company"}</p>
+                  <h4 className="font-medium text-slate-900">
+                    {proposal.dealTitle || "Unknown Client"}
+                  </h4>
+                  <p className="text-sm text-slate-600">
+                    {proposal.companyName || "No company"}
+                  </p>
                 </div>
               </div>
               <div className="space-y-2">
-                <a href={`mailto:${proposal.email}`} className="flex items-center text-sm text-slate-600 hover:text-blue-600 transition-colors">
+                <a
+                  href={`mailto:${proposal.email}`}
+                  className="flex items-center text-sm text-slate-600 hover:text-blue-600 transition-colors"
+                >
                   <Mail size={14} className="mr-2" />
                   {proposal.email}
                 </a>

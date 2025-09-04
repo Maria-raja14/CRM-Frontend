@@ -347,15 +347,15 @@ const InvoiceHead = () => {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-4 mt-8 items-center justify-between">
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-12">
           <DatePicker
             selected={startDate}
             onChange={(date) => setStartDate(date)}
-            className="px-4 py-2 rounded-lg border shadow-sm focus:ring-2 focus:ring-blue-400"
+            className="px-4 py-2 rounded-md border bg-white shadow-sm focus:ring-2 focus:ring-blue-400"
             placeholderText="Filter by Date"
           />
           <select
-            className="px-4 py-2 rounded-lg border shadow-sm text-gray-600"
+            className="px-4 py-2 rounded-md bg-white border shadow-sm text-gray-600"
             value={filterAssignTo}
             onChange={(e) => setFilterAssignTo(e.target.value)}
           >
@@ -374,7 +374,7 @@ const InvoiceHead = () => {
             )}
           </select>
           <select
-            className="px-4 py-2 rounded-lg border shadow-sm text-gray-600"
+            className="px-4 py-2 rounded-md bg-white border shadow-sm text-gray-600"
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
           >
@@ -385,12 +385,12 @@ const InvoiceHead = () => {
         </div>
 
         {/* Search */}
-        <div className="flex items-center border rounded-lg bg-white px-3 shadow-sm w-[250px]">
+        <div className="flex items-center border rounded-full bg-white px-3 shadow-sm w-[250px]">
           <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
           <input
             type="text"
             placeholder="Search Invoice #"
-            className="ml-2 w-full py-2 outline-none text-gray-700"
+            className="ml-2 w-full py-2 rounded-full outline-none text-gray-700"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
