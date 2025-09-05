@@ -259,6 +259,9 @@
 
 
 
+
+
+
 import React, { useState, useEffect } from "react";
 import {
   Home,
@@ -270,7 +273,13 @@ import {
   Calendar,
   Shield,
   HelpCircle,
-} from "react-feather";
+  BarChart3,
+  TrendingUp,
+  FileText,
+  ClipboardList,
+  Users,
+  GitBranch
+} from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useTour } from "../component/Tour/TourContext";
 
@@ -278,6 +287,7 @@ const IconCircle = ({ children, isActive }) => (
   <div className="w-10 h-10 flex items-center justify-center rounded-full shadow-sm bg-white">
     {React.cloneElement(children, {
       color: isActive ? "#008ecc" : "#1f1f1f",
+      size: 18
     })}
   </div>
 );
@@ -291,6 +301,9 @@ const SidebarItem = ({
   hasPermission = true,
   tourStep = null,
 }) => {
+  const location = useLocation();
+  const isActive = exact ? location.pathname === to : location.pathname.startsWith(to);
+
   if (!hasPermission) return null;
 
   return (
@@ -305,10 +318,10 @@ const SidebarItem = ({
       id={tourStep ? `sidebar-${tourStep}` : undefined}
     >
       <div className="flex items-center space-x-3">
-        <IconCircle isActive={window.location.pathname === to}>{icon}</IconCircle>
+        <IconCircle isActive={isActive}>{icon}</IconCircle>
         <span
           className={`text-base font-medium ${
-            window.location.pathname === to ? "text-[#008ecc]" : "text-gray-700"
+            isActive ? "text-[#008ecc]" : "text-gray-700"
           }`}
         >
           {label}
@@ -352,6 +365,9 @@ const Collapsible = ({
 };
 
 const SmallLink = ({ to, icon, label, hasPermission = true, tourStep = null }) => {
+  const location = useLocation();
+  const isActive = location.pathname === to;
+
   if (!hasPermission) return null;
 
   return (
@@ -364,11 +380,14 @@ const SmallLink = ({ to, icon, label, hasPermission = true, tourStep = null }) =
       id={tourStep ? `sidebar-${tourStep}` : undefined}
     >
       <div className="w-7 h-7 flex items-center justify-center rounded-full shadow-sm bg-white">
-        {React.cloneElement(icon, { color: window.location.pathname === to ? "#008ecc" : "#1f1f1f" })}
+        {React.cloneElement(icon, { 
+          color: isActive ? "#008ecc" : "#1f1f1f",
+          size: 16
+        })}
       </div>
       <span
         className={`${
-          window.location.pathname === to ? "text-[#008ecc]" : "text-gray-700"
+          isActive ? "text-[#008ecc]" : "text-gray-700"
         }`}
       >
         {label}
@@ -407,9 +426,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   }, []);
 
   const startSidebarTour = () => {
-    // Ensure the activities section is open for the tour
-    setShowActivities(true);
-    
     // Start the tour after a small delay to ensure the DOM is updated
     setTimeout(() => {
       const tourSteps = [
@@ -450,23 +466,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           placement: "right"
         },
         {
-          target: '#sidebar-deals',
-          title: "Deals Management",
-          content: (
-            <div className="space-y-2">
-              <p>End-to-end deal management system:</p>
-              <ul className="list-disc pl-5 space-y-1">
-                <li><strong>Create Deals:</strong> Set up new deals with parameters</li>
-                <li><strong>Edit & Delete:</strong> Modify deal terms or remove deals</li>
-                <li><strong>Update Progress:</strong> Change deal stages and probabilities</li>
-                <li><strong>Deal Information:</strong> View comprehensive details</li>
-                <li><strong>Advanced Filtering:</strong> Organize deals by various criteria</li>
-              </ul>
-            </div>
-          ),
-          placement: "right"
-        },
-        {
           target: '#sidebar-pipeline',
           title: "Pipeline Visualization",
           content: (
@@ -485,6 +484,23 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           placement: "right"
         },
         {
+          target: '#sidebar-deals',
+          title: "Deals Management",
+          content: (
+            <div className="space-y-2">
+              <p>End-to-end deal management system:</p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li><strong>Create Deals:</strong> Set up new deals with parameters</li>
+                <li><strong>Edit & Delete:</strong> Modify deal terms or remove deals</li>
+                <li><strong>Update Progress:</strong> Change deal stages and probabilities</li>
+                <li><strong>Deal Information:</strong> View comprehensive details</li>
+                <li><strong>Advanced Filtering:</strong> Organize deals by various criteria</li>
+              </ul>
+            </div>
+          ),
+          placement: "right"
+        },
+        {
           target: '#sidebar-invoices',
           title: "Invoice Management",
           content: (
@@ -497,6 +513,23 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 <li><strong>Create Invoices:</strong> Generate professional invoices</li>
                 <li><strong>Email Integration:</strong> Send directly to clients</li>
                 <li><strong>PDF Export:</strong> Download for records</li>
+              </ul>
+            </div>
+          ),
+          placement: "right"
+        },
+        {
+          target: '#sidebar-proposals',
+          title: "Proposal Management",
+          content: (
+            <div className="space-y-2">
+              <p>Create and manage client proposals:</p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li><strong>Create Proposals:</strong> Design professional proposals</li>
+                <li><strong>Templates:</strong> Use pre-built templates</li>
+                <li><strong>Track Status:</strong> Monitor proposal acceptance</li>
+                <li><strong>Convert to Invoice:</strong> Turn accepted proposals into invoices</li>
+                <li><strong>Client Management:</strong> Organize proposals by client</li>
               </ul>
             </div>
           ),
@@ -580,7 +613,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
               <ul className="list-disc pl-5 space-y-1">
                 <li>Check our knowledge base</li>
                 <li>Contact our support team</li>
-                {/* <li>Join training webinars</li> */}
               </ul>
             </div>
           ),
@@ -591,6 +623,23 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       startTour(tourSteps);
     }, 100);
   };
+
+  // Open activities when tour reaches that step
+  useEffect(() => {
+    const handleTourStepChange = (step) => {
+      if (step.target === '#sidebar-activities') {
+        setShowActivities(true);
+      }
+    };
+
+    // You'll need to implement this based on your tour library
+    // This is a placeholder for the actual implementation
+    window.addEventListener('tourStepChange', handleTourStepChange);
+    
+    return () => {
+      window.removeEventListener('tourStepChange', handleTourStepChange);
+    };
+  }, []);
 
   return (
     <aside
@@ -611,12 +660,10 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       </div>
 
       <nav className="flex flex-col gap-3 px-2">
-   
-
         {/* Dashboard */}
         <SidebarItem
           to="/adminDashboard"
-          icon={<Home size={18} />}
+          icon={<Home />}
           label="Dashboard"
           hasPermission={isAdmin || userPermissions.dashboard}
           tourStep="dashboard"
@@ -625,7 +672,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         {/* Leads */}
         <SidebarItem
           to="/leads"
-          icon={<User size={18} />}
+          icon={<Users />}
           label="Leads"
           hasPermission={isAdmin || userPermissions.leads}
           tourStep="leads"
@@ -634,16 +681,16 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         {/* Pipeline View */}
         <SidebarItem
           to="/Pipelineview"
-          icon={<User size={18} />}
+          icon={<GitBranch />}
           label="Pipeline View"
-          hasPermission={isAdmin || userPermissions.leads}
+          hasPermission={isAdmin || userPermissions.pipeline}
           tourStep="pipeline"
         />
 
         {/* Deals */}
         <SidebarItem
           to="/deals"
-          icon={<Tag size={18} />}
+          icon={<TrendingUp />}
           label="All Deals"
           hasPermission={isAdmin || userPermissions.deals}
           tourStep="deals"
@@ -653,33 +700,25 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         <SidebarItem
           to="/invoice"
           exact
-          icon={
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              height="18px"
-              viewBox="0 -960 960 960"
-              width="18px"
-              fill={window.location.pathname === "/invoice" ? "#008ecc" : "#1f1f1f"}
-            >
-              <path d="M340-460h280v-64H340v64Zm0 120h280v-64H340v64Zm0 120h174v-64H340v64ZM263.72-96Q234-96 213-117.15T192-168v-624q0-29.7 21.15-50.85Q234.3-864 264-864h312l192 192v504q0 29.7-21.16 50.85Q725.68-96 695.96-96H263.72ZM528-624v-168H264v624h432v-456H528ZM264-792v168-168 624-624Z" />
-            </svg>
-          }
+          icon={<FileText />}
           label="Invoices"
           hasPermission={isAdmin || userPermissions.invoice}
+          tourStep="invoices"
         />
 
         {/* Proposal */}
         <SidebarItem
           to="/proposal"
-          icon={<Tag size={18} />}
+          icon={<ClipboardList />}
           label="Proposal"
           hasPermission={isAdmin || userPermissions.proposal}
+          tourStep="proposals"
         />
 
         {/* Activities */}
         <Collapsible
           label="Activities"
-          icon={<Calendar size={18} />}
+          icon={<Calendar />}
           open={showActivities}
           onToggle={() => setShowActivities((s) => !s)}
           hasPermission={isAdmin || userPermissions.calendar}
@@ -687,14 +726,14 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         >
           <SmallLink
             to="/calendar"
-            icon={<Calendar size={16} />}
+            icon={<Calendar />}
             label="Calendar View"
             hasPermission={isAdmin || userPermissions.calendar}
             tourStep="calendar"
           />
           <SmallLink
             to="/list"
-            icon={<List size={16} />}
+            icon={<List />}
             label="Activity list"
             hasPermission={isAdmin || userPermissions.activityList}
             tourStep="activityList"
@@ -704,7 +743,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         {/* Users & Roles */}
         <SidebarItem
           to="/user/roles"
-          icon={<Shield size={18} />}
+          icon={<Shield />}
           label="Users & Roles"
           hasPermission={isAdmin || userPermissions.usersRoles}
           tourStep="users"
