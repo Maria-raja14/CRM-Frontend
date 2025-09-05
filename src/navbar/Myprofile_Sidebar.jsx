@@ -48,10 +48,10 @@ const Sidebar = () => {
   const location = useLocation();
 
   const menuItems = [
-    { path: "/myprofile", label: "Personal Info" },
+    // { path: "/myprofile", label: "Personal Info" },
     { path: "/myprofile/passwordchange", label: "Password Change" },
     // { path: "/myprofile/activity-logs", label: "Activity Logs" },
-    { path: "/myprofile/social-links", label: "Social Links" },
+    // { path: "/myprofile/social-links", label: "Social Links" },
   ];
 
   return (

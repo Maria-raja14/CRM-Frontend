@@ -72,9 +72,9 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Sidebar from "./Myprofile_Sidebar";
-import PersonalInfoForm from "./Myprofile_Maincontent";
+//import PersonalInfoForm from "./Myprofile_Maincontent";
 import PasswordChange from "./Password_change";
-import SocialLinks from "./MyProfile_socialLinks";
+//import SocialLinks from "./MyProfile_socialLinks";
 
 const MyProfile = () => {
   return (
@@ -87,9 +87,9 @@ const MyProfile = () => {
       {/* Profile Content */}
       <div className="flex-1 bg-white rounded-lg shadow-md p-6">
         <Routes>
-          <Route path="/" element={<PersonalInfoForm />} />
+          {/* <Route path="/" element={<PersonalInfoForm />} /> */}
           <Route path="/passwordchange" element={<PasswordChange />} />
-          <Route path="/social-links" element={<SocialLinks />} />
+          {/* <Route path="/social-links" element={<SocialLinks />} /> */}
         </Routes>
       </div>
     </div>

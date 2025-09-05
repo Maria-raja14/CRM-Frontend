@@ -204,7 +204,7 @@ export default function CreateLeads() {
             dataToSend,
             config
           );
-          toast.success("🎉 Lead created successfully");
+          toast.success("Lead created successfully");
         }
 
         // wait a bit so toast shows before redirect
@@ -602,3 +602,5 @@ export default function CreateLeads() {
     </>
   );
 } //sales and admin deatils come correctly..
+
+
