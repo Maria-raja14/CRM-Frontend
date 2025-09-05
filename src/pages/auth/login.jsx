@@ -5,6 +5,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { initSocket } from "../../utils/socket";
 
 const Login = () => {
+
+ const API_URL = import.meta.env.VITE_API_URL;
+
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -15,7 +19,7 @@ const Login = () => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/users/login",
+        `${API_URL}/users/login`,
         {
           email,
           password,

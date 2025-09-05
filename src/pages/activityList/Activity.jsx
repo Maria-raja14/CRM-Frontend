@@ -5,6 +5,10 @@ import ListActivity from "./ListActivity";
 import axios from "axios";
 
 const CalendarView = () => {
+
+ const API_URL = import.meta.env.VITE_API_URL;
+
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activities, setActivities] = useState([]);
@@ -20,7 +24,7 @@ const CalendarView = () => {
 
   const fetchCalendar = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/activity");
+      const res = await axios.get(`${API_URL}/activity`);
       setActivities(res.data);
       console.log("Fetched data:", res.data);
     } catch (error) {

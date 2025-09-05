@@ -12,6 +12,10 @@ import {
 import { toast } from "react-toastify";
 
 export default function EditUserModal({ user, roles, onClose, onUserUpdated }) {
+
+const API_URL = import.meta.env.VITE_API_URL;
+
+
   const [formData, setFormData] = useState({
     firstName: user.firstName,
     lastName: user.lastName,
@@ -119,7 +123,7 @@ export default function EditUserModal({ user, roles, onClose, onUserUpdated }) {
       const token = localStorage.getItem("token");
 
       const response = await axios.put(
-        `http://localhost:5000/api/users/update-user/${user._id}`,
+        `${API_URL}/users/update-user/${user._id}`,
         payload,
         {
           headers: {

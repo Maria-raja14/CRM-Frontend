@@ -25,6 +25,10 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const InvoiceHead = () => {
+
+  const API_URL = import.meta.env.VITE_API_URL;
+
+
   const { openModal } = useModal();
   const [startDate, setStartDate] = useState(null);
   const [invoices, setInvoices] = useState([]);
@@ -80,7 +84,7 @@ const InvoiceHead = () => {
   const fetchInvoices = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/invoice/getInvoice?page=${currentPage}&limit=${itemsPerPage}`
+        `${API_URL}/invoice/getInvoice?page=${currentPage}&limit=${itemsPerPage}`
       );
       setInvoices(response.data.invoices || response.data);
       setFilteredInvoices(response.data.invoices || response.data);
@@ -99,7 +103,7 @@ const InvoiceHead = () => {
       setEmailMessage("📨 Sending invoice email...");
 
       await axios.post(
-        `http://localhost:5000/api/invoice/sendEmail/${invoiceId}`
+        `${API_URL}/invoice/sendEmail/${invoiceId}`
       );
 
       setEmailStatus("success");
@@ -160,7 +164,7 @@ const InvoiceHead = () => {
   const handleDelete = async (invoiceId) => {
     try {
       await axios.delete(
-        `http://localhost:5000/api/invoice/delete/${invoiceId}`
+        `${API_URL}/invoice/delete/${invoiceId}`
       );
       toast.success("Invoice deleted successfully!");
       setRefreshTrigger(prev => prev + 1);

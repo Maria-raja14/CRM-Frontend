@@ -1677,6 +1677,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       </div>
 
       <nav className="flex flex-col gap-3 px-2">
+   
+
         {/* Dashboard */}
         <SidebarItem
           to="/adminDashboard"

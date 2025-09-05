@@ -72,6 +72,10 @@ function formatDate(dateString) {
 
 // ----- Main Pipeline Board -----
 function SalesPipelineBoardPure() {
+
+  const API_URL = import.meta.env.VITE_API_URL;
+
+
   const [columns, setColumns] = useState({});
   const [leads, setLeads] = useState([]);
   const [query, setQuery] = useState("");
@@ -118,7 +122,7 @@ function SalesPipelineBoardPure() {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:5000/api/users", {
+      const res = await axios.get(`API_URL/users`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const filteredSales = (res.data.users || []).filter(
@@ -141,7 +145,7 @@ function SalesPipelineBoardPure() {
 
       // Fetch deals
       const dealsRes = await axios.get(
-        "http://localhost:5000/api/deals/getAll",
+        `${API_URL}/deals/getAll`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -149,7 +153,7 @@ function SalesPipelineBoardPure() {
 
       // Fetch leads
       const leadsRes = await axios.get(
-        "http://localhost:5000/api/leads/getAllLead",
+        `${API_URL}/leads/getAllLead`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -204,7 +208,7 @@ function SalesPipelineBoardPure() {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        "http://localhost:5000/api/deals/createManual",
+        `${API_URL}/deals/createManual`,
         {
           dealName: title,
           value,
@@ -254,7 +258,7 @@ function SalesPipelineBoardPure() {
     try {
       const token = localStorage.getItem("token");
       await axios.patch(
-        `http://localhost:5000/api/deals/update-deal/${dealId}`,
+        `${API_URL}/deals/update-deal/${dealId}`,
         {
           stage: toStage,
         },
@@ -295,7 +299,7 @@ function SalesPipelineBoardPure() {
       });
 
       await axios.delete(
-        `http://localhost:5000/api/deals/delete-deal/${dealToDelete._id}`,
+        `${API_URL}/deals/delete-deal/${dealToDelete._id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -378,7 +382,7 @@ function SalesPipelineBoardPure() {
       });
 
       await axios.patch(
-        `http://localhost:5000/api/deals/update-deal/${dealToEdit._id}`,
+        `${API_URL}/deals/update-deal/${dealToEdit._id}`,
         editFormData,
         {
           headers: { Authorization: `Bearer ${token}` },

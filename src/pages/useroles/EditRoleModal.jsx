@@ -267,6 +267,9 @@ import {
 } from "react-feather";
 
 export default function EditRoleModal({ role, onClose, onRoleUpdated }) {
+const API_URL = import.meta.env.VITE_API_URL;
+
+
   const [roleData, setRoleData] = useState({
     name: "",
     permissions: {
@@ -316,7 +319,7 @@ export default function EditRoleModal({ role, onClose, onRoleUpdated }) {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `http://localhost:5000/api/roles/update-role/${role._id}`,
+        `${API_URL}/roles/update-role/${role._id}`,
         roleData,
         { headers: { Authorization: `Bearer ${token}` } }
       );

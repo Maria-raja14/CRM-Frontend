@@ -1,9 +1,4 @@
 
-
-
-
-
-
 import { useEffect, useState } from "react";
 import axios from "axios";
 import {
@@ -17,6 +12,10 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 export default function AddUserModal({ onUserCreated }) {
+
+const API_URL = import.meta.env.VITE_API_URL;
+
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
@@ -121,7 +120,7 @@ export default function AddUserModal({ onUserCreated }) {
 
       const token = localStorage.getItem("token");
 
-      await axios.post("http://localhost:5000/api/users/create", payload, {
+      await axios.post(`${API_URL}/users/create`, payload, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
@@ -151,7 +150,7 @@ export default function AddUserModal({ onUserCreated }) {
   const fetchRole = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get("http://localhost:5000/api/roles", {
+      const response = await axios.get(`${API_URL}/roles`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

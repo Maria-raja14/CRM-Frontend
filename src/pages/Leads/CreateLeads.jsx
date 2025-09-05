@@ -22,6 +22,9 @@ import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 
 export default function CreateLeads() {
+const API_URL = import.meta.env.VITE_API_URL;
+
+
   const navigate = useNavigate();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -67,7 +70,7 @@ export default function CreateLeads() {
         try {
           const token = localStorage.getItem("token");
           const response = await axios.get(
-            `http://localhost:5000/api/leads/getLead/${leadId}`,
+            `${API_URL}/leads/getLead/${leadId}`,
             {
               headers: { Authorization: `Bearer ${token}` },
             }
@@ -110,7 +113,7 @@ export default function CreateLeads() {
         const user = userData ? JSON.parse(userData) : null;
 
         if (user && user.role?.name === "Admin") {
-          const response = await axios.get("http://localhost:5000/api/users", {
+          const response = await axios.get(`${API_URL}/users`, {
             headers: { Authorization: `Bearer ${token}` },
           });
 
@@ -193,14 +196,14 @@ export default function CreateLeads() {
 
         if (leadId) {
           await axios.put(
-            `http://localhost:5000/api/leads/updateLead/${leadId}`,
+            `${API_URL}/leads/updateLead/${leadId}`,
             dataToSend,
             config
           );
           toast.success("✅ Lead updated successfully");
         } else {
           await axios.post(
-            "http://localhost:5000/api/leads/create",
+            `${API_URL}/leads/create`,
             dataToSend,
             config
           );
