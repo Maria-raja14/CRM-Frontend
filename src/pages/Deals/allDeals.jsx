@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from "react";
 import axios from "axios";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import { MoreVertical, Edit, Trash2 } from "lucide-react";
 import {
   Dialog,
@@ -8,7 +8,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../../components/ui/dialog";
-import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
 import ReactDOM from "react-dom";
 
@@ -35,7 +34,7 @@ export const AllDeals = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
-  // Add these hooks
+  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (openDropdownId && !e.target.closest(".dropdown-menu")) {
@@ -54,7 +53,7 @@ export const AllDeals = () => {
     } else {
       const rect = event.currentTarget.getBoundingClientRect();
       setDropdownCoords({
-        top: rect.bottom + window.scrollY + 4, // +4 for small gap
+        top: rect.bottom + window.scrollY + 4,
         left: rect.left + window.scrollX,
       });
       setOpenDropdownId(id);
@@ -114,7 +113,7 @@ export const AllDeals = () => {
     const role = getUserRole();
     setUserRole(role);
     fetchDeals();
-    fetchUsers(); // fetch users for everyone
+    fetchUsers();
   }, []);
 
   const formatDate = (date) =>
@@ -158,23 +157,21 @@ export const AllDeals = () => {
   const handleBulkDelete = async () => {
     if (!selectedDeals.length) return toast.info("Select deals to delete");
     if (!window.confirm(`Delete ${selectedDeals.length} deals?`)) return;
-    
+
     try {
       setIsBulkDeleting(true);
       const token = localStorage.getItem("token");
-      
-      // Use a single API call for bulk deletion if your backend supports it
-      // Otherwise, show a loading state and process sequentially
+
       const deletePromises = selectedDeals.map((id) =>
         axios.delete(`${API_URL}/deals/delete-deal/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
       );
-      
+
       await Promise.all(deletePromises);
       toast.success(`Successfully deleted ${selectedDeals.length} deals`);
       setSelectedDeals([]);
-      await fetchDeals(); // Wait for the fetch to complete
+      await fetchDeals();
     } catch (err) {
       console.error("Bulk delete error:", err);
       toast.error("Failed to delete some deals");
@@ -184,7 +181,6 @@ export const AllDeals = () => {
   };
 
   // Actions
-
   const handleEdit = (deal) => {
     setEditDeal({ ...deal, assignedTo: deal.assignedTo?._id || "" });
     setIsEditModalOpen(true);
@@ -204,7 +200,7 @@ export const AllDeals = () => {
       });
       toast.success("Deal deleted successfully");
       setIsDeleteModalOpen(false);
-      await fetchDeals(); // Wait for the fetch to complete
+      await fetchDeals();
       setSelectedDeals((prev) => prev.filter((d) => d !== deleteDeal._id));
     } catch (err) {
       console.error("Delete error:", err);
@@ -224,7 +220,7 @@ export const AllDeals = () => {
       );
       toast.success("Deal updated successfully");
       setIsEditModalOpen(false);
-      await fetchDeals(); // Wait for the fetch to complete
+      await fetchDeals();
     } catch (err) {
       console.error("Update error:", err);
       toast.error(err.response?.data?.message || "Failed to update deal");
@@ -233,7 +229,6 @@ export const AllDeals = () => {
     }
   };
 
-  // Handle deal name click to navigate to pipeline view
   const handleDealNameClick = (dealId) => {
     navigate(`/Pipelineview/${dealId}`);
   };
@@ -248,25 +243,11 @@ export const AllDeals = () => {
 
   return (
     <div className="p-4">
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
-      
       <h2 className="text-xl font-semibold text-gray-800 mb-4">All Deals</h2>
 
-      {/* Top bar: filters + search + create button */}
+      {/* Top bar */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-3">
-        <div className="flex flex-wrap gap-16  items-center">
-          {/* Stage Filter */}
+        <div className="flex flex-wrap gap-16 items-center">
           <select
             value={filters.stage}
             onChange={(e) =>
@@ -282,7 +263,6 @@ export const AllDeals = () => {
             <option value="Closed Lost">Closed Lost</option>
           </select>
 
-          {/* Assigned To Filter */}
           <select
             value={filters.assignedTo}
             onChange={(e) =>
@@ -298,7 +278,6 @@ export const AllDeals = () => {
             ))}
           </select>
 
-          {/* Search */}
           <input
             type="text"
             value={searchTerm}
@@ -308,7 +287,6 @@ export const AllDeals = () => {
           />
         </div>
 
-        {/* Create Deal Button */}
         <div>
           <button
             onClick={() => navigate("/createDeal")}
@@ -319,7 +297,7 @@ export const AllDeals = () => {
         </div>
       </div>
 
-      {/* Bulk delete for Admin */}
+      {/* Bulk delete */}
       {selectedDeals.length > 0 && userRole === "Admin" && (
         <div className="mb-2 flex items-center space-x-2">
           <button
@@ -327,7 +305,9 @@ export const AllDeals = () => {
             disabled={isBulkDeleting}
             className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed"
           >
-            {isBulkDeleting ? "Deleting..." : `Delete Selected (${selectedDeals.length})`}
+            {isBulkDeleting
+              ? "Deleting..."
+              : `Delete Selected (${selectedDeals.length})`}
           </button>
         </div>
       )}
@@ -435,6 +415,8 @@ export const AllDeals = () => {
           </button>
         </div>
       )}
+
+      {/* Dropdown Actions */}
       {openDropdownId &&
         dropdownCoords &&
         ReactDOM.createPortal(
@@ -464,6 +446,7 @@ export const AllDeals = () => {
           </div>,
           document.body
         )}
+
       {/* Edit Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="max-w-md p-6">
