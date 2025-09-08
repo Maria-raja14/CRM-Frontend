@@ -1,17 +1,10 @@
-
-
-
-
-
-
 import React, { useState, useEffect, useRef } from "react";
 import DatePicker from "react-datepicker";
 import { FaEllipsisV } from "react-icons/fa";
 import { useModal } from "../../context/ModalContext.jsx";
 import InvoiceModal from "./InvoiceModal.jsx";
 import axios from "axios";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import ReactDOM from "react-dom";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 import "react-datepicker/dist/react-datepicker.css";
 import {
@@ -20,14 +13,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../../components/ui/dialog";
-//import { toast } from "react-toastify";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const InvoiceHead = () => {
-
   const API_URL = import.meta.env.VITE_API_URL;
-
 
   const { openModal } = useModal();
   const [startDate, setStartDate] = useState(null);
@@ -43,6 +33,7 @@ const InvoiceHead = () => {
   const [editingInvoice, setEditingInvoice] = useState(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [invoiceToDelete, setInvoiceToDelete] = useState(null);
+  const[dropdownButton,setDropdownButton]=useState(null)
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -53,6 +44,12 @@ const InvoiceHead = () => {
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [emailMessage, setEmailMessage] = useState("Sending invoice email...");
   const [emailStatus, setEmailStatus] = useState("loading"); // loading | success | error
+
+  const [downloadModalOpen, setDownloadModalOpen] = useState(false);
+  const [downloadMessage, setDownloadMessage] = useState(
+    "Downloading invoice..."
+  );
+  const [downloadStatus, setDownloadStatus] = useState("loading"); // loading | success | error
 
   const dropdownRef = useRef(null);
 
@@ -102,9 +99,7 @@ const InvoiceHead = () => {
       setEmailStatus("loading");
       setEmailMessage("📨 Sending invoice email...");
 
-      await axios.post(
-        `${API_URL}/invoice/sendEmail/${invoiceId}`
-      );
+      await axios.post(`${API_URL}/invoice/sendEmail/${invoiceId}`);
 
       setEmailStatus("success");
       setEmailMessage("✅ Invoice sent to customer email!");
@@ -128,9 +123,10 @@ const InvoiceHead = () => {
     let filtered = invoices;
 
     if (searchTerm) {
-      filtered = filtered.filter((invoice) =>
-        invoice.invoicenumber &&
-        invoice.invoicenumber.toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter(
+        (invoice) =>
+          invoice.invoicenumber &&
+          invoice.invoicenumber.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -163,11 +159,9 @@ const InvoiceHead = () => {
 
   const handleDelete = async (invoiceId) => {
     try {
-      await axios.delete(
-        `${API_URL}/invoice/delete/${invoiceId}`
-      );
+      await axios.delete(`${API_URL}/invoice/delete/${invoiceId}`);
       toast.success("Invoice deleted successfully!");
-      setRefreshTrigger(prev => prev + 1);
+      setRefreshTrigger((prev) => prev + 1);
       setDeleteConfirmOpen(false);
     } catch (error) {
       console.error("Error deleting invoice:", error);
@@ -188,74 +182,42 @@ const InvoiceHead = () => {
 
   // Callback function to refresh invoices after creating/updating
   const handleInvoiceSaved = () => {
-    setRefreshTrigger(prev => prev + 1);
+    setRefreshTrigger((prev) => prev + 1);
     setEditingInvoice(null);
   };
 
-  const generatePDF = (invoice) => {
-    const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text("Invoice", 105, 20, { align: "center" });
-    doc.rect(10, 10, 190, 30);
+  const downloadInvoice = async (invoiceId, invoiceNumber) => {
+    try {
+      setDownloadModalOpen(true);
+      setDownloadStatus("loading");
+      setDownloadMessage("📥 Downloading invoice PDF...");
 
-    doc.setFontSize(12);
-    const details = [
-      ["Invoice #", invoice.invoicenumber || "N/A"],
-      [
-        "Assigned To",
-        invoice.assignTo
-          ? `${invoice.assignTo.firstName} ${invoice.assignTo.lastName}`
-          : "N/A",
-      ],
-      ["Status", invoice.status || "N/A"],
-    ];
+      const response = await axios.get(
+        `${API_URL}/invoice/download/${invoiceId}`,
+        { responseType: "blob" }
+      );
 
-    let y = 50;
-    details.forEach(([key, value]) => {
-      doc.text(`${key}: ${value}`, 14, y);
-      y += 10;
-    });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `Invoice_${invoiceNumber}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
 
-    autoTable(doc, {
-      startY: y + 10,
-      head: [["Deal Name", "Amount (Rs.)"]],
-      body:
-        invoice.items?.map((item) => [
-          item.deal?.dealName || "N/A",
-          Number(item.amount).toFixed(2),
-        ]) || [],
-      theme: "grid",
-      styles: { halign: "center", fontSize: 10 },
-      headStyles: {
-        fontSize: 12,
-        fillColor: [40, 116, 166],
-        textColor: [255, 255, 255],
-      },
-      alternateRowStyles: { fillColor: [240, 240, 240] },
-    });
-
-    const finalY = doc.lastAutoTable.finalY + 10;
-    doc.setFontSize(14).setTextColor(40, 116, 166);
-    doc.text(`Total Amount: Rs. ${Number(invoice.total).toFixed(2)}`, 14, finalY);
-    doc.setFontSize(12).setTextColor(0, 0, 0);
-    doc.text(`Tax: Rs. ${Number(invoice.tax).toFixed(2)}`, 14, finalY + 10);
-
-    const footerY = finalY + 25;
-    doc.setFontSize(10);
-    doc.text("Company Name | Address | Phone | Email", 105, footerY, {
-      align: "center",
-    });
-    doc.setFontSize(8).setTextColor(169, 169, 169);
-    doc.text(
-      "Terms & Conditions: Payment due within 30 days.",
-      105,
-      footerY + 10,
-      {
-        align: "center",
-      }
-    );
-
-    doc.save(`Invoice_${invoice.invoicenumber}.pdf`);
+      setDownloadStatus("success");
+      setDownloadMessage("✅ Invoice downloaded successfully!");
+    } catch (error) {
+      setDownloadStatus("error");
+      setDownloadMessage("❌ Failed to download invoice.");
+      toast.error("Failed to download invoice.");
+      console.error("Error downloading invoice:", error);
+    } finally {
+      // auto close after 2s
+      setTimeout(() => {
+        setDownloadModalOpen(false);
+      }, 2000);
+    }
   };
 
   const totalAmount = filteredInvoices.reduce(
@@ -294,60 +256,101 @@ const InvoiceHead = () => {
         </button>
       </div>
 
-      <InvoiceModal 
-        onInvoiceSaved={handleInvoiceSaved} 
+      <InvoiceModal
+        onInvoiceSaved={handleInvoiceSaved}
         editingInvoice={editingInvoice}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
-  {/* Total Amount Card */}
-  <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-md border border-blue-200 relative overflow-hidden">
-    <div className="absolute top-0 right-0 w-24 h-24 -mr-6 -mt-6 bg-blue-200 rounded-full opacity-30"></div>
-    <div className="relative z-10">
-      <div className="flex items-center mb-4">
-        <div className="p-2 rounded-lg bg-blue-100 mr-3">
-          <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+        {/* Total Amount Card */}
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-md border border-blue-200 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 -mr-6 -mt-6 bg-blue-200 rounded-full opacity-30"></div>
+          <div className="relative z-10">
+            <div className="flex items-center mb-4">
+              <div className="p-2 rounded-lg bg-blue-100 mr-3">
+                <svg
+                  className="w-5 h-5 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-blue-800">
+                Total Amount
+              </h3>
+            </div>
+            <p className="text-2xl font-bold text-blue-900">
+              ₹{totalAmount.toFixed(2)}
+            </p>
+          </div>
         </div>
-        <h3 className="text-lg font-medium text-blue-800">Total Amount</h3>
-      </div>
-      <p className="text-2xl font-bold text-blue-900">₹{totalAmount.toFixed(2)}</p>
-    </div>
-  </div>
 
-  {/* Total Paid Card */}
-  <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-md border border-green-200 relative overflow-hidden">
-    <div className="absolute top-0 right-0 w-24 h-24 -mr-6 -mt-6 bg-green-200 rounded-full opacity-30"></div>
-    <div className="relative z-10">
-      <div className="flex items-center mb-4">
-        <div className="p-2 rounded-lg bg-green-100 mr-3">
-          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+        {/* Total Paid Card */}
+        <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-md border border-green-200 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 -mr-6 -mt-6 bg-green-200 rounded-full opacity-30"></div>
+          <div className="relative z-10">
+            <div className="flex items-center mb-4">
+              <div className="p-2 rounded-lg bg-green-100 mr-3">
+                <svg
+                  className="w-5 h-5 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-green-800">Total Paid</h3>
+            </div>
+            <p className="text-2xl font-bold text-green-900">
+              ₹{totalPaid.toFixed(2)}
+            </p>
+          </div>
         </div>
-        <h3 className="text-lg font-medium text-green-800">Total Paid</h3>
-      </div>
-      <p className="text-2xl font-bold text-green-900">₹{totalPaid.toFixed(2)}</p>
-    </div>
-  </div>
 
-  {/* Total Due Card */}
-  <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl shadow-md border border-orange-200 relative overflow-hidden">
-    <div className="absolute top-0 right-0 w-24 h-24 -mr-6 -mt-6 bg-orange-200 rounded-full opacity-30"></div>
-    <div className="relative z-10">
-      <div className="flex items-center mb-4">
-        <div className="p-2 rounded-lg bg-orange-100 mr-3">
-          <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
+        {/* Total Due Card */}
+        <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl shadow-md border border-orange-200 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 -mr-6 -mt-6 bg-orange-200 rounded-full opacity-30"></div>
+          <div className="relative z-10">
+            <div className="flex items-center mb-4">
+              <div className="p-2 rounded-lg bg-orange-100 mr-3">
+                <svg
+                  className="w-5 h-5 text-orange-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-orange-800">Total Due</h3>
+            </div>
+            <p className="text-2xl font-bold text-orange-900">
+              ₹{totalDue.toFixed(2)}
+            </p>
+          </div>
         </div>
-        <h3 className="text-lg font-medium text-orange-800">Total Due</h3>
       </div>
-      <p className="text-2xl font-bold text-orange-900">₹{totalDue.toFixed(2)}</p>
-    </div>
-  </div>
-</div>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-4 mt-8 items-center justify-between">
@@ -355,11 +358,11 @@ const InvoiceHead = () => {
           <DatePicker
             selected={startDate}
             onChange={(date) => setStartDate(date)}
-            className="px-4 py-2 rounded-md border bg-white shadow-sm focus:ring-2 focus:ring-blue-400"
+            className="px-4 py-2 rounded-md border bg-white  focus:ring-2 focus:ring-blue-400"
             placeholderText="Filter by Date"
           />
           <select
-            className="px-4 py-2 rounded-md bg-white border shadow-sm text-gray-600"
+            className="px-4 py-2 rounded-md bg-white border  text-gray-600"
             value={filterAssignTo}
             onChange={(e) => setFilterAssignTo(e.target.value)}
           >
@@ -378,7 +381,7 @@ const InvoiceHead = () => {
             )}
           </select>
           <select
-            className="px-4 py-2 rounded-md bg-white border shadow-sm text-gray-600"
+            className="px-4 py-2 rounded-md bg-white border  text-gray-600"
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
           >
@@ -389,7 +392,7 @@ const InvoiceHead = () => {
         </div>
 
         {/* Search */}
-        <div className="flex items-center border rounded-full bg-white px-3 shadow-sm w-[250px]">
+        <div className="flex items-center border rounded-full bg-white px-3  w-[250px]">
           <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
           <input
             type="text"
@@ -444,52 +447,74 @@ const InvoiceHead = () => {
                     ? `${invoice.assignTo.firstName} ${invoice.assignTo.lastName}`
                     : "N/A"}
                 </td>
-                <td className="px-6 py-4">
-                  ₹{Number(invoice.tax).toFixed(2)}
-                </td>
-                <td className="px-6 py-4 text-center relative">
-                  <button
-                    onClick={() =>
-                      setOpenIndex(openIndex === index ? null : index)
-                    }
-                    className="p-2 rounded-full hover:bg-gray-100 text-gray-500"
-                  >
-                    <FaEllipsisV />
-                  </button>
+                <td className="px-6 py-4">₹{Number(invoice.tax).toFixed(2)}</td>
+              <td className="px-6 py-4 text-center relative">
+  <button
+    onClick={(e) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
 
-                  {openIndex === index && (
-                    <div
-                      ref={dropdownRef}
-                      className="absolute right-0 mt-2 w-32 bg-white border rounded-md shadow-lg z-50"
-                    >
-                      <button
-                        className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                        onClick={() => handleSendEmail(invoice._id)}
-                      >
-                        Send to Email
-                      </button>
+      const position = spaceBelow > 200 ? "below" : "above"; // if not enough space, open above
 
-                      <button
-                        className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                        onClick={() => generatePDF(invoice)}
-                      >
-                        Download
-                      </button>
-                      <button 
-                        className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                        onClick={() => handleEdit(invoice)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                        onClick={() => confirmDelete(invoice)}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  )}
-                </td>
+      setOpenIndex(openIndex === index ? null : index);
+      setDropdownButton({
+        rect,
+        position,
+      });
+    }}
+    className="p-2 rounded-full hover:bg-gray-100 text-gray-500"
+  >
+    <FaEllipsisV />
+  </button>
+
+  {openIndex === index &&
+    ReactDOM.createPortal(
+      <div
+        ref={dropdownRef}
+        className="absolute z-50 bg-white border rounded-md shadow-lg"
+        style={{
+          top:
+            dropdownButton?.position === "below"
+              ? dropdownButton.rect.bottom + window.scrollY
+              : dropdownButton.rect.top +
+                window.scrollY -
+                (dropdownRef.current?.offsetHeight || 150),
+          left: dropdownButton
+            ? dropdownButton.rect.left + window.scrollX
+            : 0,
+          minWidth: "8rem",
+        }}
+      >
+        <button
+          className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+          onClick={() => handleSendEmail(invoice._id)}
+        >
+          Send to Email
+        </button>
+        <button
+          className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+          onClick={() => downloadInvoice(invoice._id, invoice.invoicenumber)}
+        >
+          Download
+        </button>
+        <button
+          className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+          onClick={() => handleEdit(invoice)}
+        >
+          Edit
+        </button>
+        <button
+          className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+          onClick={() => confirmDelete(invoice)}
+        >
+          Delete
+        </button>
+      </div>,
+      document.body
+    )}
+</td>
+
               </tr>
             ))}
 
@@ -520,12 +545,14 @@ const InvoiceHead = () => {
           </select>
           <span className="text-sm text-gray-700 ml-2">entries</span>
         </div>
-        
+
         <div className="flex items-center">
           <span className="text-sm text-gray-700 mr-4">
-            Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount} entries
+            Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+            {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount}{" "}
+            entries
           </span>
-          
+
           <div className="flex space-x-1">
             <button
               onClick={() => handlePageChange(currentPage - 1)}
@@ -534,7 +561,7 @@ const InvoiceHead = () => {
             >
               Previous
             </button>
-            
+
             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
               let pageNum;
               if (totalPages <= 5) {
@@ -546,7 +573,7 @@ const InvoiceHead = () => {
               } else {
                 pageNum = currentPage - 2 + i;
               }
-              
+
               return (
                 <button
                   key={pageNum}
@@ -559,7 +586,7 @@ const InvoiceHead = () => {
                 </button>
               );
             })}
-            
+
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
@@ -600,8 +627,13 @@ const InvoiceHead = () => {
             <DialogTitle>Confirm Delete</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <p>Are you sure you want to delete invoice #{invoiceToDelete?.invoicenumber}?</p>
-            <p className="text-sm text-gray-500 mt-2">This action cannot be undone.</p>
+            <p>
+              Are you sure you want to delete invoice #
+              {invoiceToDelete?.invoicenumber}?
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              This action cannot be undone.
+            </p>
           </div>
           <div className="flex justify-end space-x-3">
             <button
@@ -619,7 +651,33 @@ const InvoiceHead = () => {
           </div>
         </DialogContent>
       </Dialog>
-       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
+      {/* Download PDF Modal */}
+      <Dialog open={downloadModalOpen} onOpenChange={setDownloadModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Download Status</DialogTitle>
+          </DialogHeader>
+          <div className="py-6 text-center">
+            {downloadStatus === "loading" && (
+              <p className="text-blue-600 font-medium animate-pulse">
+                {downloadMessage}
+              </p>
+            )}
+            {downloadStatus === "success" && (
+              <p className="text-green-600 font-semibold">{downloadMessage}</p>
+            )}
+            {downloadStatus === "error" && (
+              <p className="text-red-600 font-semibold">{downloadMessage}</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+      />
     </div>
   );
 };

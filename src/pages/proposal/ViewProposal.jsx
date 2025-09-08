@@ -125,7 +125,7 @@ const ViewProposal = () => {
   const statusStyle = statusConfig[proposal.status] || statusConfig.draft;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 px-4">
+    <div className="min-h-screen  py-8 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Header Section */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">

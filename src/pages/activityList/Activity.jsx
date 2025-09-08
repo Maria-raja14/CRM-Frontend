@@ -95,7 +95,7 @@ const CalendarView = () => {
         {/* Filters */}
         <div className="flex flex-wrap gap-4">
           <select
-            className="border rounded p-2"
+            className="border rounded-md bg-white p-2"
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
           >
@@ -108,7 +108,7 @@ const CalendarView = () => {
           </select>
 
           <select
-            className="border rounded p-2"
+            className="border rounded-md bg-white p-2"
             value={assignedFilter}
             onChange={(e) => setAssignedFilter(e.target.value)}
           >

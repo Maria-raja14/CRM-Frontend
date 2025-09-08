@@ -888,7 +888,7 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
                       <option value="">Select a Deal</option>
                       {deals.map((deal) => (
                         <option key={deal._id} value={deal._id}>
-                          {deal.dealName} - ${deal.amount || "N/A"}
+                          {deal.dealName}
                         </option>
                       ))}
                     </select>

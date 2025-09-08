@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useRef, useEffect, useState } from "react";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import { MoreVertical, Edit, Trash2 } from "lucide-react";
@@ -10,6 +10,7 @@ import {
 } from "../../components/ui/dialog";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
+import ReactDOM from "react-dom";
 
 export const AllDeals = () => {
   const API_URL = import.meta.env.VITE_API_URL;
@@ -29,6 +30,33 @@ export const AllDeals = () => {
   const [userRole, setUserRole] = useState("");
   const [filters, setFilters] = useState({ stage: "", assignedTo: "" });
   const [searchTerm, setSearchTerm] = useState("");
+  const [dropdownCoords, setDropdownCoords] = useState(null);
+
+  // Add these hooks
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (openDropdownId && !e.target.closest(".dropdown-menu")) {
+        setOpenDropdownId(null);
+        setDropdownCoords(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [openDropdownId]);
+
+  const toggleDropdown = (id, event) => {
+    if (openDropdownId === id) {
+      setOpenDropdownId(null);
+      setDropdownCoords(null);
+    } else {
+      const rect = event.currentTarget.getBoundingClientRect();
+      setDropdownCoords({
+        top: rect.bottom + window.scrollY + 4, // +4 for small gap
+        left: rect.left + window.scrollX,
+      });
+      setOpenDropdownId(id);
+    }
+  };
 
   const itemsPerPage = 10;
 
@@ -99,9 +127,7 @@ export const AllDeals = () => {
   };
 
   const paginatedDeals = deals
-    .filter((d) =>
-      d.dealName?.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    .filter((d) => d.dealName?.toLowerCase().includes(searchTerm.toLowerCase()))
     .filter((d) => (filters.stage ? d.stage === filters.stage : true))
     .filter((d) =>
       filters.assignedTo ? d.assignedTo?._id === filters.assignedTo : true
@@ -145,8 +171,7 @@ export const AllDeals = () => {
   };
 
   // Actions
-  const toggleDropdown = (id) =>
-    setOpenDropdownId(openDropdownId === id ? null : id);
+
   const handleEdit = (deal) => {
     setEditDeal({ ...deal, assignedTo: deal.assignedTo?._id || "" });
     setIsEditModalOpen(true);
@@ -160,10 +185,9 @@ export const AllDeals = () => {
   const handleDeleteConfirm = async () => {
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(
-        `${API_URL}/deals/delete-deal/${deleteDeal._id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await axios.delete(`${API_URL}/deals/delete-deal/${deleteDeal._id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       toast.success("Deleted successfully");
       setIsDeleteModalOpen(false);
       fetchDeals();
@@ -285,9 +309,7 @@ export const AllDeals = () => {
                     onChange={handleSelectAll}
                     checked={
                       paginatedDeals.length > 0 &&
-                      paginatedDeals.every((d) =>
-                        selectedDeals.includes(d._id)
-                      )
+                      paginatedDeals.every((d) => selectedDeals.includes(d._id))
                     }
                   />
                 </th>
@@ -332,29 +354,13 @@ export const AllDeals = () => {
                   <td className="px-6 py-4">{deal.stage || "-"}</td>
                   <td className="px-6 py-4">{deal.value || "-"}</td>
                   <td className="px-6 py-4">{formatDate(deal.createdAt)}</td>
-                  <td className="px-6 py-4 relative">
+                  <td className="px-6 py-4 ">
                     <button
-                      onClick={() => toggleDropdown(deal._id)}
+                      onClick={(e) => toggleDropdown(deal._id, e)}
                       className="p-2 rounded hover:bg-gray-200"
                     >
                       <MoreVertical size={18} />
                     </button>
-                    {openDropdownId === deal._id && (
-                      <div className="absolute right-0 mt-2 w-32 bg-white border rounded shadow-md z-10">
-                        <button
-                          onClick={() => handleEdit(deal)}
-                          className="flex items-center px-3 py-2 hover:bg-gray-100 w-full text-left"
-                        >
-                          <Edit size={16} className="mr-2" /> Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(deal)}
-                          className="flex items-center px-3 py-2 hover:bg-gray-100 w-full text-left text-red-600"
-                        >
-                          <Trash2 size={16} className="mr-2" /> Delete
-                        </button>
-                      </div>
-                    )}
                   </td>
                 </tr>
               ))
@@ -394,7 +400,35 @@ export const AllDeals = () => {
           </button>
         </div>
       )}
-
+      {openDropdownId &&
+        dropdownCoords &&
+        ReactDOM.createPortal(
+          <div
+            className="dropdown-menu absolute z-50 bg-white border rounded-md shadow-lg w-40"
+            style={{
+              top: dropdownCoords.top,
+              left: dropdownCoords.left,
+            }}
+          >
+            <button
+              onClick={() =>
+                handleEdit(deals.find((d) => d._id === openDropdownId))
+              }
+              className="flex items-center px-3 py-2 hover:bg-gray-100 w-full text-left"
+            >
+              <Edit size={16} className="mr-2" /> Edit
+            </button>
+            <button
+              onClick={() =>
+                handleDeleteClick(deals.find((d) => d._id === openDropdownId))
+              }
+              className="flex items-center px-3 py-2 hover:bg-gray-100 w-full text-left text-red-600"
+            >
+              <Trash2 size={16} className="mr-2" /> Delete
+            </button>
+          </div>,
+          document.body
+        )}
       {/* Edit Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="max-w-md p-6">
