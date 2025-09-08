@@ -750,14 +750,14 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         />
 
         {/* Help Button */}
-        <button
+        {/* <button
           onClick={startSidebarTour}
           className="flex items-center gap-3 p-3 mt-6 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
           id="sidebar-tourButton"
         >
           <HelpCircle size={18} className="text-blue-500" />
           <span className="text-gray-700">Take a Tour</span>
-        </button>
+        </button> */}
       </nav>
     </aside>
   );

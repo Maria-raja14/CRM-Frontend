@@ -4,8 +4,7 @@ import { FaEllipsisV } from "react-icons/fa";
 import { useModal } from "../../context/ModalContext.jsx";
 import InvoiceModal from "./InvoiceModal.jsx";
 import axios from "axios";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import ReactDOM from "react-dom";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 import "react-datepicker/dist/react-datepicker.css";
 import {
@@ -14,7 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../../components/ui/dialog";
-//import { toast } from "react-toastify";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -35,6 +33,7 @@ const InvoiceHead = () => {
   const [editingInvoice, setEditingInvoice] = useState(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [invoiceToDelete, setInvoiceToDelete] = useState(null);
+  const[dropdownButton,setDropdownButton]=useState(null)
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -45,6 +44,12 @@ const InvoiceHead = () => {
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [emailMessage, setEmailMessage] = useState("Sending invoice email...");
   const [emailStatus, setEmailStatus] = useState("loading"); // loading | success | error
+
+  const [downloadModalOpen, setDownloadModalOpen] = useState(false);
+  const [downloadMessage, setDownloadMessage] = useState(
+    "Downloading invoice..."
+  );
+  const [downloadStatus, setDownloadStatus] = useState("loading"); // loading | success | error
 
   const dropdownRef = useRef(null);
 
@@ -181,77 +186,15 @@ const InvoiceHead = () => {
     setEditingInvoice(null);
   };
 
-  // const generatePDF = (invoice) => {
-  //   const doc = new jsPDF();
-  //   doc.setFontSize(18);
-  //   doc.text("Invoice", 105, 20, { align: "center" });
-  //   doc.rect(10, 10, 190, 30);
-
-  //   doc.setFontSize(12);
-  //   const details = [
-  //     ["Invoice #", invoice.invoicenumber || "N/A"],
-  //     [
-  //       "Assigned To",
-  //       invoice.assignTo
-  //         ? `${invoice.assignTo.firstName} ${invoice.assignTo.lastName}`
-  //         : "N/A",
-  //     ],
-  //     ["Status", invoice.status || "N/A"],
-  //   ];
-
-  //   let y = 50;
-  //   details.forEach(([key, value]) => {
-  //     doc.text(`${key}: ${value}`, 14, y);
-  //     y += 10;
-  //   });
-
-  //   autoTable(doc, {
-  //     startY: y + 10,
-  //     head: [["Deal Name", "Amount (Rs.)"]],
-  //     body:
-  //       invoice.items?.map((item) => [
-  //         item.deal?.dealName || "N/A",
-  //         Number(item.amount).toFixed(2),
-  //       ]) || [],
-  //     theme: "grid",
-  //     styles: { halign: "center", fontSize: 10 },
-  //     headStyles: {
-  //       fontSize: 12,
-  //       fillColor: [40, 116, 166],
-  //       textColor: [255, 255, 255],
-  //     },
-  //     alternateRowStyles: { fillColor: [240, 240, 240] },
-  //   });
-
-  //   const finalY = doc.lastAutoTable.finalY + 10;
-  //   doc.setFontSize(14).setTextColor(40, 116, 166);
-  //   doc.text(`Total Amount: Rs. ${Number(invoice.total).toFixed(2)}`, 14, finalY);
-  //   doc.setFontSize(12).setTextColor(0, 0, 0);
-  //   doc.text(`Tax: Rs. ${Number(invoice.tax).toFixed(2)}`, 14, finalY + 10);
-
-  //   const footerY = finalY + 25;
-  //   doc.setFontSize(10);
-  //   doc.text("Company Name | Address | Phone | Email", 105, footerY, {
-  //     align: "center",
-  //   });
-  //   doc.setFontSize(8).setTextColor(169, 169, 169);
-  //   doc.text(
-  //     "Terms & Conditions: Payment due within 30 days.",
-  //     105,
-  //     footerY + 10,
-  //     {
-  //       align: "center",
-  //     }
-  //   );
-
-  //   doc.save(`Invoice_${invoice.invoicenumber}.pdf`);
-  // };
-
   const downloadInvoice = async (invoiceId, invoiceNumber) => {
     try {
+      setDownloadModalOpen(true);
+      setDownloadStatus("loading");
+      setDownloadMessage("📥 Downloading invoice PDF...");
+
       const response = await axios.get(
         `${API_URL}/invoice/download/${invoiceId}`,
-        { responseType: "blob" } // important for PDF
+        { responseType: "blob" }
       );
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -261,128 +204,22 @@ const InvoiceHead = () => {
       document.body.appendChild(link);
       link.click();
       link.remove();
+
+      setDownloadStatus("success");
+      setDownloadMessage("✅ Invoice downloaded successfully!");
     } catch (error) {
-      toast.error("❌ Failed to download invoice PDF");
+      setDownloadStatus("error");
+      setDownloadMessage("❌ Failed to download invoice.");
+      toast.error("Failed to download invoice.");
       console.error("Error downloading invoice:", error);
+    } finally {
+      // auto close after 2s
+      setTimeout(() => {
+        setDownloadModalOpen(false);
+      }, 2000);
     }
   };
 
-  const generatePDF = (invoice) => {
-    const doc = new jsPDF("p", "mm", "a4");
-
-    // ============ HEADER ============ //
-    // Logo (make sure to pass a base64 or URL if you want logo in frontend)
-    // Example: const logo = "data:image/png;base64,....";
-    // doc.addImage(logo, "PNG", 15, 10, 40, 20);
-
-    doc.setFontSize(14).setFont("helvetica", "bold");
-    doc.text("TechZarInfo Software Solutions Pvt Ltd", 60, 15);
-
-    doc.setFontSize(10).setFont("helvetica", "normal");
-    doc.text("No.2D, M.S Tower, 4th Floor, Convent Rd, Cantonment,", 60, 20);
-    doc.text("Tiruchirappalli, Tamil Nadu 620001", 60, 25);
-    doc.text("Email: accounts@techzarinfo.com | Phone: +91 9791343199", 60, 30);
-    doc.text("GSTIN: 33AAJCT1568Q1ZP | PAN: AAJCT1568Q", 60, 35);
-
-    doc.setLineWidth(0.5);
-    doc.line(15, 40, 195, 40); // divider
-
-    // ============ INVOICE INFO ============ //
-    doc.setFontSize(11).setFont("helvetica", "bold");
-    doc.text("Invoice", 15, 50);
-
-    doc.setFont("helvetica", "normal");
-    doc.text(`Invoice Number: ${invoice.invoicenumber || "N/A"}`, 15, 58);
-    doc.text(
-      `Invoice Date: ${
-        invoice.createdAt
-          ? new Date(invoice.createdAt).toLocaleDateString()
-          : "N/A"
-      }`,
-      15,
-      64
-    );
-    doc.text(
-      `Client: ${
-        invoice.assignTo
-          ? `${invoice.assignTo.firstName} ${invoice.assignTo.lastName}`
-          : "N/A"
-      }`,
-      15,
-      70
-    );
-
-    // ============ TABLE ============ //
-    autoTable(doc, {
-      startY: 80,
-      head: [
-        [
-          "Project Description",
-          "HSN/SAC Code",
-          "Total Effort (Days)",
-          "Amount (USD)",
-        ],
-      ],
-      body:
-        invoice.items?.map((item) => [
-          item.deal?.dealName || "N/A",
-          "998314", // static example
-          "30", // static example
-          Number(item.amount).toFixed(2),
-        ]) || [],
-      theme: "grid",
-      styles: { fontSize: 10 },
-      headStyles: {
-        fillColor: [40, 116, 166],
-        textColor: 255,
-        halign: "center",
-      },
-      columnStyles: {
-        0: { cellWidth: 80 }, // description
-        1: { cellWidth: 30, halign: "center" },
-        2: { cellWidth: 30, halign: "center" },
-        3: { cellWidth: 40, halign: "right" },
-      },
-    });
-
-    let finalY = doc.lastAutoTable.finalY + 10;
-
-    // ============ TOTALS ============ //
-    doc.setFontSize(11).setFont("helvetica", "bold");
-    doc.text(
-      `Total Cost: USD ${Number(invoice.total).toFixed(2)}`,
-      195,
-      finalY,
-      {
-        align: "right",
-      }
-    );
-    doc.setFont("helvetica", "normal");
-    doc.text(`Amount Received: USD 0.00`, 195, finalY + 6, { align: "right" });
-    doc.text(
-      `Balance Amount: USD ${Number(invoice.total).toFixed(2)}`,
-      195,
-      finalY + 12,
-      {
-        align: "right",
-      }
-    );
-
-    // ============ FOOTER ============ //
-    doc.setLineWidth(0.2);
-    doc.line(15, 285, 195, 285); // footer divider
-
-    doc.setFontSize(9).setTextColor(100);
-    doc.text("Terms & Conditions: Payment due within 30 days.", 105, 292, {
-      align: "center",
-    });
-    doc.text("TechZarInfo Software Solutions Pvt Ltd", 105, 298, {
-      align: "center",
-    });
-
-    // Save
-    doc.save(`Invoice_${invoice.invoicenumber}.pdf`);
-  };
   const totalAmount = filteredInvoices.reduce(
     (acc, invoice) => acc + (Number(invoice.total) || 0),
     0
@@ -611,52 +448,73 @@ const InvoiceHead = () => {
                     : "N/A"}
                 </td>
                 <td className="px-6 py-4">₹{Number(invoice.tax).toFixed(2)}</td>
-                <td className="px-6 py-4 text-center relative">
-                  <button
-                    onClick={() =>
-                      setOpenIndex(openIndex === index ? null : index)
-                    }
-                    className="p-2 rounded-full hover:bg-gray-100 text-gray-500"
-                  >
-                    <FaEllipsisV />
-                  </button>
+              <td className="px-6 py-4 text-center relative">
+  <button
+    onClick={(e) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
 
-                  {openIndex === index && (
-                    <div
-                      ref={dropdownRef}
-                      className="absolute right-0 mt-2 w-32 bg-white border rounded-md shadow-lg z-50"
-                    >
-                      <button
-                        className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                        onClick={() => handleSendEmail(invoice._id)}
-                      >
-                        Send to Email
-                      </button>
+      const position = spaceBelow > 200 ? "below" : "above"; // if not enough space, open above
 
-                      <button
-                        className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                        onClick={() =>
-                          downloadInvoice(invoice._id, invoice.invoicenumber)
-                        }
-                      >
-                        Download
-                      </button>
+      setOpenIndex(openIndex === index ? null : index);
+      setDropdownButton({
+        rect,
+        position,
+      });
+    }}
+    className="p-2 rounded-full hover:bg-gray-100 text-gray-500"
+  >
+    <FaEllipsisV />
+  </button>
 
-                      <button
-                        className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                        onClick={() => handleEdit(invoice)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                        onClick={() => confirmDelete(invoice)}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  )}
-                </td>
+  {openIndex === index &&
+    ReactDOM.createPortal(
+      <div
+        ref={dropdownRef}
+        className="absolute z-50 bg-white border rounded-md shadow-lg"
+        style={{
+          top:
+            dropdownButton?.position === "below"
+              ? dropdownButton.rect.bottom + window.scrollY
+              : dropdownButton.rect.top +
+                window.scrollY -
+                (dropdownRef.current?.offsetHeight || 150),
+          left: dropdownButton
+            ? dropdownButton.rect.left + window.scrollX
+            : 0,
+          minWidth: "8rem",
+        }}
+      >
+        <button
+          className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+          onClick={() => handleSendEmail(invoice._id)}
+        >
+          Send to Email
+        </button>
+        <button
+          className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+          onClick={() => downloadInvoice(invoice._id, invoice.invoicenumber)}
+        >
+          Download
+        </button>
+        <button
+          className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+          onClick={() => handleEdit(invoice)}
+        >
+          Edit
+        </button>
+        <button
+          className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+          onClick={() => confirmDelete(invoice)}
+        >
+          Delete
+        </button>
+      </div>,
+      document.body
+    )}
+</td>
+
               </tr>
             ))}
 
@@ -793,6 +651,28 @@ const InvoiceHead = () => {
           </div>
         </DialogContent>
       </Dialog>
+      {/* Download PDF Modal */}
+      <Dialog open={downloadModalOpen} onOpenChange={setDownloadModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Download Status</DialogTitle>
+          </DialogHeader>
+          <div className="py-6 text-center">
+            {downloadStatus === "loading" && (
+              <p className="text-blue-600 font-medium animate-pulse">
+                {downloadMessage}
+              </p>
+            )}
+            {downloadStatus === "success" && (
+              <p className="text-green-600 font-semibold">{downloadMessage}</p>
+            )}
+            {downloadStatus === "error" && (
+              <p className="text-red-600 font-semibold">{downloadMessage}</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <ToastContainer
         position="top-right"
         autoClose={3000}

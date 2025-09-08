@@ -27,7 +27,7 @@ const STATUS_STYLES = {
   success: "bg-green-50 text-green-700 border-green-200",
 };
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 10;
 
 const ProposalHead = () => {
 
@@ -362,27 +362,53 @@ const ProposalHead = () => {
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-4 mt-6">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 transition"
-          >
-            Prev
-          </button>
-          <span>
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 transition"
-          >
-            Next
-          </button>
-        </div>
-      )}
+      {/* Pagination */}
+{totalPages > 1 && (
+  <div className="flex justify-center items-center gap-2 mt-6">
+    {/* Prev Button */}
+    <button
+      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+      disabled={currentPage === 1}
+      className={`px-3 py-1.5 rounded-lg border text-sm transition 
+        ${currentPage === 1 
+          ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
+          : "bg-white text-gray-700 hover:bg-gray-50 border-gray-300"
+        }`}
+    >
+      Prev
+    </button>
+
+    {/* Page Numbers */}
+    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+      <button
+        key={page}
+        onClick={() => setCurrentPage(page)}
+        className={`px-3 py-1.5 rounded-lg text-sm transition 
+          ${
+            currentPage === page
+              ? "bg-blue-600 text-white font-medium shadow-sm"
+              : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+          }`}
+      >
+        {page}
+      </button>
+    ))}
+
+    {/* Next Button */}
+    <button
+      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+      disabled={currentPage === totalPages}
+      className={`px-3 py-1.5 rounded-lg border text-sm transition 
+        ${currentPage === totalPages
+          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+          : "bg-white text-gray-700 hover:bg-gray-50 border-gray-300"
+        }`}
+    >
+      Next
+    </button>
+  </div>
+)}
+
 
       {/* Follow-up Dialog */}
       <Dialog open={followUpDialogOpen} onOpenChange={setFollowUpDialogOpen}>

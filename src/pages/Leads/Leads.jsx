@@ -409,7 +409,7 @@ export default function LeadTable() {
               <select
                 value={assigneeFilter}
                 onChange={(e) => setAssigneeFilter(e.target.value)}
-                className="w-full p-2 border shadow-lg  rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               >
                 <option value="">All Assignees</option>
                 {assignees.map((assignee, index) => (
@@ -426,7 +426,7 @@ export default function LeadTable() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full p-2 border shadow-2xl rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="w-full p-2 border  rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             >
               <option value="">All Statuses</option>
               <option value="Hot">Hot</option>
@@ -445,7 +445,7 @@ export default function LeadTable() {
               placeholder="Search leads..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-4 py-2 border rounded-full bg-white shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-8 pr-4 py-2 border rounded-full bg-white  focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
