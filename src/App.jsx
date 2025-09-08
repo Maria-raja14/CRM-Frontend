@@ -25,6 +25,9 @@ import CreateDeal from "./pages/Deals/CreateDeal";
 import { NotificationProvider } from "./context/NotificationContext";
 import NotificationsPage from "./pages/notification/NotificationsPage";
 import ViewProposal from "./pages/proposal/ViewProposal";
+// // Tour Components
+import { TourProvider } from "./component/Tour/TourContext";
+import Tour from "./component/Tour/Tour";
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,9 +44,11 @@ function App() {
   }, []);
 
   return (
+     <TourProvider>
     <NotificationProvider>
       <BrowserRouter>
-        <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white transition-all">
+          <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white transition-all">
+              <Tour />
           <Routes>
             <Route path="/" element={<Login />} />
             <Route path="/layout" element={<Layout />} />
@@ -85,7 +90,8 @@ function App() {
           <ToastContainer position="top-right" autoClose={3000} />
         </div>
       </BrowserRouter>
-    </NotificationProvider>
+      </NotificationProvider>
+      </TourProvider>
   );
 }
 

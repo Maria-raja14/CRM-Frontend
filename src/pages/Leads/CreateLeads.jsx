@@ -207,7 +207,7 @@ const API_URL = import.meta.env.VITE_API_URL;
             dataToSend,
             config
           );
-          toast.success("🎉 Lead created successfully");
+          toast.success("Lead created successfully");
         }
 
         // wait a bit so toast shows before redirect
@@ -605,3 +605,5 @@ const API_URL = import.meta.env.VITE_API_URL;
     </>
   );
 } //sales and admin deatils come correctly..
+
+
