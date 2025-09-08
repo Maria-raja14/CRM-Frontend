@@ -559,3 +559,6 @@ export const AllDeals = () => {
     </div>
   );
 };
+
+
+
