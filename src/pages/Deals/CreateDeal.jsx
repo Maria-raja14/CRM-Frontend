@@ -1,7 +1,10 @@
 
-import React, { useState, useEffect } from "react";
+
+
+
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import axios from "axios";
 import { getNames } from "country-list";
 import {
@@ -15,17 +18,13 @@ import {
   Building2,
   Globe,
   MapPin,
-  FilePlus,
   FileText,
   BriefcaseBusiness,
 } from "lucide-react";
 import "react-toastify/dist/ReactToastify.css";
 
 export default function CreateDeal() {
-
-const API_URL = import.meta.env.VITE_API_URL;
-
-
+  const API_URL = import.meta.env.VITE_API_URL;
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -49,6 +48,7 @@ const API_URL = import.meta.env.VITE_API_URL;
   const [salesUsers, setSalesUsers] = useState([]);
   const [existingAttachments, setExistingAttachments] = useState([]);
   const [userRole, setUserRole] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [countries] = useState(getNames());
 
   // Load user role
@@ -74,64 +74,110 @@ const API_URL = import.meta.env.VITE_API_URL;
       }
     };
     fetchSalesUsers();
+  }, [API_URL]);
+
+  const handleChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (value.trim() !== "") {
+      setErrors(prev => ({ ...prev, [name]: false }));
+    }
   }, []);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-    if (value.trim() !== "") setErrors({ ...errors, [name]: false });
-  };
+  const handleFileChange = useCallback((e) => {
+    const files = Array.from(e.target.files);
+    
+    // Validate file sizes (max 5MB each)
+    const oversizedFiles = files.filter(file => file.size > 5 * 1024 * 1024);
+    if (oversizedFiles.length > 0) {
+      toast.error("Some files exceed the 5MB size limit");
+      // Only keep files under the size limit
+      e.target.value = null;
+      setFormData(prev => ({ 
+        ...prev, 
+        attachments: [...prev.attachments, ...files.filter(file => file.size <= 5 * 1024 * 1024)]
+      }));
+      return;
+    }
+    
+    setFormData(prev => ({ 
+      ...prev, 
+      attachments: [...prev.attachments, ...files]
+    }));
+  }, []);
 
-  const handleFileChange = (e) => {
-    setFormData({ ...formData, attachments: Array.from(e.target.files) });
-  };
-
-  const handleRemoveFile = (idx, type = "new") => {
+  const handleRemoveFile = useCallback((idx, type = "new") => {
     if (type === "new") {
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
         attachments: prev.attachments.filter((_, i) => i !== idx),
       }));
     } else {
-      setExistingAttachments((prev) => prev.filter((_, i) => i !== idx));
+      setExistingAttachments(prev => prev.filter((_, i) => i !== idx));
     }
-  };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    
     const newErrors = {
       dealName: formData.dealName.trim() === "",
       dealValue: formData.dealValue.trim() === "",
       phoneNumber: formData.phoneNumber.trim() === "",
       companyName: formData.companyName.trim() === "",
     };
+    
     setErrors(newErrors);
-    if (!Object.values(newErrors).some(Boolean)) {
-      try {
-        const token = localStorage.getItem("token");
-        const data = new FormData();
-        for (let key in formData) {
-          if (key === "attachments") {
-            formData.attachments.forEach((f) => data.append("attachments", f));
-          } else {
-            data.append(key, formData[key]);
-          }
+    
+    if (Object.values(newErrors).some(Boolean)) {
+      toast.error("Please fill in all required fields");
+      setIsSubmitting(false);
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem("token");
+      const data = new FormData();
+      
+      // Append all form fields except attachments
+      Object.keys(formData).forEach(key => {
+        if (key !== "attachments") {
+          data.append(key, formData[key]);
         }
-        data.append("existingAttachments", JSON.stringify(existingAttachments));
+      });
+      
+      // Append attachments individually
+      formData.attachments.forEach((file) => {
+        data.append("attachments", file);
+      });
+      
+      data.append("existingAttachments", JSON.stringify(existingAttachments));
 
-        await axios.post(`${API_URL}/deals/createManual`, data, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+      const response = await axios.post(`${API_URL}/deals/createManual`, data, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
+          // You could show a progress bar here if needed
+        },
+      });
 
-        toast.success("🎉 Deal created successfully");
-        setTimeout(() => navigate("/deals"), 2000);
-      } catch (err) {
-        console.error(err);
+      toast.success("Deal created successfully");
+      setTimeout(() => navigate("/deals"), 2000);
+    } catch (err) {
+      console.error("Deal creation error:", err);
+      if (err.response?.data?.message) {
+        toast.error(err.response.data.message);
+      } else {
         toast.error("Failed to create deal");
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -139,6 +185,18 @@ const API_URL = import.meta.env.VITE_API_URL;
 
   return (
     <div className="min-h-screen flex items-start justify-center py-10 px-4">
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
+      
       <div className="w-full max-w-6xl bg-white rounded-2xl shadow-xl border border-gray-100">
         {/* Header */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between px-6 py-5 border-b rounded-t-2xl">
@@ -295,6 +353,7 @@ const API_URL = import.meta.env.VITE_API_URL;
               ))}
             </div>
           </div>
+          
           {/* Management & Notes */}
           {userRole === "Admin" && (
             <div className="p-6 border border-gray-200 rounded-xl shadow-sm">
@@ -323,6 +382,7 @@ const API_URL = import.meta.env.VITE_API_URL;
               </div>
             </div>
           )}
+          
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
               <StickyNote size={16} /> Notes
@@ -336,8 +396,9 @@ const API_URL = import.meta.env.VITE_API_URL;
               className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white shadow-sm text-sm text-gray-700 placeholder-gray-400 transition resize-none"
             />
           </div>
-          {/* ---- Attachments Section ---- */}
-          <div className="p-6 border rounded-xl  shadow-sm">
+          
+          {/* Attachments Section */}
+          <div className="p-6 border rounded-xl shadow-sm">
             <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">
               Attachments
             </h2>
@@ -351,7 +412,7 @@ const API_URL = import.meta.env.VITE_API_URL;
                     className="flex flex-col items-center justify-center w-full bg-white border rounded-xl shadow-sm p-3"
                   >
                     <a
-                      href={`http://localhost:5000/${file}`} // adjust backend URL if needed
+                      href={`${API_URL}/${file}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-xs text-indigo-600 hover:underline truncate w-full text-center"
@@ -392,7 +453,7 @@ const API_URL = import.meta.env.VITE_API_URL;
                       />
                     </svg>
                     <span className="text-sm text-gray-600">
-                      Click or drag new files here
+                      Click or drag new files here (Max 5MB per file)
                     </span>
                   </>
                 ) : (
@@ -441,14 +502,16 @@ const API_URL = import.meta.env.VITE_API_URL;
               type="button"
               onClick={handleBackClick}
               className="px-6 py-2 rounded-lg border bg-white hover:bg-gray-100 text-gray-700 transition"
+              disabled={isSubmitting}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-md transition"
+              className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-md transition disabled:bg-blue-400 disabled:cursor-not-allowed"
+              disabled={isSubmitting}
             >
-              Save Deal
+              {isSubmitting ? "Creating..." : "Save Deal"}
             </button>
           </div>
         </form>

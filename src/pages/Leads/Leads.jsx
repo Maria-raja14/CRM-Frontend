@@ -1,6 +1,8 @@
+
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 
@@ -173,6 +175,7 @@ export default function LeadTable() {
     setLeads(filtered);
     setCurrentPage(1); // Reset to first page when filters change
   }, [searchQuery, assigneeFilter, statusFilter, sourceFilter, allLeads]);
+  
   const handleMenuToggle = (leadId, e) => {
     e.stopPropagation();
     if (menuOpen === leadId) {
@@ -267,6 +270,7 @@ export default function LeadTable() {
     setDealData({
       value: lead.value || 0,
       notes: lead.notes || "",
+      stage: "Qualification",
     });
     setConvertModalOpen(true);
     setMenuOpen(null);
@@ -279,28 +283,46 @@ export default function LeadTable() {
 
   const handleConvertDeal = async () => {
     if (!selectedLead) return;
+    
     try {
-      setConverting(true); // 🔵 Start loading
+      setConverting(true);
       const token = localStorage.getItem("token");
       const payload = { ...dealData };
 
+      // Show loading toast
+      const toastId = toast.loading("Converting lead to deal...");
       await axios.patch(
         `${API_URL}/leads/${selectedLead._id}/convert`,
+
         payload,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      toast.success("✅ Lead converted to deal");
+      // Update toast to success
+      toast.update(toastId, {
+        render: res.data.message || "Lead converted to deal successfully",
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
+        closeButton: true,
+      });
+
+      // Remove converted lead from UI
       setLeads(leads.filter((l) => l._id !== selectedLead._id));
       setAllLeads(allLeads.filter((l) => l._id !== selectedLead._id));
+
+      // Close modal
       setConvertModalOpen(false);
       setSelectedLead(null);
     } catch (err) {
-      toast.error(err.response?.data?.message || "❌ Conversion failed");
+      // Show error toast
+      toast.dismiss();
+      toast.error(err.response?.data?.message || "Conversion failed. Please try again.");
+      console.error("Conversion error:", err);
     } finally {
-      setConverting(false); // 🔴 Stop loading
+      setConverting(false);
     }
   };
 
@@ -371,6 +393,20 @@ export default function LeadTable() {
 
   return (
     <div className="p-6">
+      {/* Toast Container - This is required for toast notifications to work */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+      
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
         <div>
@@ -920,5 +956,4 @@ export default function LeadTable() {
       </Dialog>
     </div>
   );
-} //sales and admin deatils come correctly..
-
+}

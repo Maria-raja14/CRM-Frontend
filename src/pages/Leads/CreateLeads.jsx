@@ -1,6 +1,9 @@
+
+
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import axios from "axios";
 import { getNames } from "country-list";
 import {
@@ -22,8 +25,7 @@ import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 
 export default function CreateLeads() {
-const API_URL = import.meta.env.VITE_API_URL;
-
+  const API_URL = import.meta.env.VITE_API_URL;
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -31,6 +33,7 @@ const API_URL = import.meta.env.VITE_API_URL;
   const leadId = queryParams.get("id");
 
   const [userRole, setUserRole] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     leadName: "",
@@ -96,13 +99,14 @@ const API_URL = import.meta.env.VITE_API_URL;
             notes: leadData.notes || "",
             attachments: [], // ✅ reset uploads (can later extend to show existing files)
           });
-        } catch {
+        } catch (error) {
+          console.error("Error fetching lead:", error);
           toast.error("Failed to fetch lead data");
         }
       };
       fetchLead();
     }
-  }, [leadId]);
+  }, [leadId, API_URL]);
 
   // ✅ Fetch sales users (only for admin)
   useEffect(() => {
@@ -123,12 +127,13 @@ const API_URL = import.meta.env.VITE_API_URL;
 
           setSalesUsers(filteredSales);
         }
-      } catch {
+      } catch (error) {
+        console.error("Error fetching sales users:", error);
         toast.error("Failed to fetch sales users");
       }
     };
     fetchSalesUsers();
-  }, []);
+  }, [API_URL]);
 
   // ✅ Handlers
   const handleChange = (e) => {
@@ -154,6 +159,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
     const newErrors = {
       leadName: formData.leadName.trim() === "",
@@ -200,7 +206,7 @@ const API_URL = import.meta.env.VITE_API_URL;
             dataToSend,
             config
           );
-          toast.success("✅ Lead updated successfully");
+          toast.success("Lead updated successfully");
         } else {
           await axios.post(
             `${API_URL}/leads/create`,
@@ -210,15 +216,21 @@ const API_URL = import.meta.env.VITE_API_URL;
           toast.success("Lead created successfully");
         }
 
-        // wait a bit so toast shows before redirect
-        setTimeout(() => navigate("/leads"), 2000);
+        setTimeout(() => {
+          navigate("/leads");
+        }, 1500);
       } catch (err) {
-        console.error(err);
+        console.error("Error submitting form:", err);
         toast.error(
           err.response?.data?.message ||
-            (leadId ? "❌ Failed to update lead" : "❌ Failed to create lead")
+            (leadId ? "Failed to update lead" : "Failed to create lead")
         );
+      } finally {
+        setIsSubmitting(false);
       }
+    } else {
+      setIsSubmitting(false);
+      toast.error("Please fill in all required fields");
     }
   };
 
@@ -338,9 +350,10 @@ const API_URL = import.meta.env.VITE_API_URL;
       ],
     },
   ];
+
   return (
     <>
-      <div className="min-h-screen flex items-start justify-center  py-10 px-4">
+      <div className="min-h-screen flex items-start justify-center py-10 px-4">
         <div className="w-full max-w-6xl bg-white rounded-2xl shadow-xl border border-gray-100">
           {/* ---- Header ---- */}
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between px-6 py-5 border-b rounded-t-2xl">
@@ -365,7 +378,7 @@ const API_URL = import.meta.env.VITE_API_URL;
             {fieldGroups.map((group) => (
               <div
                 key={group.title}
-                className="space-y-6 p-6  border border-gray-200 rounded-xl shadow-sm"
+                className="space-y-6 p-6 border border-gray-200 rounded-xl shadow-sm"
               >
                 <h2
                   className={`text-lg font-semibold border-b pb-2 ${group.color}`}
@@ -499,7 +512,7 @@ const API_URL = import.meta.env.VITE_API_URL;
                       className="flex flex-col items-center justify-center w-full bg-white border rounded-xl shadow-sm p-3"
                     >
                       <a
-                        href={`http://localhost:5000/${file}`} // 🔑 adjust if backend gives full URL
+                        href={`${API_URL}/${file}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-xs text-indigo-600 hover:underline truncate w-full text-center"
@@ -594,16 +607,33 @@ const API_URL = import.meta.env.VITE_API_URL;
               </button>
               <button
                 type="submit"
-                className="px-6 py-2 rounded-lg bg-blue-600  text-white shadow-md transition"
+                disabled={isSubmitting}
+                className="px-6 py-2 rounded-lg bg-blue-600 text-white shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {leadId ? "Update Lead" : "Save Lead"}
+                {isSubmitting
+                  ? "Processing..."
+                  : leadId
+                  ? "Update Lead"
+                  : "Save Lead"}
               </button>
             </div>
           </form>
         </div>
       </div>
+      
+      {/* Toast Container */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </>
   );
-} //sales and admin deatils come correctly..
-
-
+}
