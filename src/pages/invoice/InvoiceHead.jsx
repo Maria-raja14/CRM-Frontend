@@ -1,9 +1,3 @@
-
-
-
-
-
-
 import React, { useState, useEffect, useRef } from "react";
 import DatePicker from "react-datepicker";
 import { FaEllipsisV } from "react-icons/fa";
@@ -25,9 +19,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const InvoiceHead = () => {
-
   const API_URL = import.meta.env.VITE_API_URL;
-
 
   const { openModal } = useModal();
   const [startDate, setStartDate] = useState(null);
@@ -102,9 +94,7 @@ const InvoiceHead = () => {
       setEmailStatus("loading");
       setEmailMessage("📨 Sending invoice email...");
 
-      await axios.post(
-        `${API_URL}/invoice/sendEmail/${invoiceId}`
-      );
+      await axios.post(`${API_URL}/invoice/sendEmail/${invoiceId}`);
 
       setEmailStatus("success");
       setEmailMessage("✅ Invoice sent to customer email!");
@@ -128,9 +118,10 @@ const InvoiceHead = () => {
     let filtered = invoices;
 
     if (searchTerm) {
-      filtered = filtered.filter((invoice) =>
-        invoice.invoicenumber &&
-        invoice.invoicenumber.toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter(
+        (invoice) =>
+          invoice.invoicenumber &&
+          invoice.invoicenumber.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -163,11 +154,9 @@ const InvoiceHead = () => {
 
   const handleDelete = async (invoiceId) => {
     try {
-      await axios.delete(
-        `${API_URL}/invoice/delete/${invoiceId}`
-      );
+      await axios.delete(`${API_URL}/invoice/delete/${invoiceId}`);
       toast.success("Invoice deleted successfully!");
-      setRefreshTrigger(prev => prev + 1);
+      setRefreshTrigger((prev) => prev + 1);
       setDeleteConfirmOpen(false);
     } catch (error) {
       console.error("Error deleting invoice:", error);
@@ -188,76 +177,212 @@ const InvoiceHead = () => {
 
   // Callback function to refresh invoices after creating/updating
   const handleInvoiceSaved = () => {
-    setRefreshTrigger(prev => prev + 1);
+    setRefreshTrigger((prev) => prev + 1);
     setEditingInvoice(null);
   };
 
-  const generatePDF = (invoice) => {
-    const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text("Invoice", 105, 20, { align: "center" });
-    doc.rect(10, 10, 190, 30);
+  // const generatePDF = (invoice) => {
+  //   const doc = new jsPDF();
+  //   doc.setFontSize(18);
+  //   doc.text("Invoice", 105, 20, { align: "center" });
+  //   doc.rect(10, 10, 190, 30);
 
-    doc.setFontSize(12);
-    const details = [
-      ["Invoice #", invoice.invoicenumber || "N/A"],
-      [
-        "Assigned To",
+  //   doc.setFontSize(12);
+  //   const details = [
+  //     ["Invoice #", invoice.invoicenumber || "N/A"],
+  //     [
+  //       "Assigned To",
+  //       invoice.assignTo
+  //         ? `${invoice.assignTo.firstName} ${invoice.assignTo.lastName}`
+  //         : "N/A",
+  //     ],
+  //     ["Status", invoice.status || "N/A"],
+  //   ];
+
+  //   let y = 50;
+  //   details.forEach(([key, value]) => {
+  //     doc.text(`${key}: ${value}`, 14, y);
+  //     y += 10;
+  //   });
+
+  //   autoTable(doc, {
+  //     startY: y + 10,
+  //     head: [["Deal Name", "Amount (Rs.)"]],
+  //     body:
+  //       invoice.items?.map((item) => [
+  //         item.deal?.dealName || "N/A",
+  //         Number(item.amount).toFixed(2),
+  //       ]) || [],
+  //     theme: "grid",
+  //     styles: { halign: "center", fontSize: 10 },
+  //     headStyles: {
+  //       fontSize: 12,
+  //       fillColor: [40, 116, 166],
+  //       textColor: [255, 255, 255],
+  //     },
+  //     alternateRowStyles: { fillColor: [240, 240, 240] },
+  //   });
+
+  //   const finalY = doc.lastAutoTable.finalY + 10;
+  //   doc.setFontSize(14).setTextColor(40, 116, 166);
+  //   doc.text(`Total Amount: Rs. ${Number(invoice.total).toFixed(2)}`, 14, finalY);
+  //   doc.setFontSize(12).setTextColor(0, 0, 0);
+  //   doc.text(`Tax: Rs. ${Number(invoice.tax).toFixed(2)}`, 14, finalY + 10);
+
+  //   const footerY = finalY + 25;
+  //   doc.setFontSize(10);
+  //   doc.text("Company Name | Address | Phone | Email", 105, footerY, {
+  //     align: "center",
+  //   });
+  //   doc.setFontSize(8).setTextColor(169, 169, 169);
+  //   doc.text(
+  //     "Terms & Conditions: Payment due within 30 days.",
+  //     105,
+  //     footerY + 10,
+  //     {
+  //       align: "center",
+  //     }
+  //   );
+
+  //   doc.save(`Invoice_${invoice.invoicenumber}.pdf`);
+  // };
+
+  const downloadInvoice = async (invoiceId, invoiceNumber) => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/invoice/download/${invoiceId}`,
+        { responseType: "blob" } // important for PDF
+      );
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `Invoice_${invoiceNumber}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      toast.error("❌ Failed to download invoice PDF");
+      console.error("Error downloading invoice:", error);
+    }
+  };
+
+  const generatePDF = (invoice) => {
+    const doc = new jsPDF("p", "mm", "a4");
+
+    // ============ HEADER ============ //
+    // Logo (make sure to pass a base64 or URL if you want logo in frontend)
+    // Example: const logo = "data:image/png;base64,....";
+    // doc.addImage(logo, "PNG", 15, 10, 40, 20);
+
+    doc.setFontSize(14).setFont("helvetica", "bold");
+    doc.text("TechZarInfo Software Solutions Pvt Ltd", 60, 15);
+
+    doc.setFontSize(10).setFont("helvetica", "normal");
+    doc.text("No.2D, M.S Tower, 4th Floor, Convent Rd, Cantonment,", 60, 20);
+    doc.text("Tiruchirappalli, Tamil Nadu 620001", 60, 25);
+    doc.text("Email: accounts@techzarinfo.com | Phone: +91 9791343199", 60, 30);
+    doc.text("GSTIN: 33AAJCT1568Q1ZP | PAN: AAJCT1568Q", 60, 35);
+
+    doc.setLineWidth(0.5);
+    doc.line(15, 40, 195, 40); // divider
+
+    // ============ INVOICE INFO ============ //
+    doc.setFontSize(11).setFont("helvetica", "bold");
+    doc.text("Invoice", 15, 50);
+
+    doc.setFont("helvetica", "normal");
+    doc.text(`Invoice Number: ${invoice.invoicenumber || "N/A"}`, 15, 58);
+    doc.text(
+      `Invoice Date: ${
+        invoice.createdAt
+          ? new Date(invoice.createdAt).toLocaleDateString()
+          : "N/A"
+      }`,
+      15,
+      64
+    );
+    doc.text(
+      `Client: ${
         invoice.assignTo
           ? `${invoice.assignTo.firstName} ${invoice.assignTo.lastName}`
-          : "N/A",
-      ],
-      ["Status", invoice.status || "N/A"],
-    ];
+          : "N/A"
+      }`,
+      15,
+      70
+    );
 
-    let y = 50;
-    details.forEach(([key, value]) => {
-      doc.text(`${key}: ${value}`, 14, y);
-      y += 10;
-    });
-
+    // ============ TABLE ============ //
     autoTable(doc, {
-      startY: y + 10,
-      head: [["Deal Name", "Amount (Rs.)"]],
+      startY: 80,
+      head: [
+        [
+          "Project Description",
+          "HSN/SAC Code",
+          "Total Effort (Days)",
+          "Amount (USD)",
+        ],
+      ],
       body:
         invoice.items?.map((item) => [
           item.deal?.dealName || "N/A",
+          "998314", // static example
+          "30", // static example
           Number(item.amount).toFixed(2),
         ]) || [],
       theme: "grid",
-      styles: { halign: "center", fontSize: 10 },
+      styles: { fontSize: 10 },
       headStyles: {
-        fontSize: 12,
         fillColor: [40, 116, 166],
-        textColor: [255, 255, 255],
+        textColor: 255,
+        halign: "center",
       },
-      alternateRowStyles: { fillColor: [240, 240, 240] },
+      columnStyles: {
+        0: { cellWidth: 80 }, // description
+        1: { cellWidth: 30, halign: "center" },
+        2: { cellWidth: 30, halign: "center" },
+        3: { cellWidth: 40, halign: "right" },
+      },
     });
 
-    const finalY = doc.lastAutoTable.finalY + 10;
-    doc.setFontSize(14).setTextColor(40, 116, 166);
-    doc.text(`Total Amount: Rs. ${Number(invoice.total).toFixed(2)}`, 14, finalY);
-    doc.setFontSize(12).setTextColor(0, 0, 0);
-    doc.text(`Tax: Rs. ${Number(invoice.tax).toFixed(2)}`, 14, finalY + 10);
+    let finalY = doc.lastAutoTable.finalY + 10;
 
-    const footerY = finalY + 25;
-    doc.setFontSize(10);
-    doc.text("Company Name | Address | Phone | Email", 105, footerY, {
-      align: "center",
-    });
-    doc.setFontSize(8).setTextColor(169, 169, 169);
+    // ============ TOTALS ============ //
+    doc.setFontSize(11).setFont("helvetica", "bold");
     doc.text(
-      "Terms & Conditions: Payment due within 30 days.",
-      105,
-      footerY + 10,
+      `Total Cost: USD ${Number(invoice.total).toFixed(2)}`,
+      195,
+      finalY,
       {
-        align: "center",
+        align: "right",
+      }
+    );
+    doc.setFont("helvetica", "normal");
+    doc.text(`Amount Received: USD 0.00`, 195, finalY + 6, { align: "right" });
+    doc.text(
+      `Balance Amount: USD ${Number(invoice.total).toFixed(2)}`,
+      195,
+      finalY + 12,
+      {
+        align: "right",
       }
     );
 
+    // ============ FOOTER ============ //
+    doc.setLineWidth(0.2);
+    doc.line(15, 285, 195, 285); // footer divider
+
+    doc.setFontSize(9).setTextColor(100);
+    doc.text("Terms & Conditions: Payment due within 30 days.", 105, 292, {
+      align: "center",
+    });
+    doc.text("TechZarInfo Software Solutions Pvt Ltd", 105, 298, {
+      align: "center",
+    });
+
+    // Save
     doc.save(`Invoice_${invoice.invoicenumber}.pdf`);
   };
-
   const totalAmount = filteredInvoices.reduce(
     (acc, invoice) => acc + (Number(invoice.total) || 0),
     0
@@ -294,60 +419,101 @@ const InvoiceHead = () => {
         </button>
       </div>
 
-      <InvoiceModal 
-        onInvoiceSaved={handleInvoiceSaved} 
+      <InvoiceModal
+        onInvoiceSaved={handleInvoiceSaved}
         editingInvoice={editingInvoice}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
-  {/* Total Amount Card */}
-  <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-md border border-blue-200 relative overflow-hidden">
-    <div className="absolute top-0 right-0 w-24 h-24 -mr-6 -mt-6 bg-blue-200 rounded-full opacity-30"></div>
-    <div className="relative z-10">
-      <div className="flex items-center mb-4">
-        <div className="p-2 rounded-lg bg-blue-100 mr-3">
-          <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+        {/* Total Amount Card */}
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-md border border-blue-200 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 -mr-6 -mt-6 bg-blue-200 rounded-full opacity-30"></div>
+          <div className="relative z-10">
+            <div className="flex items-center mb-4">
+              <div className="p-2 rounded-lg bg-blue-100 mr-3">
+                <svg
+                  className="w-5 h-5 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-blue-800">
+                Total Amount
+              </h3>
+            </div>
+            <p className="text-2xl font-bold text-blue-900">
+              ₹{totalAmount.toFixed(2)}
+            </p>
+          </div>
         </div>
-        <h3 className="text-lg font-medium text-blue-800">Total Amount</h3>
-      </div>
-      <p className="text-2xl font-bold text-blue-900">₹{totalAmount.toFixed(2)}</p>
-    </div>
-  </div>
 
-  {/* Total Paid Card */}
-  <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-md border border-green-200 relative overflow-hidden">
-    <div className="absolute top-0 right-0 w-24 h-24 -mr-6 -mt-6 bg-green-200 rounded-full opacity-30"></div>
-    <div className="relative z-10">
-      <div className="flex items-center mb-4">
-        <div className="p-2 rounded-lg bg-green-100 mr-3">
-          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+        {/* Total Paid Card */}
+        <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-md border border-green-200 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 -mr-6 -mt-6 bg-green-200 rounded-full opacity-30"></div>
+          <div className="relative z-10">
+            <div className="flex items-center mb-4">
+              <div className="p-2 rounded-lg bg-green-100 mr-3">
+                <svg
+                  className="w-5 h-5 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-green-800">Total Paid</h3>
+            </div>
+            <p className="text-2xl font-bold text-green-900">
+              ₹{totalPaid.toFixed(2)}
+            </p>
+          </div>
         </div>
-        <h3 className="text-lg font-medium text-green-800">Total Paid</h3>
-      </div>
-      <p className="text-2xl font-bold text-green-900">₹{totalPaid.toFixed(2)}</p>
-    </div>
-  </div>
 
-  {/* Total Due Card */}
-  <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl shadow-md border border-orange-200 relative overflow-hidden">
-    <div className="absolute top-0 right-0 w-24 h-24 -mr-6 -mt-6 bg-orange-200 rounded-full opacity-30"></div>
-    <div className="relative z-10">
-      <div className="flex items-center mb-4">
-        <div className="p-2 rounded-lg bg-orange-100 mr-3">
-          <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
+        {/* Total Due Card */}
+        <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl shadow-md border border-orange-200 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 -mr-6 -mt-6 bg-orange-200 rounded-full opacity-30"></div>
+          <div className="relative z-10">
+            <div className="flex items-center mb-4">
+              <div className="p-2 rounded-lg bg-orange-100 mr-3">
+                <svg
+                  className="w-5 h-5 text-orange-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-orange-800">Total Due</h3>
+            </div>
+            <p className="text-2xl font-bold text-orange-900">
+              ₹{totalDue.toFixed(2)}
+            </p>
+          </div>
         </div>
-        <h3 className="text-lg font-medium text-orange-800">Total Due</h3>
       </div>
-      <p className="text-2xl font-bold text-orange-900">₹{totalDue.toFixed(2)}</p>
-    </div>
-  </div>
-</div>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-4 mt-8 items-center justify-between">
@@ -355,11 +521,11 @@ const InvoiceHead = () => {
           <DatePicker
             selected={startDate}
             onChange={(date) => setStartDate(date)}
-            className="px-4 py-2 rounded-md border bg-white shadow-sm focus:ring-2 focus:ring-blue-400"
+            className="px-4 py-2 rounded-md border bg-white  focus:ring-2 focus:ring-blue-400"
             placeholderText="Filter by Date"
           />
           <select
-            className="px-4 py-2 rounded-md bg-white border shadow-sm text-gray-600"
+            className="px-4 py-2 rounded-md bg-white border  text-gray-600"
             value={filterAssignTo}
             onChange={(e) => setFilterAssignTo(e.target.value)}
           >
@@ -378,7 +544,7 @@ const InvoiceHead = () => {
             )}
           </select>
           <select
-            className="px-4 py-2 rounded-md bg-white border shadow-sm text-gray-600"
+            className="px-4 py-2 rounded-md bg-white border  text-gray-600"
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
           >
@@ -389,7 +555,7 @@ const InvoiceHead = () => {
         </div>
 
         {/* Search */}
-        <div className="flex items-center border rounded-full bg-white px-3 shadow-sm w-[250px]">
+        <div className="flex items-center border rounded-full bg-white px-3  w-[250px]">
           <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
           <input
             type="text"
@@ -444,9 +610,7 @@ const InvoiceHead = () => {
                     ? `${invoice.assignTo.firstName} ${invoice.assignTo.lastName}`
                     : "N/A"}
                 </td>
-                <td className="px-6 py-4">
-                  ₹{Number(invoice.tax).toFixed(2)}
-                </td>
+                <td className="px-6 py-4">₹{Number(invoice.tax).toFixed(2)}</td>
                 <td className="px-6 py-4 text-center relative">
                   <button
                     onClick={() =>
@@ -471,11 +635,14 @@ const InvoiceHead = () => {
 
                       <button
                         className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                        onClick={() => generatePDF(invoice)}
+                        onClick={() =>
+                          downloadInvoice(invoice._id, invoice.invoicenumber)
+                        }
                       >
                         Download
                       </button>
-                      <button 
+
+                      <button
                         className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
                         onClick={() => handleEdit(invoice)}
                       >
@@ -520,12 +687,14 @@ const InvoiceHead = () => {
           </select>
           <span className="text-sm text-gray-700 ml-2">entries</span>
         </div>
-        
+
         <div className="flex items-center">
           <span className="text-sm text-gray-700 mr-4">
-            Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount} entries
+            Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+            {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount}{" "}
+            entries
           </span>
-          
+
           <div className="flex space-x-1">
             <button
               onClick={() => handlePageChange(currentPage - 1)}
@@ -534,7 +703,7 @@ const InvoiceHead = () => {
             >
               Previous
             </button>
-            
+
             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
               let pageNum;
               if (totalPages <= 5) {
@@ -546,7 +715,7 @@ const InvoiceHead = () => {
               } else {
                 pageNum = currentPage - 2 + i;
               }
-              
+
               return (
                 <button
                   key={pageNum}
@@ -559,7 +728,7 @@ const InvoiceHead = () => {
                 </button>
               );
             })}
-            
+
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
@@ -600,8 +769,13 @@ const InvoiceHead = () => {
             <DialogTitle>Confirm Delete</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <p>Are you sure you want to delete invoice #{invoiceToDelete?.invoicenumber}?</p>
-            <p className="text-sm text-gray-500 mt-2">This action cannot be undone.</p>
+            <p>
+              Are you sure you want to delete invoice #
+              {invoiceToDelete?.invoicenumber}?
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              This action cannot be undone.
+            </p>
           </div>
           <div className="flex justify-end space-x-3">
             <button
@@ -619,7 +793,11 @@ const InvoiceHead = () => {
           </div>
         </DialogContent>
       </Dialog>
-       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+      />
     </div>
   );
 };

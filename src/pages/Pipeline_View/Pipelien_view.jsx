@@ -634,7 +634,7 @@ function SalesPipelineBoardPure() {
         </div>
         <div className="flex gap-2 items-center">
           <input
-            className="w-72 border border-gray-200 bg-white px-4 py-2 mr-12 rounded-full shadow-sm outline-none focus:ring-2 focus:ring-indigo-200"
+            className="w-72 border border-gray-200 bg-white px-4 py-2 mr-12 rounded-full  outline-none focus:ring-2 focus:ring-indigo-200"
             placeholder="Search deals…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}

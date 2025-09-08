@@ -125,7 +125,7 @@ const API_URL = import.meta.env.VITE_API_URL;
         <div className="flex flex-wrap items-center gap-4">
           {/* Category filter */}
           <select
-            className="border rounded p-2"
+            className="border p-2 rounded-md bg-white px-2"
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
           >
@@ -138,7 +138,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 
           {/* Assigned filter */}
           <select
-            className="border rounded p-2"
+            className="border rounded-md bg-white  p-2"
             value={selectedAssigned}
             onChange={(e) => setSelectedAssigned(e.target.value)}
           >

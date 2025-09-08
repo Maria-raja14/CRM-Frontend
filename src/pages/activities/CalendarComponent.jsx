@@ -194,46 +194,7 @@ const CalendarComponent = ({ activities }) => {
             Calendar
           </h2>
           
-          <div className="flex items-center space-x-4">
-            <div className="flex bg-gray-100 rounded-lg p-1">
-              {["month", "week", "day"].map((v) => (
-                <button
-                  key={v}
-                  onClick={() => setView(v)}
-                  className={`px-4 py-2 rounded-md text-sm font-medium ${
-                    view === v
-                      ? "bg-white text-blue-600 shadow-sm"
-                      : "text-gray-600 hover:text-gray-800"
-                  }`}
-                >
-                  {v.charAt(0).toUpperCase() + v.slice(1)}
-                </button>
-              ))}
-            </div>
-            
-            <div className="flex items-center">
-              <button
-                onClick={() => navigateCalendar("prev")}
-                className="p-2 text-gray-600 rounded-lg hover:bg-gray-100"
-              >
-                <FaArrowLeft />
-              </button>
-              <span className="mx-2 text-gray-700 font-medium">
-                {view === "month" 
-                  ? moment(currentDate).format("MMMM YYYY")
-                  : view === "week"
-                  ? `Week of ${moment(currentDate).startOf('week').format("MMM D")} - ${moment(currentDate).endOf('week').format("MMM D, YYYY")}`
-                  : moment(currentDate).format("dddd, MMMM D, YYYY")
-                }
-              </span>
-              <button
-                onClick={() => navigateCalendar("next")}
-                className="p-2 text-gray-600 rounded-lg hover:bg-gray-100"
-              >
-                <FaArrowRight />
-              </button>
-            </div>
-          </div>
+          
         </div>   
 
         <Calendar

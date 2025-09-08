@@ -218,7 +218,7 @@ const ProposalHead = () => {
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="border rounded px-4 py-2 bg-white shadow-sm focus:ring-2 focus:ring-blue-400"
+          className="border rounded-md px-4 py-2 bg-white  focus:ring-2 focus:ring-blue-400"
         >
           <option value="">All Status</option>
           <option value="draft">Draft</option>
@@ -234,7 +234,7 @@ const ProposalHead = () => {
             selected={filterCreatedDate}
             onChange={(date) => setFilterCreatedDate(date)}
             placeholderText="Created Date"
-            className="border rounded-md bg-white px-3 py-2 shadow-sm focus:ring-2 focus:ring-blue-400"
+            className="border rounded-md bg-white px-3 py-2  focus:ring-2 focus:ring-blue-400"
           />
         </div>
 
@@ -243,7 +243,7 @@ const ProposalHead = () => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Search by title, email, or deal"
-          className="border rounded-full px-4 py-2 bg-white shadow-sm focus:ring-2 focus:ring-blue-400 w-full md:w-1/3"
+          className="border rounded-full px-3 py-2 bg-white  focus:ring-2 focus:ring-blue-400  md:w-1/3"
         />
       </div>
 
