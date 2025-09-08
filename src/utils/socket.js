@@ -6,8 +6,10 @@ import { io } from "socket.io-client";
 let socket;
 
 export const initSocket = (userId) => {
+  const API_URL = import.meta.env.VITE_SI_URI;
+
   if (!socket) {
-    socket = io("http://localhost:5000", {
+    socket = io(`${API_URL}`, {
       auth: { userId },
       reconnectionAttempts: 3,
     });

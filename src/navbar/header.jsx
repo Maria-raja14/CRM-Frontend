@@ -531,7 +531,7 @@ const Navbar = ({ toggleSidebar }) => {
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setShowDropdown(!showDropdown)}
-              className="flex items-center space-x-2 bg-white dark:bg-gray-800 rounded-lg px-3 py-2 shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-gray-700"
+              className="flex items-center space-x-2 bg-white dark:bg-gray-800 rounded-lg  px-8 py-2 shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-gray-700"
             >
               <img
                 src="https://randomuser.me/api/portraits/men/32.jpg"

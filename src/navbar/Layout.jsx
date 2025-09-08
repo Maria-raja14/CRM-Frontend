@@ -40,7 +40,7 @@
 
 
 import React, { useState } from "react";
-import Sidebar from "../navbar/Sidebar";
+import Sidebar from "../navbar/sidebar";
 import Navbar from "./header";
 import { Outlet } from "react-router-dom";
 
