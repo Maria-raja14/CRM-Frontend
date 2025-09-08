@@ -37,11 +37,7 @@ function App() {
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
     if (user?._id) {
-      const socket = initSocket(user._id);
-
-      socket.on("new_notification", (notif) => {
-        console.log("🔔 Notification received:", notif);
-      });
+      initSocket(user._id); // 🔥 start socket right after login
     }
   }, []);
 
