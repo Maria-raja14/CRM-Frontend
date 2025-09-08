@@ -5,6 +5,8 @@ import { toast } from "react-toastify";
 const NotificationContext = createContext();
 
 export const NotificationProvider = ({ children }) => {
+const API_URL = import.meta.env.VITE_API_URL;
+
   const [notifications, setNotifications] = useState([]);
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -12,7 +14,7 @@ export const NotificationProvider = ({ children }) => {
     if (!user?._id) return;
 
     // fetch existing notifications
-    fetch(`http://localhost:5000/api/notification/${user._id}`)
+    fetch(`${API_URL}/notification/${user._id}`)
       .then((res) => res.json())
       .then((data) => setNotifications(data))
       .catch((err) => console.error(err));

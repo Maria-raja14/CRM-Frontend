@@ -27,6 +27,7 @@ import ViewProposal from "./pages/proposal/ViewProposal";
 // // Tour Components
 import { TourProvider } from "./component/Tour/TourContext";
 import Tour from "./component/Tour/Tour";
+import { SocketProvider } from "./context/SocketContext";
 //password
 //import PasswordUpdate from "./pages/password/PasswordUpdate";
 
@@ -46,6 +47,7 @@ function App() {
   }, []);
 
   return (
+    <SocketProvider>
      <TourProvider>
     <NotificationProvider>
       <BrowserRouter>
@@ -87,6 +89,7 @@ function App() {
       </BrowserRouter>
       </NotificationProvider>
       </TourProvider>
+      </SocketProvider>
   );
 }
 

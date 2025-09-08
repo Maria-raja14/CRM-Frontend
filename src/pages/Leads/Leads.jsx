@@ -24,9 +24,9 @@ import {
   DialogTitle,
 } from "../../components/ui/dialog";
 import { Eye } from "lucide-react";
+    const API_URL = import.meta.env.VITE_API_URL;
 
 export default function LeadTable() {
-    const API_URL = import.meta.env.VITE_API_URL;
 
   const navigate = useNavigate();
 
