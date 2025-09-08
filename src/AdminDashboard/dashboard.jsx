@@ -5023,9 +5023,9 @@
 //       byMonth[m] = (byMonth[m] || 0) + (inv.total || 0);
 //     });
     
-//     return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"].map((m) => ({ 
-//       month: m, 
-//       total: byMonth[m] || 0 
+//     return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"].map((m) => ({
+//       month: m,
+//       total: byMonth[m] || 0
 //     }));
 //   };
 
@@ -5263,12 +5263,12 @@
 //                       <XAxis dataKey="month" />
 //                       <YAxis />
 //                       <Tooltip formatter={(v) => [`₹${v.toLocaleString()}`, "Revenue"]} />
-//                       <Area 
-//                         type="monotone" 
-//                         dataKey="total" 
-//                         stroke="#8B5CF6" 
-//                         fill="url(#revGrad)" 
-//                         isAnimationActive 
+//                       <Area
+//                         type="monotone"
+//                         dataKey="total"
+//                         stroke="#8B5CF6"
+//                         fill="url(#revGrad)"
+//                         isAnimationActive
 //                         activeDot={{ r: 6, fill: "#8B5CF6" }}
 //                       />
 //                     </AreaChart>
@@ -5344,9 +5344,9 @@
 //                           label={(entry) => `${entry.name}: ${entry.value}`}
 //                         >
 //                           {pieData.filter((p) => p.value > 0).map((entry, idx) => (
-//                             <Cell 
-//                               key={idx} 
-//                               fill={entry.color} 
+//                             <Cell
+//                               key={idx}
+//                               fill={entry.color}
 //                               stroke="#fff"
 //                               strokeWidth={2}
 //                             />
@@ -5812,9 +5812,9 @@
 //       byMonth[m] = (byMonth[m] || 0) + (inv.total || 0);
 //     });
     
-//     return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"].map((m) => ({ 
-//       month: m, 
-//       total: byMonth[m] || 0 
+//     return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"].map((m) => ({
+//       month: m,
+//       total: byMonth[m] || 0
 //     }));
 //   };
 
@@ -6148,12 +6148,12 @@
 //                       <XAxis dataKey="month" />
 //                       <YAxis />
 //                       <Tooltip formatter={(v) => [`₹${v.toLocaleString()}`, "Revenue"]} />
-//                       <Area 
-//                         type="monotone" 
-//                         dataKey="total" 
-//                         stroke="#8B5CF6" 
-//                         fill="url(#revGrad)" 
-//                         isAnimationActive 
+//                       <Area
+//                         type="monotone"
+//                         dataKey="total"
+//                         stroke="#8B5CF6"
+//                         fill="url(#revGrad)"
+//                         isAnimationActive
 //                         activeDot={{ r: 6, fill: "#8B5CF6" }}
 //                       />
 //                     </AreaChart>
@@ -6447,16 +6447,16 @@ const CardBubbles = ({ seed = 0, count = 12, colorPalette = BASE_COLORS }) => {
           <motion.div
             key={i}
             initial={{ opacity: 0, scale: 0 }}
-            animate={{ 
-              y: [-10, 10, -10], 
-              opacity: [0, opacity, 0], 
-              x: [0, (i % 2 === 0 ? 8 : -8), 0], 
+            animate={{
+              y: [-10, 10, -10],
+              opacity: [0, opacity, 0],
+              x: [0, (i % 2 === 0 ? 8 : -8), 0],
               scale: [0.8, 1.2, 0.8],
               rotate: [0, 180, 360]
             }}
-            transition={{ 
-              repeat: Infinity, 
-              duration: duration, 
+            transition={{
+              repeat: Infinity,
+              duration: duration,
               delay,
               ease: "easeInOut"
             }}
@@ -6762,9 +6762,9 @@ const AdminDashboard = () => {
       byMonth[m] = (byMonth[m] || 0) + (inv.total || 0);
     });
     
-    return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"].map((m) => ({ 
-      month: m, 
-      total: byMonth[m] || 0 
+    return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"].map((m) => ({
+      month: m,
+      total: byMonth[m] || 0
     }));
   };
 
@@ -6785,7 +6785,7 @@ const AdminDashboard = () => {
   const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload || payload.length === 0) return null;
     return (
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="bg-white p-3 rounded-md shadow-lg border border-gray-200"
@@ -6846,16 +6846,16 @@ const AdminDashboard = () => {
             key={i}
             className="absolute rounded-full opacity-10"
             initial={{ scale: 0.95 }}
-            animate={{ 
-              y: [0, (i % 2 === 0 ? -20 : 20), 0], 
+            animate={{
+              y: [0, (i % 2 === 0 ? -20 : 20), 0],
               x: [0, (i % 3 === 0 ? 25 : -15), 0],
               rotate: [0, 180, 360]
             }}
-            transition={{ 
-              duration: 12 + (i % 6), 
-              repeat: Infinity, 
-              ease: "easeInOut", 
-              delay: i * 0.5 
+            transition={{
+              duration: 12 + (i % 6),
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: i * 0.5
             }}
             style={{
               width: 120 + (i * 18),
@@ -6870,7 +6870,7 @@ const AdminDashboard = () => {
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
         <div>
-          <motion.h1 
+          <motion.h1
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-3xl font-bold text-gray-900 flex items-center gap-3"
@@ -7115,14 +7115,14 @@ const AdminDashboard = () => {
                       <XAxis dataKey="month" />
                       <YAxis />
                       <Tooltip formatter={(v) => [`₹${v.toLocaleString()}`, "Revenue"]} />
-                      <Area 
-                        type="monotone" 
-                        dataKey="total" 
-                        stroke="#8B5CF6" 
-                        fill="url(#revGrad)" 
-                        isAnimationActive 
-                        activeDot={{ 
-                          r: 6, 
+                      <Area
+                        type="monotone"
+                        dataKey="total"
+                        stroke="#8B5CF6"
+                        fill="url(#revGrad)"
+                        isAnimationActive
+                        activeDot={{
+                          r: 6,
                           fill: "#8B5CF6",
                           stroke: "#fff",
                           strokeWidth: 2
@@ -7156,9 +7156,9 @@ const AdminDashboard = () => {
               ) : (
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart 
+                    <LineChart
                       key={lineAnimationKey}
-                      data={pipelineBarData} 
+                      data={pipelineBarData}
                       margin={{ top: 6, right: 20, left: 0, bottom: 6 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.06} />
@@ -7166,44 +7166,44 @@ const AdminDashboard = () => {
                       <YAxis />
                       <Tooltip formatter={(v) => [v, "Deals"]} />
                       <Legend />
-                      <Line 
-                        type="monotone" 
-                        dataKey="Open" 
-                        stroke="#8B5CF6" 
+                      <Line
+                        type="monotone"
+                        dataKey="Open"
+                        stroke="#8B5CF6"
                         strokeWidth={3}
-                        dot={{ 
-                          r: 4, 
-                          fill: "#8B5CF6", 
-                          strokeWidth: 2, 
-                          stroke: "#fff" 
+                        dot={{
+                          r: 4,
+                          fill: "#8B5CF6",
+                          strokeWidth: 2,
+                          stroke: "#fff"
                         }}
-                        activeDot={{ 
-                          r: 6, 
-                          fill: "#8B5CF6", 
-                          stroke: "#fff", 
-                          strokeWidth: 2 
+                        activeDot={{
+                          r: 6,
+                          fill: "#8B5CF6",
+                          stroke: "#fff",
+                          strokeWidth: 2
                         }}
                         isAnimationActive={true}
                         animationDuration={1500}
                         animationEasing="ease-out"
                       />
-                      <Line 
-                        type="monotone" 
-                        dataKey="Won" 
-                        stroke="#3B82F6" 
+                      <Line
+                        type="monotone"
+                        dataKey="Won"
+                        stroke="#3B82F6"
                         strokeWidth={3}
                         strokeDasharray="4 4"
-                        dot={{ 
-                          r: 4, 
-                          fill: "#3B82F6", 
-                          strokeWidth: 2, 
-                          stroke: "#fff" 
+                        dot={{
+                          r: 4,
+                          fill: "#3B82F6",
+                          strokeWidth: 2,
+                          stroke: "#fff"
                         }}
-                        activeDot={{ 
-                          r: 6, 
-                          fill: "#3B82F6", 
-                          stroke: "#fff", 
-                          strokeWidth: 2 
+                        activeDot={{
+                          r: 6,
+                          fill: "#3B82F6",
+                          stroke: "#fff",
+                          strokeWidth: 2
                         }}
                         isAnimationActive={true}
                         animationDuration={1500}
@@ -7276,9 +7276,9 @@ const AdminDashboard = () => {
 
                   <div className="flex gap-3 mt-4 justify-center flex-wrap">
                     {pieData.filter((p) => p.value > 0).map((p, i) => (
-                      <motion.div 
-                        key={p.name} 
-                        whileHover={{ scale: 1.04 }} 
+                      <motion.div
+                        key={p.name}
+                        whileHover={{ scale: 1.04 }}
                         className="flex items-center gap-2 mb-2"
                       >
                         <Badge variant="outline" className="flex items-center gap-2 bg-white">
@@ -7299,10 +7299,10 @@ const AdminDashboard = () => {
 
       {/* closing wow line */}
       <div className="text-center text-gray-700 mt-4 relative z-10">
-        <motion.p 
-          initial={{ opacity: 0 }} 
-          animate={{ opacity: 1 }} 
-          transition={{ duration: 0.8 }} 
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8 }}
           className="text-sm italic flex items-center justify-center gap-2"
         >
           <Sparkles className="h-4 w-4 text-purple-500" />
@@ -7314,4 +7314,7 @@ const AdminDashboard = () => {
   );
 };
 
-export default AdminDashboard;
+export default AdminDashboard;//all perfect..
+
+
+

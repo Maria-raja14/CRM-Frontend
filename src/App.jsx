@@ -4,7 +4,6 @@ import "./App.css";
 import Login from "./pages/auth/login";
 import Layout from "./navbar/Layout";
 import InvoiceHead from "./pages/invoice/InvoiceHead";
-import ProfileCard from "./navbar/Myprofile_Topcenter";
 import CalendarView from "./pages/activities/CalendarView";
 import Activity from "./pages/activityList/Activity";
 import ProposalHead from "./pages/proposal/ProposalHead";
@@ -28,6 +27,9 @@ import ViewProposal from "./pages/proposal/ViewProposal";
 // // Tour Components
 import { TourProvider } from "./component/Tour/TourContext";
 import Tour from "./component/Tour/Tour";
+//password
+//import PasswordUpdate from "./pages/password/PasswordUpdate";
+
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -56,7 +58,7 @@ function App() {
               <Route path="/adminDashboard" element={<AdminDashboard />} />
               <Route path="/user/roles" element={<UserManagement />} />
               <Route path="/invoice" element={<InvoiceHead />} />
-              <Route path="/dashboard/profile" element={<ProfileCard />} />
+              {/* <Route path="/password-update" element={<PasswordUpdate/>} /> */}
               <Route path="/proposal" element={<ProposalHead />} />
               <Route path="/proposal/sendproposal" element={<SendProposal />} />
               <Route path="/stage" element={<ProposalBoard />} />
@@ -77,14 +79,7 @@ function App() {
                 element={<NotificationsPage />}
               />
               <Route path="/proposal/view/:id" element={<ViewProposal />} />
-              <Route
-                path="/myprofile/*"
-                element={
-                  <div className="flex flex-col w-full">
-                    <ProfileCard />
-                  </div>
-                }
-              />
+          
             </Route>
           </Routes>
           <ToastContainer position="top-right" autoClose={3000} />
