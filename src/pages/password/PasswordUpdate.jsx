@@ -9,6 +9,8 @@ import {
 } from "../../components/ui/dialog";
 
 const PasswordUpdate = ({ isOpen, onClose }) => {
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const [formData, setFormData] = useState({
     email: "",
     currentPassword: "",
@@ -49,7 +51,7 @@ const PasswordUpdate = ({ isOpen, onClose }) => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        "http://localhost:5000/api/users/update-password",
+        `${API_URL}/users/update-password`,
         {
           method: "PUT",
           headers: {

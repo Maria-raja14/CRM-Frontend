@@ -26,6 +26,8 @@ import {
 import { Eye } from "lucide-react";
 
 export default function LeadTable() {
+    const API_URL = import.meta.env.VITE_API_URL;
+
   const navigate = useNavigate();
 
   const [leads, setLeads] = useState([]);
@@ -95,7 +97,7 @@ export default function LeadTable() {
         params.append("limit", itemsPerPage);
 
         const response = await axios.get(
-          `http://localhost:5000/api/leads/getAllLead?${params.toString()}`,
+          `${API_URL}/leads/getAllLead?${params.toString()}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -200,7 +202,7 @@ export default function LeadTable() {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.delete(
-        `http://localhost:5000/api/leads/deleteLead/${id}`,
+        `${API_URL}/leads/deleteLead/${id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -225,7 +227,7 @@ export default function LeadTable() {
       const token = localStorage.getItem("token");
       const responses = await Promise.all(
         selectedLeads.map((id) =>
-          axios.delete(`http://localhost:5000/api/leads/deleteLead/${id}`, {
+          axios.delete(`${API_URL}/leads/deleteLead/${id}`, {
             headers: { Authorization: `Bearer ${token}` },
           })
         )
@@ -283,7 +285,7 @@ export default function LeadTable() {
       const payload = { ...dealData };
 
       await axios.patch(
-        `http://localhost:5000/api/leads/${selectedLead._id}/convert`,
+        `${API_URL}/leads/${selectedLead._id}/convert`,
         payload,
         {
           headers: { Authorization: `Bearer ${token}` },
