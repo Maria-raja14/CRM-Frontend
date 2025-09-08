@@ -281,50 +281,48 @@ export default function LeadTable() {
     setDealData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleConvertDeal = async () => {
-    if (!selectedLead) return;
+ const handleConvertDeal = async () => {
+  if (!selectedLead) return;
+  try {
+    setConverting(true);
+    const token = localStorage.getItem("token");
+    const payload = { ...dealData };
     
-    try {
-      setConverting(true);
-      const token = localStorage.getItem("token");
-      const payload = { ...dealData };
-
-      // Show loading toast
-      const toastId = toast.loading("Converting lead to deal...");
-      await axios.patch(
-        `${API_URL}/leads/${selectedLead._id}/convert`,
-
-        payload,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      // Update toast to success
-      toast.update(toastId, {
-        render: res.data.message || "Lead converted to deal successfully",
-        type: "success",
-        isLoading: false,
-        autoClose: 3000,
-        closeButton: true,
-      });
-
-      // Remove converted lead from UI
-      setLeads(leads.filter((l) => l._id !== selectedLead._id));
-      setAllLeads(allLeads.filter((l) => l._id !== selectedLead._id));
-
-      // Close modal
-      setConvertModalOpen(false);
-      setSelectedLead(null);
-    } catch (err) {
-      // Show error toast
-      toast.dismiss();
-      toast.error(err.response?.data?.message || "Conversion failed. Please try again.");
-      console.error("Conversion error:", err);
-    } finally {
-      setConverting(false);
-    }
-  };
+    // Show loading toast
+    const toastId = toast.loading("Converting lead to deal...");
+    
+    const response = await axios.patch(
+      `${API_URL}/leads/${selectedLead._id}/convert`,
+      payload,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    
+    // Update toast to success
+    toast.update(toastId, {
+      render: response.data.message || "Lead converted to deal successfully",
+      type: "success",
+      isLoading: false,
+      autoClose: 3000,
+      closeButton: true,
+    });
+    
+    // Remove converted lead from UI
+    setLeads(leads.filter((l) => l._id !== selectedLead._id));
+    setAllLeads(allLeads.filter((l) => l._id !== selectedLead._id));
+    
+    // Close modal
+    setConvertModalOpen(false);
+    setSelectedLead(null);
+  } catch (err) {
+    toast.dismiss();
+    toast.error(err.response?.data?.message || "Conversion failed. Please try again.");
+    console.error("Conversion error:", err);
+  } finally {
+    setConverting(false);
+  }
+};
 
   const formatDate = (dateString) => {
     if (!dateString) return "-";
