@@ -28,6 +28,7 @@ import ViewProposal from "./pages/proposal/ViewProposal";
 import { TourProvider } from "./component/Tour/TourContext";
 import Tour from "./component/Tour/Tour";
 
+import { SocketProvider } from "./context/SocketContext";
 
 
 function App() {
@@ -45,6 +46,7 @@ function App() {
   }, []);
 
   return (
+    <SocketProvider>
      <TourProvider>
     <NotificationProvider>
       <BrowserRouter>
@@ -85,6 +87,7 @@ function App() {
       </BrowserRouter>
       </NotificationProvider>
       </TourProvider>
+      </SocketProvider>
   );
 }
 

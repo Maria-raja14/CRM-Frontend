@@ -62,7 +62,7 @@ useEffect(() => {
         setDeals(dealsRes.data);
 
         // ➡️ Fetch all users with token
-        const usersRes = await axios.get(`${API_URL}/user`, {
+        const usersRes = await axios.get(`${API_URL}/users`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 

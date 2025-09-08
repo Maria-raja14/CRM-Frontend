@@ -153,7 +153,7 @@ const ModalCalendar = ({
 
       const url = activityToEdit
         ? `${API_URL}/activity/update/${activityToEdit._id}`
-        : `{API_URL}/activity/add`;
+        : `${API_URL}/activity/add`;
 
       const method = activityToEdit ? axios.put : axios.post;
 
