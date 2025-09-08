@@ -31,6 +31,9 @@ export const AllDeals = () => {
   const [filters, setFilters] = useState({ stage: "", assignedTo: "" });
   const [searchTerm, setSearchTerm] = useState("");
   const [dropdownCoords, setDropdownCoords] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
   // Add these hooks
   useEffect(() => {
@@ -84,6 +87,7 @@ export const AllDeals = () => {
       setDeals(res.data || []);
       setTotalPages(Math.ceil((res.data?.length || 0) / itemsPerPage));
     } catch (err) {
+      console.error("Fetch deals error:", err);
       toast.error("Failed to fetch deals");
     } finally {
       setLoading(false);
@@ -101,6 +105,7 @@ export const AllDeals = () => {
       );
       setUsers(filteredSales);
     } catch (err) {
+      console.error("Fetch users error:", err);
       toast.error("Failed to fetch users");
     }
   };
@@ -153,20 +158,28 @@ export const AllDeals = () => {
   const handleBulkDelete = async () => {
     if (!selectedDeals.length) return toast.info("Select deals to delete");
     if (!window.confirm(`Delete ${selectedDeals.length} deals?`)) return;
+    
     try {
+      setIsBulkDeleting(true);
       const token = localStorage.getItem("token");
-      await Promise.all(
-        selectedDeals.map((id) =>
-          axios.delete(`${API_URL}/deals/delete-deal/${id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          })
-        )
+      
+      // Use a single API call for bulk deletion if your backend supports it
+      // Otherwise, show a loading state and process sequentially
+      const deletePromises = selectedDeals.map((id) =>
+        axios.delete(`${API_URL}/deals/delete-deal/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
       );
-      toast.success("Deleted successfully");
+      
+      await Promise.all(deletePromises);
+      toast.success(`Successfully deleted ${selectedDeals.length} deals`);
       setSelectedDeals([]);
-      fetchDeals();
+      await fetchDeals(); // Wait for the fetch to complete
     } catch (err) {
-      toast.error("Failed to delete");
+      console.error("Bulk delete error:", err);
+      toast.error("Failed to delete some deals");
+    } finally {
+      setIsBulkDeleting(false);
     }
   };
 
@@ -184,31 +197,39 @@ export const AllDeals = () => {
   };
   const handleDeleteConfirm = async () => {
     try {
+      setIsDeleting(true);
       const token = localStorage.getItem("token");
       await axios.delete(`${API_URL}/deals/delete-deal/${deleteDeal._id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      toast.success("Deleted successfully");
+      toast.success("Deal deleted successfully");
       setIsDeleteModalOpen(false);
-      fetchDeals();
+      await fetchDeals(); // Wait for the fetch to complete
       setSelectedDeals((prev) => prev.filter((d) => d !== deleteDeal._id));
     } catch (err) {
-      toast.error("Failed to delete");
+      console.error("Delete error:", err);
+      toast.error(err.response?.data?.message || "Failed to delete deal");
+    } finally {
+      setIsDeleting(false);
     }
   };
   const handleSave = async () => {
     try {
+      setIsUpdating(true);
       const token = localStorage.getItem("token");
       await axios.patch(
         `${API_URL}/deals/update-deal/${editDeal._id}`,
         editDeal,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success("Updated successfully");
+      toast.success("Deal updated successfully");
       setIsEditModalOpen(false);
-      fetchDeals();
+      await fetchDeals(); // Wait for the fetch to complete
     } catch (err) {
-      toast.error("Failed to update");
+      console.error("Update error:", err);
+      toast.error(err.response?.data?.message || "Failed to update deal");
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -227,6 +248,19 @@ export const AllDeals = () => {
 
   return (
     <div className="p-4">
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+      
       <h2 className="text-xl font-semibold text-gray-800 mb-4">All Deals</h2>
 
       {/* Top bar: filters + search + create button */}
@@ -290,9 +324,10 @@ export const AllDeals = () => {
         <div className="mb-2 flex items-center space-x-2">
           <button
             onClick={handleBulkDelete}
-            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            disabled={isBulkDeleting}
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed"
           >
-            Delete Selected ({selectedDeals.length})
+            {isBulkDeleting ? "Deleting..." : `Delete Selected (${selectedDeals.length})`}
           </button>
         </div>
       )}
@@ -500,9 +535,10 @@ export const AllDeals = () => {
                 </button>
                 <button
                   onClick={handleSave}
-                  className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                  disabled={isUpdating}
+                  className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed"
                 >
-                  Save
+                  {isUpdating ? "Updating..." : "Save"}
                 </button>
               </div>
             </div>
@@ -529,19 +565,14 @@ export const AllDeals = () => {
             </button>
             <button
               onClick={handleDeleteConfirm}
-              className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+              disabled={isDeleting}
+              className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed"
             >
-              Delete
+              {isDeleting ? "Deleting..." : "Delete"}
             </button>
           </div>
         </DialogContent>
       </Dialog>
-
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-      />
     </div>
   );
 };
