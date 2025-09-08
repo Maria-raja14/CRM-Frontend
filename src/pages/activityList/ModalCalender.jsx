@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -17,7 +18,6 @@ const ModalCalendar = ({
   onActivityAdded,
   onEdit,
 }) => {
-
   const API_URL = import.meta.env.VITE_API_URL;
 
   const [formData, setFormData] = useState({
@@ -37,12 +37,13 @@ const ModalCalendar = ({
   const [users, setUsers] = useState([]);
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const startTimeRef = useRef(null);
   const endTimeRef = useRef(null);
 
   // Fetch deals and users
- useEffect(() => {
+  useEffect(() => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
@@ -52,12 +53,9 @@ const ModalCalendar = ({
         }
 
         // ➡️ Fetch all deals with token
-        const dealsRes = await axios.get(
-          `${API_URL}/deals/getAll`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const dealsRes = await axios.get(`${API_URL}/deals/getAll`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setDeals(dealsRes.data);
 
         // ➡️ Fetch all users with token
@@ -74,8 +72,10 @@ const ModalCalendar = ({
       }
     };
 
-    fetchData();
-  }, []);
+    if (isOpen) {
+      fetchData();
+    }
+  }, [isOpen, API_URL]);
 
   // Fill data if editing
   useEffect(() => {
@@ -96,6 +96,20 @@ const ModalCalendar = ({
         endTime: activityToEdit.endTime || "",
         reminder: activityToEdit.reminder || "",
       });
+    } else {
+      // Reset form when adding new activity
+      setFormData({
+        activityCategory: "Call",
+        title: "",
+        description: "",
+        deal: "",
+        assignedTo: "",
+        startDate: null,
+        endDate: null,
+        startTime: "",
+        endTime: "",
+        reminder: "",
+      });
     }
   }, [activityToEdit]);
 
@@ -106,6 +120,7 @@ const ModalCalendar = ({
 
   const handleDateChange = (name, date) =>
     setFormData((prev) => ({ ...prev, [name]: date }));
+
   const handleTimeChange = (name, time) =>
     setFormData((prev) => ({ ...prev, [name]: time }));
 
@@ -126,6 +141,7 @@ const ModalCalendar = ({
   // Submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
     if (
       !formData.title ||
@@ -136,14 +152,22 @@ const ModalCalendar = ({
       !formData.endTime
     ) {
       toast.error("Please fill all required fields!");
+      setIsSubmitting(false);
       return;
     }
 
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error("Authentication token not found. Please log in again.");
+        setIsSubmitting(false);
+        return;
+      }
+
       // Prepare payload
       const payload = {
         ...formData,
-        assignedTo: formData.assignedTo || undefined, // send undefined if not selected
+        assignedTo: formData.assignedTo || undefined,
         reminder: formData.reminder
           ? new Date(
               formData.startDate.getTime() - parseReminder(formData.reminder)
@@ -157,21 +181,26 @@ const ModalCalendar = ({
 
       const method = activityToEdit ? axios.put : axios.post;
 
-      const res = await method(url, payload);
+      const res = await method(url, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (activityToEdit) {
-        // Use backend response instead of your local payload
-        onEdit(res.data.data); // <-- send updated activity from backend
-        toast.success("Activity updated!");
+        onEdit(res.data.data);
+        toast.success("Activity updated successfully!");
       } else {
         onActivityAdded(res.data.data);
-        toast.success("Activity added!");
+        toast.success("Activity added successfully!");
       }
 
       onClose();
     } catch (err) {
       console.error(err.response?.data || err);
-      toast.error(err.response?.data?.message || "Error saving activity!");
+      toast.error(
+        err.response?.data?.message || "Error saving activity. Please try again."
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -244,7 +273,7 @@ const ModalCalendar = ({
           <div className="grid grid-cols-1 gap-4">
             <div>
               <label className="block text-gray-600 mb-2 font-medium">
-                Title
+                Title *
               </label>
               <input
                 type="text"
@@ -253,6 +282,7 @@ const ModalCalendar = ({
                 onChange={handleInputChange}
                 className="w-full p-3 border rounded-lg border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
                 placeholder="Activity title"
+                required
               />
             </div>
 
@@ -274,13 +304,14 @@ const ModalCalendar = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-gray-600 mb-2 font-medium">
-                Deal
+                Deal *
               </label>
               <select
                 name="deal"
                 value={formData.deal}
                 onChange={handleInputChange}
                 className="w-full p-3 border rounded-lg border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                required
               >
                 <option value="">Select Deal</option>
                 {deals.map((deal) => (
@@ -316,11 +347,9 @@ const ModalCalendar = ({
             {["start", "end"].map((type) => (
               <div key={type}>
                 <label className="block text-gray-600 mb-2 font-medium">
-                  {type === "start" ? "Start" : "End"} Date & Time
+                  {type === "start" ? "Start" : "End"} Date & Time *
                 </label>
                 <div className="flex flex-col gap-2">
-                  {" "}
-                  {/* stacked vertically */}
                   <DatePicker
                     selected={formData[`${type}Date`]}
                     onChange={(date) => handleDateChange(`${type}Date`, date)}
@@ -328,6 +357,7 @@ const ModalCalendar = ({
                     placeholderText={`${
                       type.charAt(0).toUpperCase() + type.slice(1)
                     } date`}
+                    required
                   />
                   <div
                     className="relative w-full"
@@ -346,11 +376,12 @@ const ModalCalendar = ({
                       placeholder={`${
                         type.charAt(0).toUpperCase() + type.slice(1)
                       } time`}
+                      required
                     />
                     {(type === "start"
                       ? showStartTimePicker
                       : showEndTimePicker) && (
-                      <div className="absolute z-10 bg-white border border-gray-200 shadow-md max-h-40 overflow-y-auto w-full rounded-md mt-1 top-full left-0">
+                      <div className="absolute z-50 bg-white border border-gray-200 shadow-md max-h-40 overflow-y-auto w-full rounded-md mt-1 top-full left-0">
                         {timeOptions.map((time) => (
                           <div
                             key={time}
@@ -385,7 +416,6 @@ const ModalCalendar = ({
               className="w-full p-3 border rounded-lg border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
             >
               <option value="">No reminder</option>
-               <option value="15min">1 minutes before</option>
               <option value="15min">15 minutes before</option>
               <option value="30min">30 minutes before</option>
               <option value="1hour">1 hour before</option>
@@ -398,15 +428,17 @@ const ModalCalendar = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition w-full sm:w-auto"
+              disabled={isSubmitting}
+              className="px-5 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition w-full sm:w-auto disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition w-full sm:w-auto"
+              disabled={isSubmitting}
+              className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition w-full sm:w-auto disabled:opacity-50"
             >
-              Save
+              {isSubmitting ? "Saving..." : "Save"}
             </button>
           </div>
         </form>

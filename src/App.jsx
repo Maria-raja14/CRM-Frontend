@@ -27,9 +27,8 @@ import ViewProposal from "./pages/proposal/ViewProposal";
 // // Tour Components
 import { TourProvider } from "./component/Tour/TourContext";
 import Tour from "./component/Tour/Tour";
+
 import { SocketProvider } from "./context/SocketContext";
-//password
-//import PasswordUpdate from "./pages/password/PasswordUpdate";
 
 
 function App() {
@@ -56,7 +55,6 @@ function App() {
               <Route path="/adminDashboard" element={<AdminDashboard />} />
               <Route path="/user/roles" element={<UserManagement />} />
               <Route path="/invoice" element={<InvoiceHead />} />
-              {/* <Route path="/password-update" element={<PasswordUpdate/>} /> */}
               <Route path="/proposal" element={<ProposalHead />} />
               <Route path="/proposal/sendproposal" element={<SendProposal />} />
               <Route path="/stage" element={<ProposalBoard />} />
