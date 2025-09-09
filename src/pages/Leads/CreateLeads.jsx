@@ -132,7 +132,6 @@ export default function CreateLeads() {
     fetchSalesUsers();
   }, [API_URL]);
 
-  // ✅ Handlers
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -140,7 +139,26 @@ export default function CreateLeads() {
   };
 
   const handleFileChange = (e) => {
-    setFormData({ ...formData, attachments: Array.from(e.target.files) });
+    const files = Array.from(e.target.files);
+
+    // Check file size (20MB limit)
+    const oversizedFiles = files.filter((file) => file.size > 20 * 1024 * 1024);
+
+    if (oversizedFiles.length > 0) {
+      toast.error("Some files exceed the 20MB size limit");
+      return;
+    }
+
+    // Check total number of files (5 limit)
+    if (formData.attachments.length + files.length > 5) {
+      toast.error("Maximum 5 attachments allowed");
+      return;
+    }
+
+    setFormData({
+      ...formData,
+      attachments: [...formData.attachments, ...files],
+    });
   };
 
   const handleRemoveFile = (idx, type = "new") => {
@@ -485,103 +503,100 @@ export default function CreateLeads() {
             ))}
 
             {/* ---- Attachments Section ---- */}
-            <div className="p-6 border rounded-xl bg-gray-50 shadow-sm">
-              <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">
-                Attachments
-              </h2>
-
-              {/* Existing Files */}
-              {existingAttachments.length > 0 && (
-                <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {existingAttachments.map((file, idx) => (
-                    <div
-                      key={idx}
-                      className="flex flex-col items-center justify-center w-full bg-white border rounded-xl shadow-sm p-3"
+            <div className="mt-4">
+              <label
+                htmlFor="attachments"
+                className="flex flex-col items-center justify-center w-full min-h-32 border-2 border-dashed border-indigo-300 rounded-xl cursor-pointer hover:border-indigo-500 hover:bg-indigo-50 transition p-6"
+              >
+                {formData.attachments.length === 0 &&
+                existingAttachments.length === 0 ? (
+                  <>
+                    <svg
+                      className="w-8 h-8 text-gray-400 mb-2"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      viewBox="0 0 24 24"
                     >
-                      <a
-                        href={`${API_URL}${file.path}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-indigo-600 hover:underline truncate w-full text-center"
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M7 16V8m0 0l-4 4m4-4l4 4M17 8v8m0 0l4-4m-4 4l-4-4"
+                      />
+                    </svg>
+                    <span className="text-sm text-gray-600">
+                      Click or drag files here (Max 5 files, 20MB each)
+                    </span>
+                  </>
+                ) : (
+                  <div className="w-full flex flex-wrap gap-4">
+                    {/* Existing files */}
+                    {existingAttachments.map((file, idx) => (
+                      <div
+                        key={`existing-${idx}`}
+                        className="flex flex-col items-center justify-center w-28 h-28 bg-white border rounded-xl shadow-sm p-2"
                       >
-                        {file.name}
-                      </a>
-
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveFile(idx, "existing")}
-                        className="text-[12px] text-red-600 hover:underline mt-1"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Upload New Files */}
-              <div className="mt-4">
-                <label
-                  htmlFor="attachments"
-                  className="flex flex-col items-center justify-center w-full min-h-32 border-2 border-dashed border-indigo-300 rounded-xl cursor-pointer hover:border-indigo-500 hover:bg-indigo-50 transition p-6"
-                >
-                  {formData.attachments.length === 0 ? (
-                    <>
-                      <svg
-                        className="w-8 h-8 text-gray-400 mb-2"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M7 16V8m0 0l-4 4m4-4l4 4M17 8v8m0 0l4-4m-4 4l-4-4"
-                        />
-                      </svg>
-                      <span className="text-sm text-gray-600">
-                        Click or drag new files here
-                      </span>
-                    </>
-                  ) : (
-                    <div className="w-full flex flex-wrap gap-4">
-                      {formData.attachments.map((file, idx) => (
-                        <div
-                          key={idx}
-                          className="flex flex-col items-center justify-center w-28 h-28 bg-white border rounded-xl shadow-sm"
-                        >
-                          <div className="w-12 h-12 flex items-center justify-center bg-indigo-100 rounded-md mb-1">
-                            <span className="text-xs font-semibold text-indigo-600">
-                              {file.name.split(".").pop().toUpperCase()}
-                            </span>
-                          </div>
-                          <p className="text-xs text-gray-500">
-                            {(file.size / 1024).toFixed(1)} KB
-                          </p>
-                          <p className="text-[10px] text-gray-700 truncate w-full text-center">
-                            {file.name}
-                          </p>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveFile(idx, "new")}
-                            className="text-[12px] text-red-600 hover:underline mt-1"
-                          >
-                            Remove
-                          </button>
+                        <div className="w-12 h-12 flex items-center justify-center bg-indigo-100 rounded-md mb-1">
+                          <span className="text-xs font-semibold text-indigo-600">
+                            {file.name.split(".").pop().toUpperCase()}
+                          </span>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                  <input
-                    id="attachments"
-                    type="file"
-                    multiple
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                </label>
-              </div>
+                        <p className="text-xs text-gray-500 truncate w-full text-center">
+                          {file.name}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFile(idx, "existing")}
+                          className="text-[12px] text-red-600 hover:underline mt-1"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+
+                    {/* New files */}
+                    {formData.attachments.map((file, idx) => (
+                      <div
+                        key={`new-${idx}`}
+                        className="flex flex-col items-center justify-center w-28 h-28 bg-white border rounded-xl shadow-sm p-2"
+                      >
+                        <div className="w-12 h-12 flex items-center justify-center bg-indigo-100 rounded-md mb-1">
+                          <span className="text-xs font-semibold text-indigo-600">
+                            {file.name.split(".").pop().toUpperCase()}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          {(file.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                        <p className="text-[10px] text-gray-700 truncate w-full text-center">
+                          {file.name}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFile(idx, "new")}
+                          className="text-[12px] text-red-600 hover:underline mt-1"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <input
+                  id="attachments"
+                  type="file"
+                  multiple
+                  onChange={handleFileChange}
+                  className="hidden"
+                  disabled={
+                    formData.attachments.length + existingAttachments.length >=
+                    5
+                  }
+                />
+              </label>
+              <p className="text-xs text-gray-500 mt-2">
+                Maximum 5 files, 20MB each. Supported file types: all.
+              </p>
             </div>
 
             {/* ---- Buttons ---- */}
@@ -624,4 +639,4 @@ export default function CreateLeads() {
       />
     </>
   );
-}
+}//original...
