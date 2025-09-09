@@ -33,7 +33,7 @@ const InvoiceHead = () => {
   const [editingInvoice, setEditingInvoice] = useState(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [invoiceToDelete, setInvoiceToDelete] = useState(null);
-  const[dropdownButton,setDropdownButton]=useState(null)
+  const [dropdownButton, setDropdownButton] = useState(null);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -196,7 +196,7 @@ const InvoiceHead = () => {
         `${API_URL}/invoice/download/${invoiceId}`,
         { responseType: "blob" }
       );
-console.log(response);
+      console.log(response);
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
@@ -449,73 +449,74 @@ console.log(response);
                     : "N/A"}
                 </td>
                 <td className="px-6 py-4">₹{Number(invoice.tax).toFixed(2)}</td>
-              <td className="px-6 py-4 text-center relative">
-  <button
-    onClick={(e) => {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const spaceBelow = window.innerHeight - rect.bottom;
-      const spaceAbove = rect.top;
+                <td className="px-6 py-4 text-center relative">
+                  <button
+                    onClick={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const spaceBelow = window.innerHeight - rect.bottom;
+                      const spaceAbove = rect.top;
 
-      const position = spaceBelow > 200 ? "below" : "above"; // if not enough space, open above
+                      const position = spaceBelow > 200 ? "below" : "above"; // if not enough space, open above
 
-      setOpenIndex(openIndex === index ? null : index);
-      setDropdownButton({
-        rect,
-        position,
-      });
-    }}
-    className="p-2 rounded-full hover:bg-gray-100 text-gray-500"
-  >
-    <FaEllipsisV />
-  </button>
+                      setOpenIndex(openIndex === index ? null : index);
+                      setDropdownButton({
+                        rect,
+                        position,
+                      });
+                    }}
+                    className="p-2 rounded-full hover:bg-gray-100 text-gray-500"
+                  >
+                    <FaEllipsisV />
+                  </button>
 
-  {openIndex === index &&
-    ReactDOM.createPortal(
-      <div
-        ref={dropdownRef}
-        className="absolute z-50 bg-white border rounded-md shadow-lg"
-        style={{
-          top:
-            dropdownButton?.position === "below"
-              ? dropdownButton.rect.bottom + window.scrollY
-              : dropdownButton.rect.top +
-                window.scrollY -
-                (dropdownRef.current?.offsetHeight || 150),
-          left: dropdownButton
-            ? dropdownButton.rect.left + window.scrollX
-            : 0,
-          minWidth: "8rem",
-        }}
-      >
-        <button
-          className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-          onClick={() => handleSendEmail(invoice._id)}
-        >
-          Send to Email
-        </button>
-        <button
-          className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-          onClick={() => downloadInvoice(invoice._id, invoice.invoicenumber)}
-        >
-          Download
-        </button>
-        <button
-          className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-          onClick={() => handleEdit(invoice)}
-        >
-          Edit
-        </button>
-        <button
-          className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-          onClick={() => confirmDelete(invoice)}
-        >
-          Delete
-        </button>
-      </div>,
-      document.body
-    )}
-</td>
-
+                  {openIndex === index &&
+                    ReactDOM.createPortal(
+                      <div
+                        ref={dropdownRef}
+                        className="absolute z-50 bg-white border rounded-md shadow-lg"
+                        style={{
+                          top:
+                            dropdownButton?.position === "below"
+                              ? dropdownButton.rect.bottom + window.scrollY
+                              : dropdownButton.rect.top +
+                                window.scrollY -
+                                (dropdownRef.current?.offsetHeight || 150),
+                          left: dropdownButton
+                            ? dropdownButton.rect.left + window.scrollX
+                            : 0,
+                          minWidth: "8rem",
+                        }}
+                      >
+                        <button
+                          className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                          onClick={() => handleSendEmail(invoice._id)}
+                        >
+                          Send to Email
+                        </button>
+                        <button
+                          className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                          onClick={() =>
+                            downloadInvoice(invoice._id, invoice.invoicenumber)
+                          }
+                        >
+                          Download
+                        </button>
+                        <button
+                          className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                          onClick={() => handleEdit(invoice)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                          onClick={() => confirmDelete(invoice)}
+                        >
+                          Delete
+                        </button>
+                      </div>,
+                      document.body
+                    )}
+                </td>
               </tr>
             ))}
 
@@ -652,27 +653,6 @@ console.log(response);
           </div>
         </DialogContent>
       </Dialog>
-      {/* Download PDF Modal */}
-      <Dialog open={downloadModalOpen} onOpenChange={setDownloadModalOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Download Status</DialogTitle>
-          </DialogHeader>
-          <div className="py-6 text-center">
-            {downloadStatus === "loading" && (
-              <p className="text-blue-600 font-medium animate-pulse">
-                {downloadMessage}
-              </p>
-            )}
-            {downloadStatus === "success" && (
-              <p className="text-green-600 font-semibold">{downloadMessage}</p>
-            )}
-            {downloadStatus === "error" && (
-              <p className="text-red-600 font-semibold">{downloadMessage}</p>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <ToastContainer
         position="top-right"
@@ -684,5 +664,3 @@ console.log(response);
 };
 
 export default InvoiceHead;
-
-

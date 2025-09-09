@@ -176,16 +176,20 @@ export default function LeadTable() {
 
   const handleMenuToggle = (leadId, e) => {
     e.stopPropagation();
-    if (menuOpen === leadId) {
-      setMenuOpen(null);
-    } else {
-      const rect = e.currentTarget.getBoundingClientRect();
-      setMenuPosition({
-        top: rect.bottom + window.scrollY + 4, // small gap below
-        left: rect.right + window.scrollX - 160, // align menu width (~160px)
-      });
-      setMenuOpen(leadId);
+    const rect = e.currentTarget.getBoundingClientRect();
+    const menuHeight = 120; // approx menu height (adjust if needed)
+    const viewportHeight = window.innerHeight;
+
+    let top = rect.bottom + window.scrollY + 4; // default bottom placement
+    let left = rect.right + window.scrollX - 160;
+
+    // Check if menu will overflow bottom
+    if (rect.bottom + menuHeight > viewportHeight) {
+      top = rect.top + window.scrollY - menuHeight - 4; // open above
     }
+
+    setMenuPosition({ top, left });
+    setMenuOpen(menuOpen === leadId ? null : leadId);
   };
 
   const handleEdit = (leadId) => {
@@ -529,7 +533,6 @@ export default function LeadTable() {
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
                 Follow-Up
               </th>
-          
 
               <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">
                 Actions
@@ -604,7 +607,6 @@ export default function LeadTable() {
                   <td className="px-4 py-3 text-sm text-gray-700">
                     {formatDate(lead.followUpDate)}
                   </td>
-                 
 
                   <td className="px-4 py-3 text-right relative">
                     <div className="relative inline-block text-left">
@@ -758,8 +760,6 @@ export default function LeadTable() {
           </div>
         </DialogContent>
       </Dialog>
-
-    
 
       {/* Convert Deal Modal */}
       <Dialog open={convertModalOpen} onOpenChange={setConvertModalOpen}>
