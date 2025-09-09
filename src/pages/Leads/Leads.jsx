@@ -27,6 +27,7 @@ import {
 } from "../../components/ui/dialog";
 import { Eye } from "lucide-react";
     const API_URL = import.meta.env.VITE_API_URL;
+    const API_SI = import.meta.env.VITE_SI_URI;
 
 export default function LeadTable() {
 
@@ -789,7 +790,7 @@ export default function LeadTable() {
               <ul className="list-disc ml-5">
                 {selectedAttachments.map((filePath, idx) => {
                   // Convert backslash to slash for URLs and prepend server URL
-                  const fileUrl = `http://localhost:5000/${filePath.replace(
+                  const fileUrl = `${API_SI}/${filePath.replace(
                     /\\/g,
                     "/"
                   )}`;
