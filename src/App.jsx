@@ -1,3 +1,5 @@
+
+
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import "./App.css";
@@ -15,7 +17,7 @@ import DraftsPage from "./pages/proposal/DraftsPage";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import UserManagement from "./pages/useroles/UserManagement";
-import { initSocket /*    */ } from "./utils/socket";
+import { initSocket } from "./utils/socket";
 import { AllDeals } from "./pages/Deals/allDeals";
 import Pipeline_view from "./pages/Pipeline_View/Pipelien_view";
 import Pipeline_modal_view from "./pages/Pipeline_View/Pipeline_modal_view";
@@ -24,14 +26,16 @@ import CreateDeal from "./pages/Deals/CreateDeal";
 import { NotificationProvider } from "./context/NotificationContext";
 import NotificationsPage from "./pages/notification/NotificationsPage";
 import ViewProposal from "./pages/proposal/ViewProposal";
-// // Tour Components
 import { TourProvider } from "./component/Tour/TourContext";
 import Tour from "./component/Tour/Tour";
-
 import { SocketProvider } from "./context/SocketContext";
 import ViewLead from "./pages/Leads/ViewLead";
 
+
 import ResetPassword from "./pages/password/ResetPassword";
+
+import PrivateRoute from "./pages/auth/PrivateRoute";
+
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -45,13 +49,15 @@ function App() {
 
   return (
     <SocketProvider>
-     <TourProvider>
-    <NotificationProvider>
-      <BrowserRouter>
-          <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white transition-all">
+      <TourProvider>
+        <NotificationProvider>
+          <BrowserRouter>
+            <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white transition-all">
               <Tour />
+
           <Routes>
             <Route path="/" element={<Login />} />
+             <Route element={<PrivateRoute />}>
             <Route path="/reset-password/:token" element={<ResetPassword />} />
             <Route path="/layout" element={<Layout />} />
             <Route element={<Layout isModalOpen={isModalOpen} />}>
@@ -81,15 +87,17 @@ function App() {
                   <Route path="/leads/view/:id" element={<ViewLead />} />
 
                 
-          
+          </Route>
             </Route>
           </Routes>
           <ToastContainer position="top-right" autoClose={3000} />
         </div>
       </BrowserRouter>
       </NotificationProvider>
+
+              
       </TourProvider>
-      </SocketProvider>
+    </SocketProvider>
   );
 }
 

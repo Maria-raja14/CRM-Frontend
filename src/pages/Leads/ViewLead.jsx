@@ -31,7 +31,7 @@ const ViewLead = () => {
         const res = await axios.get(`${API_URL}/leads/getLead/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log(res);
+     
         
         setLead(res.data);
       } catch (err) {
