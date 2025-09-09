@@ -31,6 +31,7 @@ import Tour from "./component/Tour/Tour";
 import { SocketProvider } from "./context/SocketContext";
 import ViewLead from "./pages/Leads/ViewLead";
 
+import ResetPassword from "./pages/password/ResetPassword";
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -51,6 +52,7 @@ function App() {
               <Tour />
           <Routes>
             <Route path="/" element={<Login />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
             <Route path="/layout" element={<Layout />} />
             <Route element={<Layout isModalOpen={isModalOpen} />}>
               <Route path="/adminDashboard" element={<AdminDashboard />} />
@@ -76,7 +78,9 @@ function App() {
                 element={<NotificationsPage />}
               />
               <Route path="/proposal/view/:id" element={<ViewProposal />} />
-                        <Route path="/leads/view/:id" element={<ViewLead />} />
+                  <Route path="/leads/view/:id" element={<ViewLead />} />
+
+                
           
             </Route>
           </Routes>
