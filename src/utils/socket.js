@@ -1,6 +1,43 @@
 
 
 
+// import { io } from "socket.io-client";
+
+// let socket;
+
+// export const initSocket = (userId) => {
+//   const API_URL = import.meta.env.VITE_SI_URI;
+
+//   if (!socket) {
+//     socket = io(`${API_URL}`, {
+//       auth: { userId },
+//       reconnectionAttempts: 3,
+//     });
+
+//     socket.on("connect", () => {
+//       console.log("🔗 Connected:", socket.id);
+//     });
+
+//     socket.on("disconnect", () => {
+//       console.log("❌ Disconnected:", socket.id);
+//     });
+//   }
+
+//   return socket;
+// };
+
+// export const disconnectSocket = () => {
+//   if (socket) {
+//     socket.disconnect();
+//     socket = null;
+//     console.log("🔌 Socket disconnected manually");
+//   }
+// };
+
+
+
+
+
 import { io } from "socket.io-client";
 
 let socket;
@@ -8,20 +45,20 @@ let socket;
 export const initSocket = (userId) => {
   const API_URL = import.meta.env.VITE_SI_URI;
 
-  if (!socket) {
-    socket = io(`${API_URL}`, {
-      auth: { userId },
-      reconnectionAttempts: 3,
-    });
+  if (socket) return socket; // ✅ Prevent multiple sockets
 
-    socket.on("connect", () => {
-      console.log("🔗 Connected:", socket.id);
-    });
+  socket = io(API_URL, {
+    auth: { userId },
+    reconnectionAttempts: 3,
+  });
 
-    socket.on("disconnect", () => {
-      console.log("❌ Disconnected:", socket.id);
-    });
-  }
+  socket.on("connect", () => {
+    console.log("🔗 Connected:", socket.id);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("❌ Disconnected:", socket.id);
+  });
 
   return socket;
 };
@@ -33,5 +70,3 @@ export const disconnectSocket = () => {
     console.log("🔌 Socket disconnected manually");
   }
 };
-
-
