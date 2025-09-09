@@ -206,10 +206,10 @@ const InvoiceHead = () => {
       link.remove();
 
       setDownloadStatus("success");
-      setDownloadMessage("✅ Invoice downloaded successfully!");
+      setDownloadMessage("Invoice downloaded successfully!");
     } catch (error) {
       setDownloadStatus("error");
-      setDownloadMessage("❌ Failed to download invoice.");
+      setDownloadMessage(" Failed to download invoice.");
       toast.error("Failed to download invoice.");
       console.error("Error downloading invoice:", error);
     } finally {
@@ -683,3 +683,5 @@ const InvoiceHead = () => {
 };
 
 export default InvoiceHead;
+
+
