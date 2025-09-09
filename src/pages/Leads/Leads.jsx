@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
@@ -26,11 +24,10 @@ import {
   DialogTitle,
 } from "../../components/ui/dialog";
 import { Eye } from "lucide-react";
-    const API_URL = import.meta.env.VITE_API_URL;
-    const API_SI = import.meta.env.VITE_SI_URI;
+const API_URL = import.meta.env.VITE_API_URL;
+const API_SI = import.meta.env.VITE_SI_URI;
 
 export default function LeadTable() {
-
   const navigate = useNavigate();
 
   const [leads, setLeads] = useState([]);
@@ -176,7 +173,7 @@ export default function LeadTable() {
     setLeads(filtered);
     setCurrentPage(1); // Reset to first page when filters change
   }, [searchQuery, assigneeFilter, statusFilter, sourceFilter, allLeads]);
-  
+
   const handleMenuToggle = (leadId, e) => {
     e.stopPropagation();
     if (menuOpen === leadId) {
@@ -205,12 +202,9 @@ export default function LeadTable() {
   const handleDeleteLead = async (id) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.delete(
-        `${API_URL}/leads/deleteLead/${id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await axios.delete(`${API_URL}/leads/deleteLead/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (response.status === 200) {
         setLeads(leads.filter((lead) => lead._id !== id));
         setAllLeads(allLeads.filter((lead) => lead._id !== id));
@@ -282,48 +276,50 @@ export default function LeadTable() {
     setDealData((prev) => ({ ...prev, [name]: value }));
   };
 
- const handleConvertDeal = async () => {
-  if (!selectedLead) return;
-  try {
-    setConverting(true);
-    const token = localStorage.getItem("token");
-    const payload = { ...dealData };
-    
-    // Show loading toast
-    const toastId = toast.loading("Converting lead to deal...");
-    
-    const response = await axios.patch(
-      `${API_URL}/leads/${selectedLead._id}/convert`,
-      payload,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
-    
-    // Update toast to success
-    toast.update(toastId, {
-      render: response.data.message || "Lead converted to deal successfully",
-      type: "success",
-      isLoading: false,
-      autoClose: 3000,
-      closeButton: true,
-    });
-    
-    // Remove converted lead from UI
-    setLeads(leads.filter((l) => l._id !== selectedLead._id));
-    setAllLeads(allLeads.filter((l) => l._id !== selectedLead._id));
-    
-    // Close modal
-    setConvertModalOpen(false);
-    setSelectedLead(null);
-  } catch (err) {
-    toast.dismiss();
-    toast.error(err.response?.data?.message || "Conversion failed. Please try again.");
-    console.error("Conversion error:", err);
-  } finally {
-    setConverting(false);
-  }
-};
+  const handleConvertDeal = async () => {
+    if (!selectedLead) return;
+    try {
+      setConverting(true);
+      const token = localStorage.getItem("token");
+      const payload = { ...dealData };
+
+      // Show loading toast
+      const toastId = toast.loading("Converting lead to deal...");
+
+      const response = await axios.patch(
+        `${API_URL}/leads/${selectedLead._id}/convert`,
+        payload,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      // Update toast to success
+      toast.update(toastId, {
+        render: response.data.message || "Lead converted to deal successfully",
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
+        closeButton: true,
+      });
+
+      // Remove converted lead from UI
+      setLeads(leads.filter((l) => l._id !== selectedLead._id));
+      setAllLeads(allLeads.filter((l) => l._id !== selectedLead._id));
+
+      // Close modal
+      setConvertModalOpen(false);
+      setSelectedLead(null);
+    } catch (err) {
+      toast.dismiss();
+      toast.error(
+        err.response?.data?.message || "Conversion failed. Please try again."
+      );
+      console.error("Conversion error:", err);
+    } finally {
+      setConverting(false);
+    }
+  };
 
   const formatDate = (dateString) => {
     if (!dateString) return "-";
@@ -405,7 +401,7 @@ export default function LeadTable() {
         pauseOnHover
         theme="light"
       />
-      
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
         <div>
@@ -566,9 +562,13 @@ export default function LeadTable() {
                       {lead.leadName?.charAt(0) || "L"}
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-medium text-gray-900 text-sm">
+                      <span
+                        onClick={() => navigate(`/leads/view/${lead._id}`)}
+                        className="font-medium text-blue-600 text-sm cursor-pointer hover:underline"
+                      >
                         {lead.leadName || "Unnamed Lead"}
                       </span>
+
                       <span className="text-gray-400 text-xs">
                         {lead.email || "-"}
                       </span>
@@ -790,10 +790,7 @@ export default function LeadTable() {
               <ul className="list-disc ml-5">
                 {selectedAttachments.map((filePath, idx) => {
                   // Convert backslash to slash for URLs and prepend server URL
-                  const fileUrl = `${API_SI}/${filePath.replace(
-                    /\\/g,
-                    "/"
-                  )}`;
+                  const fileUrl = `${API_SI}/${filePath.replace(/\\/g, "/")}`;
                   const fileName = filePath.split("\\").pop(); // get file name from path
 
                   return (

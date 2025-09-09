@@ -29,6 +29,7 @@ import { TourProvider } from "./component/Tour/TourContext";
 import Tour from "./component/Tour/Tour";
 
 import { SocketProvider } from "./context/SocketContext";
+import ViewLead from "./pages/Leads/ViewLead";
 
 
 function App() {
@@ -75,6 +76,7 @@ function App() {
                 element={<NotificationsPage />}
               />
               <Route path="/proposal/view/:id" element={<ViewProposal />} />
+                        <Route path="/leads/view/:id" element={<ViewLead />} />
           
             </Route>
           </Routes>
