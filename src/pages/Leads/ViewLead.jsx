@@ -1,6 +1,3 @@
-
-
-
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
@@ -45,37 +42,40 @@ const ViewLead = () => {
     fetchLead();
   }, [id, API_URL]);
 
-  // Download file handler
-  const downloadFile = async (filePath, fileName) => {
-    if (!filePath) return toast.error("File path missing");
-    
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `${API_URL}/files/download?filePath=${encodeURIComponent(filePath)}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          responseType: 'blob'
-        }
-      );
 
-      // Create blob link to download
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', fileName || 'file');
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      
-      // Clean up
-      window.URL.revokeObjectURL(url);
-      toast.success("File downloaded successfully");
-    } catch (error) {
-      console.error("Download error:", error);
-      toast.error("Failed to download file");
-    }
-  };
+
+// Download file handler
+const downloadFile = async (filePath, fileName) => {
+  if (!filePath) return toast.error("File path missing");
+  
+  try {
+    const token = localStorage.getItem("token");
+    const response = await axios.get(
+      `${API_URL}/files/download?filePath=${encodeURIComponent(filePath)}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      }
+    );
+
+    // Create blob link to download
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', fileName || 'file');
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    
+    // Clean up
+    window.URL.revokeObjectURL(url);
+    toast.success("File downloaded successfully");
+  } catch (error) {
+    console.error("Download error:", error);
+    toast.error("Failed to download file");
+  }
+};
+
 
   if (!lead) {
     return (
