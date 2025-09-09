@@ -529,9 +529,7 @@ export default function LeadTable() {
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
                 Follow-Up
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
-                Attachments
-              </th>
+          
 
               <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">
                 Actions
@@ -606,20 +604,7 @@ export default function LeadTable() {
                   <td className="px-4 py-3 text-sm text-gray-700">
                     {formatDate(lead.followUpDate)}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {lead.attachments && lead.attachments.length > 0 ? (
-                      <button
-                        onClick={() =>
-                          openAttachmentsModal(lead.attachments, lead.leadName)
-                        }
-                        className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                      >
-                        <Eye className="w-5 h-5" /> View
-                      </button>
-                    ) : (
-                      "-"
-                    )}
-                  </td>
+                 
 
                   <td className="px-4 py-3 text-right relative">
                     <div className="relative inline-block text-left">
@@ -774,53 +759,7 @@ export default function LeadTable() {
         </DialogContent>
       </Dialog>
 
-      {/* Attachments Modal */}
-      <Dialog
-        open={attachmentsModalOpen}
-        onOpenChange={setAttachmentsModalOpen}
-      >
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-blue-600">
-              <Eye className="w-5 h-5" /> {selectedLeadName} - Attachments
-            </DialogTitle>
-          </DialogHeader>
-          <div className="mt-2">
-            {selectedAttachments.length > 0 ? (
-              <ul className="list-disc ml-5">
-                {selectedAttachments.map((filePath, idx) => {
-                  // Convert backslash to slash for URLs and prepend server URL
-                  const fileUrl = `${API_SI}/${filePath.replace(/\\/g, "/")}`;
-                  const fileName = filePath.split("\\").pop(); // get file name from path
-
-                  return (
-                    <li key={idx} className="mb-2">
-                      <a
-                        href={fileUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline"
-                      >
-                        {fileName}
-                      </a>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : (
-              <p className="text-gray-500">No attachments uploaded.</p>
-            )}
-          </div>
-          <div className="flex justify-end mt-4">
-            <button
-              onClick={() => setAttachmentsModalOpen(false)}
-              className="px-4 py-2 rounded-lg border hover:bg-gray-100 text-gray-700"
-            >
-              Close
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
+    
 
       {/* Convert Deal Modal */}
       <Dialog open={convertModalOpen} onOpenChange={setConvertModalOpen}>
