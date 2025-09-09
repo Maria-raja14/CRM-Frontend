@@ -196,6 +196,7 @@ const InvoiceHead = () => {
         `${API_URL}/invoice/download/${invoiceId}`,
         { responseType: "blob" }
       );
+console.log(response);
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
