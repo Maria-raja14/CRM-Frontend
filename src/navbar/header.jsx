@@ -1,6 +1,14 @@
 // Navbar.js
 import React, { useState, useEffect, useRef } from "react";
-import { Menu, User, Power, ChevronDown, Bell, Settings, CreditCard } from "react-feather";
+import {
+  Menu,
+  User,
+  Power,
+  ChevronDown,
+  Bell,
+  Settings,
+  CreditCard,
+} from "react-feather";
 import { Link, useNavigate } from "react-router-dom";
 import { useNotifications } from "../context/NotificationContext";
 import { disconnectSocket } from "../utils/socket";
@@ -127,6 +135,7 @@ const Navbar = ({ toggleSidebar }) => {
                 {notifications.length > 0 && (
                   <Link
                     to="/dashboard/notifications"
+                    onClick={() => setShowNotifications(false)} // <-- hide dropdown
                     className="block text-center px-4 py-3 bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all font-medium border-t border-gray-200 dark:border-gray-700"
                   >
                     View All Notifications
@@ -172,19 +181,22 @@ const Navbar = ({ toggleSidebar }) => {
                     {user?.email || "No email"}
                   </p>
                 </div>
-                
+
                 {/* Menu items */}
                 <div className="py-1">
                   <button
                     onClick={() => setShowPasswordModal(true)}
                     className="flex items-center w-full px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors"
                   >
-                    <ShieldCheck size={16} className="mr-3 text-gray-500 dark:text-gray-400" />
+                    <ShieldCheck
+                      size={16}
+                      className="mr-3 text-gray-500 dark:text-gray-400"
+                    />
                     <span>Password Update</span>
                   </button>
-                  
+
                   <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
-                  
+
                   <button
                     onClick={handleLogout}
                     className="flex items-center w-full px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-gray-700 transition-colors"
@@ -201,13 +213,13 @@ const Navbar = ({ toggleSidebar }) => {
 
       {/* Password Update Modal */}
       {showPasswordModal && (
-        <PasswordUpdate 
-          isOpen={showPasswordModal} 
-          onClose={() => setShowPasswordModal(false)} 
+        <PasswordUpdate
+          isOpen={showPasswordModal}
+          onClose={() => setShowPasswordModal(false)}
         />
       )}
     </>
   );
 };
 
-export default Navbar;//original
+export default Navbar; //original
