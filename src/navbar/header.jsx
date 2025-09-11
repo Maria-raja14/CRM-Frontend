@@ -1,45 +1,38 @@
-// Navbar.js
 import React, { useState, useEffect, useRef } from "react";
-import {
-  Menu,
-  User,
-  Power,
-  ChevronDown,
-  Bell,
-  Settings,
-  CreditCard,
-} from "react-feather";
+import { Menu, User, Power, ChevronDown, Bell } from "react-feather";
 import { Link, useNavigate } from "react-router-dom";
 import { useNotifications } from "../context/NotificationContext";
 import { disconnectSocket } from "../utils/socket";
 import { ShieldCheck } from "lucide-react";
 import PasswordUpdate from "../pages/password/PasswordUpdate";
+import { Maximize, Minimize } from "lucide-react"; // For fullscreen icons
 
 const Navbar = ({ toggleSidebar }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const { notifications } = useNotifications();
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
-  // Refs for outside click detection
   const notificationRef = useRef(null);
   const dropdownRef = useRef(null);
 
-  // Load user from localStorage
+  // Load user
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     if (storedUser) setUser(storedUser);
   }, []);
 
+  // Logout
   const handleLogout = () => {
     disconnectSocket();
     localStorage.clear();
     navigate("/");
   };
 
-  // Outside click handler
+  // Outside click detection
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -52,12 +45,22 @@ const Navbar = ({ toggleSidebar }) => {
         setShowDropdown(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Fullscreen toggle
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  };
 
   return (
     <>
@@ -72,6 +75,24 @@ const Navbar = ({ toggleSidebar }) => {
 
         {/* Right Section */}
         <div className="flex items-center space-x-4 relative">
+          {/* Fullscreen Toggle */}
+          <button
+            onClick={toggleFullscreen}
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            {isFullscreen ? (
+              <Minimize
+                size={22}
+                className="text-gray-600 dark:text-gray-300"
+              />
+            ) : (
+              <Maximize
+                size={22}
+                className="text-gray-600 dark:text-gray-300"
+              />
+            )}
+          </button>
+
           {/* Notifications */}
           <div className="relative" ref={notificationRef}>
             <button
@@ -85,15 +106,11 @@ const Navbar = ({ toggleSidebar }) => {
                 </span>
               )}
             </button>
-
             {showNotifications && (
               <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 shadow-xl rounded-xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
-                {/* Header */}
                 <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 font-semibold text-gray-800 dark:text-gray-100 bg-gray-50 dark:bg-gray-900">
                   Notifications
                 </div>
-
-                {/* Notification list */}
                 <div className="max-h-96 overflow-y-auto">
                   {notifications.length > 0 ? (
                     notifications.map((n) => (
@@ -130,12 +147,10 @@ const Navbar = ({ toggleSidebar }) => {
                     </div>
                   )}
                 </div>
-
-                {/* Footer */}
                 {notifications.length > 0 && (
                   <Link
                     to="/dashboard/notifications"
-                    onClick={() => setShowNotifications(false)} // <-- hide dropdown
+                    onClick={() => setShowNotifications(false)}
                     className="block text-center px-4 py-3 bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all font-medium border-t border-gray-200 dark:border-gray-700"
                   >
                     View All Notifications
@@ -145,34 +160,44 @@ const Navbar = ({ toggleSidebar }) => {
             )}
           </div>
 
-          {/* User Dropdown - Redesigned */}
+          {/* User Dropdown */}
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setShowDropdown(!showDropdown)}
-              className="flex items-center space-x-2 bg-white dark:bg-gray-800 rounded-lg  px-8 py-2 shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-gray-700"
+              className="flex items-center space-x-3 bg-white dark:bg-gray-800 rounded-xl px-4 py-2 shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <img
-                src="https://randomuser.me/api/portraits/men/32.jpg"
-                alt="User Avatar"
-                className="w-8 h-8 rounded-full object-cover border border-gray-300 dark:border-gray-600"
-              />
-              <div className="text-left hidden md:block">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
+              {/* User Avatar */}
+              <div className="relative">
+                <img
+                  src="https://randomuser.me/api/portraits/men/32.jpg"
+                  alt="User Avatar"
+                  className="w-10 h-10 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600"
+                />
+                {/* Optional Online Status */}
+                <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full animate-pulse"></span>
+              </div>
+
+              {/* User Info */}
+              <div className="flex flex-col text-left hidden md:flex">
+                <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">
                   {user?.name || "Guest"}
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                   {user?.role?.name || "No Role"}
                 </p>
               </div>
+
+              {/* Dropdown Icon */}
               <ChevronDown
-                size={16}
-                className="text-gray-500 dark:text-gray-400"
+                size={20}
+                className={`text-gray-500 dark:text-gray-400 transition-transform duration-200 ${
+                  showDropdown ? "rotate-180" : ""
+                }`}
               />
             </button>
 
             {showDropdown && (
               <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 shadow-xl rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 z-50">
-                {/* User info header */}
                 <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
                   <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
                     {user?.name || "Guest"}
@@ -181,8 +206,6 @@ const Navbar = ({ toggleSidebar }) => {
                     {user?.email || "No email"}
                   </p>
                 </div>
-
-                {/* Menu items */}
                 <div className="py-1">
                   <button
                     onClick={() => setShowPasswordModal(true)}
@@ -194,9 +217,7 @@ const Navbar = ({ toggleSidebar }) => {
                     />
                     <span>Password Update</span>
                   </button>
-
                   <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
-
                   <button
                     onClick={handleLogout}
                     className="flex items-center w-full px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-gray-700 transition-colors"
@@ -222,4 +243,4 @@ const Navbar = ({ toggleSidebar }) => {
   );
 };
 
-export default Navbar; //original
+export default Navbar;

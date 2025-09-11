@@ -10,10 +10,6 @@ import {
   Edit,
   Handshake,
   Search,
-  Filter,
-  X,
-  ChevronDown,
-  ChevronUp,
   Plus,
 } from "lucide-react";
 import { initSocket } from "../../utils/socket";
@@ -23,9 +19,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../../components/ui/dialog";
-import { Eye } from "lucide-react";
+import CurrencyInput from "react-currency-input-field";
+import currencyCodes from "currency-codes";
+
 const API_URL = import.meta.env.VITE_API_URL;
-const API_SI = import.meta.env.VITE_SI_URI;
 
 export default function LeadTable() {
   const navigate = useNavigate();
@@ -57,8 +54,9 @@ export default function LeadTable() {
   const [selectedLead, setSelectedLead] = useState(null);
   const [dealData, setDealData] = useState({
     value: 0,
+    currency: "USD",
     notes: "",
-    stage: "Qualification", // ✅ default stage
+    stage: "Qualification",
   });
 
   const [attachmentsModalOpen, setAttachmentsModalOpen] = useState(false);
@@ -67,6 +65,7 @@ export default function LeadTable() {
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 1 });
 
   // Get user role from localStorage
+
   useEffect(() => {
     const userData = localStorage.getItem("user");
     if (userData) {
@@ -74,6 +73,23 @@ export default function LeadTable() {
       setUserRole(user.role?.name || "");
     }
   }, []);
+
+  // Define your 10 allowed currencies
+  const allowedCurrencies = [
+    { code: "USD", symbol: "$", name: "US Dollar" },
+    { code: "EUR", symbol: "€", name: "Euro" },
+    { code: "INR", symbol: "₹", name: "Indian Rupee" },
+    { code: "GBP", symbol: "£", name: "British Pound" },
+    { code: "JPY", symbol: "¥", name: "Japanese Yen" },
+    { code: "AUD", symbol: "A$", name: "Australian Dollar" },
+    { code: "CAD", symbol: "C$", name: "Canadian Dollar" },
+    { code: "CHF", symbol: "CHF", name: "Swiss Franc" },
+    { code: "MYR", symbol: "RM", name: "Malaysian Ringgit" },
+    { code: "AED", symbol: "د.إ", name: "UAE Dirham" },
+    { code: "SGD", symbol: "S$", name: "Singapore Dollar" },
+    { code: "ZAR", symbol: "R", name: "South African Rand" }, // Added Aprffrica
+    { code: "SAR", symbol: "﷼", name: "Saudi Riyal" }, // Added Saudi Arabia
+  ];
 
   const openAttachmentsModal = (attachments, leadName) => {
     setSelectedAttachments(attachments || []);
@@ -203,6 +219,13 @@ export default function LeadTable() {
     setMenuOpen(null);
   };
 
+  const handleDealFieldChange = (field, value) => {
+    setDealData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
   const handleDeleteLead = async (id) => {
     try {
       const token = localStorage.getItem("token");
@@ -268,6 +291,7 @@ export default function LeadTable() {
     setSelectedLead(lead);
     setDealData({
       value: lead.value || 0,
+      currency: lead.currency || "USD", // <-- set default currency here
       notes: lead.notes || "",
       stage: "Qualification",
     });
@@ -761,7 +785,8 @@ export default function LeadTable() {
         </DialogContent>
       </Dialog>
 
-      {/* Convert Deal Modal */}
+
+      {/* Convert Lead to Deal Modal */}
       <Dialog open={convertModalOpen} onOpenChange={setConvertModalOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -770,6 +795,7 @@ export default function LeadTable() {
               Convert Lead to Deal
             </DialogTitle>
           </DialogHeader>
+
           {selectedLead && (
             <>
               <div className="mb-4 p-3 bg-blue-50 rounded-lg">
@@ -779,34 +805,50 @@ export default function LeadTable() {
                     ` from ${selectedLead.companyName}`}
                 </p>
               </div>
+
+              {/* Deal Value + Currency */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Deal Value
                 </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-gray-500">
-                    $
-                  </span>
+                <div className="flex gap-2">
                   <input
                     type="number"
-                    name="value"
                     value={dealData.value}
-                    onChange={handleDealChange}
-                    className="w-full pl-7 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    min="0"
-                    step="0.01"
+                    onChange={(e) =>
+                      handleDealFieldChange("value", e.target.value)
+                    }
+                    placeholder="Enter value"
+                    className="flex-1 px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none"
                   />
+                  <select
+                    value={dealData.currency}
+                    onChange={(e) =>
+                      handleDealFieldChange("currency", e.target.value)
+                    }
+                    className="px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none"
+                  >
+                    {allowedCurrencies.map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.symbol} {c.code}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
+
+              {/* Stage */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Stage
                 </label>
                 <select
                   name="stage"
-                  value={dealData.stage || "Qualification"}
-                  onChange={handleDealChange}
-                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={dealData.stage}
+                  onChange={(e) =>
+                    handleDealFieldChange("stage", e.target.value)
+                  }
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none"
                 >
                   <option value="Qualification">Qualification</option>
                   <option value="Proposal">Proposal</option>
@@ -816,6 +858,7 @@ export default function LeadTable() {
                 </select>
               </div>
 
+              {/* Notes */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Notes
@@ -823,72 +866,37 @@ export default function LeadTable() {
                 <textarea
                   name="notes"
                   value={dealData.notes}
-                  onChange={handleDealChange}
-                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={(e) =>
+                    handleDealFieldChange("notes", e.target.value)
+                  }
                   rows={3}
-                  placeholder="Add any additional details about this deal..."
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none"
+                  placeholder="Add any notes..."
                 />
               </div>
 
+              {/* Actions */}
               <div className="flex justify-end gap-3">
-                {/* Cancel Button */}
                 <button
-                  onClick={() => {
-                    setConvertModalOpen(false);
-                    setSelectedLead(null);
-                  }}
-                  className="px-4 py-2 rounded-lg border text-gray-700 hover:bg-gray-100"
-                  disabled={converting} // disable while converting
+                  onClick={() => setConvertModalOpen(false)}
+                  className="px-4 py-2 rounded-lg border hover:bg-gray-100 text-gray-700"
+                  disabled={converting}
                 >
                   Cancel
                 </button>
-
-                {/* Convert Button */}
                 <button
                   onClick={handleConvertDeal}
+                  className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 flex items-center gap-2 disabled:opacity-50"
                   disabled={converting}
-                  className={`flex items-center px-4 py-2 rounded-lg text-white transition ${
-                    converting
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-green-600 hover:bg-green-700"
-                  }`}
                 >
-                  {converting ? (
-                    <div className="flex items-center gap-2">
-                      <svg
-                        className="animate-spin h-4 w-4 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 100 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z"
-                        ></path>
-                      </svg>
-                      <span>Converting...</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <Handshake className="w-4 h-4" />
-                      <span>Convert</span>
-                    </div>
-                  )}
+                  {converting ? "Converting..." : "Convert"}
                 </button>
               </div>
             </>
           )}
         </DialogContent>
       </Dialog>
+
     </div>
   );
 }

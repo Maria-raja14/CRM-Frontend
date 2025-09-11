@@ -75,6 +75,22 @@ export const AllDeals = () => {
     }
     return "";
   };
+  const formatCurrencyValue = (val) => {
+    if (!val) return "-";
+
+    // Expected format: "12,554,755 INR" or "12554755 INR"
+    const match = val.match(/^([\d,]+)\s*([A-Z]+)$/i);
+
+    if (!match) return val;
+
+    const number = match[1].replace(/,/g, ""); // remove existing commas
+    const currency = match[2].toUpperCase(); // ensure uppercase (e.g. INR, USD)
+
+    // Format number in Indian numbering system
+    const formattedNumber = Number(number).toLocaleString("en-IN");
+
+    return `${formattedNumber} ${currency}`;
+  };
 
   const fetchDeals = async () => {
     try {
@@ -367,7 +383,10 @@ export const AllDeals = () => {
                       : "-"}
                   </td>
                   <td className="px-6 py-4">{deal.stage || "-"}</td>
-                  <td className="px-6 py-4">{deal.value || "-"}</td>
+                  <td className="px-6 py-4">
+                    {formatCurrencyValue(deal.value)}
+                  </td>
+
                   <td className="px-6 py-4">{formatDate(deal.createdAt)}</td>
                   <td className="px-6 py-4 ">
                     <button
@@ -447,79 +466,120 @@ export const AllDeals = () => {
           document.body
         )}
 
-      {/* Edit Modal */}
+      {/* Edit Deal Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-md p-6">
+        <DialogContent className="max-w-md w-full p-6 rounded-xl shadow-xl bg-white">
           <DialogHeader>
-            <DialogTitle>Edit Deal</DialogTitle>
+            <DialogTitle className="text-2xl font-semibold text-gray-800">
+              Edit Deal
+            </DialogTitle>
           </DialogHeader>
+
           {editDeal && (
-            <div className="space-y-4">
-              <select
-                value={editDeal.assignedTo}
-                onChange={(e) =>
-                  setEditDeal({ ...editDeal, assignedTo: e.target.value })
-                }
-                className="w-full border rounded p-2"
-              >
-                <option value="">-- Select Salesman --</option>
-                {users.map((u) => (
-                  <option key={u._id} value={u._id}>
-                    {u.firstName} {u.lastName}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="text"
-                value={editDeal.dealName || ""}
-                onChange={(e) =>
-                  setEditDeal({ ...editDeal, dealName: e.target.value })
-                }
-                className="w-full border rounded p-2"
-                placeholder="Deal Name"
-              />
-              <select
-                value={editDeal.stage || ""}
-                onChange={(e) =>
-                  setEditDeal({ ...editDeal, stage: e.target.value })
-                }
-                className="w-full border rounded p-2"
-              >
-                <option value="">-- Select Stage --</option>
-                <option>Qualification</option>
-                <option>Negotiation</option>
-                <option>Proposal Sent</option>
-                <option>Closed Won</option>
-                <option>Closed Lost</option>
-              </select>
-              <input
-                type="number"
-                value={editDeal.value || ""}
-                onChange={(e) =>
-                  setEditDeal({ ...editDeal, value: e.target.value })
-                }
-                className="w-full border rounded p-2"
-                placeholder="Value"
-              />
-              <textarea
-                value={editDeal.notes || ""}
-                onChange={(e) =>
-                  setEditDeal({ ...editDeal, notes: e.target.value })
-                }
-                className="w-full border rounded p-2"
-                placeholder="Notes"
-              />
-              <div className="flex justify-end space-x-3">
+            <div className="space-y-5 mt-4">
+              {/* Assigned To */}
+              <div className="relative">
+                <select
+                  value={editDeal.assignedTo}
+                  onChange={(e) =>
+                    setEditDeal({ ...editDeal, assignedTo: e.target.value })
+                  }
+                  className="peer w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">-- Select Salesman --</option>
+                  {users.map((u) => (
+                    <option key={u._id} value={u._id}>
+                      {u.firstName} {u.lastName}
+                    </option>
+                  ))}
+                </select>
+                <label className="absolute left-3 -top-2.5 text-gray-500 text-sm bg-white px-1 peer-focus:text-blue-500">
+                  Assigned To
+                </label>
+              </div>
+
+              {/* Deal Name */}
+              <div className="relative">
+                <input
+                  type="text"
+                  value={editDeal.dealName || ""}
+                  onChange={(e) =>
+                    setEditDeal({ ...editDeal, dealName: e.target.value })
+                  }
+                  className="peer w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                <label className="absolute left-3 -top-2.5 text-gray-500 text-sm bg-white px-1 peer-focus:text-blue-500">
+                  Deal Name
+                </label>
+              </div>
+
+              {/* Stage */}
+              <div className="relative">
+                <select
+                  value={editDeal.stage || ""}
+                  onChange={(e) =>
+                    setEditDeal({ ...editDeal, stage: e.target.value })
+                  }
+                  className="peer w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">-- Select Stage --</option>
+                  <option>Qualification</option>
+                  <option>Negotiation</option>
+                  <option>Proposal Sent</option>
+                  <option>Closed Won</option>
+                  <option>Closed Lost</option>
+                </select>
+                <label className="absolute left-3 -top-2.5 text-gray-500 text-sm bg-white px-1 peer-focus:text-blue-500">
+                  Stage
+                </label>
+              </div>
+
+              {/* Deal Value */}
+              <div className="relative">
+                <input
+                  type="number"
+                  value={
+                    editDeal.value
+                      ? Number(editDeal.value.replace(/,/g, "").split(" ")[0])
+                      : ""
+                  }
+                  onChange={(e) =>
+                    setEditDeal({ ...editDeal, value: e.target.value })
+                  }
+                  className="peer w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                <label className="absolute left-3 -top-2.5 text-gray-500 text-sm bg-white px-1 peer-focus:text-blue-500">
+                  Deal Value
+                </label>
+              </div>
+
+              {/* Notes */}
+              <div className="relative">
+                <textarea
+                  value={editDeal.notes || ""}
+                  onChange={(e) =>
+                    setEditDeal({ ...editDeal, notes: e.target.value })
+                  }
+                  rows={4}
+                  className="peer w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                />
+                <label className="absolute left-3 -top-2.5 text-gray-500 text-sm bg-white px-1 peer-focus:text-blue-500">
+                  Notes
+                </label>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-3 mt-2">
                 <button
                   onClick={() => setIsEditModalOpen(false)}
-                  className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
+                  className="px-5 py-2 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 transition"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSave}
                   disabled={isUpdating}
-                  className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed"
+                  className="px-5 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition"
                 >
                   {isUpdating ? "Updating..." : "Save"}
                 </button>
@@ -559,6 +619,3 @@ export const AllDeals = () => {
     </div>
   );
 };
-
-
-
