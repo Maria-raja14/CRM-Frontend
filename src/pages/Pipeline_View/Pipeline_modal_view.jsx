@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import axios from "axios";
@@ -30,9 +28,7 @@ import {
 } from "lucide-react";
 
 function Pipeline_modal_view() {
-
-const API_URL = import.meta.env.VITE_API_URL;
-
+  const API_URL = import.meta.env.VITE_API_URL;
 
   const { dealId } = useParams();
   const navigate = useNavigate();
@@ -50,12 +46,9 @@ const API_URL = import.meta.env.VITE_API_URL;
     try {
       setIsLoading(true);
       const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `${API_URL}/deals/getAll/${dealId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await axios.get(`${API_URL}/deals/getAll/${dealId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setDeal(response.data);
     } catch (err) {
       console.error("Failed to fetch deal details:", err);
@@ -69,9 +62,7 @@ const API_URL = import.meta.env.VITE_API_URL;
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `${API_URL}/files/download?filePath=${encodeURIComponent(
-          filePath
-        )}`,
+        `${API_URL}/files/download?filePath=${encodeURIComponent(filePath)}`,
         {
           headers: { Authorization: `Bearer ${token}` },
           responseType: "blob",
@@ -92,6 +83,24 @@ const API_URL = import.meta.env.VITE_API_URL;
       toast.error("Failed to download file");
     }
   };
+
+const formatCurrencyValue = (val) => {
+  if (!val) return "-";
+
+  // Expect format like "12,554,755 INR" or "12554755 INR"
+  const match = val.match(/^([\d,]+)\s*([A-Za-z]+)$/);
+  if (!match) return val;
+
+  const number = match[1].replace(/,/g, ""); // remove commas
+  const currency = match[2].toUpperCase();
+
+  // Format number in Indian numbering system
+  const formattedNumber = Number(number).toLocaleString("en-IN");
+
+  return `${formattedNumber} ${currency}`; // e.g. "1,25,54,755 INR"
+};
+
+
 
   const getStageBadgeClass = (stage) => {
     switch (stage) {
@@ -295,10 +304,8 @@ const API_URL = import.meta.env.VITE_API_URL;
                             <div>
                               <p className="text-sm font-medium">Value</p>
                               <p className="text-slate-900">
-                                ₹
-                                {new Intl.NumberFormat("en-IN").format(
-                                  deal.value || 0
-                                )}
+                                {formatCurrencyValue(deal.value)}
+                                
                               </p>
                             </div>
                           </div>

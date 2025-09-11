@@ -56,9 +56,19 @@ const ItemTypes = {
   DEAL: "DEAL",
 };
 
-function formatNumber(n) {
-  return new Intl.NumberFormat("en-IN").format(n);
-}
+const formatCurrencyValue = (val) => {
+  if (!val) return "-";
+
+  // Expected formats: "12545125 INR" or "12,545,125 INR"
+  const match = val.match(/^([\d,]+)\s*([A-Z]+)$/i);
+  if (!match) return val;
+
+  const number = match[1].replace(/,/g, ""); // Remove existing commas
+  const currency = match[2].toUpperCase(); // Ensure uppercase
+
+  const formattedNumber = Number(number).toLocaleString("en-IN"); // Indian format
+  return `${formattedNumber}${currency}`; // no space
+};
 
 function formatDate(dateString) {
   if (!dateString) return "—";
@@ -72,9 +82,7 @@ function formatDate(dateString) {
 
 // ----- Main Pipeline Board -----
 function SalesPipelineBoardPure() {
-
   const API_URL = import.meta.env.VITE_API_URL;
-
 
   const [columns, setColumns] = useState({});
   const [leads, setLeads] = useState([]);
@@ -144,20 +152,14 @@ function SalesPipelineBoardPure() {
       const token = localStorage.getItem("token");
 
       // Fetch deals
-      const dealsRes = await axios.get(
-        `${API_URL}/deals/getAll`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const dealsRes = await axios.get(`${API_URL}/deals/getAll`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       // Fetch leads
-      const leadsRes = await axios.get(
-        `${API_URL}/leads/getAllLead`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const leadsRes = await axios.get(`${API_URL}/leads/getAllLead`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setLeads(leadsRes.data);
 
       // Group deals by stage
@@ -298,12 +300,9 @@ function SalesPipelineBoardPure() {
         return next;
       });
 
-      await axios.delete(
-        `${API_URL}/deals/delete-deal/${dealToDelete._id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await axios.delete(`${API_URL}/deals/delete-deal/${dealToDelete._id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       toast.success("Deal deleted successfully!");
     } catch (err) {
       console.error("Failed to delete deal:", err);
@@ -496,48 +495,48 @@ function SalesPipelineBoardPure() {
 
       {/* Edit Deal Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md w-full rounded-xl shadow-xl bg-white p-6">
           <DialogHeader>
-            <DialogTitle>Edit Deal</DialogTitle>
+            <DialogTitle className="text-2xl font-semibold text-gray-800">
+              Edit Deal
+            </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleEditSubmit} className="space-y-4 py-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Deal Name
-              </label>
-              <input
-                type="text"
-                name="dealName"
-                value={editFormData.dealName}
-                onChange={handleEditChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Value (₹)
-              </label>
+
+          <form onSubmit={handleEditSubmit} className="space-y-5 mt-4">
+            {/* Deal Value */}
+            <div className="relative">
               <input
                 type="number"
                 name="value"
-                value={editFormData.value}
+                value={
+                  editFormData.value
+                    ? Number(
+                        editFormData.value
+                          .toString()
+                          .replace(/,/g, "")
+                          .split(" ")[0]
+                      )
+                    : ""
+                }
                 onChange={handleEditChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2"
+                className="peer w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="Deal Value"
                 required
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Assigned To
+              <label className="absolute left-3 -top-2.5 text-gray-500 text-sm bg-white px-1 peer-focus:text-indigo-500">
+                Deal Value (₹)
               </label>
+            </div>
+
+            {/* Assigned To */}
+            <div className="relative">
               <select
                 name="assignedTo"
-                value={editFormData.assignedTo}
+                value={editFormData.assignedTo || ""}
                 onChange={handleEditChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2"
+                className="peer w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 required
-                disabled={userRole !== "Admin"} // Only admin can reassign deals
+                disabled={userRole !== "Admin"}
               >
                 <option value="">-- Select Salesperson --</option>
                 {users.map((u) => (
@@ -551,32 +550,27 @@ function SalesPipelineBoardPure() {
                   Only admins can reassign deals
                 </p>
               )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Company Name
+              <label className="absolute left-3 -top-2.5 text-gray-500 text-sm bg-white px-1 peer-focus:text-indigo-500">
+                Assigned To
               </label>
-              <input
-                type="text"
-                name="companyName"
-                value={editFormData.companyName}
-                onChange={handleEditChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2"
-              />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Notes
-              </label>
+
+            {/* Notes */}
+            <div className="relative">
               <textarea
                 name="notes"
-                value={editFormData.notes}
+                value={editFormData.notes || ""}
                 onChange={handleEditChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2"
+                className="peer w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
                 rows="3"
               />
+              <label className="absolute left-3 -top-2.5 text-gray-500 text-sm bg-white px-1 peer-focus:text-indigo-500">
+                Notes
+              </label>
             </div>
-            <div className="flex justify-end gap-3">
+
+            {/* Buttons */}
+            <div className="flex justify-end gap-3 mt-2">
               <button
                 type="button"
                 className="px-4 py-2 text-gray-600 hover:text-gray-800"
@@ -644,7 +638,7 @@ function SalesPipelineBoardPure() {
               className=" bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm"
               onClick={() => navigate("/createDeal")}
             >
-              + Add Deal
+              + Create Deal
             </button>
           )}
         </div>
@@ -782,7 +776,7 @@ function DealCard({
 
   // Function to get stage badge color based on stageId
   function getStageBadgeColor() {
-    switch(stageId) {
+    switch (stageId) {
       case "Qualification":
         return "bg-blue-100 text-blue-800";
       case "Negotiation":
@@ -932,25 +926,32 @@ function DealCard({
 
             {/* Value */}
             <div className="flex items-center">
-              <div className="bg-indigo-100 p-1.5 rounded-md mr-2">
-                <svg
-                  className="w-4 h-4 text-indigo-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
               <div>
                 <div className="text-xs text-gray-500">Value</div>
                 <div className="text-sm font-semibold text-gray-800">
-                  ₹{formatNumber(deal.value || 0)}
+                  {deal.value ? (
+                    <>
+                      {(() => {
+                        const formatted = formatCurrencyValue(deal.value); // e.g., "25,45,125INR"
+
+                        // Split number and currency for styling
+                        const match = formatted.match(/^([\d,]+)([A-Z]+)$/);
+                        if (!match) return formatted;
+
+                        const number = match[1];
+                        const currency = match[2];
+
+                        return (
+                          <>
+                            <span className="text-gray-800">{number}</span> {""}
+                            <span className="text-gray-800">{currency}</span>
+                          </>
+                        );
+                      })()}
+                    </>
+                  ) : (
+                    "-"
+                  )}
                 </div>
               </div>
             </div>
@@ -975,7 +976,9 @@ function DealCard({
       {/* Stage Indicator with badge design */}
       <div className="flex justify-between items-center text-xs mt-1">
         <span className="text-gray-500">Stage:</span>
-        <span className={`font-bold px-2 py-1 rounded-full ${getStageBadgeColor()}`}>
+        <span
+          className={`font-bold px-2 py-1 rounded-full ${getStageBadgeColor()}`}
+        >
           {stageId}
         </span>
       </div>
@@ -991,5 +994,3 @@ export default function SalesPipelineBoard() {
     </DndProvider>
   );
 } //All design come perfectly..
-
-

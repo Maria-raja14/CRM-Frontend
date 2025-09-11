@@ -70,10 +70,16 @@ export const NotificationProvider = ({ children }) => {
     if (!user?._id) return;
 
     // ✅ Fetch existing notifications once
-    fetch(`${API_URL}/notification/${user._id}`)
-      .then((res) => res.json())
-      .then((data) => setNotifications(data))
-      .catch((err) => console.error(err));
+  fetch(`${API_URL}/notification/${user._id}`)
+    .then((res) => res.json())
+    .then((data) => {
+      console.log("Fetched notifications:", data);
+      data.forEach((n) => {
+        console.log("Notification profileImage:", n?.profileImage || "❌ Not available");
+      });
+      setNotifications(data);
+    })
+    .catch((err) => console.error(err));
 
     // ✅ Initialize socket only once with userId
     const socket = initSocket(user._id);
