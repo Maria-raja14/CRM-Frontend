@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import AddActivityModal from "./ModalCalendar";
@@ -7,9 +5,7 @@ import CalendarComponent from "./CalendarComponent";
 import axios from "axios";
 
 const CalendarView = () => {
-
-const API_URL = import.meta.env.VITE_API_URL;
-
+  const API_URL = import.meta.env.VITE_API_URL;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -169,7 +165,7 @@ const API_URL = import.meta.env.VITE_API_URL;
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           activityToEdit={activityToEdit}
-          onactivityAdded={handleAddActivity}
+          onActivityAdded={handleAddActivity} // <-- Capital 'A'
           onEdit={handleEditActivity}
         />
       )}

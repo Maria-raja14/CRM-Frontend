@@ -1,6 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import DatePicker from "react-datepicker";
-import { FaEllipsisV } from "react-icons/fa";
+import {
+  FaEllipsisV,
+  FaRupeeSign,
+  FaDollarSign,
+  FaEuroSign,
+  FaPoundSign,
+  FaChevronLeft,
+  FaChevronRight,
+} from "react-icons/fa";
 import { useModal } from "../../context/ModalContext.jsx";
 import InvoiceModal from "./InvoiceModal.jsx";
 import axios from "axios";
@@ -15,6 +23,7 @@ import {
 } from "../../components/ui/dialog";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useNavigate } from "react-router-dom";
 
 const InvoiceHead = () => {
   const API_URL = import.meta.env.VITE_API_URL;
@@ -33,7 +42,7 @@ const InvoiceHead = () => {
   const [editingInvoice, setEditingInvoice] = useState(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [invoiceToDelete, setInvoiceToDelete] = useState(null);
-  const[dropdownButton,setDropdownButton]=useState(null)
+  const [dropdownButton, setDropdownButton] = useState(null);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -52,7 +61,8 @@ const InvoiceHead = () => {
   const [downloadStatus, setDownloadStatus] = useState("loading"); // loading | success | error
 
   const dropdownRef = useRef(null);
-
+  const currencyScrollRef = useRef(null);
+  const navigate = useNavigate();
   useEffect(() => {
     fetchInvoices();
   }, [refreshTrigger, currentPage, itemsPerPage]); // Add pagination dependencies
@@ -77,6 +87,38 @@ const InvoiceHead = () => {
     filterMethod,
     invoices,
   ]);
+
+  // Group by currency with enhanced data
+  const groupedTotals = filteredInvoices.reduce((acc, inv) => {
+    const cur = inv.currency || "INR"; // default INR
+    const total = Number(inv.total) || 0;
+    const paid = inv.status === "paid" ? total : 0;
+    const due = inv.status !== "paid" ? total : 0;
+
+    if (!acc[cur]) {
+      acc[cur] = {
+        totalAmount: 0,
+        totalPaid: 0,
+        totalDue: 0,
+        count: 0,
+        paidCount: 0,
+        dueCount: 0,
+      };
+    }
+
+    acc[cur].totalAmount += total;
+    acc[cur].totalPaid += paid;
+    acc[cur].totalDue += due;
+    acc[cur].count += 1;
+
+    if (inv.status === "paid") {
+      acc[cur].paidCount += 1;
+    } else {
+      acc[cur].dueCount += 1;
+    }
+
+    return acc;
+  }, {});
 
   const fetchInvoices = async () => {
     try {
@@ -196,7 +238,7 @@ const InvoiceHead = () => {
         `${API_URL}/invoice/download/${invoiceId}`,
         { responseType: "blob" }
       );
-console.log(response);
+      console.log(response);
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
@@ -221,16 +263,66 @@ console.log(response);
     }
   };
 
-  const totalAmount = filteredInvoices.reduce(
-    (acc, invoice) => acc + (Number(invoice.total) || 0),
-    0
-  );
-  const totalPaid = filteredInvoices
-    .filter((inv) => inv.status === "paid")
-    .reduce((acc, inv) => acc + (Number(inv.total) || 0), 0);
-  const totalDue = filteredInvoices
-    .filter((inv) => inv.status !== "paid")
-    .reduce((acc, inv) => acc + (Number(inv.total) || 0), 0);
+
+  // Currency icon mapping
+  const getCurrencyIcon = (currency) => {
+    switch (currency) {
+      case "INR":
+        return <FaRupeeSign className="text-indigo-600" />;
+      case "USD":
+        return <FaDollarSign className="text-teal-600" />;
+      case "EUR":
+        return <FaEuroSign className="text-rose-600" />;
+      case "GBP":
+        return <FaPoundSign className="text-amber-600" />;
+      default:
+        return <FaDollarSign className="text-gray-600" />;
+    }
+  };
+
+  // Currency background color mapping with unique colors
+  const getCurrencyBgColor = (currency) => {
+    switch (currency) {
+      case "INR":
+        return "bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200";
+      case "USD":
+        return "bg-gradient-to-br from-teal-50 to-teal-100 border-teal-200";
+      case "EUR":
+        return "bg-gradient-to-br from-rose-50 to-rose-100 border-rose-200";
+      case "GBP":
+        return "bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200";
+      default:
+        return "bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200";
+    }
+  };
+
+  // Currency text color mapping
+  const getCurrencyTextColor = (currency) => {
+    switch (currency) {
+      case "INR":
+        return "text-indigo-800";
+      case "USD":
+        return "text-teal-800";
+      case "EUR":
+        return "text-rose-800";
+      case "GBP":
+        return "text-amber-800";
+      default:
+        return "text-gray-800";
+    }
+  };
+  // Scroll functions for currency cards
+  const scrollLeft = () => {
+    if (currencyScrollRef.current) {
+      currencyScrollRef.current.scrollBy({ left: -300, behavior: "smooth" });
+    }
+  };
+
+  const scrollRight = () => {
+    if (currencyScrollRef.current) {
+      currencyScrollRef.current.scrollBy({ left: 300, behavior: "smooth" });
+    }
+  };
 
   // Pagination functions
   const totalPages = Math.ceil(totalCount / itemsPerPage);
@@ -240,6 +332,10 @@ console.log(response);
   const handleItemsPerPageChange = (e) => {
     setItemsPerPage(Number(e.target.value));
     setCurrentPage(1);
+  };
+
+  const handleInvoiceClick = (invoiceId) => {
+    navigate(`/invoice/${invoiceId}`);
   };
 
   return (
@@ -262,95 +358,149 @@ console.log(response);
         editingInvoice={editingInvoice}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
-        {/* Total Amount Card */}
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-md border border-blue-200 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 -mr-6 -mt-6 bg-blue-200 rounded-full opacity-30"></div>
-          <div className="relative z-10">
-            <div className="flex items-center mb-4">
-              <div className="p-2 rounded-lg bg-blue-100 mr-3">
-                <svg
-                  className="w-5 h-5 text-blue-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-blue-800">
-                Total Amount
-              </h3>
+      {/* Enhanced Multi-Currency Summary Cards with Horizontal Scroll */}
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-gray-800">
+            Financial Summary
+          </h2>
+          {Object.keys(groupedTotals).length > 0 && (
+            <div className="flex space-x-2 mt-2">
+              <button
+                onClick={scrollLeft}
+                className="p-2  rounded-full bg-white border hover:bg-gray-50 transition-colors shadow-sm"
+              >
+                <FaChevronLeft className="text-gray-600" />
+              </button>
+              <button
+                onClick={scrollRight}
+                className="p-2 rounded-full bg-white border hover:bg-gray-50 transition-colors shadow-sm"
+              >
+                <FaChevronRight className="text-gray-600" />
+              </button>
             </div>
-            <p className="text-2xl font-bold text-blue-900">
-              ₹{totalAmount.toFixed(2)}
-            </p>
-          </div>
+          )}
         </div>
 
-        {/* Total Paid Card */}
-        <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-md border border-green-200 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 -mr-6 -mt-6 bg-green-200 rounded-full opacity-30"></div>
-          <div className="relative z-10">
-            <div className="flex items-center mb-4">
-              <div className="p-2 rounded-lg bg-green-100 mr-3">
-                <svg
-                  className="w-5 h-5 text-green-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-green-800">Total Paid</h3>
+        {Object.keys(groupedTotals).length === 0 ? (
+          <div className="bg-white p-8 rounded-xl shadow-sm border text-center">
+            <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-8 w-8 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
             </div>
-            <p className="text-2xl font-bold text-green-900">
-              ₹{totalPaid.toFixed(2)}
+            <p className="text-gray-500">No invoice data available</p>
+            <p className="text-gray-400 text-sm mt-1">
+              Create your first invoice to see financial insights
             </p>
           </div>
-        </div>
+        ) : (
+          <div className="relative">
+            <div
+              ref={currencyScrollRef}
+              className="flex overflow-x-auto scrollbar-hide space-4 pb-4 -mx-2 px-2"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            >
+              {Object.entries(groupedTotals).map(([currency, data]) => (
+                <div
+                  key={currency}
+                  className={`${getCurrencyBgColor(
+                    currency
+                  )} flex-shrink-0 w-80 p-6 rounded-xl shadow-sm border relative overflow-hidden mx-2 transition-transform hover:scale-[1.02] hover:shadow-md`}
+                >
+                  {/* Currency header */}
+                  <div className="flex justify-between items-start mb-5">
+                    <div>
+                      <h3
+                        className={`text-lg font-semibold ${getCurrencyTextColor(
+                          currency
+                        )} mb-1`}
+                      >
+                        {currency}
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        {data.count} invoice{data.count !== 1 ? "s" : ""}
+                      </p>
+                    </div>
+                    <div className="text-2xl p-2 bg-white rounded-lg shadow-sm">
+                      {getCurrencyIcon(currency)}
+                    </div>
+                  </div>
 
-        {/* Total Due Card */}
-        <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl shadow-md border border-orange-200 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 -mr-6 -mt-6 bg-orange-200 rounded-full opacity-30"></div>
-          <div className="relative z-10">
-            <div className="flex items-center mb-4">
-              <div className="p-2 rounded-lg bg-orange-100 mr-3">
-                <svg
-                  className="w-5 h-5 text-orange-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-orange-800">Total Due</h3>
+                  {/* Amount metrics */}
+                  <div className="space-y-3 mb-5">
+                    {/* Total Amount */}
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-600">
+                        Total Amount
+                      </span>
+                      <span className="font-semibold text-gray-800">
+                        {data.totalAmount.toLocaleString()} {currency}
+                      </span>
+                    </div>
+
+                    {/* Paid Amount */}
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-600">
+                        Paid ({data.paidCount})
+                      </span>
+                      <span className="font-semibold text-green-600">
+                        {data.totalPaid.toLocaleString()} {currency}
+                      </span>
+                    </div>
+
+                    {/* Due Amount */}
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-600">
+                        Due ({data.dueCount})
+                      </span>
+                      <span className="font-semibold text-rose-600">
+                        {data.totalDue.toLocaleString()} {currency}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Progress bar showing paid vs due */}
+                  <div className="mb-2">
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-green-500 h-2 rounded-full transition-all duration-500"
+                        style={{
+                          width: `${
+                            data.totalAmount > 0
+                              ? (data.totalPaid / data.totalAmount) * 100
+                              : 0
+                          }%`,
+                        }}
+                      ></div>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                      <span>
+                        {Math.round((data.totalPaid / data.totalAmount) * 100)}%
+                        Paid
+                      </span>
+                      <span>
+                        {Math.round((data.totalDue / data.totalAmount) * 100)}%
+                        Due
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-            <p className="text-2xl font-bold text-orange-900">
-              ₹{totalDue.toFixed(2)}
-            </p>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Filters */}
@@ -415,7 +565,7 @@ console.log(response);
               <th className="px-6 py-3">Status</th>
               <th className="px-6 py-3">Amount</th>
               <th className="px-6 py-3">Assigned To</th>
-              <th className="px-6 py-3">Tax</th>
+              <th className="px-6 py-3">Due Date</th>
               <th className="px-6 py-3 text-center">Action</th>
             </tr>
           </thead>
@@ -425,7 +575,15 @@ console.log(response);
                 key={invoice._id}
                 className="hover:bg-gray-50 transition-colors"
               >
-                <td className="px-6 py-4">{invoice.invoicenumber}</td>
+                <td className="px-6 py-4">
+                  <button
+                    onClick={() => handleInvoiceClick(invoice._id)}
+                    className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                  >
+                    {invoice.invoicenumber}
+                  </button>
+                </td>
+
                 <td className="px-6 py-4">
                   {invoice.items?.[0]?.deal?.dealName || "N/A"}
                 </td>
@@ -441,81 +599,98 @@ console.log(response);
                   </span>
                 </td>
                 <td className="px-6 py-4 font-semibold">
-                  ₹{Number(invoice.total).toFixed(2)}
+                  {invoice.total
+                    ? Number(invoice.total).toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })
+                    : "-"}{" "}
+                  {invoice.currency}
                 </td>
+
                 <td className="px-6 py-4">
                   {invoice.assignTo
                     ? `${invoice.assignTo.firstName} ${invoice.assignTo.lastName}`
                     : "N/A"}
                 </td>
-                <td className="px-6 py-4">₹{Number(invoice.tax).toFixed(2)}</td>
-              <td className="px-6 py-4 text-center relative">
-  <button
-    onClick={(e) => {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const spaceBelow = window.innerHeight - rect.bottom;
-      const spaceAbove = rect.top;
+                <td className="px-6 py-4">
+                  {invoice.dueDate
+                    ? new Date(invoice.dueDate).toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })
+                    : "-"}
+                </td>
 
-      const position = spaceBelow > 200 ? "below" : "above"; // if not enough space, open above
+                <td className="px-6 py-4 text-center relative">
+                  <button
+                    onClick={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const spaceBelow = window.innerHeight - rect.bottom;
+                      const spaceAbove = rect.top;
 
-      setOpenIndex(openIndex === index ? null : index);
-      setDropdownButton({
-        rect,
-        position,
-      });
-    }}
-    className="p-2 rounded-full hover:bg-gray-100 text-gray-500"
-  >
-    <FaEllipsisV />
-  </button>
+                      const position = spaceBelow > 200 ? "below" : "above"; // if not enough space, open above
 
-  {openIndex === index &&
-    ReactDOM.createPortal(
-      <div
-        ref={dropdownRef}
-        className="absolute z-50 bg-white border rounded-md shadow-lg"
-        style={{
-          top:
-            dropdownButton?.position === "below"
-              ? dropdownButton.rect.bottom + window.scrollY
-              : dropdownButton.rect.top +
-                window.scrollY -
-                (dropdownRef.current?.offsetHeight || 150),
-          left: dropdownButton
-            ? dropdownButton.rect.left + window.scrollX
-            : 0,
-          minWidth: "8rem",
-        }}
-      >
-        <button
-          className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-          onClick={() => handleSendEmail(invoice._id)}
-        >
-          Send to Email
-        </button>
-        <button
-          className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-          onClick={() => downloadInvoice(invoice._id, invoice.invoicenumber)}
-        >
-          Download
-        </button>
-        <button
-          className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-          onClick={() => handleEdit(invoice)}
-        >
-          Edit
-        </button>
-        <button
-          className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-          onClick={() => confirmDelete(invoice)}
-        >
-          Delete
-        </button>
-      </div>,
-      document.body
-    )}
-</td>
+                      setOpenIndex(openIndex === index ? null : index);
+                      setDropdownButton({
+                        rect,
+                        position,
+                      });
+                    }}
+                    className="p-2 rounded-full hover:bg-gray-100 text-gray-500"
+                  >
+                    <FaEllipsisV />
+                  </button>
 
+                  {openIndex === index &&
+                    ReactDOM.createPortal(
+                      <div
+                        ref={dropdownRef}
+                        className="absolute z-50 bg-white border rounded-md shadow-lg"
+                        style={{
+                          top:
+                            dropdownButton?.position === "below"
+                              ? dropdownButton.rect.bottom + window.scrollY
+                              : dropdownButton.rect.top +
+                                window.scrollY -
+                                (dropdownRef.current?.offsetHeight || 150),
+                          left: dropdownButton
+                            ? dropdownButton.rect.left + window.scrollX
+                            : 0,
+                          minWidth: "8rem",
+                        }}
+                      >
+                        <button
+                          className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                          onClick={() => handleSendEmail(invoice._id)}
+                        >
+                          Send to Email
+                        </button>
+                        <button
+                          className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                          onClick={() =>
+                            downloadInvoice(invoice._id, invoice.invoicenumber)
+                          }
+                        >
+                          Download
+                        </button>
+                        <button
+                          className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                          onClick={() => handleEdit(invoice)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                          onClick={() => confirmDelete(invoice)}
+                        >
+                          Delete
+                        </button>
+                      </div>,
+                      document.body
+                    )}
+                </td>
               </tr>
             ))}
 
@@ -679,10 +854,18 @@ console.log(response);
         autoClose={3000}
         hideProgressBar={false}
       />
+
+      <style jsx>{`
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </div>
   );
 };
 
 export default InvoiceHead;
-
-
