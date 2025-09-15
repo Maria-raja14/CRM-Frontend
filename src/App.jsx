@@ -44,11 +44,11 @@ function App() {
   return (
     <SocketProvider>
 
-      <TourProvider>
+      {/* <TourProvider> */}
         <NotificationProvider>
           <BrowserRouter>
             <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white transition-all">
-              <Tour />
+              {/* <Tour /> */}
 
               <Routes>
                 <Route path="/" element={<Login />} />
@@ -100,7 +100,7 @@ function App() {
             </div>
           </BrowserRouter>
         </NotificationProvider>
-      </TourProvider>
+      {/* </TourProvider> */}
 
     </SocketProvider>
   );

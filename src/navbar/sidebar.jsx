@@ -17,7 +17,7 @@ import {
   GitBranch,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
-import { useTour } from "../component/Tour/TourContext";
+// import { useTour } from "../component/Tour/TourContext";
 
 const IconCircle = ({ children, isActive }) => (
   <div className="w-10 h-10 flex items-center justify-center rounded-full shadow-sm bg-white">
@@ -142,7 +142,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   const [showActivities, setShowActivities] = useState(false);
   const [userPermissions, setUserPermissions] = useState({});
   const [isAdmin, setIsAdmin] = useState(false);
-  const { startTour } = useTour();
+  // const { startTour } = useTour();
 
   const location = useLocation();
 
