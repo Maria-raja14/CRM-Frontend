@@ -34,74 +34,69 @@ import PrivateRoute from "./pages/auth/PrivateRoute";
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (user?._id) {
-      initSocket(user._id); // 🔥 start socket right after login
-    }
-  }, []);
+// inside App()
+useEffect(() => {
+  const user = JSON.parse(localStorage.getItem("user"));
+  if (user?._id) {
+    console.log("App: init socket with user:", user._id);
+    initSocket(user._id); // safe: initSocket returns null if userId falsy
+  }
+}, []); // run once at app start
+
 
   return (
     <SocketProvider>
-
       {/* <TourProvider> */}
-        <NotificationProvider>
-          <BrowserRouter>
-            <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white transition-all">
-              {/* <Tour /> */}
+      <NotificationProvider>
+        <BrowserRouter>
+          <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white transition-all">
+            {/* <Tour /> */}
 
-              <Routes>
-                <Route path="/" element={<Login />} />
-                <Route element={<PrivateRoute />}>
+            <Routes>
+              <Route path="/" element={<Login />} />
+              <Route element={<PrivateRoute />}>
+                <Route
+                  path="/reset-password/:token"
+                  element={<ResetPassword />}
+                />
+                <Route path="/layout" element={<Layout />} />
+                <Route element={<Layout isModalOpen={isModalOpen} />}>
+                  <Route path="/adminDashboard" element={<AdminDashboard />} />
+                  <Route path="/user/roles" element={<UserManagement />} />
+                  <Route path="/invoice" element={<InvoiceHead />} />
+                  <Route path="/proposal" element={<ProposalHead />} />
                   <Route
-                    path="/reset-password/:token"
-                    element={<ResetPassword />}
+                    path="/proposal/sendproposal"
+                    element={<SendProposal />}
                   />
-                  <Route path="/layout" element={<Layout />} />
-                  <Route element={<Layout isModalOpen={isModalOpen} />}>
-                    <Route
-                      path="/adminDashboard"
-                      element={<AdminDashboard />}
-                    />
-                    <Route path="/user/roles" element={<UserManagement />} />
-                    <Route path="/invoice" element={<InvoiceHead />} />
-                    <Route path="/proposal" element={<ProposalHead />} />
-                    <Route
-                      path="/proposal/sendproposal"
-                      element={<SendProposal />}
-                    />
-                    <Route path="/stage" element={<ProposalBoard />} />
-                    <Route path="/calendar" element={<CalendarView />} />
-                    <Route path="/list" element={<Activity />} />
-                    <Route path="/leads" element={<Leads />} />
-                    <Route path="/createleads" element={<CreateLeads />} />
-                    <Route path="/deals" element={<AllDeals />} />
-                    <Route path="/createDeal" element={<CreateDeal />} />
-                    <Route path="/Pipelineview" element={<Pipeline_view />} />
-                    <Route
-                      path="/Pipelineview/:dealId?"
-                      element={<Pipeline_modal_view />}
-                    />
-                    <Route path="/proposal/drafts" element={<DraftsPage />} />
-                    <Route
-                      path="/dashboard/notifications"
-                      element={<NotificationsPage />}
-                    />
-                    <Route
-                      path="/proposal/view/:id"
-                      element={<ViewProposal />}
-                    />
-                    <Route path="/leads/view/:id" element={<ViewLead />} />
-                    <Route path="/invoice/:id" element={<InvoiceView />} />
-                  </Route>
+                  <Route path="/stage" element={<ProposalBoard />} />
+                  <Route path="/calendar" element={<CalendarView />} />
+                  <Route path="/list" element={<Activity />} />
+                  <Route path="/leads" element={<Leads />} />
+                  <Route path="/createleads" element={<CreateLeads />} />
+                  <Route path="/deals" element={<AllDeals />} />
+                  <Route path="/createDeal" element={<CreateDeal />} />
+                  <Route path="/Pipelineview" element={<Pipeline_view />} />
+                  <Route
+                    path="/Pipelineview/:dealId?"
+                    element={<Pipeline_modal_view />}
+                  />
+                  <Route path="/proposal/drafts" element={<DraftsPage />} />
+                  <Route
+                    path="/dashboard/notifications"
+                    element={<NotificationsPage />}
+                  />
+                  <Route path="/proposal/view/:id" element={<ViewProposal />} />
+                  <Route path="/leads/view/:id" element={<ViewLead />} />
+                  <Route path="/invoice/:id" element={<InvoiceView />} />
                 </Route>
-              </Routes>
-              <ToastContainer position="top-right" autoClose={3000} />
-            </div>
-          </BrowserRouter>
-        </NotificationProvider>
+              </Route>
+            </Routes>
+            <ToastContainer position="top-right" autoClose={3000} />
+          </div>
+        </BrowserRouter>
+      </NotificationProvider>
       {/* </TourProvider> */}
-
     </SocketProvider>
   );
 }

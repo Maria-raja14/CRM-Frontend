@@ -1,72 +1,46 @@
 
 
 
-// import { io } from "socket.io-client";
 
-// let socket;
-
-// export const initSocket = (userId) => {
-//   const API_URL = import.meta.env.VITE_SI_URI;
-
-//   if (!socket) {
-//     socket = io(`${API_URL}`, {
-//       auth: { userId },
-//       reconnectionAttempts: 3,
-//     });
-
-//     socket.on("connect", () => {
-//       console.log("🔗 Connected:", socket.id);
-//     });
-
-//     socket.on("disconnect", () => {
-//       console.log("❌ Disconnected:", socket.id);
-//     });
-//   }
-
-//   return socket;
-// };
-
-// export const disconnectSocket = () => {
-//   if (socket) {
-//     socket.disconnect();
-//     socket = null;
-//     console.log("🔌 Socket disconnected manually");
-//   }
-// };
-
-
-
-
-
+// utils/socket.js
 import { io } from "socket.io-client";
 
-let socket;
+let socket = null;
 
 export const initSocket = (userId) => {
   const API_URL = import.meta.env.VITE_SI_URI;
 
-  if (socket) return socket; // ✅ Prevent multiple sockets
+  // DO NOT create socket without a valid userId
+  if (!userId) {
+    console.log("initSocket: no userId provided, not creating socket");
+    return null;
+  }
+
+  if (socket) return socket;
 
   socket = io(API_URL, {
     auth: { userId },
-    reconnectionAttempts: 3,
+    transports: ["websocket"],
+    reconnectionAttempts: 5,
   });
 
   socket.on("connect", () => {
-    console.log("🔗 Connected:", socket.id);
+    console.log("✅ Socket connected:", socket.id, "userId:", userId);
+    socket.emit("user_connected", userId); // extra safety register
   });
 
   socket.on("disconnect", () => {
-    console.log("❌ Disconnected:", socket.id);
+    console.log("❌ Socket disconnected:", socket?.id);
   });
 
   return socket;
 };
 
+export const getSocket = () => socket;
+
 export const disconnectSocket = () => {
   if (socket) {
     socket.disconnect();
     socket = null;
-    console.log("🔌 Socket disconnected manually");
   }
 };

@@ -1,48 +1,79 @@
 // import { createContext, useContext, useState, useEffect } from "react";
-// import { initSocket } from "../utils/socket";
+// import axios from "axios";
+// import { getSocket } from "../utils/socket"; 
 // import { toast } from "react-toastify";
 
 // const NotificationContext = createContext();
 
 // export const NotificationProvider = ({ children }) => {
-// const API_URL = import.meta.env.VITE_API_URL;
-
+//   const API_URL = import.meta.env.VITE_API_URL;
 //   const [notifications, setNotifications] = useState([]);
 //   const user = JSON.parse(localStorage.getItem("user"));
 
 //   useEffect(() => {
 //     if (!user?._id) return;
 
-//     // fetch existing notifications
-//     fetch(`${API_URL}/notification/${user._id}`)
-//       .then((res) => res.json())
-//       .then((data) => setNotifications(data))
-//       .catch((err) => console.error(err));
+//     // Fetch notifications from backend
+//     const fetchNotifications = async () => {
+//       try {
+//         const res = await axios.get(`${API_URL}/notification/${user._id}`);
+//         const data = res.data || [];
+        
+//         // Ensure all notifications have _id and default profile image
+//         const normalized = data.map((n) => ({
+//           _id: n._id || n.id || Date.now() + Math.random(),
+//           title: n.type === "followup" ? "Follow-up Reminder" :
+//                  n.type === "activity" || n.type === "admin" ? "Activity Reminder" :
+//                  "Notification",
+//           text: n.text,
+//           read: !!n.read,
+//           profileImage: n.profileImage || "/default-avatar.png",
+//           createdAt: n.createdAt || new Date().toISOString(),
+//           meta: n.meta || {},
+//           type: n.type || "notification",
+//         }));
 
-//     // init socket
-//     const socket = initSocket();
-//     if (!socket) return;
+//         setNotifications(normalized);
+//       } catch (err) {
+//         console.error("Error fetching notifications:", err);
+//       }
+//     };
+//     fetchNotifications();
 
-//     const handleFollowup = (data) => {
-//       const notif = { id: Date.now(), text: data.message };
-//       setNotifications((prev) => [notif, ...prev]);
-//       toast.info(data.message, { autoClose: 5000 });
+//     // Setup socket listener
+//     const socket = getSocket();
+//     if (!socket) {
+//       console.log("NotificationProvider: socket not initialized yet");
+//       return;
+//     }
+
+//     const handleNewNotification = (data) => {
+//       const notif = {
+//         _id: data._id || data.id || Date.now() + Math.random(),
+//         title: data.type === "followup" ? "Follow-up Reminder" :
+//                data.type === "activity" || data.type === "admin" ? "Activity Reminder" :
+//                "Notification",
+//         text: data.text,
+//         read: false,
+//         profileImage: data.profileImage || "/default-avatar.png",
+//         createdAt: data.createdAt || new Date().toISOString(),
+//         meta: data.meta || {},
+//         type: data.type || "notification",
+//       };
+
+//       // Deduplicate by _id
+//       setNotifications((prev) => {
+//         const exists = prev.some((n) => n._id === notif._id);
+//         if (exists) return prev;
+//         return [notif, ...prev];
+//       });
+
+//       toast.info(notif.text);
 //     };
 
-//     const handleActivity = (data) => {
-//       // data should be the full notification object from backend
-//       setNotifications((prev) => [data, ...prev]);
-//       toast.info(data.text, { autoClose: 5000 });
-//     };
-
-//     socket.on("followup_reminder", handleFollowup);
-//     socket.on("activity_reminder", handleActivity);
-
-//     return () => {
-//       socket.off("followup_reminder", handleFollowup);
-//       socket.off("activity_reminder", handleActivity);
-//     };
-//   }, [user]);
+//     socket.on("new_notification", handleNewNotification);
+//     return () => socket.off("new_notification", handleNewNotification);
+//   }, [user?._id]);
 
 //   return (
 //     <NotificationContext.Provider value={{ notifications, setNotifications }}>
@@ -55,8 +86,10 @@
 
 
 
+
 import { createContext, useContext, useState, useEffect } from "react";
-import { initSocket, disconnectSocket } from "../utils/socket";
+import axios from "axios";
+import { getSocket } from "../utils/socket";
 import { toast } from "react-toastify";
 
 const NotificationContext = createContext();
@@ -66,46 +99,113 @@ export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const user = JSON.parse(localStorage.getItem("user"));
 
-  useEffect(() => {
-    if (!user?._id) return;
+  // useEffect(() => {
+  //   if (!user?._id) return;
 
-    // ✅ Fetch existing notifications once
-  fetch(`${API_URL}/notification/${user._id}`)
-    .then((res) => res.json())
-    .then((data) => {
-      console.log("Fetched notifications:", data);
-      data.forEach((n) => {
-        console.log("Notification profileImage:", n?.profileImage || "❌ Not available");
-      });
-      setNotifications(data);
-    })
-    .catch((err) => console.error(err));
+  //   // Fetch notifications from backend
+  //   const fetchNotifications = async () => {
+  //     try {
+  //       const res = await axios.get(`${API_URL}/notification/${user._id}`);
+  //       const data = res.data || [];
 
-    // ✅ Initialize socket only once with userId
-    const socket = initSocket(user._id);
-    if (!socket) return;
+  //       const normalized = data.map((n) => ({
+  //         _id: n._id || n.id || Date.now() + Math.random(),
+  //         title:
+  //           n.type === "followup"
+  //             ? "Follow-up Reminder"
+  //             : n.type === "activity" || n.type === "admin"
+  //             ? "Activity Reminder"
+  //             : "Notification",
+  //         text: n.text,
+  //         read: !!n.read,
+  //         profileImage: n.profileImage || "/default-avatar.png",
+  //         createdAt: n.createdAt || new Date().toISOString(),
+  //         meta: n.meta || {},
+  //         type: n.type || "notification",
+  //       }));
 
-    const handleFollowup = (data) => {
-      const notif = { id: Date.now(), text: data.message };
-      setNotifications((prev) => [notif, ...prev]);
-      toast.info(data.message, { autoClose: 5000 });
+  //       setNotifications(normalized);
+  //     } catch (err) {
+  //       console.error("Error fetching notifications:", err);
+  //     }
+  //   };
+  //   fetchNotifications();
+
+  //   // Setup socket listener
+  //   const socket = getSocket();
+  //   if (!socket) return;
+
+  //   const handleNewNotification = (data) => {
+  //     const notif = {
+  //       _id: data._id || data.id || Date.now() + Math.random(),
+  //       title:
+  //         data.type === "followup"
+  //           ? "Follow-up Reminder"
+  //           : data.type === "activity" || data.type === "admin"
+  //           ? "Activity Reminder"
+  //           : "Notification",
+  //       text: data.text,
+  //       read: false,
+  //       profileImage: data.profileImage || "/default-avatar.png",
+  //       createdAt: data.createdAt || new Date().toISOString(),
+  //       meta: data.meta || {},
+  //       type: data.type || "notification",
+  //     };
+
+  //     setNotifications((prev) => {
+  //       // Deduplicate by _id
+  //       if (notif._id && prev.some((n) => n._id === notif._id)) return prev;
+  //       return [notif, ...prev];
+  //     });
+
+  //     toast.info(notif.text);
+  //   };
+
+  //   socket.on("new_notification", handleNewNotification);
+  //   return () => socket.off("new_notification", handleNewNotification);
+  // }, [user?._id]);
+useEffect(() => {
+  if (!user?._id) return;
+
+  const socket = getSocket();
+  if (!socket) return;
+
+  const handleNewNotification = (data) => {
+    const notif = {
+      _id: data._id || data.id || Date.now() + Math.random(),
+      title:
+        data.type === "followup"
+          ? "Follow-up Reminder"
+          : data.type === "activity" || data.type === "admin"
+          ? "Activity Reminder"
+          : "Notification",
+      text: data.text,
+      read: false,
+      profileImage: data.profileImage || "/default-avatar.png",
+      createdAt: data.createdAt || new Date().toISOString(),
+      meta: data.meta || {},
+      type: data.type || "notification",
     };
 
-    const handleActivity = (data) => {
-      setNotifications((prev) => [data, ...prev]);
-      toast.info(data.text, { autoClose: 5000 });
-    };
+    setNotifications((prev) => {
+      if (notif._id && prev.some((n) => n._id === notif._id)) return prev;
+      return [notif, ...prev];
+    });
 
-    socket.on("followup_reminder", handleFollowup);
-    socket.on("activity_reminder", handleActivity);
+    toast.info(notif.text);
+  };
 
-    return () => {
-      socket.off("followup_reminder", handleFollowup);
-      socket.off("activity_reminder", handleActivity);
-      // optional: fully disconnect when provider unmounts
-      // disconnectSocket();
-    };
-  }, [user?._id]); // depend only on userId
+  // Listen for all events
+  socket.on("new_notification", handleNewNotification);
+  socket.on("activity_reminder", handleNewNotification);
+  socket.on("admin_reminder", handleNewNotification);
+
+  return () => {
+    socket.off("new_notification", handleNewNotification);
+    socket.off("activity_reminder", handleNewNotification);
+    socket.off("admin_reminder", handleNewNotification);
+  };
+}, [user?._id]);
 
   return (
     <NotificationContext.Provider value={{ notifications, setNotifications }}>

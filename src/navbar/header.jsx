@@ -6,7 +6,7 @@ import { disconnectSocket } from "../utils/socket";
 import { ShieldCheck } from "lucide-react";
 import PasswordUpdate from "../pages/password/PasswordUpdate";
 import { Maximize, Minimize } from "lucide-react"; // For fullscreen icons
-
+import { formatDistanceToNow } from "date-fns";
 const Navbar = ({ toggleSidebar }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -18,7 +18,7 @@ const Navbar = ({ toggleSidebar }) => {
 
   const notificationRef = useRef(null);
   const dropdownRef = useRef(null);
-
+  const API_SI = import.meta.env.VITE_SI_URI;
   // Load user
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -115,14 +115,18 @@ const Navbar = ({ toggleSidebar }) => {
                   {notifications.length > 0 ? (
                     notifications.map((n) => (
                       <div
-                        key={n.id}
+                        key={n._id} // ✅ Use _id
                         className="flex items-start px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all cursor-pointer border-b border-gray-100 dark:border-gray-600 last:border-0"
                       >
                         <div className="flex-shrink-0">
                           <img
                             src={
-                              n.avatar ||
-                              "https://randomuser.me/api/portraits/men/32.jpg"
+                              n.profileImage
+                                ? `${API_SI}/${n.profileImage.replace(
+                                    /\\/g,
+                                    "/"
+                                  )}`
+                                : "https://randomuser.me/api/portraits/men/32.jpg"
                             }
                             alt="avatar"
                             className="w-10 h-10 rounded-full object-cover border border-gray-300 dark:border-gray-600"
@@ -136,7 +140,10 @@ const Navbar = ({ toggleSidebar }) => {
                             {n.text}
                           </p>
                           <p className="text-gray-400 dark:text-gray-500 text-xs mt-2">
-                            {n.time || "Just now"}
+                            {formatDistanceToNow(new Date(n.createdAt), {
+                              addSuffix: true,
+                            })}{" "}
+                            {/* ✅ relative time */}
                           </p>
                         </div>
                       </div>
