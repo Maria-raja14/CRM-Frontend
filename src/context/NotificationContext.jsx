@@ -90,7 +90,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 import { getSocket } from "../utils/socket";
-import { toast } from "react-toastify";
+
 
 const NotificationContext = createContext();
 
@@ -192,7 +192,7 @@ useEffect(() => {
       return [notif, ...prev];
     });
 
-    toast.info(notif.text);
+
   };
 
   // Listen for all events
