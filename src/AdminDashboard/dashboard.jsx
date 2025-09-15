@@ -1,6 +1,3 @@
-
-
-
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   Card,
@@ -778,17 +775,17 @@ const AdminDashboard = () => {
               <div className="flex justify-between items-center">
                 <CardTitle className="text-xl text-gray-800">Revenue Overview</CardTitle>
                 <div className="flex items-center gap-2">
-                  <Select value={activePreset} onValueChange={(v) => applyPreset(v)}>
+                  {/* <Select value={activePreset} onValueChange={(v) => applyPreset(v)}>
                     <SelectTrigger className="w-[140px]">
                       <SelectValue placeholder="Range" />
-                    </SelectTrigger>
-                    <SelectContent>
+                    </SelectTrigger> */}
+                    {/* <SelectContent>
                       <SelectItem value="today">Today</SelectItem>
                       <SelectItem value="7days">Last 7 Days</SelectItem>
                       <SelectItem value="month">This Month</SelectItem>
                       <SelectItem value="year">This Year</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    </SelectContent> */}
+                  {/* </Select> */}
                 </div>
               </div>
               <CardDescription>Realtime revenue (auto-updates)</CardDescription>

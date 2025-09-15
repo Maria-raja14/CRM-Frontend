@@ -24,14 +24,11 @@ import CreateDeal from "./pages/Deals/CreateDeal";
 import { NotificationProvider } from "./context/NotificationContext";
 import NotificationsPage from "./pages/notification/NotificationsPage";
 import ViewProposal from "./pages/proposal/ViewProposal";
-import { TourProvider } from "./component/Tour/TourContext";
-import Tour from "./component/Tour/Tour";
 import { SocketProvider } from "./context/SocketContext";
 import ViewLead from "./pages/Leads/ViewLead";
 import InvoiceView from "./pages/invoice/InvoiceView";
 
 import ResetPassword from "./pages/password/ResetPassword";
-
 import PrivateRoute from "./pages/auth/PrivateRoute";
 
 function App() {
@@ -46,6 +43,7 @@ function App() {
 
   return (
     <SocketProvider>
+
       <TourProvider>
         <NotificationProvider>
           <BrowserRouter>
@@ -103,6 +101,7 @@ function App() {
           </BrowserRouter>
         </NotificationProvider>
       </TourProvider>
+
     </SocketProvider>
   );
 }
