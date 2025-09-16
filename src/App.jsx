@@ -65,6 +65,7 @@ function App() {
                   <Route path="/createleads" element={<CreateLeads />} />
                   <Route path="/deals" element={<AllDeals />} />
                   <Route path="/createDeal" element={<CreateDeal />} />
+                  <Route path="/createDeal/:id" element={<CreateDeal />} />
                   <Route path="/Pipelineview" element={<Pipeline_view />} />
                   <Route
                     path="/Pipelineview/:dealId?"

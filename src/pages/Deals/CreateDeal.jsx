@@ -1,5 +1,5 @@
 // import React, { useState, useEffect, useCallback } from "react";
-// import { useNavigate } from "react-router-dom";
+// import { useNavigate, useParams } from "react-router-dom";
 // import { toast, ToastContainer } from "react-toastify";
 // import axios from "axios";
 // import { getNames } from "country-list";
@@ -19,13 +19,32 @@
 // } from "lucide-react";
 // import "react-toastify/dist/ReactToastify.css";
 
+// // Currency options (with flags + symbols)
+// const currencyOptions = [
+//   { code: "USD", symbol: "$", label: "🇺🇸 USD" }, // US Dollar
+//   { code: "EUR", symbol: "€", label: "🇪🇺 EUR" }, // Euro
+//   { code: "INR", symbol: "₹", label: "🇮🇳 INR" }, // Indian Rupee
+//   { code: "GBP", symbol: "£", label: "🇬🇧 GBP" }, // British Pound
+//   { code: "JPY", symbol: "¥", label: "🇯🇵 JPY" }, // Japanese Yen
+//   { code: "AUD", symbol: "A$", label: "🇦🇺 AUD" }, // Australian Dollar
+//   { code: "CAD", symbol: "C$", label: "🇨🇦 CAD" }, // Canadian Dollar
+//   { code: "CHF", symbol: "CHF", label: "🇨🇭 CHF" }, // Swiss Franc
+//   { code: "MYR", symbol: "RM", label: "🇲🇾 MYR" }, // Malaysian Ringgit
+//   { code: "AED", symbol: "د.إ", label: "🇦🇪 AED" }, // UAE Dirham
+//   { code: "SGD", symbol: "S$", label: "🇸🇬 SGD" }, // Singapore Dollar
+//   { code: "ZAR", symbol: "R", label: "🇿🇦 ZAR" }, // South African Rand
+//   { code: "SAR", symbol: "﷼", label: "🇸🇦 SAR" }, // Saudi Riyal
+// ];
+
 // export default function CreateDeal() {
 //   const API_URL = import.meta.env.VITE_API_URL;
 //   const navigate = useNavigate();
+//   const { id } = useParams(); // Get deal ID from URL if editing
 
 //   const [formData, setFormData] = useState({
 //     dealName: "",
 //     dealValue: "",
+//     currency: "INR",
 //     stage: "Qualification",
 //     assignTo: "",
 //     notes: "",
@@ -45,13 +64,77 @@
 //   const [existingAttachments, setExistingAttachments] = useState([]);
 //   const [userRole, setUserRole] = useState("");
 //   const [isSubmitting, setIsSubmitting] = useState(false);
+//   const [isLoading, setIsLoading] = useState(false);
 //   const [countries] = useState(getNames());
+//   const [isEditMode, setIsEditMode] = useState(false);
 
 //   // Load user role
 //   useEffect(() => {
 //     const userData = localStorage.getItem("user");
 //     if (userData) setUserRole(JSON.parse(userData).role?.name || "");
 //   }, []);
+
+//   // Check if we're in edit mode
+//   useEffect(() => {
+//     if (id) {
+//       setIsEditMode(true);
+//       fetchDealData();
+//     }
+//   }, [id]);
+
+//   // Fetch deal data for editing
+//   const fetchDealData = async () => {
+//     try {
+//       setIsLoading(true);
+//       const token = localStorage.getItem("token");
+//       const response = await axios.get(`${API_URL}/deals/getAll/${id}`, {
+//         headers: { Authorization: `Bearer ${token}` },
+//       });
+
+//       const deal = response.data;
+
+//       // Extract numeric value and currency from formatted value
+//       let numericValue = "";
+//       let currency = "INR";
+
+//       if (deal.value && typeof deal.value === "string") {
+//         const valueParts = deal.value.split(" ");
+//         if (valueParts.length >= 2) {
+//           numericValue = valueParts[0].replace(/,/g, "");
+//           currency = valueParts[1];
+//         }
+//       }
+
+//       // Populate form with existing deal data
+//       setFormData({
+//         dealName: deal.dealName || "",
+//         dealValue: numericValue || "",
+//         currency: currency || "INR",
+//         stage: deal.stage || "Qualification",
+//         assignTo: deal.assignedTo?._id || "",
+//         notes: deal.notes || "",
+//         phoneNumber: deal.phoneNumber || "",
+//         email: deal.email || "",
+//         source: deal.source || "",
+//         companyName: deal.companyName || "",
+//         industry: deal.industry || "",
+//         requirement: deal.requirement || "",
+//         address: deal.address || "",
+//         country: deal.country || "",
+//         attachments: [],
+//       });
+
+//       // Set existing attachments
+//       if (deal.attachments && deal.attachments.length > 0) {
+//         setExistingAttachments(deal.attachments);
+//       }
+//     } catch (err) {
+//       console.error("Fetch deal error:", err);
+//       toast.error("Failed to fetch deal data");
+//     } finally {
+//       setIsLoading(false);
+//     }
+//   };
 
 //   // Fetch sales users
 //   useEffect(() => {
@@ -74,9 +157,9 @@
 
 //   const handleChange = useCallback((e) => {
 //     const { name, value } = e.target;
-//     setFormData(prev => ({ ...prev, [name]: value }));
+//     setFormData((prev) => ({ ...prev, [name]: value }));
 //     if (value.trim() !== "") {
-//       setErrors(prev => ({ ...prev, [name]: false }));
+//       setErrors((prev) => ({ ...prev, [name]: false }));
 //     }
 //   }, []);
 
@@ -84,32 +167,34 @@
 //     const files = Array.from(e.target.files);
 
 //     // Validate file sizes (max 5MB each)
-//     const oversizedFiles = files.filter(file => file.size > 5 * 1024 * 1024);
+//     const oversizedFiles = files.filter((file) => file.size > 5 * 1024 * 1024);
 //     if (oversizedFiles.length > 0) {
 //       toast.error("Some files exceed the 5MB size limit");
-//       // Only keep files under the size limit
 //       e.target.value = null;
-//       setFormData(prev => ({
+//       setFormData((prev) => ({
 //         ...prev,
-//         attachments: [...prev.attachments, ...files.filter(file => file.size <= 5 * 1024 * 1024)]
+//         attachments: [
+//           ...prev.attachments,
+//           ...files.filter((file) => file.size <= 5 * 1024 * 1024),
+//         ],
 //       }));
 //       return;
 //     }
 
-//     setFormData(prev => ({
+//     setFormData((prev) => ({
 //       ...prev,
-//       attachments: [...prev.attachments, ...files]
+//       attachments: [...prev.attachments, ...files],
 //     }));
 //   }, []);
 
 //   const handleRemoveFile = useCallback((idx, type = "new") => {
 //     if (type === "new") {
-//       setFormData(prev => ({
+//       setFormData((prev) => ({
 //         ...prev,
 //         attachments: prev.attachments.filter((_, i) => i !== idx),
 //       }));
 //     } else {
-//       setExistingAttachments(prev => prev.filter((_, i) => i !== idx));
+//       setExistingAttachments((prev) => prev.filter((_, i) => i !== idx));
 //     }
 //   }, []);
 
@@ -119,7 +204,7 @@
 
 //     const newErrors = {
 //       dealName: formData.dealName.trim() === "",
-//       dealValue: formData.dealValue.trim() === "",
+//       dealValue: formData.dealValue.toString().trim() === "",
 //       phoneNumber: formData.phoneNumber.trim() === "",
 //       companyName: formData.companyName.trim() === "",
 //     };
@@ -136,41 +221,51 @@
 //       const token = localStorage.getItem("token");
 //       const data = new FormData();
 
-//       // Append all form fields except attachments
-//       Object.keys(formData).forEach(key => {
+//       // Append all form data except attachments
+//       Object.keys(formData).forEach((key) => {
 //         if (key !== "attachments") {
 //           data.append(key, formData[key]);
 //         }
 //       });
 
-//       // Append attachments individually
+//       // Append new files
 //       formData.attachments.forEach((file) => {
 //         data.append("attachments", file);
 //       });
 
+//       // Append existing attachments to be kept
 //       data.append("existingAttachments", JSON.stringify(existingAttachments));
 
-//       const response = await axios.post(`${API_URL}/deals/createManual`, data, {
-//         headers: {
-//           "Content-Type": "multipart/form-data",
-//           Authorization: `Bearer ${token}`,
-//         },
-//         onUploadProgress: (progressEvent) => {
-//           const percentCompleted = Math.round(
-//             (progressEvent.loaded * 100) / progressEvent.total
-//           );
-//           // You could show a progress bar here if needed
-//         },
-//       });
+//       let response;
+//       if (isEditMode) {
+//         // Update existing deal - using PATCH method
+//         response = await axios.patch(`${API_URL}/deals/update-deal/${id}`, data, {
+//           headers: {
+//             "Content-Type": "multipart/form-data",
+//             Authorization: `Bearer ${token}`,
+//           },
 
-//       toast.success("Deal created successfully");
+//         });
+//               console.log(response);
+//         toast.success("Deal updated successfully");
+//       } else {
+//         // Create new deal
+//         response = await axios.post(`${API_URL}/deals/createManual`, data, {
+//           headers: {
+//             "Content-Type": "multipart/form-data",
+//             Authorization: `Bearer ${token}`,
+//           },
+//         });
+//         toast.success("Deal created successfully");
+//       }
+
 //       setTimeout(() => navigate("/deals"), 2000);
 //     } catch (err) {
-//       console.error("Deal creation error:", err);
+//       console.error("Deal operation error:", err);
 //       if (err.response?.data?.message) {
 //         toast.error(err.response.data.message);
 //       } else {
-//         toast.error("Failed to create deal");
+//         toast.error(`Failed to ${isEditMode ? "update" : "create"} deal`);
 //       }
 //     } finally {
 //       setIsSubmitting(false);
@@ -179,20 +274,17 @@
 
 //   const handleBackClick = () => navigate(-1);
 
+//   if (isLoading) {
+//     return (
+//       <div className="min-h-screen flex items-center justify-center">
+//         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+//       </div>
+//     );
+//   }
+
 //   return (
 //     <div className="min-h-screen flex items-start justify-center py-10 px-4">
-//       <ToastContainer
-//         position="top-right"
-//         autoClose={5000}
-//         hideProgressBar={false}
-//         newestOnTop={false}
-//         closeOnClick
-//         rtl={false}
-//         pauseOnFocusLoss
-//         draggable
-//         pauseOnHover
-//       />
-
+//       <ToastContainer position="top-right" autoClose={5000} />
 //       <div className="w-full max-w-6xl bg-white rounded-2xl shadow-xl border border-gray-100">
 //         {/* Header */}
 //         <div className="flex flex-col md:flex-row items-start md:items-center justify-between px-6 py-5 border-b rounded-t-2xl">
@@ -204,7 +296,7 @@
 //               <ArrowLeft size={20} />
 //             </button>
 //             <h1 className="text-2xl font-bold text-gray-800">
-//               Create New Deal
+//               {isEditMode ? "Edit Deal" : "Create New Deal"}
 //             </h1>
 //           </div>
 //         </div>
@@ -217,48 +309,172 @@
 //               Deal Information
 //             </h2>
 //             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-//               {[
-//                 {
-//                   name: "dealName",
-//                   label: "Deal Name",
-//                   icon: <FileText size={16} />,
-//                 },
-//                 {
-//                   name: "dealValue",
-//                   label: "Deal Value",
-//                   icon: <DollarSign size={16} />,
-//                   type: "number",
-//                 },
-//                 {
-//                   name: "stage",
-//                   label: "Stage",
-//                   icon: <Briefcase size={16} />,
-//                   type: "select",
-//                   options: [
+//               {/* Deal Name */}
+//               <div>
+//                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+//                   <FileText size={16} /> Deal Name{" "}
+//                   <span className="text-red-500">*</span>
+//                 </label>
+//                 <input
+//                   type="text"
+//                   name="dealName"
+//                   value={formData.dealName}
+//                   onChange={handleChange}
+//                   placeholder="Enter Deal Name"
+//                   className="w-full border rounded-lg px-3 py-2 text-sm h-11"
+//                 />
+//                 {errors.dealName && (
+//                   <p className="text-red-500 text-sm mt-1">
+//                     Deal Name is required
+//                   </p>
+//                 )}
+//               </div>
+
+//               {/* Deal Value with Currency Select */}
+//               <div>
+//                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+//                   <DollarSign size={16} /> Deal Value{" "}
+//                   <span className="text-red-500">*</span>
+//                 </label>
+//                 <div className="flex gap-2">
+//                   {/* Currency Dropdown */}
+//                   <select
+//                     value={formData.currency}
+//                     onChange={(e) =>
+//                       setFormData((prev) => ({
+//                         ...prev,
+//                         currency: e.target.value,
+//                       }))
+//                     }
+//                     className="w-28 border rounded-lg px-2 text-sm h-11 focus:ring-2 focus:ring-green-500 focus:outline-none"
+//                   >
+//                     {currencyOptions.map((c) => (
+//                       <option key={c.code} value={c.code}>
+//                         {c.symbol} {c.code}
+//                       </option>
+//                     ))}
+//                   </select>
+
+//                   {/* Number Input */}
+//                   <input
+//                     type="number"
+//                     name="dealValue"
+//                     value={formData.dealValue}
+//                     onChange={(e) => {
+//                       setFormData((prev) => ({
+//                         ...prev,
+//                         dealValue: e.target.value,
+//                       }));
+//                       if (e.target.value.toString().trim() !== "") {
+//                         setErrors((prev) => ({ ...prev, dealValue: false }));
+//                       }
+//                     }}
+//                     placeholder="Enter deal value"
+//                     className="flex-1 border rounded-lg px-3 py-2 text-sm h-11 focus:ring-2 focus:ring-green-500 focus:outline-none"
+//                   />
+//                 </div>
+//                 {errors.dealValue && (
+//                   <p className="text-red-500 text-sm mt-1">
+//                     Deal Value is required
+//                   </p>
+//                 )}
+//               </div>
+
+//               {/* Stage */}
+//               <div>
+//                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+//                   <Briefcase size={16} /> Stage
+//                 </label>
+//                 <select
+//                   name="stage"
+//                   value={formData.stage}
+//                   onChange={handleChange}
+//                   className="w-full border rounded-lg px-3 py-2 text-sm h-11"
+//                 >
+//                   {[
 //                     "Qualification",
 //                     "Proposal",
 //                     "Negotiation",
 //                     "Closed Won",
 //                     "Closed Lost",
-//                   ],
-//                 },
-//                 {
-//                   name: "phoneNumber",
-//                   label: "Phone Number",
-//                   icon: <Phone size={16} />,
-//                 },
-//                 { name: "email", label: "Email", icon: <Mail size={16} /> },
-//                 {
-//                   name: "companyName",
-//                   label: "Company Name",
-//                   icon: <Building2 size={16} />,
-//                 },
-//                 {
-//                   name: "industry",
-//                   label: "Industry",
-//                   icon: <BriefcaseBusiness size={16} />,
-//                   type: "select",
-//                   options: [
+//                   ].map((opt) => (
+//                     <option key={opt} value={opt}>
+//                       {opt}
+//                     </option>
+//                   ))}
+//                 </select>
+//               </div>
+
+//               {/* Phone Number */}
+//               <div>
+//                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+//                   <Phone size={16} /> Phone Number{" "}
+//                   <span className="text-red-500">*</span>
+//                 </label>
+//                 <input
+//                   type="text"
+//                   name="phoneNumber"
+//                   value={formData.phoneNumber}
+//                   onChange={handleChange}
+//                   placeholder="Enter Phone Number"
+//                   className="w-full border rounded-lg px-3 py-2 text-sm h-11"
+//                 />
+//                 {errors.phoneNumber && (
+//                   <p className="text-red-500 text-sm mt-1">
+//                     Phone Number is required
+//                   </p>
+//                 )}
+//               </div>
+
+//               {/* Email */}
+//               <div>
+//                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+//                   <Mail size={16} /> Email
+//                 </label>
+//                 <input
+//                   type="email"
+//                   name="email"
+//                   value={formData.email}
+//                   onChange={handleChange}
+//                   placeholder="Enter Email"
+//                   className="w-full border rounded-lg px-3 py-2 text-sm h-11"
+//                 />
+//               </div>
+
+//               {/* Company Name */}
+//               <div>
+//                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+//                   <Building2 size={16} /> Company Name{" "}
+//                   <span className="text-red-500">*</span>
+//                 </label>
+//                 <input
+//                   type="text"
+//                   name="companyName"
+//                   value={formData.companyName}
+//                   onChange={handleChange}
+//                   placeholder="Enter Company Name"
+//                   className="w-full border rounded-lg px-3 py-2 text-sm h-11"
+//                 />
+//                 {errors.companyName && (
+//                   <p className="text red-500 text-sm mt-1">
+//                     Company Name is required
+//                   </p>
+//                 )}
+//               </div>
+
+//               {/* Industry */}
+//               <div>
+//                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+//                   <BriefcaseBusiness size={16} /> Industry
+//                 </label>
+//                 <select
+//                   name="industry"
+//                   value={formData.industry}
+//                   onChange={handleChange}
+//                   className="w-full border rounded-lg px-3 py-2 text-sm h-11"
+//                 >
+//                   <option value="">Select Industry</option>
+//                   {[
 //                     "IT",
 //                     "Finance",
 //                     "Healthcare",
@@ -266,87 +482,75 @@
 //                     "Manufacturing",
 //                     "Retail",
 //                     "Other",
-//                   ],
-//                 },
-//                 {
-//                   name: "source",
-//                   label: "Source",
-//                   icon: <Globe size={16} />,
-//                   type: "select",
-//                   options: [
+//                   ].map((opt) => (
+//                     <option key={opt} value={opt}>
+//                       {opt}
+//                     </option>
+//                   ))}
+//                 </select>
+//               </div>
+
+//               {/* Source */}
+//               <div>
+//                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+//                   <Globe size={16} /> Source
+//                 </label>
+//                 <select
+//                   name="source"
+//                   value={formData.source}
+//                   onChange={handleChange}
+//                   className="w-full border rounded-lg px-3 py-2 text-sm h-11"
+//                 >
+//                   <option value="">Select Source</option>
+//                   {[
 //                     "Website",
 //                     "Referral",
 //                     "Social Media",
 //                     "Email",
 //                     "Phone",
 //                     "Other",
-//                   ],
-//                 },
-//                 {
-//                   name: "address",
-//                   label: "Address",
-//                   icon: <MapPin size={16} />,
-//                 },
-//                 {
-//                   name: "country",
-//                   label: "Country",
-//                   icon: <Globe size={16} />,
-//                   type: "select",
-//                   options: countries,
-//                 },
-//               ].map((field) => (
-//                 <div
-//                   key={field.name}
-//                   className={`${
-//                     field.type === "textarea" ? "md:col-span-3" : ""
-//                   }`}
+//                   ].map((opt) => (
+//                     <option key={opt} value={opt}>
+//                       {opt}
+//                     </option>
+//                   ))}
+//                 </select>
+//               </div>
+
+//               {/* Address */}
+//               <div>
+//                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+//                   <MapPin size={16} /> Address
+//                 </label>
+//                 <input
+//                   type="text"
+//                   name="address"
+//                   value={formData.address}
+//                   onChange={handleChange}
+//                   placeholder="Enter Address"
+//                   className="w-full border rounded-lg px-3 py-2 text-sm h-11"
+//                 />
+//               </div>
+
+//               {/* Country */}
+//               <div>
+//                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+//                   <Globe size={16} /> Country
+//                 </label>
+//                 <select
+//                   name="country"
+//                   value={formData.country}
+//                   onChange={handleChange}
+//                   className="w-full border rounded-lg px-3 py-2 text-sm h-11"
 //                 >
-//                   <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-//                     {field.icon} {field.label}{" "}
-//                     {(field.name === "dealName" ||
-//                       field.name === "dealValue" ||
-//                       field.name === "phoneNumber" ||
-//                       field.name === "companyName") && (
-//                       <span className="text-red-500">*</span>
-//                     )}
-//                   </label>
-//                   {field.type === "select" ? (
-//                     <select
-//                       name={field.name}
-//                       value={formData[field.name] || ""}
-//                       onChange={handleChange}
-//                       className="w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-400 outline-none transition h-11"
-//                     >
-//                       <option value="">Select {field.label}</option>
-//                       {field.options.map((opt) =>
-//                         typeof opt === "string" ? (
-//                           <option key={opt} value={opt}>
-//                             {opt}
-//                           </option>
-//                         ) : (
-//                           <option key={opt.value} value={opt.value}>
-//                             {opt.label}
-//                           </option>
-//                         )
-//                       )}
-//                     </select>
-//                   ) : (
-//                     <input
-//                       type={field.type || "text"}
-//                       name={field.name}
-//                       value={formData[field.name] || ""}
-//                       onChange={handleChange}
-//                       placeholder={`Enter ${field.label}`}
-//                       className="w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-400 outline-none transition h-11"
-//                     />
-//                   )}
-//                   {errors[field.name] && (
-//                     <p className="text-red-500 text-sm mt-1">
-//                       {field.label} is required
-//                     </p>
-//                   )}
-//                 </div>
-//               ))}
+//                   <option value="">Select Country</option>
+//                   {countries.map((c) => (
+//                     <option key={c} value={c}>
+//                       {c}
+//                     </option>
+//                   ))}
+//                 </select>
+//               </div>
 //             </div>
 //           </div>
 
@@ -365,7 +569,7 @@
 //                     name="assignTo"
 //                     value={formData.assignTo}
 //                     onChange={handleChange}
-//                     className="w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-400 outline-none transition h-11"
+//                     className="w-full border rounded-lg px-3 py-2 text-sm h-11"
 //                   >
 //                     <option value="">Select User</option>
 //                     {salesUsers.map((u) => (
@@ -389,7 +593,7 @@
 //               value={formData.notes}
 //               onChange={handleChange}
 //               placeholder="Enter Notes..."
-//               className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white shadow-sm text-sm text-gray-700 placeholder-gray-400 transition resize-none"
+//               className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white shadow-sm text-sm resize-none"
 //             />
 //           </div>
 
@@ -400,35 +604,40 @@
 //             </h2>
 
 //             {/* Existing Files */}
-//             {existingAttachments.length > 0 && (
-//               <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-//                 {existingAttachments.map((file, idx) => (
-//                   <div
-//                     key={idx}
-//                     className="flex flex-col items-center justify-center w-full bg-white border rounded-xl shadow-sm p-3"
-//                   >
-//                     <a
-//                       href={`${API_URL}/${file}`}
-//                       target="_blank"
-//                       rel="noopener noreferrer"
-//                       className="text-xs text-indigo-600 hover:underline truncate w-full text-center"
-//                     >
-//                       {file.split("/").pop()}
-//                     </a>
-//                     <button
-//                       type="button"
-//                       onClick={() => handleRemoveFile(idx, "existing")}
-//                       className="text-[12px] text-red-600 hover:underline mt-1"
-//                     >
-//                       Remove
-//                     </button>
-//                   </div>
-//                 ))}
-//               </div>
-//             )}
+// {existingAttachments.length > 0 && (
+//   <div className="mt-4">
+//     <h3 className="text-sm font-medium text-gray-700 mb-2">Existing Attachments:</h3>
+//     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+//       {existingAttachments.map((file, idx) => {
+//         const fileName = typeof file === "string" ? file.split("/").pop() : file.name;
+//         const fileUrl = typeof file === "string" ? `${API_URL}/${file}` : "#";
+//         return (
+//           <div key={idx} className="flex flex-col items-center justify-center w-full bg-white border rounded-xl shadow-sm p-3">
+//             <a
+//               href={fileUrl}
+//               target="_blank"
+//               rel="noopener noreferrer"
+//               className="text-xs text-indigo-600 hover:underline truncate w-full text-center"
+//             >
+//               {fileName}
+//             </a>
+//             <button
+//               type="button"
+//               onClick={() => handleRemoveFile(idx, "existing")}
+//               className="text-[12px] text-red-600 hover:underline mt-1"
+//             >
+//               Remove
+//             </button>
+//           </div>
+//         );
+//       })}
+//     </div>
+//   </div>
+// )}
 
 //             {/* Upload New Files */}
 //             <div className="mt-4">
+//               <h3 className="text-sm font-medium text-gray-700 mb-2">Add New Attachments:</h3>
 //               <label
 //                 htmlFor="attachments"
 //                 className="flex flex-col items-center justify-center w-full min-h-32 border-2 border-dashed border-indigo-300 rounded-xl cursor-pointer hover:border-indigo-500 hover:bg-indigo-50 transition p-6"
@@ -460,20 +669,27 @@
 //                         className="flex flex-col items-center justify-center w-28 h-28 bg-white border rounded-xl shadow-sm p-2"
 //                       >
 //                         <div className="w-12 h-12 flex items-center justify-center bg-indigo-100 rounded-md mb-1">
-//                           <span className="text-xs font-semibold text-indigo-600">
-//                             {file.name.split(".").pop().toUpperCase()}
-//                           </span>
+//                           <svg
+//                             className="w-6 h-6 text-indigo-600"
+//                             fill="none"
+//                             stroke="currentColor"
+//                             strokeWidth={2}
+//                             viewBox="0 0 24 24"
+//                           >
+//                             <path
+//                               strokeLinecap="round"
+//                               strokeLinejoin="round"
+//                               d="M12 4v16m8-8H4"
+//                             />
+//                           </svg>
 //                         </div>
-//                         <p className="text-xs text-gray-500">
-//                           {(file.size / 1024).toFixed(1)} KB
-//                         </p>
-//                         <p className="text-[10px] text-gray-700 truncate w-full text-center">
+//                         <span className="text-[11px] text-gray-600 truncate w-full text-center">
 //                           {file.name}
-//                         </p>
+//                         </span>
 //                         <button
 //                           type="button"
 //                           onClick={() => handleRemoveFile(idx, "new")}
-//                           className="text-[12px] text-red-600 hover:underline mt-1"
+//                           className="text-[10px] text-red-600 hover:underline mt-1"
 //                         >
 //                           Remove
 //                         </button>
@@ -482,46 +698,41 @@
 //                   </div>
 //                 )}
 //                 <input
-//                   id="attachments"
 //                   type="file"
+//                   id="attachments"
+//                   name="attachments"
 //                   multiple
-//                   onChange={handleFileChange}
 //                   className="hidden"
+//                   onChange={handleFileChange}
 //                 />
 //               </label>
 //             </div>
 //           </div>
 
-//           {/* Buttons */}
-//           <div className="flex justify-end gap-4 pt-6 border-t">
-//             <button
-//               type="button"
-//               onClick={handleBackClick}
-//               className="px-6 py-2 rounded-lg border bg-white hover:bg-gray-100 text-gray-700 transition"
-//               disabled={isSubmitting}
-//             >
-//               Cancel
-//             </button>
+//           {/* Submit */}
+//           <div className="flex justify-end">
 //             <button
 //               type="submit"
-//               className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-md transition disabled:bg-blue-400 disabled:cursor-not-allowed"
 //               disabled={isSubmitting}
+//               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-md font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
 //             >
-//               {isSubmitting ? "Creating..." : "Save Deal"}
+//               {isSubmitting
+//                 ? (isEditMode ? "Updating..." : "Submitting...")
+//                 : (isEditMode ? "Update Deal" : "Create Deal")
+//               }
 //             </button>
 //           </div>
 //         </form>
 //       </div>
 //     </div>
 //   );
-// }
+// }//ok
 
 import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import axios from "axios";
 import { getNames } from "country-list";
-import CurrencyInput from "react-currency-input-field";
 import {
   ArrowLeft,
   DollarSign,
@@ -538,31 +749,19 @@ import {
 } from "lucide-react";
 import "react-toastify/dist/ReactToastify.css";
 
-// Currency options (with flags + symbols)
-const currencyOptions = [
-  { code: "USD", symbol: "$", label: "🇺🇸 USD" }, // US Dollar
-  { code: "EUR", symbol: "€", label: "🇪🇺 EUR" }, // Euro
-  { code: "INR", symbol: "₹", label: "🇮🇳 INR" }, // Indian Rupee
-  { code: "GBP", symbol: "£", label: "🇬🇧 GBP" }, // British Pound
-  { code: "JPY", symbol: "¥", label: "🇯🇵 JPY" }, // Japanese Yen
-  { code: "AUD", symbol: "A$", label: "🇦🇺 AUD" }, // Australian Dollar
-  { code: "CAD", symbol: "C$", label: "🇨🇦 CAD" }, // Canadian Dollar
-  { code: "CHF", symbol: "CHF", label: "🇨🇭 CHF" }, // Swiss Franc
-  { code: "MYR", symbol: "RM", label: "🇲🇾 MYR" }, // Malaysian Ringgit
-  { code: "AED", symbol: "د.إ", label: "🇦🇪 AED" }, // UAE Dirham
-  { code: "SGD", symbol: "S$", label: "🇸🇬 SGD" }, // Singapore Dollar
-  { code: "ZAR", symbol: "R", label: "🇿🇦 ZAR" }, // South African Rand
-  { code: "SAR", symbol: "﷼", label: "🇸🇦 SAR" }, // Saudi Riyal
-];
-
 export default function CreateDeal() {
   const API_URL = import.meta.env.VITE_API_URL;
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Check if we're editing an existing deal
+  const isEditMode = location.state?.deal;
+  const existingDeal = location.state?.deal || null;
 
   const [formData, setFormData] = useState({
     dealName: "",
     dealValue: "",
-    currency: "INR",
+    currency: "INR", // Default currency
     stage: "Qualification",
     assignTo: "",
     notes: "",
@@ -589,6 +788,49 @@ export default function CreateDeal() {
     const userData = localStorage.getItem("user");
     if (userData) setUserRole(JSON.parse(userData).role?.name || "");
   }, []);
+
+  // Pre-fill form if editing an existing deal
+  useEffect(() => {
+    if (isEditMode && existingDeal) {
+      // Extract numeric value and currency from the formatted value
+      let dealValue = "";
+      let currency = "INR";
+
+      if (existingDeal.value) {
+        const valueParts = existingDeal.value.split(" ");
+        if (valueParts.length >= 2) {
+          // Remove commas and get the numeric part
+          dealValue = valueParts[0].replace(/,/g, "");
+          currency = valueParts[1];
+        } else {
+          dealValue = existingDeal.value.replace(/,/g, "");
+        }
+      }
+
+      setFormData({
+        dealName: existingDeal.dealName || "",
+        dealValue: dealValue,
+        currency: currency,
+        stage: existingDeal.stage || "Qualification",
+        assignTo: existingDeal.assignedTo?._id || "",
+        notes: existingDeal.notes || "",
+        phoneNumber: existingDeal.phoneNumber || "",
+        email: existingDeal.email || "",
+        source: existingDeal.source || "",
+        companyName: existingDeal.companyName || "",
+        industry: existingDeal.industry || "",
+        requirement: existingDeal.requirement || "",
+        address: existingDeal.address || "",
+        country: existingDeal.country || "",
+        attachments: [],
+      });
+
+      // Set existing attachments if any
+      if (existingDeal.attachments && existingDeal.attachments.length > 0) {
+        setExistingAttachments(existingDeal.attachments);
+      }
+    }
+  }, [isEditMode, existingDeal]);
 
   // Fetch sales users
   useEffect(() => {
@@ -624,6 +866,7 @@ export default function CreateDeal() {
     const oversizedFiles = files.filter((file) => file.size > 5 * 1024 * 1024);
     if (oversizedFiles.length > 0) {
       toast.error("Some files exceed the 5MB size limit");
+      // Only keep files under the size limit
       e.target.value = null;
       setFormData((prev) => ({
         ...prev,
@@ -675,33 +918,55 @@ export default function CreateDeal() {
       const token = localStorage.getItem("token");
       const data = new FormData();
 
+      // Append all form fields
       Object.keys(formData).forEach((key) => {
         if (key !== "attachments") {
           data.append(key, formData[key]);
         }
       });
 
+      // Append attachments individually
       formData.attachments.forEach((file) => {
         data.append("attachments", file);
       });
 
+      // Append existing attachments as JSON string
       data.append("existingAttachments", JSON.stringify(existingAttachments));
 
-      await axios.post(`${API_URL}/deals/createManual`, data, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      let response;
+      if (isEditMode && existingDeal) {
+        // Update existing deal
+        response = await axios.patch(
+          `${API_URL}/deals/update-deal/${existingDeal._id}`,
+          data,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        toast.success("Deal updated successfully");
+      } else {
+        // Create new deal
+        response = await axios.post(`${API_URL}/deals/createManual`, data, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        toast.success("Deal created successfully");
+      }
 
-      toast.success("Deal created successfully");
       setTimeout(() => navigate("/deals"), 2000);
     } catch (err) {
-      console.error("Deal creation error:", err);
+      console.error("Deal operation error:", err);
       if (err.response?.data?.message) {
         toast.error(err.response.data.message);
       } else {
-        toast.error("Failed to create deal");
+        toast.error(
+          isEditMode ? "Failed to update deal" : "Failed to create deal"
+        );
       }
     } finally {
       setIsSubmitting(false);
@@ -710,13 +975,20 @@ export default function CreateDeal() {
 
   const handleBackClick = () => navigate(-1);
 
-  // Get selected currency symbol
-  const selectedCurrency =
-    currencyOptions.find((c) => c.code === formData.currency)?.symbol || "₹";
-
   return (
     <div className="min-h-screen flex items-start justify-center py-10 px-4">
-      <ToastContainer position="top-right" autoClose={5000} />
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
+
       <div className="w-full max-w-6xl bg-white rounded-2xl shadow-xl border border-gray-100">
         {/* Header */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between px-6 py-5 border-b rounded-t-2xl">
@@ -728,7 +1000,7 @@ export default function CreateDeal() {
               <ArrowLeft size={20} />
             </button>
             <h1 className="text-2xl font-bold text-gray-800">
-              Create New Deal
+              {isEditMode ? "Edit Deal" : "Create New Deal"}
             </h1>
           </div>
         </div>
@@ -741,173 +1013,60 @@ export default function CreateDeal() {
               Deal Information
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Deal Name */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                  <FileText size={16} /> Deal Name{" "}
-                  <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="dealName"
-                  value={formData.dealName}
-                  onChange={handleChange}
-                  placeholder="Enter Deal Name"
-                  className="w-full border rounded-lg px-3 py-2 text-sm h-11"
-                />
-                {errors.dealName && (
-                  <p className="text-red-500 text-sm mt-1">
-                    Deal Name is required
-                  </p>
-                )}
-              </div>
-
-              {/* Deal Value with CurrencyInput + Currency Select */}
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                  <DollarSign size={16} /> Deal Value{" "}
-                  <span className="text-red-500">*</span>
-                </label>
-                <div className="flex gap-2">
-                  {/* Currency Dropdown */}
-                  <select
-                    value={formData.currency}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        currency: e.target.value,
-                      }))
-                    }
-                    className="w-28 border rounded-lg px-2 text-sm h-11 focus:ring-2 focus:ring-green-500 focus:outline-none"
-                  >
-                    {currencyOptions.map((c) => (
-                      <option key={c.code} value={c.code}>
-                        {c.symbol} {c.code}
-                      </option>
-                    ))}
-                  </select>
-
-                  {/* Number Input */}
-                  <input
-                    type="number"
-                    name="dealValue"
-                    value={formData.dealValue}
-                    onChange={(e) => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        dealValue: e.target.value,
-                      }));
-                      if (e.target.value.trim() !== "") {
-                        setErrors((prev) => ({ ...prev, dealValue: false }));
-                      }
-                    }}
-                    placeholder="Enter deal value"
-                    className="flex-1 border rounded-lg px-3 py-2 text-sm h-11 focus:ring-2 focus:ring-green-500 focus:outline-none"
-                  />
-                </div>
-                {errors.dealValue && (
-                  <p className="text-red-500 text-sm mt-1">
-                    Deal Value is required
-                  </p>
-                )}
-              </div>
-
-              {/* Stage */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                  <Briefcase size={16} /> Stage
-                </label>
-                <select
-                  name="stage"
-                  value={formData.stage}
-                  onChange={handleChange}
-                  className="w-full border rounded-lg px-3 py-2 text-sm h-11"
-                >
-                  {[
+              {[
+                {
+                  name: "dealName",
+                  label: "Deal Name",
+                  icon: <FileText size={16} />,
+                },
+                {
+                  name: "dealValue",
+                  label: "Deal Value",
+                  icon: <DollarSign size={16} />,
+                  type: "number",
+                },
+                {
+                  name: "currency",
+                  label: "Currency",
+                  icon: <DollarSign size={16} />,
+                  type: "select",
+                  options: [
+                    { value: "INR", label: "INR" },
+                    { value: "USD", label: "USD" },
+                    { value: "EUR", label: "EUR" },
+                    { value: "GBP", label: "GBP" },
+                  ],
+                },
+                {
+                  name: "stage",
+                  label: "Stage",
+                  icon: <Briefcase size={16} />,
+                  type: "select",
+                  options: [
                     "Qualification",
                     "Proposal",
                     "Negotiation",
                     "Closed Won",
                     "Closed Lost",
-                  ].map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Phone Number */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                  <Phone size={16} /> Phone Number{" "}
-                  <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="phoneNumber"
-                  value={formData.phoneNumber}
-                  onChange={handleChange}
-                  placeholder="Enter Phone Number"
-                  className="w-full border rounded-lg px-3 py-2 text-sm h-11"
-                />
-                {errors.phoneNumber && (
-                  <p className="text-red-500 text-sm mt-1">
-                    Phone Number is required
-                  </p>
-                )}
-              </div>
-
-              {/* Email */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                  <Mail size={16} /> Email
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="Enter Email"
-                  className="w-full border rounded-lg px-3 py-2 text-sm h-11"
-                />
-              </div>
-
-              {/* Company Name */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                  <Building2 size={16} /> Company Name{" "}
-                  <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="companyName"
-                  value={formData.companyName}
-                  onChange={handleChange}
-                  placeholder="Enter Company Name"
-                  className="w-full border rounded-lg px-3 py-2 text-sm h-11"
-                />
-                {errors.companyName && (
-                  <p className="text-red-500 text-sm mt-1">
-                    Company Name is required
-                  </p>
-                )}
-              </div>
-
-              {/* Industry */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                  <BriefcaseBusiness size={16} /> Industry
-                </label>
-                <select
-                  name="industry"
-                  value={formData.industry}
-                  onChange={handleChange}
-                  className="w-full border rounded-lg px-3 py-2 text-sm h-11"
-                >
-                  <option value="">Select Industry</option>
-                  {[
+                  ],
+                },
+                {
+                  name: "phoneNumber",
+                  label: "Phone Number",
+                  icon: <Phone size={16} />,
+                },
+                { name: "email", label: "Email", icon: <Mail size={16} /> },
+                {
+                  name: "companyName",
+                  label: "Company Name",
+                  icon: <Building2 size={16} />,
+                },
+                {
+                  name: "industry",
+                  label: "Industry",
+                  icon: <BriefcaseBusiness size={16} />,
+                  type: "select",
+                  options: [
                     "IT",
                     "Finance",
                     "Healthcare",
@@ -915,75 +1074,87 @@ export default function CreateDeal() {
                     "Manufacturing",
                     "Retail",
                     "Other",
-                  ].map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Source */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                  <Globe size={16} /> Source
-                </label>
-                <select
-                  name="source"
-                  value={formData.source}
-                  onChange={handleChange}
-                  className="w-full border rounded-lg px-3 py-2 text-sm h-11"
-                >
-                  <option value="">Select Source</option>
-                  {[
+                  ],
+                },
+                {
+                  name: "source",
+                  label: "Source",
+                  icon: <Globe size={16} />,
+                  type: "select",
+                  options: [
                     "Website",
                     "Referral",
                     "Social Media",
                     "Email",
                     "Phone",
                     "Other",
-                  ].map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Address */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                  <MapPin size={16} /> Address
-                </label>
-                <input
-                  type="text"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  placeholder="Enter Address"
-                  className="w-full border rounded-lg px-3 py-2 text-sm h-11"
-                />
-              </div>
-
-              {/* Country */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                  <Globe size={16} /> Country
-                </label>
-                <select
-                  name="country"
-                  value={formData.country}
-                  onChange={handleChange}
-                  className="w-full border rounded-lg px-3 py-2 text-sm h-11"
+                  ],
+                },
+                {
+                  name: "address",
+                  label: "Address",
+                  icon: <MapPin size={16} />,
+                },
+                {
+                  name: "country",
+                  label: "Country",
+                  icon: <Globe size={16} />,
+                  type: "select",
+                  options: countries,
+                },
+              ].map((field) => (
+                <div
+                  key={field.name}
+                  className={`${
+                    field.type === "textarea" ? "md:col-span-3" : ""
+                  }`}
                 >
-                  <option value="">Select Country</option>
-                  {countries.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                    {field.icon} {field.label}{" "}
+                    {(field.name === "dealName" ||
+                      field.name === "dealValue" ||
+                      field.name === "phoneNumber" ||
+                      field.name === "companyName") && (
+                      <span className="text-red-500">*</span>
+                    )}
+                  </label>
+                  {field.type === "select" ? (
+                    <select
+                      name={field.name}
+                      value={formData[field.name] || ""}
+                      onChange={handleChange}
+                      className="w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-400 outline-none transition h-11"
+                    >
+                      <option value="">Select {field.label}</option>
+                      {field.options.map((opt) =>
+                        typeof opt === "string" ? (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ) : (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        )
+                      )}
+                    </select>
+                  ) : (
+                    <input
+                      type={field.type || "text"}
+                      name={field.name}
+                      value={formData[field.name] || ""}
+                      onChange={handleChange}
+                      placeholder={`Enter ${field.label}`}
+                      className="w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-400 outline-none transition h-11"
+                    />
+                  )}
+                  {errors[field.name] && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {field.label} is required
+                    </p>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
 
@@ -1002,7 +1173,7 @@ export default function CreateDeal() {
                     name="assignTo"
                     value={formData.assignTo}
                     onChange={handleChange}
-                    className="w-full border rounded-lg px-3 py-2 text-sm h-11"
+                    className="w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-400 outline-none transition h-11"
                   >
                     <option value="">Select User</option>
                     {salesUsers.map((u) => (
@@ -1026,7 +1197,7 @@ export default function CreateDeal() {
               value={formData.notes}
               onChange={handleChange}
               placeholder="Enter Notes..."
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white shadow-sm text-sm resize-none"
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white shadow-sm text-sm text-gray-700 placeholder-gray-400 transition resize-none"
             />
           </div>
 
@@ -1097,27 +1268,20 @@ export default function CreateDeal() {
                         className="flex flex-col items-center justify-center w-28 h-28 bg-white border rounded-xl shadow-sm p-2"
                       >
                         <div className="w-12 h-12 flex items-center justify-center bg-indigo-100 rounded-md mb-1">
-                          <svg
-                            className="w-6 h-6 text-indigo-600"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth={2}
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M12 4v16m8-8H4"
-                            />
-                          </svg>
+                          <span className="text-xs font-semibold text-indigo-600">
+                            {file.name.split(".").pop().toUpperCase()}
+                          </span>
                         </div>
-                        <span className="text-[11px] text-gray-600 truncate w-full text-center">
+                        <p className="text-xs text-gray-500">
+                          {(file.size / 1024).toFixed(1)} KB
+                        </p>
+                        <p className="text-[10px] text-gray-700 truncate w-full text-center">
                           {file.name}
-                        </span>
+                        </p>
                         <button
                           type="button"
                           onClick={() => handleRemoveFile(idx, "new")}
-                          className="text-[10px] text-red-600 hover:underline mt-1"
+                          className="text-[12px] text-red-600 hover:underline mt-1"
                         >
                           Remove
                         </button>
@@ -1126,29 +1290,42 @@ export default function CreateDeal() {
                   </div>
                 )}
                 <input
-                  type="file"
                   id="attachments"
-                  name="attachments"
+                  type="file"
                   multiple
-                  className="hidden"
                   onChange={handleFileChange}
+                  className="hidden"
                 />
               </label>
             </div>
           </div>
 
-          {/* Submit */}
-          <div className="flex justify-end">
+          {/* Buttons */}
+          <div className="flex justify-end gap-4 pt-6 border-t">
+            <button
+              type="button"
+              onClick={handleBackClick}
+              className="px-6 py-2 rounded-lg border bg-white hover:bg-gray-100 text-gray-700 transition"
+              disabled={isSubmitting}
+            >
+              Cancel
+            </button>
             <button
               type="submit"
+              className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-md transition disabled:bg-blue-400 disabled:cursor-not-allowed"
               disabled={isSubmitting}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-md font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? "Submitting..." : "Create Deal"}
+              {isSubmitting
+                ? isEditMode
+                  ? "Updating..."
+                  : "Creating..."
+                : isEditMode
+                ? "Update Deal"
+                : "Save Deal"}
             </button>
           </div>
         </form>
       </div>
     </div>
   );
-}
+} //update work correctly

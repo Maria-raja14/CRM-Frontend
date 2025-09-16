@@ -1,7 +1,12 @@
-import { useRef, useEffect, useState } from "react";
+
+
+
+
+
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { MoreVertical, Edit, Trash2 } from "lucide-react";
+import { MoreVertical, Edit, Trash2, Eye, Plus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -10,29 +15,114 @@ import {
 } from "../../components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import ReactDOM from "react-dom";
+import { TourProvider, useTour } from "@reactour/tour";
 
-export const AllDeals = () => {
-  const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL;
 
+// Tour steps configuration for deals
+const dealTourSteps = [
+  {
+    selector: ".tour-deals-header",
+    content:
+      "Welcome to the Deals Management page! Here you can view, edit, and manage all your deals.",
+  },
+  {
+    selector: ".tour-create-deal",
+    content:
+      "Click here to create a new deal and add important details like value, stage, and assigned user.",
+  },
+  {
+    selector: ".tour-filters",
+    content:
+      "Use these filters to narrow down deals by stage, assigned user, or name.",
+  },
+  {
+    selector: ".tour-deals-table",
+    content:
+      "This is your deals table. It shows all your deals with their details such as stage, value, and assignee.",
+  },
+  {
+    selector: ".tour-deal-name",
+    content: "Click a Deal Name to view its detailed information.",
+  },
+  // {
+  //   selector: ".tour-checkbox",
+  //   content: "Admins can select deals here to bulk delete them all at once.",
+  // },
+  {
+    selector: ".tour-deal-actions",
+    content:
+      "Click the three-dot menu to edit or delete a deal quickly.",
+  },
+  // {
+  //   selector: ".tour-pagination",
+  //   content:
+  //     "Use these controls to navigate between pages of deals.",
+  // },
+  {
+    selector: ".tour-finish",
+    content:
+      "That's the end of the tour! Click the button below to finish it anytime.",
+  },
+];
+
+function AllDealsComponent() {
   const navigate = useNavigate();
+  const { setIsOpen, setSteps, setCurrentStep, close } = useTour();
+
   const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const [selectedDeals, setSelectedDeals] = useState([]);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [editDeal, setEditDeal] = useState(null);
   const [deleteDeal, setDeleteDeal] = useState(null);
   const [users, setUsers] = useState([]);
   const [userRole, setUserRole] = useState("");
   const [filters, setFilters] = useState({ stage: "", assignedTo: "" });
   const [searchTerm, setSearchTerm] = useState("");
   const [dropdownCoords, setDropdownCoords] = useState(null);
-  const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
+  const itemsPerPage = 10;
+
+  // Tour setup on mount
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    let role = "";
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        role = payload.role || "";
+      } catch (err) {
+        console.error("Error decoding token:", err);
+      }
+    }
+    setUserRole(role);
+
+    const hasTakenTour = localStorage.getItem("dealsTourCompleted");
+    if (!hasTakenTour && role === "Sales") {
+      setSteps(dealTourSteps);
+      setTimeout(() => setIsOpen(true), 1000);
+    }
+  }, [setIsOpen, setSteps]);
+
+  const startTour = () => {
+    setSteps(dealTourSteps);
+    setCurrentStep(0);
+    setIsOpen(true);
+    localStorage.setItem("dealsTourCompleted", "true");
+  };
+
+  const finishTour = () => {
+    close();
+    localStorage.setItem("dealsTourCompleted", "true");
+    toast.success(
+      "Tour completed! You can always restart it using the 'Take Tour' button."
+    );
+  };
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -60,35 +150,13 @@ export const AllDeals = () => {
     }
   };
 
-  const itemsPerPage = 10;
-
-  const getUserRole = () => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split(".")[1]));
-        return payload.role || "";
-      } catch (err) {
-        console.error("Error decoding token:", err);
-        return "";
-      }
-    }
-    return "";
-  };
   const formatCurrencyValue = (val) => {
     if (!val) return "-";
-
-    // Expected format: "12,554,755 INR" or "12554755 INR"
     const match = val.match(/^([\d,]+)\s*([A-Z]+)$/i);
-
     if (!match) return val;
-
-    const number = match[1].replace(/,/g, ""); // remove existing commas
-    const currency = match[2].toUpperCase(); // ensure uppercase (e.g. INR, USD)
-
-    // Format number in Indian numbering system
+    const number = match[1].replace(/,/g, "");
+    const currency = match[2].toUpperCase();
     const formattedNumber = Number(number).toLocaleString("en-IN");
-
     return `${formattedNumber} ${currency}`;
   };
 
@@ -126,8 +194,6 @@ export const AllDeals = () => {
   };
 
   useEffect(() => {
-    const role = getUserRole();
-    setUserRole(role);
     fetchDeals();
     fetchUsers();
   }, []);
@@ -141,7 +207,6 @@ export const AllDeals = () => {
         })
       : "-";
 
-  // Pagination
   const handlePageChange = (newPage) => {
     if (newPage > 0 && newPage <= totalPages) setCurrentPage(newPage);
   };
@@ -154,12 +219,12 @@ export const AllDeals = () => {
     )
     .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  // Bulk select
   const handleCheckboxChange = (id) => {
     setSelectedDeals((prev) =>
       prev.includes(id) ? prev.filter((d) => d !== id) : [...prev, id]
     );
   };
+
   const handleSelectAll = (e) => {
     if (e.target.checked) {
       const ids = paginatedDeals.map((d) => d._id);
@@ -177,13 +242,11 @@ export const AllDeals = () => {
     try {
       setIsBulkDeleting(true);
       const token = localStorage.getItem("token");
-
       const deletePromises = selectedDeals.map((id) =>
         axios.delete(`${API_URL}/deals/delete-deal/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
       );
-
       await Promise.all(deletePromises);
       toast.success(`Successfully deleted ${selectedDeals.length} deals`);
       setSelectedDeals([]);
@@ -196,17 +259,17 @@ export const AllDeals = () => {
     }
   };
 
-  // Actions
   const handleEdit = (deal) => {
-    setEditDeal({ ...deal, assignedTo: deal.assignedTo?._id || "" });
-    setIsEditModalOpen(true);
+    navigate("/createDeal", { state: { deal } });
     setOpenDropdownId(null);
   };
+
   const handleDeleteClick = (deal) => {
     setDeleteDeal(deal);
     setIsDeleteModalOpen(true);
     setOpenDropdownId(null);
   };
+
   const handleDeleteConfirm = async () => {
     try {
       setIsDeleting(true);
@@ -225,25 +288,6 @@ export const AllDeals = () => {
       setIsDeleting(false);
     }
   };
-  const handleSave = async () => {
-    try {
-      setIsUpdating(true);
-      const token = localStorage.getItem("token");
-      await axios.patch(
-        `${API_URL}/deals/update-deal/${editDeal._id}`,
-        editDeal,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success("Deal updated successfully");
-      setIsEditModalOpen(false);
-      await fetchDeals();
-    } catch (err) {
-      console.error("Update error:", err);
-      toast.error(err.response?.data?.message || "Failed to update deal");
-    } finally {
-      setIsUpdating(false);
-    }
-  };
 
   const handleDealNameClick = (dealId) => {
     navigate(`/Pipelineview/${dealId}`);
@@ -259,11 +303,28 @@ export const AllDeals = () => {
  const user = JSON.parse(localStorage.getItem("user")); // already exists
   return (
     <div className="p-4">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">All Deals</h2>
+      {/* Header with flex and aligned buttons */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-3 tour-deals-header">
+        <h2 className="text-xl font-semibold text-gray-800">All Deals</h2>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={startTour}
+            className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 tour-finish"
+          >
+            <Eye className="w-4 h-4" /> Take Tour
+          </button>
+          <button
+            onClick={() => navigate("/createDeal")}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 tour-create-deal"
+          >
+            <Plus className="w-4 h-4" /> Create Deal
+          </button>
+        </div>
+      </div>
 
-      {/* Top bar */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-3">
-        <div className="flex flex-wrap gap-16 items-center">
+      {/* Filters */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-3 tour-filters">
+        <div className="flex flex-wrap gap-6 items-center">
           <select
             value={filters.stage}
             onChange={(e) =>
@@ -322,7 +383,7 @@ export const AllDeals = () => {
           <button
             onClick={handleBulkDelete}
             disabled={isBulkDeleting}
-            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed tour-checkbox"
           >
             {isBulkDeleting
               ? "Deleting..."
@@ -332,7 +393,7 @@ export const AllDeals = () => {
       )}
 
       {/* Deals Table */}
-      <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+      <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm tour-deals-table">
         <table className="min-w-full text-sm text-gray-700">
           <thead className="bg-gray-100">
             <tr>
@@ -353,7 +414,7 @@ export const AllDeals = () => {
               <th className="px-6 py-3 text-left">Stage</th>
               <th className="px-6 py-3 text-left">Value</th>
               <th className="px-6 py-3 text-left">Created At</th>
-              <th className="px-6 py-3 text-left">Actions</th>
+              <th className="px-6 py-3 text-left tour-deal-actions">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -375,7 +436,7 @@ export const AllDeals = () => {
                   <td className="px-6 py-4">
                     <button
                       onClick={() => handleDealNameClick(deal._id)}
-                      className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                      className="text-blue-600 hover:text-blue-800 hover:underline font-medium tour-deal-name"
                     >
                       {deal.dealName || "-"}
                     </button>
@@ -389,9 +450,8 @@ export const AllDeals = () => {
                   <td className="px-6 py-4">
                     {formatCurrencyValue(deal.value)}
                   </td>
-
                   <td className="px-6 py-4">{formatDate(deal.createdAt)}</td>
-                  <td className="px-6 py-4 ">
+                  <td className="px-6 py-4">
                     <button
                       onClick={(e) => toggleDropdown(deal._id, e)}
                       className="p-2 rounded hover:bg-gray-200"
@@ -404,7 +464,7 @@ export const AllDeals = () => {
             ) : (
               <tr>
                 <td
-                  colSpan={userRole === "Admin" ? "8" : "7"}
+                  colSpan={userRole === "Admin" ? "7" : "6"}
                   className="px-6 py-8 text-center text-gray-500"
                 >
                   No deals found
@@ -417,7 +477,7 @@ export const AllDeals = () => {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-between items-center mt-4">
+        <div className="flex justify-between items-center mt-4 tour-pagination">
           <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
@@ -469,129 +529,6 @@ export const AllDeals = () => {
           document.body
         )}
 
-      {/* Edit Deal Modal */}
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-md w-full p-6 rounded-xl shadow-xl bg-white">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-semibold text-gray-800">
-              Edit Deal
-            </DialogTitle>
-          </DialogHeader>
-
-          {editDeal && (
-            <div className="space-y-5 mt-4">
-              {/* Assigned To */}
-              <div className="relative">
-                <select
-                  value={editDeal.assignedTo}
-                  onChange={(e) =>
-                    setEditDeal({ ...editDeal, assignedTo: e.target.value })
-                  }
-                  className="peer w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">-- Select Salesman --</option>
-                  {users.map((u) => (
-                    <option key={u._id} value={u._id}>
-                      {u.firstName} {u.lastName}
-                    </option>
-                  ))}
-                </select>
-                <label className="absolute left-3 -top-2.5 text-gray-500 text-sm bg-white px-1 peer-focus:text-blue-500">
-                  Assigned To
-                </label>
-              </div>
-
-              {/* Deal Name */}
-              <div className="relative">
-                <input
-                  type="text"
-                  value={editDeal.dealName || ""}
-                  onChange={(e) =>
-                    setEditDeal({ ...editDeal, dealName: e.target.value })
-                  }
-                  className="peer w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-                <label className="absolute left-3 -top-2.5 text-gray-500 text-sm bg-white px-1 peer-focus:text-blue-500">
-                  Deal Name
-                </label>
-              </div>
-
-              {/* Stage */}
-              <div className="relative">
-                <select
-                  value={editDeal.stage || ""}
-                  onChange={(e) =>
-                    setEditDeal({ ...editDeal, stage: e.target.value })
-                  }
-                  className="peer w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">-- Select Stage --</option>
-                  <option>Qualification</option>
-                  <option>Negotiation</option>
-                  <option>Proposal Sent</option>
-                  <option>Closed Won</option>
-                  <option>Closed Lost</option>
-                </select>
-                <label className="absolute left-3 -top-2.5 text-gray-500 text-sm bg-white px-1 peer-focus:text-blue-500">
-                  Stage
-                </label>
-              </div>
-
-              {/* Deal Value */}
-              <div className="relative">
-                <input
-                  type="number"
-                  value={
-                    editDeal.value
-                      ? Number(editDeal.value.replace(/,/g, "").split(" ")[0])
-                      : ""
-                  }
-                  onChange={(e) =>
-                    setEditDeal({ ...editDeal, value: e.target.value })
-                  }
-                  className="peer w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-                <label className="absolute left-3 -top-2.5 text-gray-500 text-sm bg-white px-1 peer-focus:text-blue-500">
-                  Deal Value
-                </label>
-              </div>
-
-              {/* Notes */}
-              <div className="relative">
-                <textarea
-                  value={editDeal.notes || ""}
-                  onChange={(e) =>
-                    setEditDeal({ ...editDeal, notes: e.target.value })
-                  }
-                  rows={4}
-                  className="peer w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                />
-                <label className="absolute left-3 -top-2.5 text-gray-500 text-sm bg-white px-1 peer-focus:text-blue-500">
-                  Notes
-                </label>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex justify-end space-x-3 mt-2">
-                <button
-                  onClick={() => setIsEditModalOpen(false)}
-                  className="px-5 py-2 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={isUpdating}
-                  className="px-5 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition"
-                >
-                  {isUpdating ? "Updating..." : "Save"}
-                </button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
       {/* Delete Modal */}
       <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
         <DialogContent className="max-w-sm p-6">
@@ -620,5 +557,56 @@ export const AllDeals = () => {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+// Wrap component with TourProvider like in LeadTable
+export const AllDeals = () => {
+  return (
+    <TourProvider
+      steps={dealTourSteps}
+      afterOpen={() => (document.body.style.overflow = "hidden")}
+      beforeClose={() => (document.body.style.overflow = "unset")}
+      showNumber={false}
+      styles={{
+        popover: (base) => ({
+          ...base,
+          backgroundColor: "#fff",
+          color: "#1f1f1f",
+        }),
+        maskArea: (base) => ({ ...base, rx: 8 }),
+        badge: (base) => ({
+          ...base,
+          display: "none", // Hide the default number badge
+        }),
+        close: (base) => ({
+          ...base,
+          right: "auto",
+          left: 8,
+          top: 8,
+        }),
+        footer: (base) => ({
+          ...base,
+          justifyContent: "space-between",
+        }),
+        buttonClose: (base) => ({
+          ...base,
+          display: "none",
+        }),
+      }}
+      footer={({ close }) => (
+        <div className="flex justify-between items-center w-full px-4 py-2 border-t border-gray-200">
+          <button
+            onClick={close}
+            className="text-gray-700 hover:text-gray-900 font-semibold"
+          >
+            Finish Tour
+          </button>
+          <div />
+        </div>
+      )}
+    >
+      <AllDealsComponent />
+    </TourProvider>
   );
 };
