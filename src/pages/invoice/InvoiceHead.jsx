@@ -120,19 +120,30 @@ const InvoiceHead = () => {
     return acc;
   }, {});
 
+
   const fetchInvoices = async () => {
     try {
+      const user = JSON.parse(localStorage.getItem("user"));
+      const token = localStorage.getItem("token"); // make sure you saved token at login
+
       const response = await axios.get(
-        `${API_URL}/invoice/getInvoice?page=${currentPage}&limit=${itemsPerPage}`
+        `${API_URL}/invoice/getInvoice?page=${currentPage}&limit=${itemsPerPage}&assignTo=${user?._id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
+
       setInvoices(response.data.invoices || response.data);
       setFilteredInvoices(response.data.invoices || response.data);
       setTotalCount(response.data.totalCount || response.data.length);
     } catch (error) {
       toast.error("Error fetching invoices!");
-      console.error("Error fetching invoices:", error);
+      console.error("Error fetching invoices:", error.response?.data || error);
     }
   };
+  const user = JSON.parse(localStorage.getItem("user")); // already exists
 
   const handleSendEmail = async (invoiceId) => {
     try {
@@ -263,7 +274,6 @@ const InvoiceHead = () => {
     }
   };
 
-
   // Currency icon mapping
   const getCurrencyIcon = (currency) => {
     switch (currency) {
@@ -342,15 +352,17 @@ const InvoiceHead = () => {
     <div className="p-4">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold">Invoices</h1>
-        <button
-          onClick={() => {
-            setEditingInvoice(null);
-            openModal();
-          }}
-          className="bg-[#4466f2] p-2 px-4 text-white rounded-sm"
-        >
-          Create invoices
-        </button>
+        {user?.role.name === "Admin" && (
+          <button
+            onClick={() => {
+              setEditingInvoice(null);
+              openModal();
+            }}
+            className="bg-[#4466f2] p-2 px-4 text-white rounded-sm"
+          >
+            Create invoices
+          </button>
+        )}
       </div>
 
       <InvoiceModal

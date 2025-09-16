@@ -11,15 +11,26 @@ import {
   DialogFooter,
 } from "../../components/ui/dialog";
 
-const formatDateTime = (dateStr) => {
+const formatDateTime = (dateStr, timeStr) => {
   if (!dateStr) return "-";
-  const date = new Date(dateStr);
-  return date.toLocaleString("en-GB", {
+
+  let date = new Date(dateStr);
+
+  // If timeStr exists, set hours and minutes
+  if (timeStr) {
+    const [hours, minutes] = timeStr.split(":").map(Number);
+    date.setHours(hours);
+    date.setMinutes(minutes);
+  }
+
+  return date.toLocaleString("en-US", {
+    // <-- en-US for AM/PM
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    hour12: true, // <-- 12-hour format with AM/PM
   });
 };
 
@@ -71,15 +82,15 @@ const ListActivity = ({ activities, setActivities, fetchActivities }) => {
       await axios.delete(`${API_URL}/activity/delete/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       // Update local state immediately
       setActivities((prev) => prev.filter((act) => act._id !== id));
-      
+
       // Also refetch from server to ensure consistency
       if (fetchActivities) {
         fetchActivities();
       }
-      
+
       toast.success("Activity deleted successfully!");
     } catch (error) {
       console.error("Delete error:", error);
@@ -101,7 +112,7 @@ const ListActivity = ({ activities, setActivities, fetchActivities }) => {
         activity._id === updatedActivity._id ? updatedActivity : activity
       )
     );
-    
+
     // Also refetch from server to ensure consistency
     if (fetchActivities) {
       fetchActivities();
@@ -110,7 +121,7 @@ const ListActivity = ({ activities, setActivities, fetchActivities }) => {
 
   const handleActivityAdded = (newActivity) => {
     setActivities((prev) => [newActivity, ...prev]);
-    
+
     // Also refetch from server to ensure consistency
     if (fetchActivities) {
       fetchActivities();
@@ -153,9 +164,18 @@ const ListActivity = ({ activities, setActivities, fetchActivities }) => {
                       : "-"}
                   </td>
 
-                  <td className="p-3">{formatDateTime(activity.startDate)}</td>
-                  <td className="p-3">{formatDateTime(activity.endDate)}</td>
-                  <td className="p-3 ">{activity.reminder || "-"}</td>
+                  <td className="p-3">
+                    {formatDateTime(activity.startDate, activity.startTime)}
+                  </td>
+                  <td className="p-3">
+                    {formatDateTime(activity.endDate, activity.endTime)}
+                  </td>
+                  <td className="p-3">
+                    {activity.reminder
+                      ? formatDateTime(activity.reminder)
+                      : "-"}
+                  </td>
+
                   <td className="p-3 text-right relative">
                     <button
                       ref={(el) => (buttonRefs.current[index] = el)}

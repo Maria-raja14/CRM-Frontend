@@ -103,17 +103,20 @@ const CalendarView = () => {
 
     setActivities(filtered);
   };
+const user = JSON.parse(localStorage.getItem("user")); // already exists
 
   return (
     <div className="p-6">
       <div className="flex flex-wrap justify-between items-center gap-4">
         <h1 className="text-lg font-semibold text-gray-600">Calendar View</h1>
+       {user?.role.name === "Admin" && (
         <button
           className="bg-blue-600 text-white px-4 py-2 rounded shadow"
           onClick={() => setIsModalOpen(true)}
         >
           Add activity
         </button>
+        )}
       </div>
 
       {/* Filters */}

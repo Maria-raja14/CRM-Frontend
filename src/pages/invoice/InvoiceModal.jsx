@@ -91,9 +91,13 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
     const fetchSalesUsers = async () => {
       try {
         const token = localStorage.getItem("token");
+        console.log(token);
+
         const response = await axios.get(`${API_URL}/users`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+        console.log(response);
+        
         const filteredSales = (response.data.users || []).filter(
           (user) =>
             user.role &&
@@ -261,6 +265,8 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
           invoiceToSave,
           { headers: { Authorization: `Bearer ${token}` } }
         );
+        console.log(response);
+        
         toast.success("Invoice updated successfully!");
       } else {
         response = await axios.post(
@@ -326,6 +332,10 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
                           ? "border-red-500"
                           : "border-gray-300"
                       }`}
+                      disabled={
+                        editingInvoice &&
+                        localStorage.getItem("role")?.toLowerCase() === "Sales"
+                      }
                     >
                       <option value="">Select Sales User</option>
                       {salesUsers.map((user) => (
@@ -334,6 +344,7 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
                         </option>
                       ))}
                     </select>
+
                     {validationErrors.assignTo && (
                       <p className="mt-1 text-sm text-red-600">
                         {validationErrors.assignTo}
