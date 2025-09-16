@@ -15,7 +15,6 @@ import DraftsPage from "./pages/proposal/DraftsPage";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import UserManagement from "./pages/useroles/UserManagement";
-import { initSocket } from "./utils/socket";
 import { AllDeals } from "./pages/Deals/allDeals";
 import Pipeline_view from "./pages/Pipeline_View/Pipelien_view";
 import Pipeline_modal_view from "./pages/Pipeline_View/Pipeline_modal_view";
@@ -33,16 +32,6 @@ import PrivateRoute from "./pages/auth/PrivateRoute";
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-// inside App()
-// useEffect(() => {
-//   const user = JSON.parse(localStorage.getItem("user"));
-//   if (user?._id) {
-//     console.log("App: init socket with user:", user._id);
-//     initSocket(user._id); // safe: initSocket returns null if userId falsy
-//   }
-// }, []); // run once at app start
-
 
   return (
     <SocketProvider>

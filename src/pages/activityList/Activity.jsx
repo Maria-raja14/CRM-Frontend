@@ -23,14 +23,19 @@ const CalendarView = () => {
   }, []);
 
   const fetchCalendar = async () => {
-    try {
-      const res = await axios.get(`${API_URL}/activity`);
-      setActivities(res.data);
-      console.log("Fetched data:", res.data);
-    } catch (error) {
-      console.error("Error fetching activities:", error);
-    }
-  };
+  try {
+    const token = localStorage.getItem("token"); // ✅ get JWT token
+    if (!token) return toast.error("User not logged in");
+
+    const res = await axios.get(`${API_URL}/activity`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setActivities(res.data);
+  } catch (error) {
+    console.error("Error fetching activities:", error);
+    toast.error("Failed to fetch activities");
+  }
+};
 
   const handleAddActivity = (newActivity) => {
     setActivities([...activities, newActivity]);
@@ -78,17 +83,20 @@ const CalendarView = () => {
 
     return matchesSearch && matchesCategory && matchesAssigned;
   });
+const user = JSON.parse(localStorage.getItem("user")); // already exists
 
   return (
     <div className="p-6">
       <div className="flex flex-wrap justify-between items-center gap-4">
         <h1 className="text-lg font-semibold text-gray-600">Calendar View</h1>
+        {user?.role.name === "Admin" && (
         <button
           className="bg-blue-600 text-white px-4 py-2 rounded shadow"
           onClick={() => setIsModalOpen(true)}
         >
           Add activity
         </button>
+        )}
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-4 mt-4">

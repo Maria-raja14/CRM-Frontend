@@ -14,11 +14,10 @@ const CalendarView = () => {
   const [activities, setActivities] = useState([]);
   const [activityToEdit, setActivityToEdit] = useState(null);
 
-  const [selectedType, setSelectedType] = useState("Any");
   const [selectedCategory, setSelectedCategory] = useState("Any");
   const [selectedAssigned, setSelectedAssigned] = useState("Any");
-  const [showOnlyDone, setShowOnlyDone] = useState(false);
-  const [showTypeDropdown, setShowTypeDropdown] = useState(false);
+
+  const user = JSON.parse(localStorage.getItem("user")); // already exists
 
   useEffect(() => {
     fetchCalendar();
@@ -26,18 +25,14 @@ const CalendarView = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [
-    searchQuery,
-    selectedType,
-    selectedCategory,
-    selectedAssigned,
-    showOnlyDone,
-    allActivities,
-  ]);
+  }, [searchQuery, selectedCategory, selectedAssigned, allActivities]);
 
   const fetchCalendar = async () => {
     try {
-      const res = await axios.get(`${API_URL}/activity`);
+      const token = localStorage.getItem("token"); // make sure JWT token is stored here
+      const res = await axios.get(`${API_URL}/activity`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setAllActivities(res.data);
     } catch (error) {
       console.error("Error fetching activities:", error);
@@ -58,16 +53,12 @@ const CalendarView = () => {
   };
 
   // Dynamic filters
-  const uniqueTypes = [
-    "Any",
-    ...new Set(allActivities.map((a) => a.activityModel).filter(Boolean)),
-  ];
   const uniqueCategories = [
-    "All Activities",
+    "Any",
     ...new Set(allActivities.map((a) => a.activityCategory).filter(Boolean)),
   ];
   const uniqueAssigned = [
-    "All Assigned",
+    "Any",
     ...new Set(
       allActivities
         .map((a) =>
@@ -145,23 +136,10 @@ const CalendarView = () => {
       afterOpen={() => (document.body.style.overflow = "hidden")}
       beforeClose={() => (document.body.style.overflow = "unset")}
       styles={{
-        popover: (base) => ({
-          ...base,
-          backgroundColor: "#fff",
-          color: "#1f1f1f",
-        }),
+        popover: (base) => ({ ...base, backgroundColor: "#fff", color: "#1f1f1f" }),
         maskArea: (base) => ({ ...base, rx: 8 }),
-      
-        badge: (base) => ({ 
-  ...base, 
-  display: "none" // This hides the step number badge
-}),
-        close: (base) => ({
-          ...base,
-          right: "auto",
-          left: 8,
-          top: 8,
-        }),
+        badge: (base) => ({ ...base, display: "none" }),
+        close: (base) => ({ ...base, right: "auto", left: 8, top: 8 }),
       }}
     >
       <div className="p-6">
@@ -170,12 +148,14 @@ const CalendarView = () => {
             Calendar View
           </h1>
           <div className="flex flex-wrap gap-3 items-center">
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="bg-blue-600 text-white px-4 py-2 rounded shadow tour-add-activity"
-            >
-              Add activity
-            </button>
+            {user?.role.name === "Admin" && (
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="bg-blue-600 text-white px-4 py-2 rounded shadow tour-add-activity"
+              >
+                Add activity
+              </button>
+            )}
             <TourComponent />
           </div>
         </div>
@@ -212,10 +192,7 @@ const CalendarView = () => {
 
           {/* Search bar */}
           <div className="relative w-full sm:w-64 ml-0 sm:ml-28 tour-search">
-            <Search
-              className="absolute left-3 top-2.5 text-gray-400"
-              size={16}
-            />
+            <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
             <input
               type="text"
               placeholder="Search by title"
@@ -247,16 +224,9 @@ const CalendarView = () => {
 };
 
 const TourComponent = () => {
-  // const { setIsOpen } = useTour();
-
-  // const startTour = () => {
-  //   setIsOpen(true);
-  // };
-
   const { setIsOpen, setCurrentStep } = useTour();
 
   const startTour = () => {
-    // Reset to first step before opening the tour
     setCurrentStep(0);
     setIsOpen(true);
   };

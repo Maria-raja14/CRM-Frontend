@@ -150,19 +150,62 @@ const InvoiceHeadComponent = () => {
     invoices,
   ]);
 
+  // Group by currency with enhanced data
+  const groupedTotals = filteredInvoices.reduce((acc, inv) => {
+    const cur = inv.currency || "INR"; // default INR
+    const total = Number(inv.total) || 0;
+    const paid = inv.status === "paid" ? total : 0;
+    const due = inv.status !== "paid" ? total : 0;
+
+    if (!acc[cur]) {
+      acc[cur] = {
+        totalAmount: 0,
+        totalPaid: 0,
+        totalDue: 0,
+        count: 0,
+        paidCount: 0,
+        dueCount: 0,
+      };
+    }
+
+    acc[cur].totalAmount += total;
+    acc[cur].totalPaid += paid;
+    acc[cur].totalDue += due;
+    acc[cur].count += 1;
+
+    if (inv.status === "paid") {
+      acc[cur].paidCount += 1;
+    } else {
+      acc[cur].dueCount += 1;
+    }
+
+    return acc;
+  }, {});
+
+
   const fetchInvoices = async () => {
     try {
+      const user = JSON.parse(localStorage.getItem("user"));
+      const token = localStorage.getItem("token"); // make sure you saved token at login
+
       const response = await axios.get(
-        `${API_URL}/invoice/getInvoice?page=${currentPage}&limit=${itemsPerPage}`
+        `${API_URL}/invoice/getInvoice?page=${currentPage}&limit=${itemsPerPage}&assignTo=${user?._id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
+
       setInvoices(response.data.invoices || response.data);
       setFilteredInvoices(response.data.invoices || response.data);
       setTotalCount(response.data.totalCount || response.data.length);
     } catch (error) {
       toast.error("Error fetching invoices!");
-      console.error("Error fetching invoices:", error);
+      console.error("Error fetching invoices:", error.response?.data || error);
     }
   };
+  const user = JSON.parse(localStorage.getItem("user")); // already exists
 
   const handleSendEmail = async (invoiceId) => {
     try {
@@ -290,6 +333,65 @@ const InvoiceHeadComponent = () => {
     }
   };
 
+  // Currency icon mapping
+  const getCurrencyIcon = (currency) => {
+    switch (currency) {
+      case "INR":
+        return <FaRupeeSign className="text-indigo-600" />;
+      case "USD":
+        return <FaDollarSign className="text-teal-600" />;
+      case "EUR":
+        return <FaEuroSign className="text-rose-600" />;
+      case "GBP":
+        return <FaPoundSign className="text-amber-600" />;
+      default:
+        return <FaDollarSign className="text-gray-600" />;
+    }
+  };
+
+  // Currency background color mapping with unique colors
+  const getCurrencyBgColor = (currency) => {
+    switch (currency) {
+      case "INR":
+        return "bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200";
+      case "USD":
+        return "bg-gradient-to-br from-teal-50 to-teal-100 border-teal-200";
+      case "EUR":
+        return "bg-gradient-to-br from-rose-50 to-rose-100 border-rose-200";
+      case "GBP":
+        return "bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200";
+      default:
+        return "bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200";
+    }
+  };
+
+  // Currency text color mapping
+  const getCurrencyTextColor = (currency) => {
+    switch (currency) {
+      case "INR":
+        return "text-indigo-800";
+      case "USD":
+        return "text-teal-800";
+      case "EUR":
+        return "text-rose-800";
+      case "GBP":
+        return "text-amber-800";
+      default:
+        return "text-gray-800";
+    }
+  };
+  // Scroll functions for currency cards
+  const scrollLeft = () => {
+    if (currencyScrollRef.current) {
+      currencyScrollRef.current.scrollBy({ left: -300, behavior: "smooth" });
+    }
+  };
+
+  const scrollRight = () => {
+    if (currencyScrollRef.current) {
+      currencyScrollRef.current.scrollBy({ left: 300, behavior: "smooth" });
+    }
+  };
   const totalAmount = filteredInvoices.reduce(
     (acc, invoice) => acc + (Number(invoice.total) || 0),
     0
@@ -315,6 +417,18 @@ const InvoiceHeadComponent = () => {
     <div className="p-4">
       <div className="flex justify-between items-center tour-header">
         <h1 className="text-2xl font-semibold">Invoices</h1>
+        {user?.role.name === "Admin" && (
+            <button
+            onClick={() => {
+              setEditingInvoice(null);
+              openModal();
+            }}
+            className="bg-[#4466f2] p-2 px-4 text-white rounded-sm"
+          >
+            Create invoices
+          </button>
+          
+        )}
         <div className="flex flex-wrap gap-3 items-center">
           <button
             onClick={startTour}
@@ -323,18 +437,10 @@ const InvoiceHeadComponent = () => {
           >
             <Eye className="w-4 h-4" /> Take Tour
           </button>
-          <button
-            onClick={() => {
-              setEditingInvoice(null);
-              openModal();
-            }}
-            className="bg-[#4466f2] p-2 px-4 text-white rounded-sm tour-create-invoice"
-            type="button"
-            id="create-invoice-btn"
-          >
-            Create invoices
-          </button>
+        
+            
         </div>
+
       </div>
 
       <InvoiceModal
