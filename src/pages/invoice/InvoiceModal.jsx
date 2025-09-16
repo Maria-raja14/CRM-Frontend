@@ -7,8 +7,9 @@ import {
 import { useModal } from "../../context/ModalContext";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer } from "react-toastify";
 
 const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
   const API_URL = import.meta.env.VITE_API_URL;
@@ -25,9 +26,11 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
     deal: "",
     price: 0,
     tax: "0",
+    taxType: "none",
     discountType: "none",
     discountValue: 0,
     note: "",
+    currency: "INR",
   });
   const [note, setNote] = useState("");
   const [isNoteVisible, setIsNoteVisible] = useState(false);
@@ -48,9 +51,11 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
         deal: editingInvoice.items?.[0]?.deal?._id || "",
         price: editingInvoice.items?.[0]?.price || 0,
         tax: editingInvoice.tax?.toString() || "0",
+        taxType: editingInvoice.taxType || "none",
         discountType: editingInvoice.discountType || "none",
         discountValue: editingInvoice.discountValue || 0,
         note: editingInvoice.note || "",
+        currency: editingInvoice.currency || "INR",
       });
       setNote(editingInvoice.note || "");
       setIsNoteVisible(!!editingInvoice.note);
@@ -58,7 +63,7 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
       const selectedDeal = deals.find(
         (d) => d._id === editingInvoice.items?.[0]?.deal?._id
       );
-      setSelectedDealRequirement(selectedDeal?.requirement || "");
+      setSelectedDealRequirement(selectedDeal || null);
     } else {
       setInvoiceData({
         assignTo: "",
@@ -68,13 +73,15 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
         deal: "",
         price: 0,
         tax: "0",
+        taxType: "none",
         discountType: "none",
         discountValue: 0,
         note: "",
+        currency: "INR",
       });
       setNote("");
       setIsNoteVisible(false);
-      setSelectedDealRequirement("");
+      setSelectedDealRequirement(null);
     }
     setValidationErrors({});
   }, [editingInvoice, isOpen, deals]);
@@ -94,7 +101,7 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
             user.role.name.toLowerCase() === "sales"
         );
         setSalesUsers(filteredSales);
-      } catch (error) {
+      } catch {
         toast.error("Failed to fetch sales users");
       }
     };
@@ -110,7 +117,7 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (response.data) setDeals(response.data);
-      } catch (err) {
+      } catch {
         toast.error("Failed to fetch deals");
       }
     };
@@ -122,24 +129,23 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
     const { name, value } = e.target;
     setInvoiceData((prev) => ({ ...prev, [name]: value }));
 
-    // if (name === "deal") {
-    //   const selectedDeal = deals.find((d) => d._id === value);
-    //   console.log(selectedDeal);
-
-    //   setSelectedDealRequirement(selectedDeal?.requirement || "");
-    //   if (selectedDeal?.amount) {
-    //     setInvoiceData((prev) => ({ ...prev, price: selectedDeal.amount }));
-    //   }
-    // }
     if (name === "deal") {
       const selectedDeal = deals.find((d) => d._id === value);
       setSelectedDealRequirement(selectedDeal || null);
+
       if (selectedDeal?.value) {
-        setInvoiceData((prev) => ({ ...prev, price: selectedDeal.value }));
+        const numericValue = Number(selectedDeal.value.replace(/[^0-9.]/g, ""));
+        const currency = selectedDeal.value.replace(/[\d.,\s]/g, "").trim();
+        setInvoiceData((prev) => ({
+          ...prev,
+          price: numericValue,
+          currency: currency || "INR",
+        }));
       }
     }
   };
 
+  // Notes
   const handleAddNoteClick = () => setIsNoteVisible(true);
   const handleNoteChange = (e) => {
     setNote(e.target.value);
@@ -172,62 +178,78 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
     return Object.keys(errors).length === 0;
   };
 
-  // Calculate amount and total
+  // Calculations
   const calculateAmount = () => {
     return (Number(invoiceData.price) || 0).toFixed(2);
   };
 
-  const calculateTotal = () => {
-    let subtotal = Number(invoiceData.price) || 0;
+  const calculateTotalBreakdown = () => {
+    const price = Number(invoiceData.price) || 0;
 
-    // Apply discount
-    const discountVal = Number(invoiceData.discountValue) || 0;
-    if (invoiceData.discountType === "fixed") {
-      subtotal -= discountVal;
-    } else if (invoiceData.discountType === "percentage") {
-      subtotal -= (subtotal * discountVal) / 100;
+    // Discount
+    let discountAmount = 0;
+    if (invoiceData.discountType && invoiceData.discountType !== "none") {
+      const discountVal = Number(invoiceData.discountValue) || 0;
+      if (invoiceData.discountType === "fixed") discountAmount = discountVal;
+      else if (invoiceData.discountType === "percentage")
+        discountAmount = (price * discountVal) / 100;
     }
+    const priceAfterDiscount = price - discountAmount;
 
-    subtotal = Math.max(0, subtotal);
-
-    // Apply tax
-    const taxVal = Number(invoiceData.tax) || 0;
+    // Tax (only if INR)
     let taxAmount = 0;
-
-    if (invoiceData.taxType === "fixed") {
-      taxAmount = taxVal;
-    } else if (invoiceData.taxType === "percentage") {
-      taxAmount = (subtotal * taxVal) / 100;
+    if (invoiceData.currency === "INR" && invoiceData.taxType !== "none") {
+      const taxVal = Number(invoiceData.tax) || 0;
+      if (invoiceData.taxType === "fixed") taxAmount = taxVal;
+      else if (invoiceData.taxType === "percentage")
+        taxAmount = (priceAfterDiscount * taxVal) / 100;
     }
 
-    const total = subtotal + taxAmount;
-    return total.toFixed(2);
+    const total = priceAfterDiscount + taxAmount;
+
+    return {
+      price: price.toFixed(2),
+      discountAmount: discountAmount.toFixed(2),
+      taxAmount: taxAmount.toFixed(2),
+      total: total.toFixed(2),
+      subtotalAfterDiscount: priceAfterDiscount.toFixed(2),
+      discountText:
+        invoiceData.discountType === "percentage"
+          ? `${invoiceData.discountValue}% of ${price.toFixed(2)}`
+          : discountAmount.toFixed(2),
+      taxText:
+        invoiceData.taxType === "percentage"
+          ? `${invoiceData.tax}% of ${priceAfterDiscount.toFixed(2)}`
+          : taxAmount.toFixed(2),
+    };
   };
 
-  // Save invoice
+  // Save
   const handleSaveInvoice = async () => {
     if (!validateInputs()) {
       toast.error("Please correct the errors in the form.");
       return;
     }
 
-    const items = [
-      {
-        deal: invoiceData.deal,
-        price: Number(invoiceData.price),
-        amount: Number(invoiceData.price).toFixed(2),
-      },
-    ];
-
-    const total = calculateTotal();
+    const breakdown = calculateTotalBreakdown();
 
     const invoiceToSave = {
       ...invoiceData,
-      items,
-      total: Number(total),
-      price: Number(invoiceData.price),
-      tax: Number(invoiceData.tax),
+      items: [
+        {
+          deal: invoiceData.deal,
+          price: Number(invoiceData.price),
+          amount: Number(invoiceData.price),
+        },
+      ],
       discountValue: Number(invoiceData.discountValue),
+      discountType:
+        invoiceData.discountType === "none"
+          ? "fixed"
+          : invoiceData.discountType,
+      tax: Number(invoiceData.tax),
+      taxType: invoiceData.taxType === "none" ? "fixed" : invoiceData.taxType,
+      total: Number(breakdown.total),
     };
 
     try {
@@ -255,7 +277,7 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
       } else {
         toast.error("Failed to save invoice.");
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to save invoice.");
     }
   };
@@ -521,57 +543,61 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
               Financial Details
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tax Type
-                </label>
-                <select
-                  name="taxType"
-                  value={invoiceData.taxType || "none"}
-                  onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                >
-                  <option value="none">Zero Tax</option>
-                  <option value="fixed">Fixed Amount</option>
-                  <option value="percentage">Percentage</option>
-                </select>
-              </div>
+              {invoiceData.currency === "INR" && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Tax Type
+                    </label>
+                    <select
+                      name="taxType"
+                      value={invoiceData.taxType || "none"}
+                      onChange={handleChange}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                    >
+                      <option value="none">Zero Tax</option>
+                      <option value="fixed">Fixed Amount</option>
+                      <option value="percentage">Percentage</option>
+                    </select>
+                  </div>
 
-              {invoiceData.taxType === "fixed" && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tax Amount
-                  </label>
-                  <input
-                    type="number"
-                    name="tax"
-                    min="0"
-                    step="0.01"
-                    value={invoiceData.tax}
-                    onChange={handleChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                    placeholder="Enter fixed tax amount"
-                  />
-                </div>
-              )}
+                  {invoiceData.taxType === "fixed" && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Tax Amount
+                      </label>
+                      <input
+                        type="number"
+                        name="tax"
+                        min="0"
+                        step="0.01"
+                        value={invoiceData.tax}
+                        onChange={handleChange}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                        placeholder="Enter fixed tax amount"
+                      />
+                    </div>
+                  )}
 
-              {invoiceData.taxType === "percentage" && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tax Percentage
-                  </label>
-                  <input
-                    type="number"
-                    name="tax"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                    value={invoiceData.tax}
-                    onChange={handleChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                    placeholder="Enter tax %"
-                  />
-                </div>
+                  {invoiceData.taxType === "percentage" && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Tax Percentage
+                      </label>
+                      <input
+                        type="number"
+                        name="tax"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        value={invoiceData.tax}
+                        onChange={handleChange}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                        placeholder="Enter tax %"
+                      />
+                    </div>
+                  )}
+                </>
               )}
 
               <div>
@@ -612,9 +638,42 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
               <span className="text-lg font-semibold text-gray-800">
                 Total Amount:
               </span>
-              <span className="text-xl font-bold text-blue-600">
-                Rs: {calculateTotal()}
-              </span>
+              {(() => {
+                const breakdown = calculateTotalBreakdown();
+                return (
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-gray-700">
+                      <span>Price:</span>
+                      <span>Rs {breakdown.price}</span>
+                    </div>
+
+                    {invoiceData.currency === "INR" &&
+                      invoiceData.taxType !== "none" && (
+                        <div className="flex justify-between text-gray-700">
+                          <span>Tax:</span>
+                          <span>
+                            {breakdown.taxText} = Rs {breakdown.taxAmount}
+                          </span>
+                        </div>
+                      )}
+
+                    {invoiceData.discountType !== "none" && (
+                      <div className="flex justify-between text-gray-700">
+                        <span>Discount:</span>
+                        <span>
+                          {breakdown.discountText} = Rs{" "}
+                          {breakdown.discountAmount}
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="flex justify-between font-bold text-blue-600">
+                      <span>Total:</span>
+                      <span>Rs {breakdown.total}</span>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
 

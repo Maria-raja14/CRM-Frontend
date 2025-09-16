@@ -26,24 +26,32 @@ import NotificationsPage from "./pages/notification/NotificationsPage";
 import ViewProposal from "./pages/proposal/ViewProposal";
 import { SocketProvider } from "./context/SocketContext";
 import ViewLead from "./pages/Leads/ViewLead";
+import InvoiceView from "./pages/invoice/InvoiceView";
+
 import ResetPassword from "./pages/password/ResetPassword";
 import PrivateRoute from "./pages/auth/PrivateRoute";
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (user?._id) {
-      initSocket(user._id); // 🔥 start socket right after login
-    }
-  }, []);
+// inside App()
+// useEffect(() => {
+//   const user = JSON.parse(localStorage.getItem("user"));
+//   if (user?._id) {
+//     console.log("App: init socket with user:", user._id);
+//     initSocket(user._id); // safe: initSocket returns null if userId falsy
+//   }
+// }, []); // run once at app start
+
 
   return (
     <SocketProvider>
+      {/* <TourProvider> */}
       <NotificationProvider>
         <BrowserRouter>
           <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white transition-all">
+            {/* <Tour /> */}
+
             <Routes>
               <Route path="/" element={<Login />} />
               <Route element={<PrivateRoute />}>
@@ -81,6 +89,7 @@ function App() {
                   />
                   <Route path="/proposal/view/:id" element={<ViewProposal />} />
                   <Route path="/leads/view/:id" element={<ViewLead />} />
+                  <Route path="/invoice/:id" element={<InvoiceView />} />
                 </Route>
               </Route>
             </Routes>
@@ -88,6 +97,7 @@ function App() {
           </div>
         </BrowserRouter>
       </NotificationProvider>
+      {/* </TourProvider> */}
     </SocketProvider>
   );
 }

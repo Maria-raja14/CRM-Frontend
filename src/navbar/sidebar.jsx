@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
+
 const IconCircle = ({ children, isActive }) => (
   <div className="w-10 h-10 flex items-center justify-center rounded-full shadow-sm bg-white">
     {React.cloneElement(children, {
@@ -132,6 +133,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   const [showActivities, setShowActivities] = useState(false);
   const [userPermissions, setUserPermissions] = useState({});
   const [isAdmin, setIsAdmin] = useState(false);
+
 
   const location = useLocation();
 
