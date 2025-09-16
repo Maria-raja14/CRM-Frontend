@@ -35,13 +35,13 @@ function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
 // inside App()
-useEffect(() => {
-  const user = JSON.parse(localStorage.getItem("user"));
-  if (user?._id) {
-    console.log("App: init socket with user:", user._id);
-    initSocket(user._id); // safe: initSocket returns null if userId falsy
-  }
-}, []); // run once at app start
+// useEffect(() => {
+//   const user = JSON.parse(localStorage.getItem("user"));
+//   if (user?._id) {
+//     console.log("App: init socket with user:", user._id);
+//     initSocket(user._id); // safe: initSocket returns null if userId falsy
+//   }
+// }, []); // run once at app start
 
 
   return (
