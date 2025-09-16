@@ -1,8 +1,3 @@
-
-
-
-
-
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -51,8 +46,7 @@ const dealTourSteps = [
   // },
   {
     selector: ".tour-deal-actions",
-    content:
-      "Click the three-dot menu to edit or delete a deal quickly.",
+    content: "Click the three-dot menu to edit or delete a deal quickly.",
   },
   // {
   //   selector: ".tour-pagination",
@@ -300,7 +294,7 @@ function AllDealsComponent() {
       </div>
     );
   }
- const user = JSON.parse(localStorage.getItem("user")); // already exists
+  const user = JSON.parse(localStorage.getItem("user")); // already exists
   return (
     <div className="p-4">
       {/* Header with flex and aligned buttons */}
@@ -362,18 +356,6 @@ function AllDealsComponent() {
             placeholder="Search Deal Name..."
             className="border rounded-full px-4 py-2 bg-white text-sm"
           />
-        </div>
-
-        <div>
-           {user?.role.name === "Admin" && (
-               <button
-            onClick={() => navigate("/createDeal")}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
-          >
-            + Create Deal
-          </button>
-        )}
-          
         </div>
       </div>
 

@@ -272,17 +272,20 @@ const API_URL = import.meta.env.VITE_API_URL;
 
   const [roleData, setRoleData] = useState({
     name: "",
-    permissions: {
-      dashboard: false,
-      leads: false,
-      deals: false,
-      pipeline: false,
-      invoice: false,
-      proposal: false,
-      calendar: false,
-      activityList: false,
-      usersRoles: false,
-    }
+   
+     permissions: {
+    dashboard: false,
+    leads: false,
+    deals_all: false,
+    deals_pipeline: false,
+    invoices: false,
+    proposal: false,
+    activities: false,
+    activities_calendar: false,
+    activities_list: false,
+    users_roles: false,
+    admin_access: false,
+  }
   });
 
   useEffect(() => {
@@ -290,15 +293,17 @@ const API_URL = import.meta.env.VITE_API_URL;
       setRoleData({
         name: role.name || "",
         permissions: role.permissions || {
-          dashboard: false,
-          leads: false,
-          deals: false,
-          pipeline: false,
-          invoice: false,
-          proposal: false,
-          calendar: false,
-          activityList: false,
-          usersRoles: false,
+         dashboard: false,
+    leads: false,
+    deals_all: false,
+    deals_pipeline: false,
+    invoices: false,
+    proposal: false,
+    activities: false,
+    activities_calendar: false,
+    activities_list: false,
+    users_roles: false,
+    admin_access: false,
         }
       });
     }
@@ -335,36 +340,37 @@ const API_URL = import.meta.env.VITE_API_URL;
 
   // Permission groups for better organization (same as CreateRoleModal)
   const permissionGroups = [
-    {
-      title: "Core Modules",
-      permissions: [
-        { key: "dashboard", label: "Dashboard", icon: Home },
-        { key: "leads", label: "Leads", icon: Users },
-        { key: "deals", label: "All Deals", icon: Tag },
-        { key: "pipeline", label: "Pipeline View", icon: List },
-      ]
-    },
-    {
-      title: "Documents",
-      permissions: [
-        { key: "invoice", label: "Invoices", icon: FileText },
-        { key: "proposal", label: "Proposal", icon: Edit },
-      ]
-    },
-    {
-      title: "Activities",
-      permissions: [
-        { key: "calendar", label: "Calendar View", icon: Calendar },
-        { key: "activityList", label: "Activity List", icon: List },
-      ]
-    },
-    {
-      title: "Administration",
-      permissions: [
-        { key: "usersRoles", label: "Users & Roles", icon: Shield },
-      ]
-    }
-  ];
+  {
+    title: "Core Modules",
+    permissions: [
+      { key: "dashboard", label: "Dashboard", icon: Home },
+      { key: "leads", label: "Leads", icon: Users },
+      { key: "deals_all", label: "All Deals", icon: Tag },
+      { key: "deals_pipeline", label: "Pipeline View", icon: List },
+    ]
+  },
+  {
+    title: "Documents",
+    permissions: [
+      { key: "invoices", label: "Invoices", icon: FileText },
+      { key: "proposal", label: "Proposal", icon: Edit },
+    ]
+  },
+  {
+    title: "Activities",
+    permissions: [
+      { key: "activities_calendar", label: "Calendar View", icon: Calendar },
+      { key: "activities_list", label: "Activity List", icon: List },
+    ]
+  },
+  {
+    title: "Administration",
+    permissions: [
+      { key: "users_roles", label: "Users & Roles", icon: Shield },
+    ]
+  }
+];
+
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
