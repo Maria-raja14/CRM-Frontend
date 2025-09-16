@@ -1,4 +1,6 @@
+
 import { useEffect, useState } from "react";
+
 import axios from "axios";
 import { toast } from "react-toastify";
 import { MoreVertical, Edit, Trash2, Eye, Plus } from "lucide-react";
@@ -591,4 +593,4 @@ export const AllDeals = () => {
       <AllDealsComponent />
     </TourProvider>
   );
-};
+};//original
