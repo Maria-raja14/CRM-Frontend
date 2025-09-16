@@ -147,27 +147,8 @@ const API_URL = import.meta.env.VITE_API_URL;
     }
   };
 
-  const fetchRole = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(`${API_URL}/roles`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setRoles(
-        Array.isArray(response.data) ? response.data : response.data.roles || []
-      );
-    } catch (err) {
-      console.error("Failed to fetch roles", err);
-    }
-  };
 
-  useEffect(() => {
-    if (isDialogOpen) {
-      fetchRole();
-    }
-  }, [isDialogOpen]);
+
 
   return (
     <div>

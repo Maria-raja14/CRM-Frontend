@@ -1,6 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import DatePicker from "react-datepicker";
-import { FaEllipsisV } from "react-icons/fa";
+import {
+  FaEllipsisV,
+  FaRupeeSign,
+  FaDollarSign,
+  FaEuroSign,
+  FaPoundSign,
+  FaChevronLeft,
+  FaChevronRight,
+} from "react-icons/fa";
 import { useModal } from "../../context/ModalContext.jsx";
 import InvoiceModal from "./InvoiceModal.jsx";
 import axios from "axios";
@@ -15,10 +23,9 @@ import {
 } from "../../components/ui/dialog";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { TourProvider, useTour } from "@reactour/tour";
-import { Eye } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-const InvoiceHeadComponent = () => {
+const InvoiceHead = () => {
   const API_URL = import.meta.env.VITE_API_URL;
 
   const { openModal } = useModal();
@@ -54,80 +61,11 @@ const InvoiceHeadComponent = () => {
   const [downloadStatus, setDownloadStatus] = useState("loading"); // loading | success | error
 
   const dropdownRef = useRef(null);
-
-  // Reactour tour hooks
-  const { setIsOpen, setSteps, setCurrentStep, close } = useTour();
-
-  // Define tour steps
-  const tourSteps = [
-    {
-      selector: ".tour-header",
-      content:
-        "Welcome to the Invoices page! Here you can view and manage all your invoices.",
-    },
-    {
-      selector: ".tour-create-invoice",
-      content:
-        "Click here to create a new invoice for your deals and customers.",
-    },
-    {
-      selector: ".tour-total-amount",
-      content:
-        "This card shows the total amount of all invoices, including both paid and unpaid.",
-    },
-    {
-      selector: ".tour-total-paid",
-      content:
-        "This card displays the total amount of invoices that have been paid successfully.",
-    },
-    {
-      selector: ".tour-total-due",
-      content:
-        "This card shows the total outstanding amount from unpaid invoices that need to be collected.",
-    },
-    {
-      selector: ".tour-filters",
-      content:
-        "Use these filters to narrow down invoices by date, assigned user, or status.",
-    },
-    {
-      selector: ".tour-search",
-      content: "Search invoices quickly by invoice number here.",
-    },
-    {
-      selector: ".tour-invoice-action-btn",
-      content:
-        "Click this button on any invoice row to access options like Edit, Delete, Download, and Send to Email.",
-    },
-    {
-      selector: ".tour-finish",
-      content: (
-        <>
-          That's the end of the tour! <br />
-          Click the button below to finish it anytime.
-        </>
-      ),
-    },
-  ];
-
-  // Tour start function
-  const startTour = () => {
-    setSteps(tourSteps);
-    setCurrentStep(0);
-    setIsOpen(true);
-  };
-
-  // Tour finish function
-  const finishTour = () => {
-    close();
-    toast.success(
-      "Tour completed! You can start it anytime by clicking the 'Take Tour' button."
-    );
-  };
-
+  const currencyScrollRef = useRef(null);
+  const navigate = useNavigate();
   useEffect(() => {
     fetchInvoices();
-  }, [refreshTrigger, currentPage, itemsPerPage]);
+  }, [refreshTrigger, currentPage, itemsPerPage]); // Add pagination dependencies
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -182,7 +120,7 @@ const InvoiceHeadComponent = () => {
     return acc;
   }, {});
 
-
+  
   const fetchInvoices = async () => {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
@@ -227,6 +165,7 @@ const InvoiceHeadComponent = () => {
       setSendingEmailId(null);
       setOpenIndex(null);
 
+      // auto close modal after 2 seconds if success/error
       setTimeout(() => {
         setEmailModalOpen(false);
       }, 2000);
@@ -310,6 +249,7 @@ const InvoiceHeadComponent = () => {
         `${API_URL}/invoice/download/${invoiceId}`,
         { responseType: "blob" }
       );
+      console.log(response);
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
@@ -327,6 +267,7 @@ const InvoiceHeadComponent = () => {
       toast.error("Failed to download invoice.");
       console.error("Error downloading invoice:", error);
     } finally {
+      // auto close after 2s
       setTimeout(() => {
         setDownloadModalOpen(false);
       }, 2000);
@@ -392,16 +333,6 @@ const InvoiceHeadComponent = () => {
       currencyScrollRef.current.scrollBy({ left: 300, behavior: "smooth" });
     }
   };
-  const totalAmount = filteredInvoices.reduce(
-    (acc, invoice) => acc + (Number(invoice.total) || 0),
-    0
-  );
-  const totalPaid = filteredInvoices
-    .filter((inv) => inv.status === "paid")
-    .reduce((acc, inv) => acc + (Number(inv.total) || 0), 0);
-  const totalDue = filteredInvoices
-    .filter((inv) => inv.status !== "paid")
-    .reduce((acc, inv) => acc + (Number(inv.total) || 0), 0);
 
   // Pagination functions
   const totalPages = Math.ceil(totalCount / itemsPerPage);
@@ -413,12 +344,16 @@ const InvoiceHeadComponent = () => {
     setCurrentPage(1);
   };
 
+  const handleInvoiceClick = (invoiceId) => {
+    navigate(`/invoice/${invoiceId}`);
+  };
+
   return (
     <div className="p-4">
-      <div className="flex justify-between items-center tour-header">
+      <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold">Invoices</h1>
         {user?.role.name === "Admin" && (
-            <button
+          <button
             onClick={() => {
               setEditingInvoice(null);
               openModal();
@@ -427,20 +362,7 @@ const InvoiceHeadComponent = () => {
           >
             Create invoices
           </button>
-          
         )}
-        <div className="flex flex-wrap gap-3 items-center">
-          <button
-            onClick={startTour}
-            className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 tour-finish"
-            type="button"
-          >
-            <Eye className="w-4 h-4" /> Take Tour
-          </button>
-        
-            
-        </div>
-
       </div>
 
       <InvoiceModal
@@ -448,99 +370,153 @@ const InvoiceHeadComponent = () => {
         editingInvoice={editingInvoice}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
-        {/* Total Amount Card */}
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-md border border-blue-200 relative overflow-hidden tour-total-amount">
-          <div className="absolute top-0 right-0 w-24 h-24 -mr-6 -mt-6 bg-blue-200 rounded-full opacity-30"></div>
-          <div className="relative z-10">
-            <div className="flex items-center mb-4">
-              <div className="p-2 rounded-lg bg-blue-100 mr-3">
-                <svg
-                  className="w-5 h-5 text-blue-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-blue-800">
-                Total Amount
-              </h3>
+      {/* Enhanced Multi-Currency Summary Cards with Horizontal Scroll */}
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-gray-800">
+            Financial Summary
+          </h2>
+          {Object.keys(groupedTotals).length > 0 && (
+            <div className="flex space-x-2 mt-2">
+              <button
+                onClick={scrollLeft}
+                className="p-2  rounded-full bg-white border hover:bg-gray-50 transition-colors shadow-sm"
+              >
+                <FaChevronLeft className="text-gray-600" />
+              </button>
+              <button
+                onClick={scrollRight}
+                className="p-2 rounded-full bg-white border hover:bg-gray-50 transition-colors shadow-sm"
+              >
+                <FaChevronRight className="text-gray-600" />
+              </button>
             </div>
-            <p className="text-2xl font-bold text-blue-900">
-              ₹{totalAmount.toFixed(2)}
-            </p>
-          </div>
+          )}
         </div>
 
-        {/* Total Paid Card */}
-        <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-md border border-green-200 relative overflow-hidden tour-total-paid">
-          <div className="absolute top-0 right-0 w-24 h-24 -mr-6 -mt-6 bg-green-200 rounded-full opacity-30"></div>
-          <div className="relative z-10">
-            <div className="flex items-center mb-4">
-              <div className="p-2 rounded-lg bg-green-100 mr-3">
-                <svg
-                  className="w-5 h-5 text-green-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-green-800">Total Paid</h3>
+        {Object.keys(groupedTotals).length === 0 ? (
+          <div className="bg-white p-8 rounded-xl shadow-sm border text-center">
+            <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-8 w-8 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
             </div>
-            <p className="text-2xl font-bold text-green-900">
-              ₹{totalPaid.toFixed(2)}
+            <p className="text-gray-500">No invoice data available</p>
+            <p className="text-gray-400 text-sm mt-1">
+              Create your first invoice to see financial insights
             </p>
           </div>
-        </div>
+        ) : (
+          <div className="relative">
+            <div
+              ref={currencyScrollRef}
+              className="flex overflow-x-auto scrollbar-hide space-4 pb-4 -mx-2 px-2"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            >
+              {Object.entries(groupedTotals).map(([currency, data]) => (
+                <div
+                  key={currency}
+                  className={`${getCurrencyBgColor(
+                    currency
+                  )} flex-shrink-0 w-80 p-6 rounded-xl shadow-sm border relative overflow-hidden mx-2 transition-transform hover:scale-[1.02] hover:shadow-md`}
+                >
+                  {/* Currency header */}
+                  <div className="flex justify-between items-start mb-5">
+                    <div>
+                      <h3
+                        className={`text-lg font-semibold ${getCurrencyTextColor(
+                          currency
+                        )} mb-1`}
+                      >
+                        {currency}
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        {data.count} invoice{data.count !== 1 ? "s" : ""}
+                      </p>
+                    </div>
+                    <div className="text-2xl p-2 bg-white rounded-lg shadow-sm">
+                      {getCurrencyIcon(currency)}
+                    </div>
+                  </div>
 
-        {/* Total Due Card */}
-        <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl shadow-md border border-orange-200 relative overflow-hidden tour-total-due">
-          <div className="absolute top-0 right-0 w-24 h-24 -mr-6 -mt-6 bg-orange-200 rounded-full opacity-30"></div>
-          <div className="relative z-10">
-            <div className="flex items-center mb-4">
-              <div className="p-2 rounded-lg bg-orange-100 mr-3">
-                <svg
-                  className="w-5 h-5 text-orange-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-orange-800">Total Due</h3>
+                  {/* Amount metrics */}
+                  <div className="space-y-3 mb-5">
+                    {/* Total Amount */}
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-600">
+                        Total Amount
+                      </span>
+                      <span className="font-semibold text-gray-800">
+                        {data.totalAmount.toLocaleString()} {currency}
+                      </span>
+                    </div>
+
+                    {/* Paid Amount */}
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-600">
+                        Paid ({data.paidCount})
+                      </span>
+                      <span className="font-semibold text-green-600">
+                        {data.totalPaid.toLocaleString()} {currency}
+                      </span>
+                    </div>
+
+                    {/* Due Amount */}
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-600">
+                        Due ({data.dueCount})
+                      </span>
+                      <span className="font-semibold text-rose-600">
+                        {data.totalDue.toLocaleString()} {currency}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Progress bar showing paid vs due */}
+                  <div className="mb-2">
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-green-500 h-2 rounded-full transition-all duration-500"
+                        style={{
+                          width: `${
+                            data.totalAmount > 0
+                              ? (data.totalPaid / data.totalAmount) * 100
+                              : 0
+                          }%`,
+                        }}
+                      ></div>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                      <span>
+                        {Math.round((data.totalPaid / data.totalAmount) * 100)}%
+                        Paid
+                      </span>
+                      <span>
+                        {Math.round((data.totalDue / data.totalAmount) * 100)}%
+                        Due
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-            <p className="text-2xl font-bold text-orange-900">
-              ₹{totalDue.toFixed(2)}
-            </p>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-4 mt-8 items-center justify-between tour-filters">
+      <div className="flex flex-wrap gap-4 mt-8 items-center justify-between">
         <div className="flex flex-wrap gap-12">
           <DatePicker
             selected={startDate}
@@ -579,7 +555,7 @@ const InvoiceHeadComponent = () => {
         </div>
 
         {/* Search */}
-        <div className="flex items-center border rounded-full bg-white px-3 w-[250px] tour-search">
+        <div className="flex items-center border rounded-full bg-white px-3  w-[250px]">
           <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
           <input
             type="text"
@@ -601,7 +577,7 @@ const InvoiceHeadComponent = () => {
               <th className="px-6 py-3">Status</th>
               <th className="px-6 py-3">Amount</th>
               <th className="px-6 py-3">Assigned To</th>
-              <th className="px-6 py-3">Tax</th>
+              <th className="px-6 py-3">Due Date</th>
               <th className="px-6 py-3 text-center">Action</th>
             </tr>
           </thead>
@@ -611,7 +587,15 @@ const InvoiceHeadComponent = () => {
                 key={invoice._id}
                 className="hover:bg-gray-50 transition-colors"
               >
-                <td className="px-6 py-4">{invoice.invoicenumber}</td>
+                <td className="px-6 py-4">
+                  <button
+                    onClick={() => handleInvoiceClick(invoice._id)}
+                    className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                  >
+                    {invoice.invoicenumber}
+                  </button>
+                </td>
+
                 <td className="px-6 py-4">
                   {invoice.items?.[0]?.deal?.dealName || "N/A"}
                 </td>
@@ -627,14 +611,30 @@ const InvoiceHeadComponent = () => {
                   </span>
                 </td>
                 <td className="px-6 py-4 font-semibold">
-                  ₹{Number(invoice.total).toFixed(2)}
+                  {invoice.total
+                    ? Number(invoice.total).toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })
+                    : "-"}{" "}
+                  {invoice.currency}
                 </td>
+
                 <td className="px-6 py-4">
                   {invoice.assignTo
                     ? `${invoice.assignTo.firstName} ${invoice.assignTo.lastName}`
                     : "N/A"}
                 </td>
-                <td className="px-6 py-4">₹{Number(invoice.tax).toFixed(2)}</td>
+                <td className="px-6 py-4">
+                  {invoice.dueDate
+                    ? new Date(invoice.dueDate).toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })
+                    : "-"}
+                </td>
+
                 <td className="px-6 py-4 text-center relative">
                   <button
                     onClick={(e) => {
@@ -642,7 +642,7 @@ const InvoiceHeadComponent = () => {
                       const spaceBelow = window.innerHeight - rect.bottom;
                       const spaceAbove = rect.top;
 
-                      const position = spaceBelow > 200 ? "below" : "above";
+                      const position = spaceBelow > 200 ? "below" : "above"; // if not enough space, open above
 
                       setOpenIndex(openIndex === index ? null : index);
                       setDropdownButton({
@@ -650,9 +650,7 @@ const InvoiceHeadComponent = () => {
                         position,
                       });
                     }}
-                    className="p-2 rounded-full hover:bg-gray-100 text-gray-500 tour-invoice-action-btn"
-                    aria-label="Open invoice actions"
-                    type="button"
+                    className="p-2 rounded-full hover:bg-gray-100 text-gray-500"
                   >
                     <FaEllipsisV />
                   </button>
@@ -678,7 +676,6 @@ const InvoiceHeadComponent = () => {
                         <button
                           className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
                           onClick={() => handleSendEmail(invoice._id)}
-                          type="button"
                         >
                           Send to Email
                         </button>
@@ -687,21 +684,18 @@ const InvoiceHeadComponent = () => {
                           onClick={() =>
                             downloadInvoice(invoice._id, invoice.invoicenumber)
                           }
-                          type="button"
                         >
                           Download
                         </button>
                         <button
                           className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
                           onClick={() => handleEdit(invoice)}
-                          type="button"
                         >
                           Edit
                         </button>
                         <button
                           className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                           onClick={() => confirmDelete(invoice)}
-                          type="button"
                         >
                           Delete
                         </button>
@@ -752,7 +746,6 @@ const InvoiceHeadComponent = () => {
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
               className="px-3 py-1 rounded-md border text-sm disabled:opacity-50"
-              type="button"
             >
               Previous
             </button>
@@ -776,7 +769,6 @@ const InvoiceHeadComponent = () => {
                   className={`px-3 py-1 rounded-md border text-sm ${
                     currentPage === pageNum ? "bg-blue-500 text-white" : ""
                   }`}
-                  type="button"
                 >
                   {pageNum}
                 </button>
@@ -787,7 +779,6 @@ const InvoiceHeadComponent = () => {
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
               className="px-3 py-1 rounded-md border text-sm disabled:opacity-50"
-              type="button"
             >
               Next
             </button>
@@ -836,21 +827,18 @@ const InvoiceHeadComponent = () => {
             <button
               onClick={() => setDeleteConfirmOpen(false)}
               className="px-4 py-2 border rounded-md text-sm"
-              type="button"
             >
               Cancel
             </button>
             <button
               onClick={() => handleDelete(invoiceToDelete?._id)}
               className="px-4 py-2 bg-red-600 text-white rounded-md text-sm"
-              type="button"
             >
               Delete
             </button>
           </div>
         </DialogContent>
       </Dialog>
-
       {/* Download PDF Modal */}
       <Dialog open={downloadModalOpen} onOpenChange={setDownloadModalOpen}>
         <DialogContent className="sm:max-w-md">
@@ -878,57 +866,17 @@ const InvoiceHeadComponent = () => {
         autoClose={3000}
         hideProgressBar={false}
       />
-    </div>
-  );
-};
 
-const InvoiceHead = () => {
-  return (
-    <TourProvider
-      steps={
-        [
-          // This will be set dynamically inside InvoiceHeadComponent
-        ]
-      }
-      afterOpen={() => (document.body.style.overflow = "hidden")}
-      beforeClose={() => (document.body.style.overflow = "unset")}
-      showNumber={false}
-      styles={{
-        popover: (base) => ({
-          ...base,
-          backgroundColor: "#fff",
-          color: "#1f1f1f",
-        }),
-        maskArea: (base) => ({ ...base, rx: 8 }),
-        badge: (base) => ({ ...base, display: "none" }),
-        close: (base) => ({
-          ...base,
-          right: "auto",
-          left: 8,
-          top: 8,
-          display: "none",
-        }),
-        footer: (base) => ({
-          ...base,
-          justifyContent: "space-between",
-          paddingTop: "10px",
-          paddingBottom: "10px",
-        }),
-      }}
-      footer={({ close }) => (
-        <div className="flex justify-between items-center w-full px-4 py-2 border-t border-gray-200">
-          <button
-            onClick={close}
-            className="text-gray-700 hover:text-gray-900 font-semibold"
-            type="button"
-          >
-            Finish Tour
-          </button>
-        </div>
-      )}
-    >
-      <InvoiceHeadComponent />
-    </TourProvider>
+      <style jsx>{`
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
+    </div>
   );
 };
 
