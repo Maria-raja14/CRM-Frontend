@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import axios from "axios";
 import {
@@ -13,8 +12,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 export default function AddUserModal({ onUserCreated }) {
 
-const API_URL = import.meta.env.VITE_API_URL;
-
+  const API_URL = import.meta.env.VITE_API_URL;
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -38,10 +36,10 @@ const API_URL = import.meta.env.VITE_API_URL;
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    
+
     // Clear error when field is changed
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: "" }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
@@ -49,38 +47,53 @@ const API_URL = import.meta.env.VITE_API_URL;
     const file = e.target.files[0];
     if (file) {
       // Validate file type
-      const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+      const validImageTypes = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/gif",
+      ];
       if (!validImageTypes.includes(file.type)) {
-        setErrors(prev => ({ ...prev, profileImage: "Only JPEG, JPG, PNG and GIF files are allowed" }));
+        setErrors((prev) => ({
+          ...prev,
+          profileImage: "Only JPEG, JPG, PNG and GIF files are allowed",
+        }));
         return;
       }
-      
+
       // Validate file size (20MB)
       if (file.size > 20 * 1024 * 1024) {
-        setErrors(prev => ({ ...prev, profileImage: "File size must be less than 20MB" }));
+        setErrors((prev) => ({
+          ...prev,
+          profileImage: "File size must be less than 20MB",
+        }));
         return;
       }
-      
+
       setFormData((prev) => ({ ...prev, profileImage: file }));
       setPreviewUrl(URL.createObjectURL(file));
-      setErrors(prev => ({ ...prev, profileImage: "" }));
+      setErrors((prev) => ({ ...prev, profileImage: "" }));
     }
   };
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.firstName) newErrors.firstName = "First name is required";
     if (!formData.lastName) newErrors.lastName = "Last name is required";
     if (!formData.email) newErrors.email = "Email is required";
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "Email is invalid";
+    else if (!/\S+@\S+\.\S+/.test(formData.email))
+      newErrors.email = "Email is invalid";
     if (!formData.password) newErrors.password = "Password is required";
-    else if (formData.password.length < 6) newErrors.password = "Password must be at least 6 characters";
-    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Passwords do not match";
-    if (!formData.mobileNumber) newErrors.mobileNumber = "Mobile number is required";
+    else if (formData.password.length < 6)
+      newErrors.password = "Password must be at least 6 characters";
+    if (formData.password !== formData.confirmPassword)
+      newErrors.confirmPassword = "Passwords do not match";
+    if (!formData.mobileNumber)
+      newErrors.mobileNumber = "Mobile number is required";
     if (!formData.role) newErrors.role = "Role is required";
     if (!formData.gender) newErrors.gender = "Gender is required";
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -107,9 +120,9 @@ const API_URL = import.meta.env.VITE_API_URL;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
+
     try {
       const payload = new FormData();
       Object.entries(formData).forEach(([key, value]) => {
@@ -139,16 +152,36 @@ const API_URL = import.meta.env.VITE_API_URL;
       console.error(err);
       const errorMsg = err.response?.data?.message || "Failed to create user";
       toast.error(errorMsg);
-      
+
       // Set server validation errors
       if (err.response?.data?.errors) {
         setErrors(err.response.data.errors);
       }
     }
   };
+  const fetchRoles = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API_URL}/roles`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
+      // Check your API response structure
+      // If response.data.roles exists, use it, otherwise fallback
+      const rolesData = Array.isArray(response.data)
+        ? response.data
+        : response.data.roles || [];
 
-
+      setRoles(rolesData);
+    } catch (err) {
+      console.error("Failed to fetch roles", err);
+    }
+  };
+  useEffect(() => {
+    if (isDialogOpen) {
+      fetchRoles();
+    }
+  }, [isDialogOpen]);
 
   return (
     <div>
@@ -205,7 +238,9 @@ const API_URL = import.meta.env.VITE_API_URL;
             </div>
           </div>
           {errors.profileImage && (
-            <p className="text-red-500 text-sm text-center -mt-3">{errors.profileImage}</p>
+            <p className="text-red-500 text-sm text-center -mt-3">
+              {errors.profileImage}
+            </p>
           )}
 
           {/* Form */}
@@ -221,10 +256,14 @@ const API_URL = import.meta.env.VITE_API_URL;
                 placeholder="First Name"
                 value={formData.firstName}
                 onChange={handleChange}
-                className={`p-2 border rounded-md w-full ${errors.firstName ? 'border-red-500' : ''}`}
+                className={`p-2 border rounded-md w-full ${
+                  errors.firstName ? "border-red-500" : ""
+                }`}
                 required
               />
-              {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}
+              {errors.firstName && (
+                <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>
+              )}
             </div>
 
             {/* Last Name */}
@@ -235,10 +274,14 @@ const API_URL = import.meta.env.VITE_API_URL;
                 placeholder="Last Name"
                 value={formData.lastName}
                 onChange={handleChange}
-                className={`p-2 border rounded-md w-full ${errors.lastName ? 'border-red-500' : ''}`}
+                className={`p-2 border rounded-md w-full ${
+                  errors.lastName ? "border-red-500" : ""
+                }`}
                 required
               />
-              {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
+              {errors.lastName && (
+                <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>
+              )}
             </div>
 
             {/* Gender */}
@@ -247,7 +290,9 @@ const API_URL = import.meta.env.VITE_API_URL;
                 name="gender"
                 value={formData.gender}
                 onChange={handleChange}
-                className={`p-2 border rounded-md w-full ${errors.gender ? 'border-red-500' : ''}`}
+                className={`p-2 border rounded-md w-full ${
+                  errors.gender ? "border-red-500" : ""
+                }`}
                 required
               >
                 <option value="">Select Gender</option>
@@ -255,7 +300,9 @@ const API_URL = import.meta.env.VITE_API_URL;
                 <option value="Female">Female</option>
                 <option value="Other">Other</option>
               </select>
-              {errors.gender && <p className="text-red-500 text-sm mt-1">{errors.gender}</p>}
+              {errors.gender && (
+                <p className="text-red-500 text-sm mt-1">{errors.gender}</p>
+              )}
             </div>
 
             {/* DOB */}
@@ -277,10 +324,16 @@ const API_URL = import.meta.env.VITE_API_URL;
                 placeholder="Mobile Number"
                 value={formData.mobileNumber}
                 onChange={handleChange}
-                className={`p-2 border rounded-md w-full ${errors.mobileNumber ? 'border-red-500' : ''}`}
+                className={`p-2 border rounded-md w-full ${
+                  errors.mobileNumber ? "border-red-500" : ""
+                }`}
                 required
               />
-              {errors.mobileNumber && <p className="text-red-500 text-sm mt-1">{errors.mobileNumber}</p>}
+              {errors.mobileNumber && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.mobileNumber}
+                </p>
+              )}
             </div>
 
             {/* Email */}
@@ -291,10 +344,14 @@ const API_URL = import.meta.env.VITE_API_URL;
                 placeholder="Email"
                 value={formData.email}
                 onChange={handleChange}
-                className={`p-2 border rounded-md w-full ${errors.email ? 'border-red-500' : ''}`}
+                className={`p-2 border rounded-md w-full ${
+                  errors.email ? "border-red-500" : ""
+                }`}
                 required
               />
-              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+              )}
             </div>
 
             {/* Password */}
@@ -305,10 +362,14 @@ const API_URL = import.meta.env.VITE_API_URL;
                 placeholder="Password"
                 value={formData.password}
                 onChange={handleChange}
-                className={`p-2 border rounded-md w-full ${errors.password ? 'border-red-500' : ''}`}
+                className={`p-2 border rounded-md w-full ${
+                  errors.password ? "border-red-500" : ""
+                }`}
                 required
               />
-              {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+              {errors.password && (
+                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+              )}
             </div>
 
             {/* Confirm Password */}
@@ -319,10 +380,16 @@ const API_URL = import.meta.env.VITE_API_URL;
                 placeholder="Confirm Password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className={`p-2 border rounded-md w-full ${errors.confirmPassword ? 'border-red-500' : ''}`}
+                className={`p-2 border rounded-md w-full ${
+                  errors.confirmPassword ? "border-red-500" : ""
+                }`}
                 required
               />
-              {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
+              {errors.confirmPassword && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.confirmPassword}
+                </p>
+              )}
             </div>
 
             {/* Address (full width row) */}
@@ -342,17 +409,26 @@ const API_URL = import.meta.env.VITE_API_URL;
                 name="role"
                 value={formData.role}
                 onChange={handleChange}
-                className={`p-2 border rounded-md w-full ${errors.role ? 'border-red-500' : ''}`}
+                className={`p-2 border rounded-md w-full ${
+                  errors.role ? "border-red-500" : ""
+                }`}
                 required
               >
                 <option value="">Select Role</option>
-                {roles.map((role) => (
-                  <option key={role._id} value={role._id}>
-                    {role.name}
-                  </option>
-                ))}
+                {roles.length === 0 ? (
+                  <option disabled>Loading roles...</option>
+                ) : (
+                  roles.map((role) => (
+                    <option key={role._id} value={role._id}>
+                      {role.name}
+                    </option>
+                  ))
+                )}
               </select>
-              {errors.role && <p className="text-red-500 text-sm mt-1">{errors.role}</p>}
+
+              {errors.role && (
+                <p className="text-red-500 text-sm mt-1">{errors.role}</p>
+              )}
             </div>
 
             {/* Status */}
