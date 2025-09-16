@@ -1,10 +1,9 @@
-// // components/Login.jsx
 // import React, { useState } from "react";
 // import axios from "axios";
-// import { Link, useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 // import { initSocket } from "../../utils/socket";
 // import { Eye, EyeOff } from "lucide-react";
-
+// import ForgotPassword from "../password/ForgotPassword";
 
 // const Login = () => {
 //   const API_URL = import.meta.env.VITE_API_URL;
@@ -15,20 +14,19 @@
 //   const [message, setMessage] = useState("");
 //   const [isError, setIsError] = useState(false);
 //   const [isLoading, setIsLoading] = useState(false);
+//   const [isForgotOpen, setIsForgotOpen] = useState(false); // 👈 modal state
+
 //   const navigate = useNavigate();
 
 //   const handleLogin = async (e) => {
 //     e.preventDefault();
 //     setIsLoading(true);
-    
+
 //     try {
-//       const response = await axios.post(
-//         `${API_URL}/users/login`,
-//         {
-//           email,
-//           password,
-//         }
-//       );
+//       const response = await axios.post(`${API_URL}/users/login`, {
+//         email,
+//         password,
+//       });
 
 //       if (response.data.token) {
 //         // ✅ Save user & token with role permissions
@@ -84,8 +82,8 @@
 //         </div>
 
 //         {/* Right Side - Login Form */}
-//         <div className="flex flex-col  justify-center w-full lg:w-1/2 p-8 lg:p-12">
-//           {/* Mobile Logo (only shown on small screens) */}
+//         <div className="flex flex-col justify-center w-full lg:w-1/2 p-8 lg:p-12">
+//           {/* Mobile Logo */}
 //           <div className="mb-8 lg:hidden flex justify-center">
 //             <img
 //               src="/images/TZI_Logo-04_-_Copy-removebg-preview.png"
@@ -95,8 +93,10 @@
 //           </div>
 
 //           <h2 className="text-3xl font-bold text-gray-800 mb-2 text-center lg:text-left">Sign In</h2>
-//           <p className="text-gray-600 mb-8 text-center lg:text-left">Enter your credentials to continue</p>
-          
+//           <p className="text-gray-600 mb-8 text-center lg:text-left">
+//             Enter your credentials to continue
+//           </p>
+
 //           {/* Message Display */}
 //           {message && (
 //             <div
@@ -121,11 +121,6 @@
 //                   onChange={(e) => setEmail(e.target.value)}
 //                   required
 //                 />
-//                 <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-//                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-//                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-//                   </svg>
-//                 </div>
 //               </div>
 //             </div>
 
@@ -156,12 +151,13 @@
 
 //             {/* Forgot Password */}
 //             <div className="text-right">
-//               <Link
-//                 to="/forgot-password"
+//               <button
+//                 type="button"
+//                 onClick={() => setIsForgotOpen(true)} // 👈 open modal
 //                 className="text-blue-600 hover:text-blue-800 text-sm font-medium transition"
 //               >
 //                 Forgot your password?
-//               </Link>
+//               </button>
 //             </div>
 
 //             {/* Login Button */}
@@ -173,9 +169,25 @@
 //             >
 //               {isLoading ? (
 //                 <>
-//                   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-//                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-//                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+//                   <svg
+//                     className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+//                     xmlns="http://www.w3.org/2000/svg"
+//                     fill="none"
+//                     viewBox="0 0 24 24"
+//                   >
+//                     <circle
+//                       className="opacity-25"
+//                       cx="12"
+//                       cy="12"
+//                       r="10"
+//                       stroke="currentColor"
+//                       strokeWidth="4"
+//                     ></circle>
+//                     <path
+//                       className="opacity-75"
+//                       fill="currentColor"
+//                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+//                     ></path>
 //                   </svg>
 //                   Signing in...
 //                 </>
@@ -189,11 +201,15 @@
 //           <p className="mt-8 text-gray-500 text-sm text-center">© 2025 TZI. All rights reserved.</p>
 //         </div>
 //       </div>
+
+//       {/* Forgot Password Modal */}
+//       <ForgotPassword isOpen={isForgotOpen} onClose={() => setIsForgotOpen(false)} />
 //     </div>
 //   );
 // };
 
-// export default Login;
+// export default Login;//org
+
 
 
 import React, { useState } from "react";
@@ -205,6 +221,7 @@ import ForgotPassword from "../password/ForgotPassword";
 
 const Login = () => {
   const API_URL = import.meta.env.VITE_API_URL;
+  const API_SI = import.meta.env.VITE_SI_URI; // Add this line
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -212,7 +229,7 @@ const Login = () => {
   const [message, setMessage] = useState("");
   const [isError, setIsError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isForgotOpen, setIsForgotOpen] = useState(false); // 👈 modal state
+  const [isForgotOpen, setIsForgotOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -227,12 +244,13 @@ const Login = () => {
       });
 
       if (response.data.token) {
-        // ✅ Save user & token with role permissions
+        // ✅ Save user & token with role permissions and profile image
         const loggedInUser = {
           _id: response.data._id,
           name: response.data.name,
           email: response.data.email,
           role: response.data.role,
+          profileImage: response.data.profileImage // Add profile image to user object
         };
         localStorage.setItem("user", JSON.stringify(loggedInUser));
         localStorage.setItem("token", response.data.token);
@@ -351,7 +369,7 @@ const Login = () => {
             <div className="text-right">
               <button
                 type="button"
-                onClick={() => setIsForgotOpen(true)} // 👈 open modal
+                onClick={() => setIsForgotOpen(true)}
                 className="text-blue-600 hover:text-blue-800 text-sm font-medium transition"
               >
                 Forgot your password?
