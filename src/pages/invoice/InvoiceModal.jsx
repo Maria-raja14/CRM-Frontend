@@ -794,4 +794,4 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
   );
 };
 
-export default InvoiceModal;
+export default InvoiceModal; //original code...

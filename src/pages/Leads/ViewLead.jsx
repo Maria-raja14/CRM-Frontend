@@ -1,6 +1,3 @@
-
-
-
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
@@ -46,7 +43,7 @@ const ViewLead = () => {
   // Download file handler
   const downloadFile = async (filePath, fileName) => {
     if (!filePath) return toast.error("File path missing");
-    
+
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
@@ -411,4 +408,5 @@ const ViewLead = () => {
   );
 };
 
-export default ViewLead;
+export default ViewLead;//original code..
+
