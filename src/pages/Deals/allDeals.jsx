@@ -184,7 +184,7 @@ function AllDealsComponent() {
       setUsers(filteredSales);
     } catch (err) {
       console.error("Fetch users error:", err);
-      toast.error("Failed to fetch users");
+      //toast.error("Failed to fetch users");
     }
   };
 

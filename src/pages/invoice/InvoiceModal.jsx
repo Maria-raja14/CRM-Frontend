@@ -100,7 +100,7 @@ setSalesUsers(response.data.users);
 
         setSalesUsers(filteredSales);
       } catch {
-        toast.error("Failed to fetch sales users");
+       // toast.error("Failed to fetch sales users");
       }
     };
     fetchSalesUsers();
