@@ -93,15 +93,11 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
         const token = localStorage.getItem("token");
         console.log(token);
 
-        const response = await axios.get(`${API_URL}/users`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const filteredSales = (response.data.users || []).filter(
-          (user) =>
-            user.role &&
-            user.role.name &&
-            user.role.name.toLowerCase() === "sales"
-        );
+        const response = await axios.get(`${API_URL}/users/sales`, {
+  headers: { Authorization: `Bearer ${token}` },
+});
+setSalesUsers(response.data.users);
+
         setSalesUsers(filteredSales);
       } catch {
         toast.error("Failed to fetch sales users");
