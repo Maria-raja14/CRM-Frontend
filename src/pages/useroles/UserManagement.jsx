@@ -2060,6 +2060,8 @@ const tourSteps = [
 
 function UserManagementInner() {
   const API_URL = import.meta.env.VITE_API_URL;
+  const API_SI = import.meta.env.VITE_SI_URI;
+
   const [roles, setRoles] = useState([]);
   const [users, setUsers] = useState([]);
   const [currentPageUsers, setCurrentPageUsers] = useState(1);
@@ -2118,7 +2120,7 @@ function UserManagementInner() {
       const usersWithImageUrl = data.users.map((user) => ({
         ...user,
         profileImageUrl: user.profileImage
-          ? `http://localhost:5000/${user.profileImage}`
+          ? `${API_SI}/${user.profileImage}`
           : null,
       }));
       setUsers(usersWithImageUrl || []);

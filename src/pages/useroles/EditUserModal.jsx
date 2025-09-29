@@ -1,6 +1,3 @@
-
-
-
 import { useState, useEffect } from "react";
 import axios from "axios";
 import {
@@ -12,15 +9,16 @@ import {
 import { toast } from "react-toastify";
 
 export default function EditUserModal({ user, roles, onClose, onUserUpdated }) {
-
-const API_URL = import.meta.env.VITE_API_URL;
-
+  const API_URL = import.meta.env.VITE_API_URL;
+  const API_SI = import.meta.env.VITE_SI_URI;
 
   const [formData, setFormData] = useState({
     firstName: user.firstName,
     lastName: user.lastName,
     gender: user.gender,
-    dateOfBirth: user.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split('T')[0] : "",
+    dateOfBirth: user.dateOfBirth
+      ? new Date(user.dateOfBirth).toISOString().split("T")[0]
+      : "",
     mobileNumber: user.mobileNumber,
     email: user.email,
     address: user.address,
@@ -29,8 +27,8 @@ const API_URL = import.meta.env.VITE_API_URL;
     profileImage: null,
   });
   const [previewUrl, setPreviewUrl] = useState(
-    user.profileImage 
-      ? `http://localhost:5000/${user.profileImage}`
+    user.profileImage
+      ? `${API_SI}/${user.profileImage}`
       : "https://static.vecteezy.com/system/resources/previews/020/429/953/non_2x/admin-icon-vector.jpg"
   );
   const [errors, setErrors] = useState({});
@@ -42,7 +40,9 @@ const API_URL = import.meta.env.VITE_API_URL;
         firstName: user.firstName,
         lastName: user.lastName,
         gender: user.gender,
-        dateOfBirth: user.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split('T')[0] : "",
+        dateOfBirth: user.dateOfBirth
+          ? new Date(user.dateOfBirth).toISOString().split("T")[0]
+          : "",
         mobileNumber: user.mobileNumber,
         email: user.email,
         address: user.address,
@@ -51,8 +51,8 @@ const API_URL = import.meta.env.VITE_API_URL;
         profileImage: null,
       });
       setPreviewUrl(
-        user.profileImage 
-          ? `http://localhost:5000/${user.profileImage}`
+        user.profileImage
+          ? `${API_SI}/${user.profileImage}`
           : "https://static.vecteezy.com/system/resources/previews/020/429/953/non_2x/admin-icon-vector.jpg"
       );
     }
@@ -61,10 +61,10 @@ const API_URL = import.meta.env.VITE_API_URL;
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    
+
     // Clear error when field is changed
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: "" }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
@@ -72,46 +72,59 @@ const API_URL = import.meta.env.VITE_API_URL;
     const file = e.target.files[0];
     if (file) {
       // Validate file type
-      const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+      const validImageTypes = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/gif",
+      ];
       if (!validImageTypes.includes(file.type)) {
-        setErrors(prev => ({ ...prev, profileImage: "Only JPEG, JPG, PNG and GIF files are allowed" }));
+        setErrors((prev) => ({
+          ...prev,
+          profileImage: "Only JPEG, JPG, PNG and GIF files are allowed",
+        }));
         return;
       }
-      
+
       // Validate file size (20MB)
       if (file.size > 20 * 1024 * 1024) {
-        setErrors(prev => ({ ...prev, profileImage: "File size must be less than 20MB" }));
+        setErrors((prev) => ({
+          ...prev,
+          profileImage: "File size must be less than 20MB",
+        }));
         return;
       }
-      
+
       setFormData((prev) => ({ ...prev, profileImage: file }));
       setPreviewUrl(URL.createObjectURL(file));
-      setErrors(prev => ({ ...prev, profileImage: "" }));
+      setErrors((prev) => ({ ...prev, profileImage: "" }));
     }
   };
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.firstName) newErrors.firstName = "First name is required";
     if (!formData.lastName) newErrors.lastName = "Last name is required";
     if (!formData.email) newErrors.email = "Email is required";
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "Email is invalid";
-    if (!formData.mobileNumber) newErrors.mobileNumber = "Mobile number is required";
+    else if (!/\S+@\S+\.\S+/.test(formData.email))
+      newErrors.email = "Email is invalid";
+    if (!formData.mobileNumber)
+      newErrors.mobileNumber = "Mobile number is required";
     if (!formData.role) newErrors.role = "Role is required";
     if (!formData.gender) newErrors.gender = "Gender is required";
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
+
     setIsSubmitting(true);
-    
+
     try {
       const payload = new FormData();
       Object.entries(formData).forEach(([key, value]) => {
@@ -134,17 +147,17 @@ const API_URL = import.meta.env.VITE_API_URL;
       );
 
       toast.success("User updated successfully!");
-      
+
       if (onUserUpdated) {
         await onUserUpdated();
       }
-      
+
       onClose();
     } catch (err) {
       console.error(err);
       const errorMsg = err.response?.data?.message || "Failed to update user";
       toast.error(errorMsg);
-      
+
       // Set server validation errors
       if (err.response?.data?.errors) {
         setErrors(err.response.data.errors);
@@ -158,9 +171,7 @@ const API_URL = import.meta.env.VITE_API_URL;
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-lg font-bold">
-            Edit User
-          </DialogTitle>
+          <DialogTitle className="text-lg font-bold">Edit User</DialogTitle>
         </DialogHeader>
 
         {/* Profile Photo Upload */}
@@ -194,7 +205,9 @@ const API_URL = import.meta.env.VITE_API_URL;
           </div>
         </div>
         {errors.profileImage && (
-          <p className="text-red-500 text-sm text-center -mt-3">{errors.profileImage}</p>
+          <p className="text-red-500 text-sm text-center -mt-3">
+            {errors.profileImage}
+          </p>
         )}
 
         {/* Form */}
@@ -210,10 +223,14 @@ const API_URL = import.meta.env.VITE_API_URL;
               placeholder="First Name"
               value={formData.firstName}
               onChange={handleChange}
-              className={`p-2 border rounded-md w-full ${errors.firstName ? 'border-red-500' : ''}`}
+              className={`p-2 border rounded-md w-full ${
+                errors.firstName ? "border-red-500" : ""
+              }`}
               required
             />
-            {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}
+            {errors.firstName && (
+              <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>
+            )}
           </div>
 
           {/* Last Name */}
@@ -224,10 +241,14 @@ const API_URL = import.meta.env.VITE_API_URL;
               placeholder="Last Name"
               value={formData.lastName}
               onChange={handleChange}
-              className={`p-2 border rounded-md w-full ${errors.lastName ? 'border-red-500' : ''}`}
+              className={`p-2 border rounded-md w-full ${
+                errors.lastName ? "border-red-500" : ""
+              }`}
               required
             />
-            {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
+            {errors.lastName && (
+              <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>
+            )}
           </div>
 
           {/* Gender */}
@@ -236,7 +257,9 @@ const API_URL = import.meta.env.VITE_API_URL;
               name="gender"
               value={formData.gender}
               onChange={handleChange}
-              className={`p-2 border rounded-md w-full ${errors.gender ? 'border-red-500' : ''}`}
+              className={`p-2 border rounded-md w-full ${
+                errors.gender ? "border-red-500" : ""
+              }`}
               required
             >
               <option value="">Select Gender</option>
@@ -244,7 +267,9 @@ const API_URL = import.meta.env.VITE_API_URL;
               <option value="Female">Female</option>
               <option value="Other">Other</option>
             </select>
-            {errors.gender && <p className="text-red-500 text-sm mt-1">{errors.gender}</p>}
+            {errors.gender && (
+              <p className="text-red-500 text-sm mt-1">{errors.gender}</p>
+            )}
           </div>
 
           {/* DOB */}
@@ -266,10 +291,14 @@ const API_URL = import.meta.env.VITE_API_URL;
               placeholder="Mobile Number"
               value={formData.mobileNumber}
               onChange={handleChange}
-              className={`p-2 border rounded-md w-full ${errors.mobileNumber ? 'border-red-500' : ''}`}
+              className={`p-2 border rounded-md w-full ${
+                errors.mobileNumber ? "border-red-500" : ""
+              }`}
               required
             />
-            {errors.mobileNumber && <p className="text-red-500 text-sm mt-1">{errors.mobileNumber}</p>}
+            {errors.mobileNumber && (
+              <p className="text-red-500 text-sm mt-1">{errors.mobileNumber}</p>
+            )}
           </div>
 
           {/* Email */}
@@ -280,10 +309,14 @@ const API_URL = import.meta.env.VITE_API_URL;
               placeholder="Email"
               value={formData.email}
               onChange={handleChange}
-              className={`p-2 border rounded-md w-full ${errors.email ? 'border-red-500' : ''}`}
+              className={`p-2 border rounded-md w-full ${
+                errors.email ? "border-red-500" : ""
+              }`}
               required
             />
-            {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+            )}
           </div>
 
           {/* Address (full width row) */}
@@ -303,7 +336,9 @@ const API_URL = import.meta.env.VITE_API_URL;
               name="role"
               value={formData.role}
               onChange={handleChange}
-              className={`p-2 border rounded-md w-full ${errors.role ? 'border-red-500' : ''}`}
+              className={`p-2 border rounded-md w-full ${
+                errors.role ? "border-red-500" : ""
+              }`}
               required
             >
               <option value="">Select Role</option>
@@ -313,7 +348,9 @@ const API_URL = import.meta.env.VITE_API_URL;
                 </option>
               ))}
             </select>
-            {errors.role && <p className="text-red-500 text-sm mt-1">{errors.role}</p>}
+            {errors.role && (
+              <p className="text-red-500 text-sm mt-1">{errors.role}</p>
+            )}
           </div>
 
           {/* Status */}
