@@ -30,6 +30,7 @@ import InvoiceView from "./pages/invoice/InvoiceView";
 import ResetPassword from "./pages/password/ResetPassword";
 import PrivateRoute from "./pages/auth/PrivateRoute";
 
+
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 

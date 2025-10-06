@@ -1,3 +1,4 @@
+
 // import React, { useState, useEffect, useRef } from "react";
 // import { Menu, User, Power, ChevronDown, Bell } from "react-feather";
 // import { Link, useNavigate } from "react-router-dom";
@@ -5,8 +6,9 @@
 // import { disconnectSocket } from "../utils/socket";
 // import { ShieldCheck } from "lucide-react";
 // import PasswordUpdate from "../pages/password/PasswordUpdate";
-// import { Maximize, Minimize } from "lucide-react"; // For fullscreen icons
+// import { Maximize, Minimize } from "lucide-react";
 // import { formatDistanceToNow } from "date-fns";
+
 // const Navbar = ({ toggleSidebar }) => {
 //   const [showDropdown, setShowDropdown] = useState(false);
 //   const [showNotifications, setShowNotifications] = useState(false);
@@ -19,6 +21,7 @@
 //   const notificationRef = useRef(null);
 //   const dropdownRef = useRef(null);
 //   const API_SI = import.meta.env.VITE_SI_URI;
+
 //   // Load user
 //   useEffect(() => {
 //     const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -60,6 +63,17 @@
 //       document.exitFullscreen();
 //       setIsFullscreen(false);
 //     }
+//   };
+
+//   // Function to get profile image URL
+//   const getProfileImageUrl = (profileImage) => {
+//     if (!profileImage) return "https://randomuser.me/api/portraits/men/32.jpg";
+    
+//     if (profileImage.startsWith('http')) {
+//       return profileImage;
+//     }
+    
+//     return `${API_SI}/${profileImage.replace(/\\/g, "/")}`;
 //   };
 
 //   return (
@@ -115,19 +129,12 @@
 //                   {notifications.length > 0 ? (
 //                     notifications.map((n) => (
 //                       <div
-//                         key={n._id} // ✅ Use _id
+//                         key={n._id}
 //                         className="flex items-start px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all cursor-pointer border-b border-gray-100 dark:border-gray-600 last:border-0"
 //                       >
 //                         <div className="flex-shrink-0">
 //                           <img
-//                             src={
-//                               n.profileImage
-//                                 ? `${API_SI}/${n.profileImage.replace(
-//                                     /\\/g,
-//                                     "/"
-//                                   )}`
-//                                 : "https://randomuser.me/api/portraits/men/32.jpg"
-//                             }
+//                             src={getProfileImageUrl(n.profileImage)}
 //                             alt="avatar"
 //                             className="w-10 h-10 rounded-full object-cover border border-gray-300 dark:border-gray-600"
 //                           />
@@ -142,8 +149,7 @@
 //                           <p className="text-gray-400 dark:text-gray-500 text-xs mt-2">
 //                             {formatDistanceToNow(new Date(n.createdAt), {
 //                               addSuffix: true,
-//                             })}{" "}
-//                             {/* ✅ relative time */}
+//                             })}
 //                           </p>
 //                         </div>
 //                       </div>
@@ -176,7 +182,7 @@
 //               {/* User Avatar */}
 //               <div className="relative">
 //                 <img
-//                   src="https://randomuser.me/api/portraits/men/32.jpg"
+//                   src={getProfileImageUrl(user?.profileImage)}
 //                   alt="User Avatar"
 //                   className="w-10 h-10 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600"
 //                 />
@@ -250,19 +256,18 @@
 //   );
 // };
 
-// export default Navbar;//org
-
+// export default Navbar;
 
 
 import React, { useState, useEffect, useRef } from "react";
-import { Menu, User, Power, ChevronDown, Bell } from "react-feather";
+import { Menu, Power, ChevronDown, Bell } from "react-feather";
 import { Link, useNavigate } from "react-router-dom";
 import { useNotifications } from "../context/NotificationContext";
 import { disconnectSocket } from "../utils/socket";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, Maximize, Minimize } from "lucide-react";
 import PasswordUpdate from "../pages/password/PasswordUpdate";
-import { Maximize, Minimize } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { FaWhatsapp } from "react-icons/fa"; // WhatsApp icon
 
 const Navbar = ({ toggleSidebar }) => {
   const [showDropdown, setShowDropdown] = useState(false);
@@ -276,6 +281,10 @@ const Navbar = ({ toggleSidebar }) => {
   const notificationRef = useRef(null);
   const dropdownRef = useRef(null);
   const API_SI = import.meta.env.VITE_SI_URI;
+
+  // Sales team number (international format)
+  const salesTeamNumber = "919952885799"; // replace with your number
+  const whatsappLink = `https://wa.me/${salesTeamNumber}?text=Hello%20I%20am%20interested%20in%20your%20services`;
 
   // Load user
   useEffect(() => {
@@ -323,11 +332,7 @@ const Navbar = ({ toggleSidebar }) => {
   // Function to get profile image URL
   const getProfileImageUrl = (profileImage) => {
     if (!profileImage) return "https://randomuser.me/api/portraits/men/32.jpg";
-    
-    if (profileImage.startsWith('http')) {
-      return profileImage;
-    }
-    
+    if (profileImage.startsWith("http")) return profileImage;
     return `${API_SI}/${profileImage.replace(/\\/g, "/")}`;
   };
 
@@ -350,17 +355,23 @@ const Navbar = ({ toggleSidebar }) => {
             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           >
             {isFullscreen ? (
-              <Minimize
-                size={22}
-                className="text-gray-600 dark:text-gray-300"
-              />
+              <Minimize size={22} className="text-gray-600 dark:text-gray-300" />
             ) : (
-              <Maximize
-                size={22}
-                className="text-gray-600 dark:text-gray-300"
-              />
+              <Maximize size={22} className="text-gray-600 dark:text-gray-300" />
             )}
           </button>
+
+          {/* WhatsApp Button with Animation */}
+          <a
+            href={whatsappLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="relative group flex items-center justify-center w-10 h-10 rounded-full bg-green-500 shadow-lg hover:shadow-xl transition-all transform hover:scale-110 motion-safe:animate-bounce cursor-pointer"
+          >
+            <FaWhatsapp size={28} className="text-white group-hover:text-green-50 transition-colors" />
+            {/* Optional floating pulse */}
+            <span className="absolute w-2 h-2 bg-green-300 rounded-full top-1 right-1 animate-ping"></span>
+          </a>
 
           {/* Notifications */}
           <div className="relative" ref={notificationRef}>
@@ -441,7 +452,6 @@ const Navbar = ({ toggleSidebar }) => {
                   alt="User Avatar"
                   className="w-10 h-10 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600"
                 />
-                {/* Optional Online Status */}
                 <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full animate-pulse"></span>
               </div>
 
