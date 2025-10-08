@@ -91,7 +91,7 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
     const fetchSalesUsers = async () => {
       try {
         const token = localStorage.getItem("token");
-        console.log(token);
+        // console.log(token);
 
         const response = await axios.get(`${API_URL}/users/sales`, {
   headers: { Authorization: `Bearer ${token}` },

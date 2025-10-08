@@ -12,7 +12,7 @@ export const initSocket = (userId) => {
 
   // DO NOT create socket without a valid userId
   if (!userId) {
-    console.log("initSocket: no userId provided, not creating socket");
+    // console.log("initSocket: no userId provided, not creating socket");
     return null;
   }
 
@@ -25,7 +25,7 @@ export const initSocket = (userId) => {
   });
 
   socket.on("connect", () => {
-    console.log("✅ Socket connected:", socket.id, "userId:", userId);
+    // console.log("✅ Socket connected:", socket.id, "userId:", userId);
     socket.emit("user_connected", userId); // extra safety register
   });
 

@@ -1,3 +1,7 @@
+
+
+
+
 // import React, { useEffect, useState, useCallback, useRef } from "react";
 // import {
 //   Card,
@@ -274,6 +278,7 @@
 //   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
 //   const [displayedRevenue, setDisplayedRevenue] = useState(0);
+//   const [revenueBreakdown, setRevenueBreakdown] = useState({});
 //   const [pieColors, setPieColors] = useState(["#8B5CF6", "#3B82F6", "#60A5FA"]);
 //   const [activeSlice, setActiveSlice] = useState(-1);
 //   const [lineAnimationKey, setLineAnimationKey] = useState(0);
@@ -319,6 +324,22 @@
 //     return Number(((diff / Math.abs(previous)) * 100).toFixed(1));
 //   };
 
+//   /* ---------- Calculate total revenue from currency breakdown ---------- */
+//   const calculateTotalRevenue = (revenueByCurrency = {}) => {
+//     return Object.values(revenueByCurrency).reduce((total, amount) => total + amount, 0);
+//   };
+
+//   /* ---------- Format revenue breakdown for display ---------- */
+//   const formatRevenueBreakdown = (revenueByCurrency = {}) => {
+//     return Object.entries(revenueByCurrency)
+//       .filter(([_, amount]) => amount > 0)
+//       .map(([currency, amount]) => ({
+//         currency,
+//         amount,
+//         formatted: `${currency} ${amount.toLocaleString()}`
+//       }));
+//   };
+
 //   /* ---------- Main Fetch ---------- */
 //   const fetchAll = async (
 //     params,
@@ -356,6 +377,10 @@
 //       const curr = resSummary.data || {};
 //       const prev = resPrevSummary.data || {};
 
+//       // Calculate total revenue from currency breakdown
+//       const currentTotalRevenue = calculateTotalRevenue(curr.revenueByCurrency);
+//       const previousTotalRevenue = calculateTotalRevenue(prev.revenueByCurrency);
+
 //       // Calculate accurate percentages
 //       const totalLeadsChange = computeChange(
 //         curr.totalLeads || 0,
@@ -366,8 +391,8 @@
 //         prev.totalDealsWon || 0
 //       );
 //       const totalRevenueChange = computeChange(
-//         curr.totalRevenue || 0,
-//         prev.totalRevenue || 0
+//         currentTotalRevenue,
+//         previousTotalRevenue
 //       );
 //       const pendingInvoicesChange = computeChange(
 //         curr.pendingInvoices || 0,
@@ -393,7 +418,7 @@
 //         },
 //         {
 //           title: "Revenue",
-//           value: curr.totalRevenue || 0,
+//           value: currentTotalRevenue,
 //           change: totalRevenueChange,
 //           color: "indigo",
 //           icon: <DollarSign className="h-5 w-5" />,
@@ -412,8 +437,9 @@
 //       setSummary(summaryCards);
 //       setPipeline(resPipeline.data || []);
 //       setRecentInvoices(resInvoices.data || []);
+//       setRevenueBreakdown(curr.revenueByCurrency || {});
 
-//       const incomingRevenue = curr.totalRevenue || 0;
+//       const incomingRevenue = currentTotalRevenue;
 //       animateDisplayedRevenue(incomingRevenue);
 
 //       if ((curr.totalDealsWon || 0) > 5 && totalDealsWonChange > 0) {
@@ -717,9 +743,6 @@
 //             </motion.div>
 //             Dashboard
 //           </motion.h1>
-//           {/* <p className="text-gray-500 mt-1">
-//             Real-time insights — auto-refresh every 60s
-//           </p> */}
 //         </div>
 
 //         <div className="flex items-center gap-2 flex-wrap">
@@ -864,6 +887,19 @@
 //                         {card.icon}
 //                       </motion.div>
 //                     </div>
+
+//                     {/* Revenue breakdown tooltip */}
+//                     {card.title === "Revenue" && Object.keys(revenueBreakdown).length > 0 && (
+//                       <div className="mt-2">
+//                         <div className="text-xs text-gray-500">
+//                           {formatRevenueBreakdown(revenueBreakdown).map((item, i) => (
+//                             <div key={i} className="truncate">
+//                               {item.formatted}
+//                             </div>
+//                           ))}
+//                         </div>
+//                       </div>
+//                     )}
 
 //                     <div className="mt-4 flex items-center">
 //                       <TrendingUp
@@ -1046,17 +1082,24 @@
 //                   Revenue Overview
 //                 </CardTitle>
 //                 <div className="flex items-center gap-2">
-//                   {/* Date selector removed for cleaner UI */}
+//                   {/* Currency breakdown badge */}
+//                   {Object.keys(revenueBreakdown).length > 0 && (
+//                     <Badge variant="outline" className="bg-white/80 backdrop-blur-sm">
+//                       {Object.keys(revenueBreakdown).length} currencies
+//                     </Badge>
+//                   )}
 //                 </div>
 //               </div>
-//               <CardDescription>Realtime revenue (auto-updates)</CardDescription>
+//               <CardDescription>
+//                 Realtime revenue (auto-updates) • Multi-currency support
+//               </CardDescription>
 //             </CardHeader>
 
 //             <CardContent className="pt-6">
 //               <div className="flex items-center justify-between mb-4">
 //                 <div>
 //                   <p className="text-sm text-gray-500">
-//                     Live Revenue (calculated from recent invoices)
+//                     Live Revenue (calculated from won deals)
 //                   </p>
 //                   <div className="text-2xl font-semibold flex items-baseline gap-2">
 //                     <span className="text-sm text-gray-500">₹</span>
@@ -1070,6 +1113,17 @@
 //                       realtime
 //                     </motion.span>
 //                   </div>
+                  
+//                   {/* Currency breakdown */}
+//                   {Object.keys(revenueBreakdown).length > 0 && (
+//                     <div className="mt-2 flex flex-wrap gap-2">
+//                       {formatRevenueBreakdown(revenueBreakdown).map((item, i) => (
+//                         <Badge key={i} variant="secondary" className="text-xs">
+//                           {item.formatted}
+//                         </Badge>
+//                       ))}
+//                     </div>
+//                   )}
 //                 </div>
 //               </div>
 
@@ -1373,7 +1427,8 @@
 //   );
 // };
 
-// export default AdminDashboard; //original
+// export default AdminDashboard;
+
 
 
 
@@ -1422,6 +1477,12 @@ import {
   Sparkles,
   Activity,
   Target,
+  Globe,
+  CreditCard,
+  ArrowUpRight,
+  ArrowDownRight,
+  Receipt,
+  BarChart3,
 } from "lucide-react";
 import axios from "axios";
 import { cn } from "../lib/utils";
@@ -1430,6 +1491,23 @@ import CountUp from "react-countup";
 import confetti from "canvas-confetti";
 
 const API_URL = import.meta.env.VITE_API_URL;
+
+// Supported currencies with symbols and formatting
+const allowedCurrencies = [
+  { code: "USD", symbol: "$", name: "US Dollar" },
+  { code: "EUR", symbol: "€", name: "Euro" },
+  { code: "INR", symbol: "₹", name: "Indian Rupee" },
+  { code: "GBP", symbol: "£", name: "British Pound" },
+  { code: "JPY", symbol: "¥", name: "Japanese Yen" },
+  { code: "AUD", symbol: "A$", name: "Australian Dollar" },
+  { code: "CAD", symbol: "C$", name: "Canadian Dollar" },
+  { code: "CHF", symbol: "CHF", name: "Swiss Franc" },
+  { code: "MYR", symbol: "RM", name: "Malaysian Ringgit" },
+  { code: "AED", symbol: "د.إ", name: "UAE Dirham" },
+  { code: "SGD", symbol: "S$", name: "Singapore Dollar" },
+  { code: "ZAR", symbol: "R", name: "South African Rand" },
+  { code: "SAR", symbol: "﷼", name: "Saudi Riyal" },
+];
 
 /* ---------- Helpers ---------- */
 const formatDate = (d) => {
@@ -1482,23 +1560,15 @@ const previousRangeFor = (preset, selectedMonth = new Date().getMonth()) => {
     const end = new Date();
     end.setDate(end.getDate() - 7);
     const start = new Date();
-    start.setDate(start.getDate() - 13); // previous 7-day block
+    start.setDate(start.getDate() - 13);
     return { start: formatDate(start), end: formatDate(end) };
   } else if (preset === "month") {
     const year = now.getFullYear();
     const thisMonth = new Date(year, selectedMonth, 1);
     const prevMonth = new Date(thisMonth);
     prevMonth.setMonth(thisMonth.getMonth() - 1);
-    const prevStart = new Date(
-      prevMonth.getFullYear(),
-      prevMonth.getMonth(),
-      1
-    );
-    const prevEnd = new Date(
-      prevMonth.getFullYear(),
-      prevMonth.getMonth() + 1,
-      0
-    );
+    const prevStart = new Date(prevMonth.getFullYear(), prevMonth.getMonth(), 1);
+    const prevEnd = new Date(prevMonth.getFullYear(), prevMonth.getMonth() + 1, 0);
     return { start: formatDate(prevStart), end: formatDate(prevEnd) };
   }
   return todayRange();
@@ -1519,20 +1589,30 @@ const useDebouncedCallback = (fn, delay = 400) => {
 };
 
 const BASE_COLORS = [
-  "#8B5CF6",
-  "#3B82F6",
-  "#60A5FA",
-  "#A78BFA",
-  "#7C3AED",
-  "#10B981",
-  "#F59E0B",
-  "#EF4444",
+  "#8B5CF6", "#3B82F6", "#10B981", "#F59E0B",
+  "#EF4444", "#6366F1", "#EC4899", "#06B6D4"
 ];
-const STATUS_COLORS = {
-  paid: "#8B5CF6",
-  unpaid: "#3B82F6",
-  pending: "#60A5FA",
-  overdue: "#A78BFA",
+
+// Enhanced gradient color palette for Deal Performance with attractive colors
+const GRADIENT_COLORS = [
+  { from: "#3B82F6", to: "#60A5FA" }, // Blue gradient for Open
+  { from: "#10B981", to: "#34D399" }, // Green gradient for Won
+  { from: "#F59E0B", to: "#FBBF24" }, // Amber gradient for Lost
+];
+
+// Special attractive colors for Open and Won states
+const ATTRACTIVE_COLORS = {
+  open: [
+    { from: "#6366F1", to: "#8B5CF6" }, // Vibrant purple to indigo
+    { from: "#3B82F6", to: "#06B6D4" }, // Blue to cyan
+  ],
+  won: [
+    { from: "#10B981", to: "#84CC16" }, // Emerald to lime
+    { from: "#059669", to: "#65A30D" }, // Green to olive
+  ],
+  lost: [
+    { from: "#EF4444", to: "#F97316" }, // Red to orange
+  ]
 };
 
 /* ---------- Enhanced Card Bubbles overlay ---------- */
@@ -1583,52 +1663,1108 @@ const CardBubbles = ({ seed = 0, count = 12, colorPalette = BASE_COLORS }) => {
   );
 };
 
-/* Animated number (CountUp wrapper) */
-const AnimatedNumber = ({
-  value,
-  prefix = "",
-  decimals = 0,
-  duration = 0.9,
-  className = "",
-}) => (
-  <CountUp
-    end={Number(value) || 0}
-    duration={duration}
-    decimals={decimals}
-    prefix={prefix}
-    separator=","
-    className={cn("text-3xl font-bold text-gray-900", className)}
-  />
-);
+/* Currency Display Component */
+const CurrencyDisplay = ({ value, currency = "USD", className = "" }) => {
+  const currencyInfo = allowedCurrencies.find(c => c.code === currency) || allowedCurrencies[0];
+  const numericValue = Number(value) || 0;
+ 
+  // Remove leading zeros and format properly
+  const formattedValue = numericValue.toLocaleString();
+ 
+  return (
+    <div className={cn("flex items-baseline gap-1", className)}>
+      <span className="text-lg font-semibold text-gray-600">{currencyInfo.symbol}</span>
+      <span className="text-2xl font-bold text-gray-900">
+        {formattedValue}
+      </span>
+      <span className="text-sm font-medium text-gray-500 ml-1">{currencyInfo.code}</span>
+    </div>
+  );
+};
 
-/* Custom animated line for charts */
-const AnimatedLine = (props) => {
-  const { points, stroke, strokeWidth } = props;
-  const [length, setLength] = useState(0);
-  const ref = useRef(null);
+/* Enhanced Currency Breakdown Component with Total Revenue */
+const CurrencyBreakdownCard = ({ revenueData, loading }) => {
+  if (loading) {
+    return (
+      <Card className="shadow-lg border-0 overflow-hidden relative bg-gradient-to-br from-slate-50 to-gray-100/80 backdrop-blur-sm">
+        <CardContent className="p-6">
+          <Skeleton className="h-6 w-32 mb-4" />
+          <div className="space-y-3">
+            {[1, 2, 3].map(i => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
-  useEffect(() => {
-    if (ref.current) {
-      setLength(ref.current.getTotalLength());
-    }
-  }, [points]);
+  // Filter out currencies with zero or negative amounts and remove leading zeros
+  const currencies = Object.entries(revenueData)
+    .filter(([_, data]) => data.amount > 0)
+    .map(([currency, data]) => ({
+      currency,
+      amount: Number(data.amount),
+      count: data.count
+    }))
+    .sort((a, b) => b.amount - a.amount);
+
+  // Calculate total revenue
+  const totalRevenue = currencies.reduce((sum, curr) => sum + curr.amount, 0);
 
   return (
-    <motion.path
-      ref={ref}
-      d={points.reduce((acc, point, index) => {
-        if (index === 0) return `M ${point.x},${point.y}`;
-        return `${acc} L ${point.x},${point.y}`;
-      }, "")}
-      stroke={stroke}
-      strokeWidth={strokeWidth}
-      fill="none"
-      initial={{ pathLength: 0 }}
-      animate={{ pathLength: 1 }}
-      transition={{ duration: 1.5, ease: "easeOut" }}
-      strokeDasharray={length}
-      strokeDashoffset={length}
-    />
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -2 }}
+    >
+      <Card className="shadow-lg border-0 overflow-hidden relative bg-gradient-to-br from-slate-50 to-gray-100/80 backdrop-blur-sm">
+        <CardBubbles seed={5} count={6} colorPalette={["#8B5CF6", "#A78BFA", "#C4B5FD"]} />
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg text-gray-800 flex items-center gap-2">
+              <Globe className="h-5 w-5 text-purple-600" />
+              Revenue by Currency
+            </CardTitle>
+            <Badge variant="secondary" className="bg-white/80 backdrop-blur-sm text-xs">
+              {currencies.length} Currencies
+            </Badge>
+          </div>
+         
+          {/* Total Revenue Display */}
+          <div className="mt-4 p-4 bg-white/60 rounded-lg border border-gray-200/50 backdrop-blur-sm">
+            <div className="text-sm font-medium text-gray-600 mb-1">Total Revenue</div>
+            <div className="text-2xl font-bold text-gray-900">
+              ${totalRevenue.toLocaleString()}
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              Across all currencies
+            </div>
+          </div>
+        </CardHeader>
+       
+        <CardContent className="space-y-3">
+          {currencies.length > 0 ? (
+            currencies.map(({ currency, amount, count }, index) => {
+              const currencyInfo = allowedCurrencies.find(c => c.code === currency);
+             
+              return (
+                <motion.div
+                  key={currency}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="flex items-center justify-between p-3 bg-white/60 rounded-lg border border-gray-200/50 backdrop-blur-sm hover:bg-white/80 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: BASE_COLORS[index % BASE_COLORS.length] }}
+                    />
+                    <div>
+                      <div className="font-semibold text-gray-800 text-sm">{currencyInfo?.name}</div>
+                      <div className="text-xs text-gray-500">{currencyInfo?.code}</div>
+                    </div>
+                  </div>
+                 
+                  <div className="text-right">
+                    <div className="font-bold text-gray-900 text-sm">
+                      {currencyInfo?.symbol}{amount.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-gray-500">{count || 0} invoices</div>
+                  </div>
+                </motion.div>
+              );
+            })
+          ) : (
+            <div className="text-center py-6 text-gray-500">
+              <CreditCard className="h-8 w-8 mx-auto mb-2 opacity-40" />
+              <p className="text-sm">No revenue data</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+};
+
+/* Enhanced Pending Invoices Card with Light Weight Colors */
+const PendingInvoicesCard = ({ invoicesData, loading }) => {
+  if (loading) {
+    return (
+      <Card className="shadow-lg border-0 overflow-hidden relative bg-gradient-to-br from-blue-50/60 to-indigo-50/50 backdrop-blur-sm">
+        <CardContent className="p-6">
+          <Skeleton className="h-6 w-32 mb-4" />
+          <div className="space-y-3">
+            {[1, 2].map(i => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const pendingInvoices = invoicesData?.filter(inv =>
+    inv.status === 'pending' || inv.status === 'unpaid'
+  ) || [];
+
+  const pendingByCurrency = {};
+  pendingInvoices.forEach(invoice => {
+    const currency = invoice.currency || 'USD';
+    const amount = Number(invoice.total) || 0;
+    if (amount > 0) {
+      if (!pendingByCurrency[currency]) {
+        pendingByCurrency[currency] = { amount: 0, count: 0 };
+      }
+      pendingByCurrency[currency].amount += amount;
+      pendingByCurrency[currency].count += 1;
+    }
+  });
+
+  // Filter out zero amounts and remove leading zeros
+  const currencies = Object.entries(pendingByCurrency)
+    .filter(([_, data]) => data.amount > 0)
+    .map(([currency, data]) => ({
+      currency,
+      amount: Number(data.amount),
+      count: data.count
+    }))
+    .sort((a, b) => b.amount - a.amount);
+
+  // Calculate total pending amount
+  const totalPending = currencies.reduce((sum, curr) => sum + curr.amount, 0);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -2 }}
+    >
+      <Card className="shadow-lg border-0 overflow-hidden relative bg-gradient-to-br from-blue-50/60 to-indigo-50/50 backdrop-blur-sm">
+        <CardBubbles seed={6} count={5} colorPalette={["#3B82F6", "#60A5FA", "#93C5FD"]} />
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg text-gray-800 flex items-center gap-2">
+              <Receipt className="h-5 w-5 text-blue-600" />
+              Pending Invoices
+            </CardTitle>
+            <Badge variant="secondary" className="bg-white/80 backdrop-blur-sm text-xs">
+              {currencies.length} Currencies
+            </Badge>
+          </div>
+         
+          {/* Total Pending Display */}
+          <div className="mt-4 p-4 bg-white/50 rounded-lg border border-blue-200/30 backdrop-blur-sm">
+            <div className="text-sm font-medium text-gray-600 mb-1">Total Pending</div>
+            <div className="text-2xl font-bold text-gray-900">
+              ${totalPending.toLocaleString()}
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              Awaiting payment
+            </div>
+          </div>
+        </CardHeader>
+       
+        <CardContent className="space-y-3">
+          {currencies.length > 0 ? (
+            currencies.map(({ currency, amount, count }, index) => {
+              const currencyInfo = allowedCurrencies.find(c => c.code === currency);
+             
+              return (
+                <motion.div
+                  key={currency}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="flex items-center justify-between p-3 bg-white/50 rounded-lg border border-blue-200/30 backdrop-blur-sm hover:bg-white/70 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-blue-400" />
+                    <div>
+                      <div className="font-semibold text-gray-800 text-sm">{currencyInfo?.name}</div>
+                      <div className="text-xs text-gray-500">{currencyInfo?.code}</div>
+                    </div>
+                  </div>
+                 
+                  <div className="text-right">
+                    <div className="font-bold text-gray-900 text-sm">
+                      {currencyInfo?.symbol}{amount.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-gray-500">{count || 0} pending</div>
+                  </div>
+                </motion.div>
+              );
+            })
+          ) : (
+            <div className="text-center py-6 text-gray-500">
+              <FileText className="h-8 w-8 mx-auto mb-2 opacity-40" />
+              <p className="text-sm">No pending invoices</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+};
+
+/* Enhanced Revenue Trend Chart with Sharp Design */
+const RevenueTrendChart = ({ revenueData, loading, activePreset, selectedMonth, selectedYear, recentInvoices }) => {
+  const [selectedCurrency, setSelectedCurrency] = useState('ALL');
+
+  // Filter out zero amounts and remove leading zeros
+  const currencies = Object.entries(revenueData)
+    .filter(([_, data]) => data.amount > 0)
+    .map(([currency]) => currency)
+    .sort();
+
+  const currencyOptions = [
+    { code: 'ALL', name: 'All Currencies' },
+    ...currencies.map(code => ({
+      code,
+      name: allowedCurrencies.find(c => c.code === code)?.name || code
+    }))
+  ];
+
+  // Build chart data from actual invoices
+  const buildChartData = () => {
+    if (!recentInvoices || recentInvoices.length === 0) return [];
+
+    const monthlyData = {};
+   
+    recentInvoices.forEach(invoice => {
+      const invoiceDate = new Date(invoice.createdAt || invoice.date || new Date());
+      const monthKey = invoiceDate.toLocaleString('default', { month: 'short' });
+      const amount = Number(invoice.total) || 0;
+      const currency = invoice.currency || 'USD';
+     
+      if (amount > 0) {
+        if (!monthlyData[monthKey]) {
+          monthlyData[monthKey] = { month: monthKey };
+          currencies.forEach(curr => {
+            monthlyData[monthKey][curr] = 0;
+          });
+          monthlyData[monthKey].total = 0;
+        }
+       
+        monthlyData[monthKey][currency] = (monthlyData[monthKey][currency] || 0) + amount;
+        monthlyData[monthKey].total += amount;
+      }
+    });
+
+    // Fill in missing months with zero values
+    const allMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return allMonths.map(month => {
+      const data = monthlyData[month] || { month, total: 0 };
+      currencies.forEach(currency => {
+        if (!data[currency]) data[currency] = 0;
+      });
+      return data;
+    });
+  };
+
+  const chartData = buildChartData();
+
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (!active || !payload || payload.length === 0) return null;
+   
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white p-4 rounded-lg shadow-xl border border-gray-200/80 backdrop-blur-sm min-w-48"
+      >
+        <div className="text-sm font-semibold text-gray-800 mb-2">{label}</div>
+        {selectedCurrency === 'ALL' ? (
+          <>
+            <div className="text-sm text-gray-600 mb-2">
+              Total: <strong>${payload.reduce((sum, p) => sum + (p.value || 0), 0).toLocaleString()}</strong>
+            </div>
+            {payload
+              .filter(p => p.value > 0)
+              .map((p, i) => (
+                <div key={i} className="text-sm text-gray-600 mt-1 flex items-center justify-between">
+                  <div className="flex items-center">
+                    <span
+                      style={{
+                        display: "inline-block",
+                        width: 10,
+                        height: 10,
+                        background: p.color,
+                        marginRight: 8,
+                        borderRadius: "50%",
+                      }}
+                    />
+                    {p.dataKey}
+                  </div>
+                  <strong className="ml-2">${p.value?.toLocaleString()}</strong>
+                </div>
+              ))}
+          </>
+        ) : (
+          <div className="text-sm text-gray-600 flex items-center justify-between">
+            <div className="flex items-center">
+              <span
+                style={{
+                  display: "inline-block",
+                  width: 10,
+                  height: 10,
+                  background: payload[0]?.color,
+                  marginRight: 8,
+                  borderRadius: "50%",
+                }}
+              />
+              {selectedCurrency}
+            </div>
+            <strong className="ml-2">${payload[0]?.value?.toLocaleString()}</strong>
+          </div>
+        )}
+      </motion.div>
+    );
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 16 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.45 }}
+      whileHover={{ y: -2 }}
+    >
+      <Card className="shadow-lg border-0 overflow-hidden relative bg-white/80 backdrop-blur-sm h-full hover:shadow-xl transition-all duration-300">
+        <CardBubbles
+          seed={21}
+          count={8}
+          colorPalette={["#8B5CF6", "#A78BFA", "#C4B5FD"]}
+        />
+        <CardHeader className="pb-4 border-b border-gray-200/50">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex-1">
+              <CardTitle className="text-xl text-gray-800 flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-purple-600" />
+                Revenue Trend
+              </CardTitle>
+              <CardDescription>
+                {selectedCurrency === 'ALL' ? 'Monthly revenue across all currencies' : `Monthly revenue in ${selectedCurrency}`}
+              </CardDescription>
+            </div>
+           
+            <div className="flex items-center gap-3">
+              <Select value={selectedCurrency} onValueChange={setSelectedCurrency}>
+                <SelectTrigger className="w-[180px] bg-white/90 backdrop-blur-sm border-gray-200 shadow-sm">
+                  <SelectValue placeholder="Select currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  {currencyOptions.map(option => (
+                    <SelectItem key={option.code} value={option.code}>
+                      {option.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                className="text-sm text-gray-600 flex items-center gap-2 bg-white/70 px-3 py-1.5 rounded-full border border-gray-200/50"
+              >
+                <Calendar className="h-4 w-4" />
+                <span>
+                  {activePreset === "today"
+                    ? "Today"
+                    : activePreset === "7days"
+                    ? "Last 7 Days"
+                    : activePreset === "month"
+                    ? months[selectedMonth].label
+                    : `Year ${selectedYear}`}
+                </span>
+              </motion.div>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <p className="text-sm text-gray-500">Current Period</p>
+              <div className="text-2xl font-semibold text-gray-900">
+                {selectedCurrency === 'ALL' ? (
+                  `$${Object.values(revenueData).reduce((sum, curr) => sum + (Number(curr.amount) || 0), 0).toLocaleString()}`
+                ) : (
+                  <CurrencyDisplay
+                    value={revenueData[selectedCurrency]?.amount || 0}
+                    currency={selectedCurrency}
+                    className="text-2xl"
+                  />
+                )}
+              </div>
+            </div>
+
+            <Badge variant="secondary" className="bg-white/80 backdrop-blur-sm">
+              {selectedCurrency === 'ALL' ? `${currencies.length} Currencies` : selectedCurrency}
+            </Badge>
+          </div>
+
+          {loading ? (
+            <Skeleton className="h-64 w-full rounded-lg" />
+          ) : chartData.length > 0 ? (
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={chartData}
+                  margin={{ top: 6, right: 20, left: 0, bottom: 6 }}
+                >
+                  <defs>
+                    {selectedCurrency === 'ALL' ? (
+                      currencies.map((currency, index) => (
+                        <linearGradient
+                          key={currency}
+                          id={`gradient-${currency}`}
+                          x1="0" x2="0" y1="0" y2="1"
+                        >
+                          <stop offset="0%" stopColor={BASE_COLORS[index % BASE_COLORS.length]} stopOpacity={0.8} />
+                          <stop offset="100%" stopColor={BASE_COLORS[index % BASE_COLORS.length]} stopOpacity={0.1} />
+                        </linearGradient>
+                      ))
+                    ) : (
+                      <linearGradient id="revGrad" x1="0" x2="0" y1="0" y2="1">
+                        <stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.8} />
+                        <stop offset="100%" stopColor="#8B5CF6" stopOpacity={0.1} />
+                      </linearGradient>
+                    )}
+                  </defs>
+                 
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="#E5E7EB"
+                    opacity={0.5}
+                  />
+                 
+                  <XAxis
+                    dataKey="month"
+                    axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
+                    tickLine={false}
+                    tick={{ fill: '#6B7280', fontSize: 12, fontWeight: 500 }}
+                  />
+                 
+                  <YAxis
+                    axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
+                    tickLine={false}
+                    tick={{ fill: '#6B7280', fontSize: 12, fontWeight: 500 }}
+                    tickFormatter={(value) => `$${value.toLocaleString()}`}
+                  />
+                 
+                  <Tooltip content={<CustomTooltip />} />
+                 
+                  {selectedCurrency === 'ALL' ? (
+                    currencies.map((currency, index) => (
+                      <Line
+                        key={currency}
+                        type="monotone"
+                        dataKey={currency}
+                        stroke={BASE_COLORS[index % BASE_COLORS.length]}
+                        strokeWidth={3}
+                        dot={{
+                          stroke: BASE_COLORS[index % BASE_COLORS.length],
+                          strokeWidth: 2,
+                          r: 4,
+                          fill: "#fff",
+                        }}
+                        activeDot={{
+                          r: 6,
+                          stroke: "#fff",
+                          strokeWidth: 2,
+                          fill: BASE_COLORS[index % BASE_COLORS.length],
+                        }}
+                        isAnimationActive={true}
+                        animationBegin={index * 200}
+                        animationDuration={2000}
+                        animationEasing="ease-out"
+                        connectNulls={false}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    ))
+                  ) : (
+                    <Line
+                      type="monotone"
+                      dataKey={selectedCurrency}
+                      stroke="#8B5CF6"
+                      strokeWidth={3}
+                      dot={{
+                        stroke: "#8B5CF6",
+                        strokeWidth: 2,
+                        r: 4,
+                        fill: "#fff"
+                      }}
+                      activeDot={{
+                        r: 8,
+                        stroke: "#fff",
+                        strokeWidth: 3,
+                        fill: "#8B5CF6",
+                      }}
+                      isAnimationActive={true}
+                      animationDuration={2000}
+                      animationEasing="ease-out"
+                      connectNulls={false}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  )}
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="h-64 flex items-center justify-center text-gray-500">
+              <div className="text-center">
+                <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-40" />
+                <p>No revenue data available</p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+};
+
+/* Enhanced Sales Pipeline Component */
+const SalesPipelineChart = ({ pipelineBarData, loading, totalPipelineLeads }) => {
+  const [hoveredBar, setHoveredBar] = useState(null);
+
+  const CustomPipelineTooltip = ({ active, payload, label }) => {
+    if (!active || !payload || payload.length === 0) return null;
+   
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white p-4 rounded-lg shadow-xl border border-gray-200/80 backdrop-blur-sm min-w-48"
+      >
+        <div className="text-sm font-semibold text-gray-800 mb-3">{label}</div>
+        {payload.map((p, i) => (
+          <div key={i} className="text-sm text-gray-600 mt-2 flex items-center justify-between">
+            <div className="flex items-center">
+              <span
+                style={{
+                  display: "inline-block",
+                  width: 10,
+                  height: 10,
+                  background: p.color,
+                  marginRight: 8,
+                  borderRadius: "50%",
+                }}
+              />
+              {p.name}
+            </div>
+            <strong className="ml-2">{p.value} deals</strong>
+          </div>
+        ))}
+        <div className="mt-3 pt-2 border-t border-gray-200">
+          <div className="text-sm font-medium text-gray-700">
+            Total: {payload.reduce((sum, p) => sum + p.value, 0)} deals
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -16 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.45 }}
+      whileHover={{ y: -2 }}
+    >
+      <Card className="shadow-lg border-0 overflow-hidden relative bg-white/80 backdrop-blur-sm hover:shadow-xl transition-all duration-300">
+        <CardBubbles
+          seed={11}
+          count={8}
+          colorPalette={["#3B82F6", "#60A5FA", "#93C5FD"]}
+        />
+        <CardHeader className="pb-4 border-b border-gray-200/50">
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-xl text-gray-800 flex items-center gap-2">
+              <Users className="h-5 w-5 text-blue-600" />
+              Sales Pipeline Analytics
+            </CardTitle>
+            <Badge
+              variant="secondary"
+              className="bg-white/80 backdrop-blur-sm"
+            >
+              {totalPipelineLeads} Total Deals
+            </Badge>
+          </div>
+          <CardDescription>
+            Monthly breakdown of open opportunities vs won deals with performance metrics
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent className="pt-6 relative">
+          {loading ? (
+            <div className="h-64">
+              <Skeleton className="h-64 w-full rounded-lg" />
+            </div>
+          ) : (
+            <motion.div
+              layout
+              initial={{ opacity: 0.6 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={pipelineBarData}
+                    margin={{ top: 20, right: 12, left: 0, bottom: 20 }}
+                    onMouseMove={(data) => {
+                      if (data.activePayload) {
+                        setHoveredBar(data.activeLabel);
+                      }
+                    }}
+                    onMouseLeave={() => setHoveredBar(null)}
+                  >
+                    <defs>
+                      <linearGradient id="gOpen" x1="0" x2="0" y1="0" y2="1">
+                        <stop offset="0%" stopColor="#3B82F6" stopOpacity={0.9} />
+                        <stop offset="100%" stopColor="#3B82F6" stopOpacity={0.2} />
+                      </linearGradient>
+                      <linearGradient id="gWon" x1="0" x2="0" y1="0" y2="1">
+                        <stop offset="0%" stopColor="#10B981" stopOpacity={0.9} />
+                        <stop offset="100%" stopColor="#10B981" stopOpacity={0.2} />
+                      </linearGradient>
+                    </defs>
+                   
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="rgba(0,0,0,0.05)"
+                    />
+                   
+                    <XAxis
+                      dataKey="month"
+                      tickLine={false}
+                      axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
+                      tick={{ fill: '#6B7280', fontSize: 12 }}
+                      interval={0}
+                    />
+                   
+                    <YAxis
+                      tickLine={false}
+                      axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
+                      tick={{ fill: '#6B7280', fontSize: 12 }}
+                    />
+                   
+                    <Tooltip content={<CustomPipelineTooltip />} />
+                   
+                    <Bar
+                      dataKey="Open"
+                      name="Open Opportunities"
+                      fill="url(#gOpen)"
+                      barSize={24}
+                      radius={[4, 4, 0, 0]}
+                      isAnimationActive={true}
+                      animationBegin={400}
+                      animationDuration={1500}
+                      onMouseEnter={() => setHoveredBar('Open')}
+                      onMouseLeave={() => setHoveredBar(null)}
+                    />
+                    <Bar
+                      dataKey="Won"
+                      name="Won Deals"
+                      fill="url(#gWon)"
+                      barSize={24}
+                      radius={[4, 4, 0, 0]}
+                      isAnimationActive={true}
+                      animationBegin={800}
+                      animationDuration={1500}
+                      onMouseEnter={() => setHoveredBar('Won')}
+                      onMouseLeave={() => setHoveredBar(null)}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="mt-6 space-y-3">
+                <div className="flex gap-4 justify-center">
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg border border-blue-200"
+                  >
+                    <span className="w-3 h-3 rounded-full bg-[#3B82F6]" />
+                    <span className="text-sm font-medium text-gray-700">Open Opportunities</span>
+                    <Badge variant="secondary" className="bg-white">
+                      {pipelineBarData.reduce((sum, d) => sum + d.Open, 0)}
+                    </Badge>
+                  </motion.div>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    className="flex items-center gap-2 px-3 py-2 bg-green-50 rounded-lg border border-green-200"
+                  >
+                    <span className="w-3 h-3 rounded-full bg-[#10B981]" />
+                    <span className="text-sm font-medium text-gray-700">Won Deals</span>
+                    <Badge variant="secondary" className="bg-white">
+                      {pipelineBarData.reduce((sum, d) => sum + d.Won, 0)}
+                    </Badge>
+                  </motion.div>
+                </div>
+               
+                <div className="flex justify-center gap-6 text-xs text-gray-500">
+                  <div className="text-center">
+                    <div className="font-semibold text-gray-700">
+                      {((pipelineBarData.reduce((sum, d) => sum + d.Won, 0) /
+                         pipelineBarData.reduce((sum, d) => sum + (d.Open + d.Won), 0)) * 100 || 0).toFixed(1)}%
+                    </div>
+                    <div>Win Rate</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-semibold text-gray-700">
+                      {pipelineBarData.reduce((sum, d) => sum + d.Open, 0)}
+                    </div>
+                    <div>Active Pipeline</div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+};
+
+/* Enhanced Deal Distribution Component with Attractive Animations */
+const DealDistributionChart = ({ pieData, loading, totalDeals }) => {
+  const [activeSlice, setActiveSlice] = useState(-1);
+  const [animationKey, setAnimationKey] = useState(0);
+
+  // Enhanced animated gradient component with attractive colors
+  const AnimatedGradientCell = ({ index, isActive, entry }) => {
+    const gradientId = `gradient-${index}`;
+   
+    // Use special attractive colors for Open and Won states
+    let colorSet;
+    if (entry.name === 'Open') {
+      colorSet = ATTRACTIVE_COLORS.open[index % ATTRACTIVE_COLORS.open.length];
+    } else if (entry.name === 'Won') {
+      colorSet = ATTRACTIVE_COLORS.won[index % ATTRACTIVE_COLORS.won.length];
+    } else {
+      colorSet = ATTRACTIVE_COLORS.lost[index % ATTRACTIVE_COLORS.lost.length];
+    }
+   
+    return (
+      <>
+        <defs>
+          <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={colorSet.from} />
+            <stop offset="100%" stopColor={colorSet.to} />
+          </linearGradient>
+        </defs>
+        <Cell
+          key={`cell-${index}`}
+          fill={`url(#${gradientId})`}
+          stroke="#fff"
+          strokeWidth={isActive ? 4 : 2}
+          style={{
+            transition: "all 400ms ease",
+            transform: isActive ? "scale(1.08)" : "scale(1)",
+            filter: isActive
+              ? `drop-shadow(0 12px 24px ${colorSet.from}60)`
+              : "drop-shadow(0 4px 8px rgba(0,0,0,0.15))",
+            opacity: isActive ? 1 : 0.95,
+          }}
+          onMouseEnter={() => setActiveSlice(index)}
+          onMouseLeave={() => setActiveSlice(-1)}
+        />
+      </>
+    );
+  };
+
+  const CustomPieTooltip = ({ active, payload }) => {
+    if (!active || !payload || payload.length === 0) return null;
+   
+    const data = payload[0].payload;
+    const entryIndex = pieData.findIndex(p => p.name === data.name);
+   
+    let colorSet;
+    if (data.name === 'Open') {
+      colorSet = ATTRACTIVE_COLORS.open[entryIndex % ATTRACTIVE_COLORS.open.length];
+    } else if (data.name === 'Won') {
+      colorSet = ATTRACTIVE_COLORS.won[entryIndex % ATTRACTIVE_COLORS.won.length];
+    } else {
+      colorSet = ATTRACTIVE_COLORS.lost[entryIndex % ATTRACTIVE_COLORS.lost.length];
+    }
+   
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white p-4 rounded-lg shadow-xl border border-gray-200/80 backdrop-blur-sm min-w-48"
+      >
+        <div className="text-sm font-semibold text-gray-800 mb-2 flex items-center gap-2">
+          <div
+            className="w-3 h-3 rounded-full"
+            style={{
+              background: `linear-gradient(135deg, ${colorSet.from}, ${colorSet.to})`
+            }}
+          />
+          {data.name}
+        </div>
+        <div className="text-lg font-bold text-gray-900 mb-1">{data.value} deals</div>
+        <div className="text-sm text-gray-600">{data.percentage}% of total</div>
+        <div className="mt-2 text-xs text-gray-500">
+          {data.name === 'Open' && 'Active opportunities in pipeline'}
+          {data.name === 'Won' && 'Successfully closed deals'}
+          {data.name === 'Lost' && 'Unsuccessful opportunities'}
+        </div>
+      </motion.div>
+    );
+  };
+
+  // Trigger re-animation when data changes
+  useEffect(() => {
+    setAnimationKey(prev => prev + 1);
+  }, [pieData]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45 }}
+      whileHover={{ y: -2 }}
+    >
+      <Card className="shadow-lg border-0 overflow-hidden relative bg-white/80 backdrop-blur-sm hover:shadow-xl transition-all duration-300">
+        <CardBubbles
+          seed={41}
+          count={8}
+          colorPalette={[...ATTRACTIVE_COLORS.open.flatMap(c => [c.from, c.to]), ...ATTRACTIVE_COLORS.won.flatMap(c => [c.from, c.to])]}
+        />
+        <CardHeader className="pb-4 border-b border-gray-200/50">
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-xl text-gray-800 flex items-center gap-2">
+              <Target className="h-5 w-5 text-blue-600" />
+              Deal Performance Analytics
+            </CardTitle>
+            <Badge variant="secondary" className="bg-white/80 backdrop-blur-sm">
+              {totalDeals} Total Deals
+            </Badge>
+          </div>
+          <CardDescription>
+            Comprehensive breakdown of deal status with conversion insights
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent className="pt-6">
+          {loading ? (
+            <Skeleton className="h-64 w-full rounded-lg" />
+          ) : pieData.filter((p) => p.value > 0).length > 0 ? (
+            <motion.div
+              key={animationKey}
+              initial={{ scale: 0.98, opacity: 0.9 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.45 }}
+              className="space-y-6"
+            >
+              {/* Enhanced Animated Pie Chart with Attractive Colors */}
+              <div className="h-56 relative">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieData.filter((p) => p.value > 0)}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={activeSlice >= 0 ? 90 : 85}
+                      innerRadius={50}
+                      dataKey="value"
+                      nameKey="name"
+                      isAnimationActive={true}
+                      animationBegin={500}
+                      animationDuration={1800}
+                      animationEasing="ease-out"
+                      paddingAngle={2}
+                    >
+                      {pieData
+                        .filter((p) => p.value > 0)
+                        .map((entry, idx) => (
+                          <AnimatedGradientCell
+                            key={idx}
+                            index={idx}
+                            isActive={idx === activeSlice}
+                            entry={entry}
+                          />
+                        ))}
+                    </Pie>
+                    <Tooltip content={<CustomPieTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
+               
+                {/* Enhanced Center Text with Pulsing Animation */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <motion.div
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 1, type: "spring", stiffness: 200 }}
+                    className="text-center"
+                  >
+                    <motion.div
+                      animate={{
+                        scale: [1, 1.08, 1],
+                        rotate: [0, 2, -2, 0]
+                      }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                      className="text-2xl font-bold text-gray-900"
+                    >
+                      {totalDeals}
+                    </motion.div>
+                    <div className="text-xs text-gray-500 mt-1">Total Deals</div>
+                  </motion.div>
+                </div>
+              </div>
+
+              {/* Enhanced Detailed Breakdown with Attractive Animations */}
+              <div className="space-y-3">
+                {pieData
+                  .filter((p) => p.value > 0)
+                  .map((p, i) => {
+                    let colorSet;
+                    if (p.name === 'Open') {
+                      colorSet = ATTRACTIVE_COLORS.open[i % ATTRACTIVE_COLORS.open.length];
+                    } else if (p.name === 'Won') {
+                      colorSet = ATTRACTIVE_COLORS.won[i % ATTRACTIVE_COLORS.won.length];
+                    } else {
+                      colorSet = ATTRACTIVE_COLORS.lost[i % ATTRACTIVE_COLORS.lost.length];
+                    }
+                   
+                    return (
+                      <motion.div
+                        key={p.name}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.8 + i * 0.1 }}
+                        whileHover={{
+                          scale: 1.03,
+                          x: 6,
+                        }}
+                        className="flex items-center justify-between p-3 rounded-lg border backdrop-blur-sm cursor-pointer transition-all duration-300 group relative overflow-hidden"
+                        style={{
+                          background: `linear-gradient(135deg, ${colorSet.from}15, ${colorSet.to}10)`,
+                          borderColor: `${colorSet.from}40`,
+                        }}
+                        onMouseEnter={() => setActiveSlice(i)}
+                        onMouseLeave={() => setActiveSlice(-1)}
+                      >
+                        {/* Animated background effect */}
+                        <motion.div
+                          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                          style={{
+                            background: `linear-gradient(135deg, ${colorSet.from}12, ${colorSet.to}08)`,
+                          }}
+                        />
+                       
+                        <div className="flex items-center gap-3 relative z-10">
+                          <motion.div
+                            animate={{
+                              scale: activeSlice === i ? 1.4 : 1,
+                              rotate: activeSlice === i ? [0, 10, -10, 0] : 0,
+                            }}
+                            transition={{
+                              type: "spring",
+                              stiffness: 300,
+                              rotate: { duration: 0.6 }
+                            }}
+                            className="w-3 h-3 rounded-full relative"
+                            style={{
+                              background: `linear-gradient(135deg, ${colorSet.from}, ${colorSet.to})`
+                            }}
+                          >
+                            {activeSlice === i && (
+                              <motion.div
+                                initial={{ scale: 0, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                className="absolute inset-0 rounded-full bg-current opacity-30"
+                                style={{
+                                  animation: "ping 2s infinite",
+                                  transform: "scale(1.5)"
+                                }}
+                              />
+                            )}
+                          </motion.div>
+                          <div>
+                            <div className="font-semibold text-gray-800 text-sm group-hover:text-gray-900 transition-colors">
+                              {p.name}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {p.name === 'Open' && 'Active in pipeline'}
+                              {p.name === 'Won' && 'Successfully closed'}
+                              {p.name === 'Lost' && 'Did not convert'}
+                            </div>
+                          </div>
+                        </div>
+                       
+                        <div className="text-right relative z-10">
+                          <div className="font-bold text-gray-900 text-sm group-hover:text-gray-950 transition-colors">
+                            {p.value} <span className="text-gray-400">deals</span>
+                          </div>
+                          <div
+                            className="text-xs font-medium group-hover:font-semibold transition-all"
+                            style={{
+                              background: `linear-gradient(135deg, ${colorSet.from}, ${colorSet.to})`,
+                              WebkitBackgroundClip: 'text',
+                              WebkitTextFillColor: 'transparent',
+                              backgroundClip: 'text',
+                            }}
+                          >
+                            {p.percentage}%
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+               
+                {/* Enhanced Performance Summary with Gradient */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.2 }}
+                  className="mt-4 p-4 rounded-lg border backdrop-blur-sm relative overflow-hidden"
+                  style={{
+                    background: `linear-gradient(135deg, #3B82F610, #60A5FA08)`,
+                    borderColor: '#3B82F620',
+                  }}
+                >
+                  <div className="text-xs text-gray-600 mb-2 font-medium relative z-10">Performance Summary</div>
+                  <div className="flex justify-between text-sm relative z-10">
+                    <div className="text-center flex-1">
+                      <div className="font-bold text-gray-800 text-lg">
+                        {((pieData.find(p => p.name === 'Won')?.value || 0) / totalDeals * 100).toFixed(1)}%
+                      </div>
+                      <div className="text-xs text-gray-600">Win Rate</div>
+                    </div>
+                    <div className="text-center flex-1 border-l border-blue-200">
+                      <div className="font-bold text-gray-800 text-lg">
+                        {((pieData.find(p => p.name === 'Won')?.value || 0) /
+                          (pieData.find(p => p.name === 'Open')?.value || 1) * 100).toFixed(1)}%
+                      </div>
+                      <div className="text-xs text-gray-600">Conversion Rate</div>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+            </motion.div>
+          ) : (
+            <div className="h-64 flex items-center justify-center text-gray-500">
+              <div className="text-center">
+                <Target className="h-12 w-12 mx-auto mb-2 opacity-40" />
+                <p>No deal distribution data</p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 };
 
@@ -1642,23 +2778,16 @@ const AdminDashboard = () => {
 
   const [dealsData, setDealsData] = useState([]);
   const [totalDeals, setTotalDeals] = useState(0);
-  const [statusCounts, setStatusCounts] = useState({
-    open: 0,
-    won: 0,
-    lost: 0,
-  });
+  const [statusCounts, setStatusCounts] = useState({ open: 0, won: 0, lost: 0 });
 
   const [activePreset, setActivePreset] = useState("today");
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
-  const [displayedRevenue, setDisplayedRevenue] = useState(0);
-  const [revenueBreakdown, setRevenueBreakdown] = useState({});
-  const [pieColors, setPieColors] = useState(["#8B5CF6", "#3B82F6", "#60A5FA"]);
-  const [activeSlice, setActiveSlice] = useState(-1);
+  // Currency state
+  const [revenueByCurrency, setRevenueByCurrency] = useState({});
   const [lineAnimationKey, setLineAnimationKey] = useState(0);
 
-  const pieColorIndex = useRef(0);
   const REFRESH_MS = 60_000;
 
   /* ---------- Ranges ---------- */
@@ -1688,6 +2817,31 @@ const AdminDashboard = () => {
     }
   };
 
+  /* ---------- Currency calculation helpers ---------- */
+  const calculateRevenueByCurrency = (invoices) => {
+    const revenue = {};
+   
+    invoices.forEach(invoice => {
+      const currency = invoice.currency || 'USD';
+      const amount = Number(invoice.total) || 0;
+     
+      // Only add if amount is positive
+      if (amount > 0) {
+        if (!revenue[currency]) {
+          revenue[currency] = { amount: 0, count: 0 };
+        }
+        revenue[currency].amount += amount;
+        revenue[currency].count += 1;
+      }
+    });
+
+    return revenue;
+  };
+
+  const getTotalRevenue = (revenueData) => {
+    return Object.values(revenueData).reduce((total, curr) => total + (Number(curr.amount) || 0), 0);
+  };
+
   /* ---------- Fetch helpers ---------- */
   const buildParams = (range) => ({ start: range.start, end: range.end });
 
@@ -1699,28 +2853,8 @@ const AdminDashboard = () => {
     return Number(((diff / Math.abs(previous)) * 100).toFixed(1));
   };
 
-  /* ---------- Calculate total revenue from currency breakdown ---------- */
-  const calculateTotalRevenue = (revenueByCurrency = {}) => {
-    return Object.values(revenueByCurrency).reduce((total, amount) => total + amount, 0);
-  };
-
-  /* ---------- Format revenue breakdown for display ---------- */
-  const formatRevenueBreakdown = (revenueByCurrency = {}) => {
-    return Object.entries(revenueByCurrency)
-      .filter(([_, amount]) => amount > 0)
-      .map(([currency, amount]) => ({
-        currency,
-        amount,
-        formatted: `${currency} ${amount.toLocaleString()}`
-      }));
-  };
-
   /* ---------- Main Fetch ---------- */
-  const fetchAll = async (
-    params,
-    preset = "today",
-    selMonth = selectedMonth
-  ) => {
+  const fetchAll = async (params, preset = "today", selMonth = selectedMonth) => {
     setLoading(true);
     setError(null);
     try {
@@ -1752,27 +2886,18 @@ const AdminDashboard = () => {
       const curr = resSummary.data || {};
       const prev = resPrevSummary.data || {};
 
-      // Calculate total revenue from currency breakdown
-      const currentTotalRevenue = calculateTotalRevenue(curr.revenueByCurrency);
-      const previousTotalRevenue = calculateTotalRevenue(prev.revenueByCurrency);
+      // Calculate revenue by currency
+      const currencyRevenue = calculateRevenueByCurrency(resInvoices.data || []);
 
-      // Calculate accurate percentages
-      const totalLeadsChange = computeChange(
-        curr.totalLeads || 0,
-        prev.totalLeads || 0
-      );
-      const totalDealsWonChange = computeChange(
-        curr.totalDealsWon || 0,
-        prev.totalDealsWon || 0
-      );
-      const totalRevenueChange = computeChange(
-        currentTotalRevenue,
-        previousTotalRevenue
-      );
-      const pendingInvoicesChange = computeChange(
-        curr.pendingInvoices || 0,
-        prev.pendingInvoices || 0
-      );
+      // Calculate changes
+      const totalLeadsChange = computeChange(curr.totalLeads || 0, prev.totalLeads || 0);
+      const totalDealsWonChange = computeChange(curr.totalDealsWon || 0, prev.totalDealsWon || 0);
+     
+      const currentTotalRevenue = getTotalRevenue(currencyRevenue);
+      const previousTotalRevenue = getTotalRevenue(calculateRevenueByCurrency(prev.recentInvoices || []));
+      const totalRevenueChange = computeChange(currentTotalRevenue, previousTotalRevenue);
+     
+      const pendingInvoicesChange = computeChange(curr.pendingInvoices || 0, prev.pendingInvoices || 0);
 
       const summaryCards = [
         {
@@ -1787,42 +2912,38 @@ const AdminDashboard = () => {
           title: "Deals Won",
           value: curr.totalDealsWon || 0,
           change: totalDealsWonChange,
-          color: "purple",
+          color: "green",
           icon: <Trophy className="h-5 w-5" />,
-          colorPalette: ["#8B5CF6", "#A78BFA", "#C4B5FD"],
+          colorPalette: ["#10B981", "#34D399", "#6EE7B7"],
         },
         {
-          title: "Revenue",
+          title: "Total Revenue",
           value: currentTotalRevenue,
           change: totalRevenueChange,
-          color: "indigo",
+          color: "purple",
           icon: <DollarSign className="h-5 w-5" />,
-          colorPalette: ["#6366F1", "#818CF8", "#A5B4FC"],
+          colorPalette: ["#8B5CF6", "#A78BFA", "#C4B5FD"],
         },
         {
           title: "Pending Invoices",
           value: curr.pendingInvoices || 0,
           change: pendingInvoicesChange,
-          color: "violet",
+          color: "orange",
           icon: <FileText className="h-5 w-5" />,
-          colorPalette: ["#7C3AED", "#8B5CF6", "#A78BFA"],
+          colorPalette: ["#F59E0B", "#FBBF24", "#FCD34D"],
         },
       ];
 
       setSummary(summaryCards);
       setPipeline(resPipeline.data || []);
       setRecentInvoices(resInvoices.data || []);
-      setRevenueBreakdown(curr.revenueByCurrency || {});
-
-      const incomingRevenue = currentTotalRevenue;
-      animateDisplayedRevenue(incomingRevenue);
+      setRevenueByCurrency(currencyRevenue);
 
       if ((curr.totalDealsWon || 0) > 5 && totalDealsWonChange > 0) {
         confetti({ particleCount: 140, spread: 90, origin: { y: 0.6 } });
       }
 
-      // Trigger line animation refresh
-      setLineAnimationKey((prev) => prev + 1);
+      setLineAnimationKey(prev => prev + 1);
     } catch (err) {
       console.error("Dashboard fetch error:", err);
       setError("Failed to load dashboard data.");
@@ -1842,7 +2963,6 @@ const AdminDashboard = () => {
 
       const deals = res.data || [];
       const counts = { open: 0, won: 0, lost: 0 };
-
       const monthlyData = {};
 
       deals.forEach((deal) => {
@@ -1866,18 +2986,8 @@ const AdminDashboard = () => {
       setStatusCounts(counts);
 
       const full = [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
       ].map((m) => {
         const found = monthlyData[m];
         return {
@@ -1908,8 +3018,7 @@ const AdminDashboard = () => {
     let range;
     if (preset === "today") range = todayRange();
     else if (preset === "7days") range = lastNDaysRange(7);
-    else if (preset === "month")
-      range = getMonthRange(selectedMonth, selectedYear);
+    else if (preset === "month") range = getMonthRange(selectedMonth, selectedYear);
     else if (preset === "year") range = getYearRange(selectedYear);
     else range = todayRange();
     debouncedFetch(range);
@@ -1921,8 +3030,7 @@ const AdminDashboard = () => {
 
     const interval = setInterval(() => {
       let range;
-      if (activePreset === "month")
-        range = getMonthRange(selectedMonth, selectedYear);
+      if (activePreset === "month") range = getMonthRange(selectedMonth, selectedYear);
       else if (activePreset === "7days") range = lastNDaysRange(7);
       else if (activePreset === "year") range = getYearRange(selectedYear);
       else range = todayRange();
@@ -1935,7 +3043,7 @@ const AdminDashboard = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePreset, selectedMonth, selectedYear]);
 
-  /* ---------- Invoice chart building ---------- */
+  /* ---------- Chart data builders ---------- */
   const buildRevenueTrend = (invoices, preset) => {
     if (!invoices || invoices.length === 0) return [];
 
@@ -1943,22 +3051,15 @@ const AdminDashboard = () => {
     invoices.forEach((inv) => {
       const d = new Date(inv.createdAt);
       const m = d.toLocaleString("default", { month: "short" });
-      byMonth[m] = (byMonth[m] || 0) + (inv.total || 0);
+      const amount = Number(inv.total) || 0;
+      if (amount > 0) {
+        byMonth[m] = (byMonth[m] || 0) + amount;
+      }
     });
 
     return [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
     ].map((m) => ({
       month: m,
       total: byMonth[m] || 0,
@@ -1966,8 +3067,6 @@ const AdminDashboard = () => {
   };
 
   const invoiceChartData = buildRevenueTrend(recentInvoices, activePreset);
-
-  /* ---------- Derived chart datasets ---------- */
   const pipelineBarData = dealsData.map((d) => ({
     month: d.month,
     Open: d.open,
@@ -1987,122 +3086,141 @@ const AdminDashboard = () => {
   };
 
   const percentages = calculatePercentages();
-
   const pieData = [
     { name: "Open", value: statusCounts.open, percentage: percentages.open },
     { name: "Won", value: statusCounts.won, percentage: percentages.won },
     { name: "Lost", value: statusCounts.lost, percentage: percentages.lost },
   ];
 
-  const totalPipelineLeads = pipeline.reduce(
-    (acc, s) => acc + (s.leads || 0),
-    0
-  );
+  const totalPipelineLeads = pipeline.reduce((acc, s) => acc + (s.leads || 0), 0);
 
-  /* ---------- Custom tooltip ---------- */
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (!active || !payload || payload.length === 0) return null;
+  /* ---------- Enhanced Summary Card Component ---------- */
+  const SummaryCard = ({ title, value, change, color, icon, colorPalette, loading }) => {
+    if (loading) {
+      return (
+        <Card className="overflow-hidden border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+          <CardContent className="p-5">
+            <Skeleton className="h-5 w-20 mb-3" />
+            <Skeleton className="h-8 w-16 mb-2" />
+            <Skeleton className="h-4 w-24" />
+          </CardContent>
+        </Card>
+      );
+    }
+
     return (
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white p-3 rounded-md shadow-lg border border-gray-200"
-        style={{ minWidth: 140 }}
+        initial={{ opacity: 0, y: 12, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{
+          type: "spring",
+          stiffness: 100,
+          damping: 12,
+        }}
+        whileHover={{
+          y: -4,
+          scale: 1.02,
+          transition: { duration: 0.2 }
+        }}
       >
-        <div className="text-sm font-medium text-gray-700 mb-1">{label}</div>
-        {payload.map((p, i) => (
-          <div key={i} className="text-sm text-gray-600 mt-1 flex items-center">
-            <span
-              style={{
-                display: "inline-block",
-                width: 10,
-                height: 10,
-                background: p.color,
-                marginRight: 8,
-                borderRadius: "50%",
-              }}
-            />
-            {p.name}:{" "}
-            <strong className="ml-1">₹{p.value.toLocaleString()}</strong>
-          </div>
-        ))}
+        <Card
+          className={cn(
+            "overflow-hidden border-0 shadow-lg transition-all duration-300 relative bg-white/80 backdrop-blur-sm hover:shadow-xl",
+            {
+              "bg-blue-50/50": color === "blue",
+              "bg-green-50/50": color === "green",
+              "bg-purple-50/50": color === "purple",
+              "bg-orange-50/50": color === "orange",
+            }
+          )}
+        >
+          <CardBubbles
+            seed={Math.random() * 10}
+            count={6}
+            colorPalette={colorPalette || BASE_COLORS}
+          />
+
+          <CardContent className="p-5 relative">
+            <div className="flex justify-between items-start mb-3">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-600 mb-2">
+                  {title}
+                </p>
+                <div className="text-2xl font-bold text-gray-900">
+                  {(value || 0).toLocaleString()}
+                </div>
+              </div>
+              <motion.div
+                className={cn("p-2 rounded-xl", {
+                  "bg-blue-100 text-blue-600": color === "blue",
+                  "bg-green-100 text-green-600": color === "green",
+                  "bg-purple-100 text-purple-600": color === "purple",
+                  "bg-orange-100 text-orange-600": color === "orange",
+                })}
+                whileHover={{ scale: 1.08, rotate: 5 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {icon}
+              </motion.div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                {change >= 0 ? (
+                  <ArrowUpRight className="h-4 w-4 text-green-500 mr-1" />
+                ) : (
+                  <ArrowDownRight className="h-4 w-4 text-red-500 mr-1" />
+                )}
+                <span
+                  className={cn("text-sm font-medium", {
+                    "text-green-500": change >= 0,
+                    "text-red-500": change < 0,
+                  })}
+                >
+                  {change >= 0 ? `+${change}%` : `${change}%`}
+                </span>
+              </div>
+              <span className="text-xs text-gray-500">vs previous</span>
+            </div>
+          </CardContent>
+        </Card>
       </motion.div>
     );
   };
 
-  /* ---------- Animated Pie: rotate colors ---------- */
-  useEffect(() => {
-    const rotate = () => {
-      pieColorIndex.current = (pieColorIndex.current + 1) % BASE_COLORS.length;
-      const rotated = BASE_COLORS.slice(pieColorIndex.current).concat(
-        BASE_COLORS.slice(0, pieColorIndex.current)
-      );
-      setPieColors([rotated[0], rotated[1], rotated[2]]);
-    };
-    const t = setInterval(rotate, 1600);
-    return () => clearInterval(t);
-  }, []);
-
-  /* ---------- Revenue realtime smoother animation ---------- */
-  const animateDisplayedRevenue = (target) => {
-    const start = displayedRevenue;
-    const diff = target - start;
-    const duration = Math.min(1200, Math.max(600, Math.abs(diff) * 0.5));
-    const startTime = performance.now();
-    const step = (now) => {
-      const elapsed = now - startTime;
-      const t = Math.min(1, elapsed / duration);
-      const eased = 1 - Math.pow(1 - t, 3);
-      const current = Math.round(start + diff * eased);
-      setDisplayedRevenue(current);
-      if (t < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  };
-
-  useEffect(() => {
-    const total = (recentInvoices || []).reduce(
-      (acc, inv) => acc + (inv.total || 0),
-      0
-    );
-    animateDisplayedRevenue(total);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recentInvoices]);
-
   /* ---------- UI ---------- */
   return (
-    <div className="p-6 space-y-6 min-h-screen relative overflow-hidden bg-gradient-to-br from-gray-50 to-indigo-50/30">
-      {/* page-wide subtle bubbles */}
+    <div className="p-6 space-y-6 min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-indigo-50/20">
+      {/* Background bubbles */}
       <div className="absolute inset-0 -z-20 pointer-events-none">
-        {[...Array(12)].map((_, i) => (
+        {[...Array(8)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute rounded-full opacity-10"
+            className="absolute rounded-full opacity-[0.03]"
             initial={{ scale: 0.95 }}
             animate={{
-              y: [0, i % 2 === 0 ? -20 : 20, 0],
-              x: [0, i % 3 === 0 ? 25 : -15, 0],
+              y: [0, i % 2 === 0 ? -30 : 30, 0],
+              x: [0, i % 3 === 0 ? 40 : -20, 0],
               rotate: [0, 180, 360],
             }}
             transition={{
-              duration: 12 + (i % 6),
+              duration: 15 + (i % 8),
               repeat: Infinity,
               ease: "easeInOut",
-              delay: i * 0.5,
+              delay: i * 0.7,
             }}
             style={{
-              width: 120 + i * 18,
-              height: 120 + i * 18,
-              top: `${(i * 13) % 100}%`,
-              left: `${(i * 27) % 100}%`,
-              background: `radial-gradient(circle, ${
-                BASE_COLORS[i % BASE_COLORS.length]
-              }22, transparent)`,
+              width: 160 + i * 25,
+              height: 160 + i * 25,
+              top: `${(i * 15) % 100}%`,
+              left: `${(i * 20) % 100}%`,
+              background: `radial-gradient(circle, ${BASE_COLORS[i % BASE_COLORS.length]}, transparent)`,
             }}
           />
         ))}
       </div>
 
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
         <div>
           <motion.h1
@@ -2114,15 +3232,23 @@ const AdminDashboard = () => {
               animate={{ rotate: [0, 15, 0] }}
               transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
             >
-              <Zap className="h-8 w-8 text-purple-600" />
+              <BarChart3 className="h-8 w-8 text-purple-600" />
             </motion.div>
-            Dashboard
+            Business Dashboard
           </motion.h1>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="text-gray-600 mt-1"
+          >
+            Real-time insights and performance metrics
+          </motion.p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
           <Select value={activePreset} onValueChange={(v) => applyPreset(v)}>
-            <SelectTrigger className="w-[180px] bg-white/80 backdrop-blur-sm border-gray-200">
+            <SelectTrigger className="w-[160px] bg-white/90 backdrop-blur-sm border-gray-200 shadow-sm">
               <SelectValue placeholder="Select period" />
             </SelectTrigger>
             <SelectContent>
@@ -2138,7 +3264,7 @@ const AdminDashboard = () => {
               value={String(selectedMonth)}
               onValueChange={(value) => applyMonthFilter(Number(value))}
             >
-              <SelectTrigger className="w-[140px] bg-white/80 backdrop-blur-sm border-gray-200">
+              <SelectTrigger className="w-[130px] bg-white/90 backdrop-blur-sm border-gray-200 shadow-sm">
                 <SelectValue placeholder="Select month" />
               </SelectTrigger>
               <SelectContent>
@@ -2156,7 +3282,7 @@ const AdminDashboard = () => {
               value={String(selectedYear)}
               onValueChange={(value) => applyYearFilter(Number(value))}
             >
-              <SelectTrigger className="w-[120px] bg-white/80 backdrop-blur-sm border-gray-200">
+              <SelectTrigger className="w-[100px] bg-white/90 backdrop-blur-sm border-gray-200 shadow-sm">
                 <SelectValue placeholder="Select year" />
               </SelectTrigger>
               <SelectContent>
@@ -2175,628 +3301,74 @@ const AdminDashboard = () => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md relative z-10"
+          className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg relative z-10"
         >
           {error}
         </motion.div>
       )}
 
       {/* Summary cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 relative z-10">
         {loading
           ? Array.from({ length: 4 }).map((_, i) => (
-              <Card key={i} className="overflow-hidden border-0 shadow-lg">
-                <CardContent className="p-6">
-                  <Skeleton className="h-7 w-24 mb-2" />
-                  <Skeleton className="h-10 w-16" />
-                </CardContent>
-              </Card>
+              <SummaryCard key={i} loading={true} />
             ))
           : summary.map((card, idx) => (
-              <motion.div
+              <SummaryCard
                 key={card.title}
-                initial={{ opacity: 0, y: 12, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{
-                  delay: idx * 0.05,
-                  type: "spring",
-                  stiffness: 100,
-                  damping: 12,
-                }}
-                whileHover={{
-                  y: -6,
-                  boxShadow: "0 15px 40px rgba(2,6,23,0.08)",
-                  scale: 1.01,
-                }}
-              >
-                <Card
-                  className={cn(
-                    "overflow-hidden border-0 shadow-lg transition-all duration-300 relative",
-                    {
-                      "bg-blue-50": card.color === "blue",
-                      "bg-purple-50": card.color === "purple",
-                      "bg-indigo-50": card.color === "indigo",
-                      "bg-violet-50": card.color === "violet",
-                    }
-                  )}
-                >
-                  {/* Enhanced card micro-bubbles with color palette */}
-                  <CardBubbles
-                    seed={idx + 3}
-                    count={8}
-                    colorPalette={card.colorPalette || BASE_COLORS}
-                  />
-
-                  <CardContent className="p-6 relative">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600 mb-2">
-                          {card.title}
-                        </p>
-                        {card.title === "Revenue" ? (
-                          <div className="flex items-baseline gap-2">
-                            <span className="text-sm text-gray-500">₹</span>
-                            <AnimatedNumber
-                              value={displayedRevenue || card.value}
-                              prefix=""
-                              duration={0.9}
-                            />
-                          </div>
-                        ) : (
-                          <AnimatedNumber value={card.value} />
-                        )}
-                      </div>
-                      <motion.div
-                        className={cn("p-3 rounded-full", {
-                          "bg-blue-100 text-blue-600": card.color === "blue",
-                          "bg-purple-100 text-purple-600":
-                            card.color === "purple",
-                          "bg-indigo-100 text-indigo-600":
-                            card.color === "indigo",
-                          "bg-violet-100 text-violet-600":
-                            card.color === "violet",
-                        })}
-                        whileHover={{ scale: 1.06, rotate: 5 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        {card.icon}
-                      </motion.div>
-                    </div>
-
-                    {/* Revenue breakdown tooltip */}
-                    {card.title === "Revenue" && Object.keys(revenueBreakdown).length > 0 && (
-                      <div className="mt-2">
-                        <div className="text-xs text-gray-500">
-                          {formatRevenueBreakdown(revenueBreakdown).map((item, i) => (
-                            <div key={i} className="truncate">
-                              {item.formatted}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="mt-4 flex items-center">
-                      <TrendingUp
-                        className={`h-4 w-4 ${
-                          card.change >= 0 ? "text-green-500" : "text-red-500"
-                        } mr-1`}
-                      />
-                      <span
-                        className={`text-sm font-medium ${
-                          card.change >= 0 ? "text-green-500" : "text-red-500"
-                        }`}
-                      >
-                        {card.change >= 0
-                          ? `+${card.change}%`
-                          : `${card.change}%`}
-                      </span>
-                      <span className="text-sm text-gray-500 ml-2">
-                        vs previous period
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
+                title={card.title}
+                value={card.value}
+                change={card.change}
+                color={card.color}
+                icon={card.icon}
+                colorPalette={card.colorPalette}
+                loading={false}
+              />
             ))}
       </div>
 
-      {/* Pipeline + Revenue */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 relative z-10">
-        {/* Pipeline */}
-        <motion.div
-          initial={{ opacity: 0, x: -16 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.45 }}
-          whileHover={{ y: -4 }}
-        >
-          <Card className="shadow-lg border-0 overflow-hidden relative bg-white/80 backdrop-blur-sm">
-            <CardBubbles
-              seed={11}
-              count={10}
-              colorPalette={["#3B82F6", "#60A5FA", "#93C5FD"]}
-            />
-            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-xl text-gray-800">
-                  Sales Pipeline
-                </CardTitle>
-                <Badge
-                  variant="outline"
-                  className="bg-white/80 backdrop-blur-sm animate-pulse"
-                >
-                  {totalPipelineLeads} Deals
-                </Badge>
-              </div>
-              <CardDescription>
-                Open vs Won — monthly (realtime)
-              </CardDescription>
-            </CardHeader>
+      {/* Currency Breakdown + Revenue Chart */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 relative z-10">
+        {/* Currency Breakdown */}
+        <div className="lg:col-span-1 space-y-5">
+          <CurrencyBreakdownCard
+            revenueData={revenueByCurrency}
+            loading={loading}
+          />
+          <PendingInvoicesCard
+            invoicesData={recentInvoices}
+            loading={loading}
+          />
+        </div>
 
-            <CardContent className="pt-6 relative">
-              {loading ? (
-                <div className="h-64">
-                  <Skeleton className="h-64 w-full" />
-                </div>
-              ) : (
-                <motion.div
-                  layout
-                  key={activePreset}
-                  initial={{ opacity: 0.6 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.6 }}
-                >
-                  <div className="h-72">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={pipelineBarData}
-                        margin={{ top: 6, right: 12, left: 0, bottom: 6 }}
-                      >
-                        <defs>
-                          <linearGradient
-                            id="gOpen"
-                            x1="0"
-                            x2="0"
-                            y1="0"
-                            y2="1"
-                          >
-                            <stop
-                              offset="0%"
-                              stopColor="#8B5CF6"
-                              stopOpacity={0.95}
-                            />
-                            <stop
-                              offset="100%"
-                              stopColor="#8B5CF6"
-                              stopOpacity={0.18}
-                            />
-                          </linearGradient>
-                          <linearGradient id="gWon" x1="0" x2="0" y1="0" y2="1">
-                            <stop
-                              offset="0%"
-                              stopColor="#3B82F6"
-                              stopOpacity={0.95}
-                            />
-                            <stop
-                              offset="100%"
-                              stopColor="#3B82F6"
-                              stopOpacity={0.18}
-                            />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          vertical={false}
-                          opacity={0.06}
-                        />
-                        <XAxis
-                          dataKey="month"
-                          tickLine={false}
-                          axisLine={false}
-                        />
-                        <YAxis />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Bar
-                          dataKey="Open"
-                          name="Open"
-                          fill="url(#gOpen)"
-                          barSize={18}
-                          radius={[6, 6, 0, 0]}
-                          isAnimationActive
-                        />
-                        <Bar
-                          dataKey="Won"
-                          name="Won"
-                          fill="url(#gWon)"
-                          barSize={18}
-                          radius={[6, 6, 0, 0]}
-                          isAnimationActive
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-
-                  <div className="flex gap-3 mt-4 justify-center">
-                    <Badge
-                      variant="outline"
-                      className="flex items-center gap-2 bg-white/80 backdrop-blur-sm"
-                    >
-                      <span className="w-2 h-2 rounded-full bg-[#8B5CF6]" />
-                      Open
-                    </Badge>
-                    <Badge
-                      variant="outline"
-                      className="flex items-center gap-2 bg-white/80 backdrop-blur-sm"
-                    >
-                      <span className="w-2 h-2 rounded-full bg-[#3B82F6]" />
-                      Won
-                    </Badge>
-                  </div>
-                </motion.div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Revenue Overview */}
-        <motion.div
-          initial={{ opacity: 0, x: 16 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.45 }}
-          whileHover={{ y: -4 }}
-        >
-          <Card className="shadow-lg border-0 overflow-hidden relative bg-white/80 backdrop-blur-sm">
-            <CardBubbles
-              seed={21}
-              count={9}
-              colorPalette={["#8B5CF6", "#A78BFA", "#C4B5FD"]}
-            />
-            <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 border-b border-purple-100">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-xl text-gray-800">
-                  Revenue Overview
-                </CardTitle>
-                <div className="flex items-center gap-2">
-                  {/* Currency breakdown badge */}
-                  {Object.keys(revenueBreakdown).length > 0 && (
-                    <Badge variant="outline" className="bg-white/80 backdrop-blur-sm">
-                      {Object.keys(revenueBreakdown).length} currencies
-                    </Badge>
-                  )}
-                </div>
-              </div>
-              <CardDescription>
-                Realtime revenue (auto-updates) • Multi-currency support
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-sm text-gray-500">
-                    Live Revenue (calculated from won deals)
-                  </p>
-                  <div className="text-2xl font-semibold flex items-baseline gap-2">
-                    <span className="text-sm text-gray-500">₹</span>
-                    <AnimatedNumber value={displayedRevenue} duration={0.9} />
-                    <motion.span
-                      className="ml-3 text-sm text-green-600"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: displayedRevenue > 0 ? 1 : 0 }}
-                      transition={{ duration: 0.6 }}
-                    >
-                      realtime
-                    </motion.span>
-                  </div>
-                  
-                  {/* Currency breakdown */}
-                  {Object.keys(revenueBreakdown).length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {formatRevenueBreakdown(revenueBreakdown).map((item, i) => (
-                        <Badge key={i} variant="secondary" className="text-xs">
-                          {item.formatted}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {loading ? (
-                <Skeleton className="h-64 w-full" />
-              ) : invoiceChartData.length > 0 ? (
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart
-                      data={invoiceChartData}
-                      margin={{ top: 6, right: 20, left: 0, bottom: 6 }}
-                    >
-                      <defs>
-                        <linearGradient
-                          id="revGrad"
-                          x1="0"
-                          x2="0"
-                          y1="0"
-                          y2="1"
-                        >
-                          <stop
-                            offset="0%"
-                            stopColor="#A78BFA"
-                            stopOpacity={0.95}
-                          />
-                          <stop
-                            offset="100%"
-                            stopColor="#A78BFA"
-                            stopOpacity={0.06}
-                          />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid
-                        strokeDasharray="3 3"
-                        vertical={false}
-                        opacity={0.06}
-                      />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <Tooltip
-                        formatter={(v) => [`₹${v.toLocaleString()}`, "Revenue"]}
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="total"
-                        stroke="#8B5CF6"
-                        fill="url(#revGrad)"
-                        isAnimationActive
-                        activeDot={{
-                          r: 6,
-                          fill: "#8B5CF6",
-                          stroke: "#fff",
-                          strokeWidth: 2,
-                        }}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              ) : (
-                <p className="text-gray-500 text-center py-8">
-                  No revenue data available
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
+        {/* Revenue Chart */}
+        <div className="lg:col-span-2">
+          <RevenueTrendChart
+            revenueData={revenueByCurrency}
+            loading={loading}
+            activePreset={activePreset}
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            recentInvoices={recentInvoices}
+          />
+        </div>
       </div>
 
-      {/* Deals Performance + Distribution */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 relative z-10">
-        {/* Deals Performance - Enhanced Line Chart */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45 }}
-          whileHover={{ y: -4 }}
-        >
-          <Card className="shadow-lg border-0 overflow-hidden relative bg-white/80 backdrop-blur-sm">
-            <CardBubbles
-              seed={31}
-              count={8}
-              colorPalette={["#3B82F6", "#60A5FA", "#93C5FD"]}
-            />
-            <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-indigo-100">
-              <CardTitle className="text-xl text-gray-800">
-                Deals Performance
-              </CardTitle>
-              <CardDescription>Open vs Won — animated trend</CardDescription>
-            </CardHeader>
+      {/* Pipeline + Deals Performance */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 relative z-10">
+        {/* Enhanced Sales Pipeline */}
+        <SalesPipelineChart
+          pipelineBarData={pipelineBarData}
+          loading={loading}
+          totalPipelineLeads={totalPipelineLeads}
+        />
 
-            <CardContent className="pt-6">
-              {loading ? (
-                <Skeleton className="h-64 w-full" />
-              ) : (
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
-                      key={lineAnimationKey}
-                      data={pipelineBarData}
-                      margin={{ top: 6, right: 20, left: 0, bottom: 6 }}
-                    >
-                      <CartesianGrid
-                        strokeDasharray="3 3"
-                        vertical={false}
-                        opacity={0.06}
-                      />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <Tooltip formatter={(v) => [v, "Deals"]} />
-                      <Legend />
-                      <Line
-                        type="monotone"
-                        dataKey="Open"
-                        stroke="#8B5CF6"
-                        strokeWidth={3}
-                        dot={{
-                          r: 4,
-                          fill: "#8B5CF6",
-                          strokeWidth: 2,
-                          stroke: "#fff",
-                        }}
-                        activeDot={{
-                          r: 6,
-                          fill: "#8B5CF6",
-                          stroke: "#fff",
-                          strokeWidth: 2,
-                        }}
-                        isAnimationActive={true}
-                        animationDuration={1500}
-                        animationEasing="ease-out"
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="Won"
-                        stroke="#3B82F6"
-                        strokeWidth={3}
-                        strokeDasharray="4 4"
-                        dot={{
-                          r: 4,
-                          fill: "#3B82F6",
-                          strokeWidth: 2,
-                          stroke: "#fff",
-                        }}
-                        activeDot={{
-                          r: 6,
-                          fill: "#3B82F6",
-                          stroke: "#fff",
-                          strokeWidth: 2,
-                        }}
-                        isAnimationActive={true}
-                        animationDuration={1500}
-                        animationEasing="ease-out"
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Deal Distribution (animated pie) */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45 }}
-          whileHover={{ y: -4 }}
-        >
-          <Card className="shadow-lg border-0 overflow-hidden relative bg-white/80 backdrop-blur-sm">
-            <CardBubbles
-              seed={41}
-              count={10}
-              colorPalette={["#8B5CF6", "#A78BFA", "#C4B5FD"]}
-            />
-            <CardHeader className="bg-gradient-to-r from-violet-50 to-purple-50 border-b border-violet-100">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-xl text-gray-800">
-                  Deal Distribution
-                </CardTitle>
-                <Badge
-                  variant="outline"
-                  className="bg-white/80 backdrop-blur-sm"
-                >
-                  {totalDeals} Total
-                </Badge>
-              </div>
-              <CardDescription>Percentage split — animated</CardDescription>
-            </CardHeader>
-
-            <CardContent className="pt-6">
-              {loading ? (
-                <Skeleton className="h-64 w-full rounded-full" />
-              ) : pieData.filter((p) => p.value > 0).length > 0 ? (
-                <motion.div
-                  initial={{ scale: 0.98, opacity: 0.9 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.45 }}
-                >
-                  <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={pieData.filter((p) => p.value > 0)}
-                          cx="50%"
-                          cy="50%"
-                          outerRadius={activeSlice >= 0 ? 92 : 80}
-                          innerRadius={36}
-                          dataKey="value"
-                          nameKey="name"
-                          onMouseEnter={(_, index) => setActiveSlice(index)}
-                          onMouseLeave={() => setActiveSlice(-1)}
-                          isAnimationActive
-                          animationDuration={800}
-                          paddingAngle={6}
-                        >
-                          {pieData
-                            .filter((p) => p.value > 0)
-                            .map((entry, idx) => {
-                              const dynamicColor =
-                                pieColors[idx % pieColors.length];
-                              const isActive = idx === activeSlice;
-                              return (
-                                <Cell
-                                  key={idx}
-                                  fill={dynamicColor}
-                                  stroke="#fff"
-                                  strokeWidth={2}
-                                  style={{
-                                    transition:
-                                      "transform 300ms ease, filter 300ms ease",
-                                    transform: isActive
-                                      ? "scale(1.04)"
-                                      : "scale(1)",
-                                    filter: isActive
-                                      ? "drop-shadow(0 6px 18px rgba(99,102,241,0.18))"
-                                      : "none",
-                                  }}
-                                />
-                              );
-                            })}
-                        </Pie>
-                        <Tooltip
-                          formatter={(value, name, props) => {
-                            const percentage = props.payload.percentage;
-                            return [`${value} deals (${percentage}%)`, name];
-                          }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-
-                  <div className="flex gap-3 mt-4 justify-center flex-wrap">
-                    {pieData
-                      .filter((p) => p.value > 0)
-                      .map((p, i) => (
-                        <motion.div
-                          key={p.name}
-                          whileHover={{ scale: 1.04 }}
-                          className="flex items-center gap-2 mb-2"
-                        >
-                          <Badge
-                            variant="outline"
-                            className="flex items-center gap-2 bg-white/80 backdrop-blur-sm"
-                          >
-                            <span
-                              className="w-2 h-2 rounded-full"
-                              style={{
-                                background: pieColors[i % pieColors.length],
-                              }}
-                            />
-                            {p.name} ({p.value} - {p.percentage}%)
-                          </Badge>
-                        </motion.div>
-                      ))}
-                  </div>
-                </motion.div>
-              ) : (
-                <p className="text-gray-500 text-center py-8">
-                  No deal distribution data available
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-
-      {/* closing wow line */}
-      <div className="text-center text-gray-700 mt-4 relative z-10">
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8 }}
-          className="text-sm italic flex items-center justify-center gap-2"
-        >
-          {/* <Sparkles className="h-4 w-4 text-purple-500" />
-          Real-time analytics with beautiful animations
-          <Sparkles className="h-4 w-4 text-purple-500" /> */}
-        </motion.p>
+        {/* Enhanced Deal Distribution */}
+        <DealDistributionChart
+          pieData={pieData}
+          loading={loading}
+          totalDeals={totalDeals}
+        />
       </div>
     </div>
   );

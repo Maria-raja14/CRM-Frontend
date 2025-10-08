@@ -1,9 +1,9 @@
 // import React, { useState, useEffect } from "react";
-
 // import { useNavigate } from "react-router-dom";
 // import { toast, ToastContainer } from "react-toastify";
 // import "react-toastify/dist/ReactToastify.css";
 // import axios from "axios";
+// import { TourProvider, useTour } from "@reactour/tour";
 
 // import {
 //   MoreVertical,
@@ -12,6 +12,7 @@
 //   Handshake,
 //   Search,
 //   Plus,
+//   Eye,
 // } from "lucide-react";
 // import { initSocket } from "../../utils/socket";
 // import {
@@ -25,8 +26,52 @@
 
 // const API_URL = import.meta.env.VITE_API_URL;
 
-// export default function LeadTable() {
+// const tourSteps = [
+//   {
+//     selector: ".tour-lead-header",
+//     content:
+//       "Welcome to the Leads Management page! Here you can view, manage, and convert your leads.",
+//   },
+//   {
+//     selector: ".tour-create-lead",
+//     content:
+//       "Click here to create a new lead. You'll be able to add all the necessary details about a potential customer.",
+//   },
+//   {
+//     selector: ".tour-search",
+//     content:
+//       "Use this search bar to quickly find leads by name, email, phone, company, or source.",
+//   },
+//   {
+//     selector: ".tour-filters",
+//     content:
+//       "Filter your leads by status, assignee, or source to focus on specific segments of your pipeline.",
+//   },
+//   {
+//     selector: ".tour-lead-table",
+//     content:
+//       "This is your leads table. It shows all your leads with their key information and status.",
+//   },
+//   {
+//     selector: ".tour-checkbox",
+//     content:
+//       "Select individual leads by checking these boxes, or use the header checkbox to select all visible leads.",
+//   },
+//   {
+//     selector: ".tour-lead-actions",
+//     content:
+//       "Click the three-dot menu to edit, convert, or delete a lead. Converting a lead turns it into a deal.",
+//   },
+//   {
+//     selector: ".tour-finish",
+//     content:
+//       "You've completed the tour! Click here anytime to review the features again.",
+//   },
+// ];
+
+// function LeadTableComponent() {
 //   const navigate = useNavigate();
+//   const { setIsOpen } = useTour();
 
 //   const [leads, setLeads] = useState([]);
 //   const [allLeads, setAllLeads] = useState([]); // Store all leads for filtering
@@ -65,8 +110,12 @@
 //   const [selectedLeadName, setSelectedLeadName] = useState("");
 //   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 1 });
 
-//   // Get user role from localStorage
+//   // Start tour function
+//   const startTour = () => {
+//     setIsOpen(true);
+//   };
 
+//   // Get user role from localStorage
 //   useEffect(() => {
 //     const userData = localStorage.getItem("user");
 //     if (userData) {
@@ -75,7 +124,7 @@
 //     }
 //   }, []);
 
-//   // Define your 10 allowed currencies
+//   // Define your allowed currencies
 //   const allowedCurrencies = [
 //     { code: "USD", symbol: "$", name: "US Dollar" },
 //     { code: "EUR", symbol: "€", name: "Euro" },
@@ -88,8 +137,8 @@
 //     { code: "MYR", symbol: "RM", name: "Malaysian Ringgit" },
 //     { code: "AED", symbol: "د.إ", name: "UAE Dirham" },
 //     { code: "SGD", symbol: "S$", name: "Singapore Dollar" },
-//     { code: "ZAR", symbol: "R", name: "South African Rand" }, // Added Aprffrica
-//     { code: "SAR", symbol: "﷼", name: "Saudi Riyal" }, // Added Saudi Arabia
+//     { code: "ZAR", symbol: "R", name: "South African Rand" },
+//     { code: "SAR", symbol: "﷼", name: "Saudi Riyal" },
 //   ];
 
 //   const openAttachmentsModal = (attachments, leadName) => {
@@ -292,7 +341,7 @@
 //     setSelectedLead(lead);
 //     setDealData({
 //       value: lead.value || 0,
-//       currency: lead.currency || "USD", // <-- set default currency here
+//       currency: lead.currency || "USD",
 //       notes: lead.notes || "",
 //       stage: "Qualification",
 //     });
@@ -401,6 +450,43 @@
 //     setSourceFilter("");
 //   };
 
+//   const handleStatusChange = async (leadId, newStatus) => {
+//     try {
+//       const token = localStorage.getItem("token");
+
+//       const response = await axios.patch(
+//         `${API_URL}/leads/${leadId}/status`,
+//         { status: newStatus },
+//         {
+//           headers: { Authorization: `Bearer ${token}` },
+//         }
+//       );
+
+//       if (response.status === 200) {
+//         setLeads((prev) =>
+//           prev.map((lead) =>
+//             lead._id === leadId ? { ...lead, status: newStatus } : lead
+//           )
+//         );
+//         setAllLeads((prev) =>
+//           prev.map((lead) =>
+//             lead._id === leadId ? { ...lead, status: newStatus } : lead
+//           )
+//         );
+//         toast.success("Status updated successfully");
+//       }
+//     } catch (error) {
+//       toast.error("Failed to update status");
+//     }
+//   };
+//   const statusClasses = {
+//     Hot: "bg-red-100 text-red-800",
+//     Warm: "bg-yellow-100 text-yellow-800",
+//     Cold: "bg-blue-100 text-blue-800",
+//     Junk: "bg-gray-100 text-gray-800",
+//     Converted: "bg-green-100 text-green-800",
+//   };
+
 //   useEffect(() => {
 //     const handleClickOutside = () => setMenuOpen(null);
 //     document.addEventListener("click", handleClickOutside);
@@ -433,11 +519,18 @@
 
 //       {/* Header */}
 //       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-//         <div>
+//         <div className="tour-lead-header">
 //           <h2 className="text-2xl font-bold text-gray-800">Leads</h2>
 //         </div>
 
 //         <div className="flex flex-wrap gap-3 items-center">
+//           <button
+//             onClick={startTour}
+//             className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 tour-finish"
+//           >
+//             <Eye className="w-4 h-4" /> Take Tour
+//           </button>
+
 //           {selectedLeads.length > 0 && (
 //             <button
 //               onClick={() => {
@@ -451,9 +544,10 @@
 //             </button>
 //           )}
 //           {/* Only show create button for admin and sales users */}
-//           {(userRole === "Admin" || userRole === "Sales") && (
+//           {/* {(userRole === "Admin" || userRole === "Sales") && ( */}
+//           {userRole === "Admin" && (
 //             <button
-//               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow flex items-center gap-2"
+//               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow flex items-center gap-2 tour-create-lead"
 //               onClick={() => navigate("/createleads")}
 //             >
 //               <Plus className="w-4 h-4" /> Create Lead
@@ -463,15 +557,27 @@
 //       </div>
 
 //       {/* Search and Filters */}
-//       <div className="mb-6 ">
-//         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+//       <div className="mb-6">
+//         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 tour-filters">
+//           {/* Search - Moved to first position */}
+//           <div className="relative w-full tour-search">
+//             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+//             <input
+//               type="text"
+//               placeholder="Search leads..."
+//               value={searchQuery}
+//               onChange={(e) => setSearchQuery(e.target.value)}
+//               className="w-full pl-10 pr-4 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+//             />
+//           </div>
+
 //           {/* Assignee - Only show for admin */}
 //           {userRole === "Admin" && (
 //             <div>
 //               <select
 //                 value={assigneeFilter}
 //                 onChange={(e) => setAssigneeFilter(e.target.value)}
-//                 className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+//                 className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
 //               >
 //                 <option value="">All Assignees</option>
 //                 {assignees.map((assignee, index) => (
@@ -488,7 +594,7 @@
 //             <select
 //               value={statusFilter}
 //               onChange={(e) => setStatusFilter(e.target.value)}
-//               className="w-full p-2 border  rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+//               className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
 //             >
 //               <option value="">All Statuses</option>
 //               <option value="Hot">Hot</option>
@@ -499,26 +605,31 @@
 //             </select>
 //           </div>
 
-//           {/* Search */}
-//           <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg ml-64">
-//             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-//             <input
-//               type="text"
-//               placeholder="Search leads..."
-//               value={searchQuery}
-//               onChange={(e) => setSearchQuery(e.target.value)}
-//               className="w-full pl-8 pr-4 py-2 border rounded-full bg-white  focus:outline-none focus:ring-2 focus:ring-blue-500"
-//             />
+//           {/* Source */}
+//           <div>
+//             <select
+//               value={sourceFilter}
+//               onChange={(e) => setSourceFilter(e.target.value)}
+//               className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+//             >
+//               <option value="">All Sources</option>
+//               <option value="Website">Website</option>
+//               <option value="Referral">Referral</option>
+//               <option value="Social Media">Social Media</option>
+//               <option value="Email">Email</option>
+//               <option value="Cold Call">Cold Call</option>
+//               <option value="Other">Other</option>
+//             </select>
 //           </div>
 //         </div>
 //       </div>
 
 //       {/* Table */}
-//       <div className="overflow-x-auto">
+//       <div className="overflow-x-auto tour-lead-table">
 //         <table className="min-w-max w-full table-auto divide-y divide-gray-200">
 //           <thead className="bg-gray-50">
 //             <tr className="whitespace-nowrap">
-//               <th className="px-4 py-3">
+//               <th className="px-4 py-3 tour-checkbox">
 //                 <input
 //                   type="checkbox"
 //                   className="h-4 w-4 text-blue-600 border-gray-300 rounded"
@@ -546,12 +657,10 @@
 //               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
 //                 Status
 //               </th>
-//               {/* Only show Assignee column for admin */}
-//               {userRole === "Admin" && (
-//                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
-//                   Assignee
-//                 </th>
-//               )}
+//               {/* Show Assignee column for both admin and sales users */}
+//               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+//                 Assignee
+//               </th>
 //               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
 //                 Created
 //               </th>
@@ -559,7 +668,7 @@
 //                 Follow-Up
 //               </th>
 
-//               <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">
+//               <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tour-lead-actions">
 //                 Actions
 //               </th>
 //             </tr>
@@ -613,18 +722,34 @@
 //                   <td className="px-4 py-3 text-sm text-gray-700">
 //                     {lead.source || "-"}
 //                   </td>
-//                   <td className="px-4 py-3">{getStatusBadge(lead.status)}</td>
+//                   {/* <td className="px-4 py-3">{getStatusBadge(lead.status)}</td> */}
 
-//                   {/* Only show Assignee column for admin */}
-//                   {userRole === "Admin" && (
-//                     <td className="px-4 py-3 text-sm text-gray-700">
-//                       {lead.assignTo
-//                         ? typeof lead.assignTo === "object"
-//                           ? `${lead.assignTo.firstName} ${lead.assignTo.lastName}`
-//                           : "Assigned User"
-//                         : "-"}
-//                     </td>
-//                   )}
+//                   <td className="px-4 py-3">
+//                     <select
+//                       value={lead.status}
+//                       onChange={(e) =>
+//                         handleStatusChange(lead._id, e.target.value)
+//                       }
+//                       className={`px-2 py-1 rounded-full text-xs font-medium ${
+//                         statusClasses[lead.status] ||
+//                         "bg-gray-100 text-gray-800"
+//                       }`}
+//                     >
+//                       <option value="Hot">Hot</option>
+//                       <option value="Warm">Warm</option>
+//                       <option value="Cold">Cold</option>
+//                       <option value="Junk">Junk</option>
+//                     </select>
+//                   </td>
+
+//                   {/* Show Assignee column for both admin and sales users */}
+//                   <td className="px-4 py-3 text-sm text-gray-700">
+//                     {lead.assignTo
+//                       ? typeof lead.assignTo === "object"
+//                         ? `${lead.assignTo.firstName} ${lead.assignTo.lastName}`
+//                         : "Assigned User"
+//                       : "-"}
+//                   </td>
 
 //                   <td className="px-4 py-3 text-sm text-gray-700">
 //                     {formatDate(lead.createdAt)}
@@ -896,11 +1021,39 @@
 //           )}
 //         </DialogContent>
 //       </Dialog>
-
 //     </div>
 //   );
-// }//original normal code..
+// }
 
+// export default function LeadTable() {
+//   return (
+//     <TourProvider
+//       steps={tourSteps}
+//       afterOpen={() => (document.body.style.overflow = "hidden")}
+//       beforeClose={() => (document.body.style.overflow = "unset")}
+//       styles={{
+//         popover: (base) => ({
+//           ...base,
+//           backgroundColor: "#fff",
+//           color: "#1f1f1f",
+//         }),
+//         maskArea: (base) => ({ ...base, rx: 8 }),
+//         badge: (base) => ({
+//           ...base,
+//           display: "none", // This hides the step number badge
+//         }),
+//         close: (base) => ({
+//           ...base,
+//           right: "auto",
+//           left: 8,
+//           top: 8,
+//         }),
+//       }}
+//     >
+//       <LeadTableComponent />
+//     </TourProvider>
+//   );
+// } //tour with sales column show data..
 
 
 
@@ -928,8 +1081,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../../components/ui/dialog";
-import CurrencyInput from "react-currency-input-field";
-import currencyCodes from "currency-codes";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -1357,6 +1508,55 @@ function LeadTableComponent() {
     setSourceFilter("");
   };
 
+  const handleStatusChange = async (leadId, newStatus) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await axios.patch(
+        `${API_URL}/leads/${leadId}/status`,
+        { status: newStatus },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (response.status === 200) {
+        setLeads((prev) =>
+          prev.map((lead) =>
+            lead._id === leadId ? { ...lead, status: newStatus } : lead
+          )
+        );
+        setAllLeads((prev) =>
+          prev.map((lead) =>
+            lead._id === leadId ? { ...lead, status: newStatus } : lead
+          )
+        );
+        toast.success("Status updated successfully");
+      }
+    } catch (error) {
+      toast.error("Failed to update status");
+    }
+  };
+
+  // Enhanced status classes with better styling
+  const statusClasses = {
+    Hot: "bg-red-50 text-red-700 border-red-200 hover:bg-red-100",
+    Warm: "bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100",
+    Cold: "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100",
+    Junk: "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100",
+    Converted: "bg-green-50 text-green-700 border-green-200 hover:bg-green-100",
+  };
+
+  const getStatusSelectClass = (status) => {
+    return `w-full px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-1 ${
+      statusClasses[status] || "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+    } ${status === 'Hot' ? 'focus:ring-red-300' : 
+        status === 'Warm' ? 'focus:ring-yellow-300' :
+        status === 'Cold' ? 'focus:ring-blue-300' :
+        status === 'Junk' ? 'focus:ring-gray-300' :
+        'focus:ring-green-300'}`;
+  };
+
   useEffect(() => {
     const handleClickOutside = () => setMenuOpen(null);
     document.addEventListener("click", handleClickOutside);
@@ -1400,7 +1600,7 @@ function LeadTableComponent() {
           >
             <Eye className="w-4 h-4" /> Take Tour
           </button>
-          
+
           {selectedLeads.length > 0 && (
             <button
               onClick={() => {
@@ -1415,7 +1615,7 @@ function LeadTableComponent() {
           )}
           {/* Only show create button for admin and sales users */}
           {/* {(userRole === "Admin" || userRole === "Sales") && ( */}
-          {(userRole === "Admin") && (
+          {userRole === "Admin" && (
             <button
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow flex items-center gap-2 tour-create-lead"
               onClick={() => navigate("/createleads")}
@@ -1592,7 +1792,22 @@ function LeadTableComponent() {
                   <td className="px-4 py-3 text-sm text-gray-700">
                     {lead.source || "-"}
                   </td>
-                  <td className="px-4 py-3">{getStatusBadge(lead.status)}</td>
+
+                  {/* Enhanced Status Dropdown */}
+                  <td className="px-4 py-3">
+                    <select
+                      value={lead.status}
+                      onChange={(e) =>
+                        handleStatusChange(lead._id, e.target.value)
+                      }
+                      className={getStatusSelectClass(lead.status)}
+                    >
+                      <option value="Hot">Hot</option>
+                      <option value="Warm">Warm</option>
+                      <option value="Cold">Cold</option>
+                      <option value="Junk">Junk</option>
+                    </select>
+                  </td>
 
                   {/* Show Assignee column for both admin and sales users */}
                   <td className="px-4 py-3 text-sm text-gray-700">
@@ -1890,9 +2105,9 @@ export default function LeadTable() {
           color: "#1f1f1f",
         }),
         maskArea: (base) => ({ ...base, rx: 8 }),
-        badge: (base) => ({ 
-          ...base, 
-          display: "none" // This hides the step number badge
+        badge: (base) => ({
+          ...base,
+          display: "none", // This hides the step number badge
         }),
         close: (base) => ({
           ...base,
@@ -1905,15 +2120,4 @@ export default function LeadTable() {
       <LeadTableComponent />
     </TourProvider>
   );
-}//tour with sales column show data..
-
-
-
-
-
-
-
-
-
-
-
+}
