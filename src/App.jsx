@@ -29,6 +29,7 @@ import InvoiceView from "./pages/invoice/InvoiceView";
 
 import ResetPassword from "./pages/password/ResetPassword";
 import PrivateRoute from "./pages/auth/PrivateRoute";
+import ReportsPage from "./pages/reports/ReportsPage";
 
 
 function App() {
@@ -80,6 +81,7 @@ function App() {
                   <Route path="/proposal/view/:id" element={<ViewProposal />} />
                   <Route path="/leads/view/:id" element={<ViewLead />} />
                   <Route path="/invoice/:id" element={<InvoiceView />} />
+                      <Route path="reports" element={<ReportsPage />} />
                 </Route>
               </Route>
             </Routes>

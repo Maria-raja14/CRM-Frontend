@@ -268,6 +268,7 @@ import { ShieldCheck, Maximize, Minimize } from "lucide-react";
 import PasswordUpdate from "../pages/password/PasswordUpdate";
 import { formatDistanceToNow } from "date-fns";
 import { FaWhatsapp } from "react-icons/fa"; // WhatsApp icon
+import axios from "axios";
 
 const Navbar = ({ toggleSidebar }) => {
   const [showDropdown, setShowDropdown] = useState(false);
@@ -281,6 +282,8 @@ const Navbar = ({ toggleSidebar }) => {
   const notificationRef = useRef(null);
   const dropdownRef = useRef(null);
   const API_SI = import.meta.env.VITE_SI_URI;
+  const API_URL = import.meta.env.VITE_API_URL;
+
 
   // Sales team number (international format)
   const salesTeamNumber = "919952885799"; // replace with your number
@@ -293,11 +296,23 @@ const Navbar = ({ toggleSidebar }) => {
   }, []);
 
   // Logout
-  const handleLogout = () => {
-    disconnectSocket();
+  
+const handleLogout = async () => {
+  const token = localStorage.getItem("token");
+  try {
+    await axios.post(
+      `${API_URL}/users/logout`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+  } catch (err) {
+    console.error("Logout error:", err);
+  } finally {
+    // Clear localStorage and navigate regardless of API success
     localStorage.clear();
     navigate("/");
-  };
+  }
+};
 
   // Outside click detection
   useEffect(() => {
@@ -362,16 +377,15 @@ const Navbar = ({ toggleSidebar }) => {
           </button>
 
           {/* WhatsApp Button with Animation */}
-          <a
+          {/* <a'
             href={whatsappLink}
             target="_blank"
             rel="noopener noreferrer"
             className="relative group flex items-center justify-center w-10 h-10 rounded-full bg-green-500 shadow-lg hover:shadow-xl transition-all transform hover:scale-110 motion-safe:animate-bounce cursor-pointer"
           >
             <FaWhatsapp size={28} className="text-white group-hover:text-green-50 transition-colors" />
-            {/* Optional floating pulse */}
             <span className="absolute w-2 h-2 bg-green-300 rounded-full top-1 right-1 animate-ping"></span>
-          </a>
+          </a> */}
 
           {/* Notifications */}
           <div className="relative" ref={notificationRef}>

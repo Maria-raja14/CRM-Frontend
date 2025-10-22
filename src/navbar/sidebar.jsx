@@ -273,6 +273,7 @@ import {
   ClipboardList,
   Users,
   GitBranch,
+  BarChart3,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
@@ -407,6 +408,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         activities_calendar: true,
         activities_list: true,
         users_roles: true,
+        reports: true, // 👈 add this
       });
     } else if (user.role && user.role.permissions) {
       setUserPermissions(user.role.permissions);
@@ -420,7 +422,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       id="main-sidebar"
     >
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between px-4">
+      <div className="mb-6 flex items-center justify-between px-12">
         <img
           src="https://tzi.zaarapp.com//storage/uploads/logo//logo-dark.png"
           alt="Logo"
@@ -506,6 +508,13 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             hasPermission={isAdmin || userPermissions.activities_list}
           />
         </Collapsible>
+        {/* Reports */}
+        <SidebarItem
+          to="/reports"
+          icon={<BarChart3 />}
+          label="Reports"
+          hasPermission={isAdmin || userPermissions.reports}
+        />
 
         {/* Users & Roles */}
         <SidebarItem
