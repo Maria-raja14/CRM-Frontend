@@ -11,6 +11,7 @@ import ForgotPassword from "../password/ForgotPassword";
 const Login = () => {
   const API_URL = import.meta.env.VITE_API_URL;
   const API_SI = import.meta.env.VITE_SI_URI; // Add this line
+console.log("VITE_API_URL =", import.meta.env.VITE_API_URL);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

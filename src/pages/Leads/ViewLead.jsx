@@ -409,4 +409,3 @@ const ViewLead = () => {
 };
 
 export default ViewLead;//original code..
-
