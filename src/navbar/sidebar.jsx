@@ -253,7 +253,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         />
 
         {/* Activities */}
-        <Collapsible
+       {/*  <Collapsible
           label="Activities"
           icon={<Calendar />}
           open={showActivities}
@@ -276,7 +276,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             label="Activity list"
             hasPermission={isAdmin || userPermissions.activities_list}
           />
-        </Collapsible>
+        </Collapsible> */}
 
         {/* Reports */}
         <SidebarItem
