@@ -353,14 +353,24 @@ const InvoiceHead = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold">Invoices</h1>
         {user?.role.name === "Admin" && (
+          // <button
+          //   onClick={() => {
+          //     setEditingInvoice(null);
+          //     openModal();
+          //   }}
+          //   className="bg-[#4466f2] p-2 px-4 text-white rounded-sm"
+          // >
+          //   Create Invoices
+          // </button>
           <button
             onClick={() => {
               setEditingInvoice(null);
               openModal();
             }}
-            className="bg-[#4466f2] p-2 px-4 text-white rounded-sm"
+            className="bg-[#4466f2] p-2 px-4 text-white rounded-sm
+                      hover:bg-[#3657d6] transition-colors duration-00"
           >
-            Create invoices
+            Create Invoices
           </button>
         )}
       </div>

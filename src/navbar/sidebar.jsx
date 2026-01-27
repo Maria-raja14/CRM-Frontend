@@ -180,9 +180,18 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           alt="Logo"
           className="h-12"
         />
+        <div className="relative group">
         <button onClick={toggleSidebar} className="lg:hidden p-1">
           <X size={22} className="text-gray-600" />
         </button>
+        {/* ✅ TOOLTIP */}
+        <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 
+          opacity-0 group-hover:opacity-100 transition-opacity
+          bg-gray-900 text-white text-xs px-3 py-1 rounded-md whitespace-nowrap
+          pointer-events-none z-50">
+          Close
+        </div>
+      </div>
       </div>
 
       <nav className="flex flex-col gap-3 px-2">
