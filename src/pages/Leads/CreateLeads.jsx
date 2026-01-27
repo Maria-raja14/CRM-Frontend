@@ -1105,7 +1105,7 @@ export default function CreateLeads() {
                     <div key={field.name} className={`${field.type === "textarea" ? "md:col-span-3" : ""}`}>
                       <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                         {field.icon} {field.label}
-                        {(field.name === "leadName" || field.name === "companyName" || field.name === "phoneNumber") && (
+                        {(field.name === "leadName" || field.name === "companyName" || field.name === "phoneNumber" ) && (
                           <span className="text-red-500">*</span>
                         )}
                       </label>
