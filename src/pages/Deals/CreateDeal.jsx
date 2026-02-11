@@ -65,12 +65,17 @@
 //   const [salesUsers, setSalesUsers] = useState([]);
 //   const [existingAttachments, setExistingAttachments] = useState([]);
 //   const [userRole, setUserRole] = useState("");
+//   const [userId, setUserId] = useState("");
 //   const [isSubmitting, setIsSubmitting] = useState(false);
 //   const [countries] = useState(getNames());
 
 //   useEffect(() => {
 //     const userData = localStorage.getItem("user");
-//     if (userData) setUserRole(JSON.parse(userData).role?.name || "");
+//     if (userData) {
+//       const user = JSON.parse(userData);
+//       setUserRole(user.role?.name || "");
+//       setUserId(user._id || "");
+//     }
 //   }, []);
 
 //   useEffect(() => {
@@ -86,6 +91,7 @@
 //           dealValue = existingDeal.value.replace(/,/g, "");
 //         }
 //       }
+      
 //       setFormData({
 //         dealName: existingDeal.dealName || "",
 //         dealValue: dealValue,
@@ -103,6 +109,7 @@
 //         country: existingDeal.country || "",
 //         attachments: [],
 //       });
+      
 //       if (existingDeal.attachments && existingDeal.attachments.length > 0) {
 //         setExistingAttachments(existingDeal.attachments);
 //       }
@@ -113,15 +120,12 @@
 //     const fetchSalesUsers = async () => {
 //       try {
 //         const token = localStorage.getItem("token");
-//         const response = await axios.get(`${API_URL}/users`, {
+//         const response = await axios.get(`${API_URL}/users/sales`, {
 //           headers: { Authorization: `Bearer ${token}` },
 //         });
-//         const filtered = (response.data.users || []).filter(
-//           (u) => u.role?.name?.trim().toLowerCase() === "sales"
-//         );
-//         setSalesUsers(filtered);
+//         setSalesUsers(response.data.users || []);
 //       } catch {
-//         toast.error("Failed to fetch sales users");
+//         //toast.error("Failed to fetch sales users");
 //       }
 //     };
 //     fetchSalesUsers();
@@ -192,70 +196,7 @@
 //     }
 //   };
 
-//   // const handleSubmit = async (e) => {
-//   //   e.preventDefault();
-//   //   setIsSubmitting(true);
-//   //   const newErrors = {
-//   //     dealName: formData.dealName.trim() === "",
-//   //     dealValue: formData.dealValue.trim() === "",
-//   //     phoneNumber: formData.phoneNumber.trim() === "",
-//   //     companyName: formData.companyName.trim() === "",
-//   //   };
-//   //   setErrors(newErrors);
-//   //   if (Object.values(newErrors).some(Boolean)) {
-//   //     toast.error("Please fill in all required fields");
-//   //     setIsSubmitting(false);
-//   //     return;
-//   //   }
-//   //   try {
-//   //     const token = localStorage.getItem("token");
-//   //     const data = new FormData();
-//   //     Object.keys(formData).forEach((key) => {
-//   //       if (key !== "attachments") {
-//   //         data.append(key, formData[key]);
-//   //       }
-//   //     });
-//   //     formData.attachments.forEach((file) => {
-//   //       data.append("attachments", file);
-//   //     });
-//   //     data.append("existingAttachments", JSON.stringify(existingAttachments));
-//   //     let response;
-//   //     if (isEditMode && existingDeal) {
-//   //       response = await axios.patch(
-//   //         `${API_URL}/deals/update-deal/${existingDeal._id}`,
-//   //         data,
-//   //         {
-//   //           headers: {
-//   //             "Content-Type": "multipart/form-data",
-//   //             Authorization: `Bearer ${token}`,
-//   //           },
-//   //         }
-//   //       );
-//   //       toast.success("Deal updated successfully");
-//   //     } else {
-//   //       response = await axios.post(`${API_URL}/deals/createManual`, data, {
-//   //         headers: {
-//   //           "Content-Type": "multipart/form-data",
-//   //           Authorization: `Bearer ${token}`,
-//   //         },
-//   //       });
-//   //       toast.success("Deal created successfully");
-//   //     }
-//   //     setTimeout(() => navigate("/deals"), 2000);
-//   //   } catch (err) {
-//   //     console.error("Deal operation error:", err);
-//   //     if (err.response?.data?.message) {
-//   //       toast.error(err.response.data.message);
-//   //     } else {
-//   //       toast.error(
-//   //         isEditMode ? "Failed to update deal" : "Failed to create deal"
-//   //       );
-//   //     }
-//   //   } finally {
-//   //     setIsSubmitting(false);
-//   //   }
-//   // };//org
-// const handleSubmit = async (e) => {
+//   const handleSubmit = async (e) => {
 //     e.preventDefault();
 //     setIsSubmitting(true);
 //     const newErrors = {
@@ -280,6 +221,11 @@
 //           data.append(key, formData[key]);
 //         }
 //       });
+      
+//       // For new deals created by sales users, auto-assign to themselves
+//       if (!isEditMode && userRole === "Sales" && !formData.assignTo) {
+//         data.set("assignTo", userId);
+//       }
       
 //       // Append new files
 //       formData.attachments.forEach((file) => {
@@ -326,13 +272,13 @@
 //     }
 //   };
 
-  
 //   const handleBackClick = () => navigate(-1);
+
+//   // Check if assign to field should be shown
+//   const showAssignToField = userRole === "Admin" || (isEditMode && userRole === "Sales");
 
 //   // --- FIELD METADATA ---
 //   const formFields = [
-  
-//     // dealValue & currency handled custom below!
 //     {
 //       name: "stage",
 //       label: "Stage",
@@ -481,46 +427,25 @@
 //                     ))}
 //                   </select>
 //                   {/* Number Input */}
-//                   {/* <input
-//                     type="number"
+//                   <input
+//                     type="text"
 //                     name="dealValue"
 //                     value={formData.dealValue}
 //                     onChange={(e) => {
-//                       setFormData((prev) => ({
-//                         ...prev,
-//                         dealValue: e.target.value,
-//                       }));
-//                       if (e.target.value.toString().trim() !== "") {
-//                         setErrors((prev) => ({ ...prev, dealValue: false }));
+//                       const val = e.target.value;
+//                       if (val === "" || /^[0-9\b]+$/.test(val)) {
+//                         setFormData((prev) => ({
+//                           ...prev,
+//                           dealValue: val,
+//                         }));
+//                         if (val.trim() !== "") {
+//                           setErrors((prev) => ({ ...prev, dealValue: false }));
+//                         }
 //                       }
 //                     }}
 //                     placeholder="Enter deal value"
 //                     className="flex-1 border rounded-lg px-3 py-2 text-sm h-11 focus:ring-2 focus:ring-green-500 focus:outline-none"
-//                   /> */}
-                 
-
-// <input
-//   type="text" // change from number to text
-//   name="dealValue"
-//   value={formData.dealValue}
-//   onChange={(e) => {
-//     const val = e.target.value;
-//     // Validate if val is numeric or empty before allowing update (optional)
-//     // But keep it string to avoid rounding issues
-//     if (val === "" || /^[0-9\b]+$/.test(val)) {
-//       setFormData((prev) => ({
-//         ...prev,
-//         dealValue: val,
-//       }));
-//       if (val.trim() !== "") {
-//         setErrors((prev) => ({ ...prev, dealValue: false }));
-//       }
-//     }
-//   }}
-//   placeholder="Enter deal value"
-//   className="flex-1 border rounded-lg px-3 py-2 text-sm h-11 focus:ring-2 focus:ring-green-500 focus:outline-none"
-// />
-
+//                   />
 //                 </div>
 //                 {errors.dealValue && (
 //                   <p className="text-red-500 text-sm mt-1">
@@ -585,7 +510,7 @@
 //             </div>
 //           </div>
 //           {/* Management & Notes */}
-//           {userRole === "Admin" && (
+//           {showAssignToField && (
 //             <div className="p-6 border border-gray-200 rounded-xl shadow-sm">
 //               <h2 className="text-lg font-semibold border-b pb-2 text-yellow-600">
 //                 Management
@@ -608,6 +533,11 @@
 //                       </option>
 //                     ))}
 //                   </select>
+//                   {userRole === "Sales" && isEditMode && (
+//                     <p className="text-xs text-gray-500 mt-1">
+//                       You can reassign this deal to another sales user
+//                     </p>
+//                   )}
 //                 </div>
 //               </div>
 //             </div>
@@ -747,15 +677,16 @@
 //       </div>
 //     </div>
 //   );
-// }//all perfect original
+// }//original
 
 
-
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import axios from "axios";
 import { getNames } from "country-list";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 import {
   ArrowLeft,
   DollarSign,
@@ -821,6 +752,15 @@ export default function CreateDeal() {
   const [userId, setUserId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [countries] = useState(getNames());
+  const [phoneError, setPhoneError] = useState("");
+  const [emailError, setEmailError] = useState("");
+
+  // Refs for scrolling to error fields
+  const dealNameRef = useRef(null);
+  const dealValueRef = useRef(null);
+  const phoneNumberRef = useRef(null);
+  const emailRef = useRef(null);
+  const companyNameRef = useRef(null);
 
   useEffect(() => {
     const userData = localStorage.getItem("user");
@@ -890,13 +830,62 @@ export default function CreateDeal() {
     if (value.trim() !== "") {
       setErrors((prev) => ({ ...prev, [name]: false }));
     }
+    
+    // Email validation on change
+    if (name === "email" && value.trim() !== "") {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(value)) {
+        setEmailError("Please enter a valid email address");
+      } else {
+        setEmailError("");
+      }
+    }
   }, []);
+
+  const handlePhoneChange = useCallback((value, country) => {
+    // Validate phone number length (excluding country code)
+    const phoneWithoutCountryCode = value.replace(`+${country.dialCode}`, '');
+    
+    if (phoneWithoutCountryCode.length > 10) {
+      setPhoneError("Phone number should not exceed 10 digits");
+    } else if (!/^\d+$/.test(phoneWithoutCountryCode)) {
+      setPhoneError("Only numbers are allowed");
+    } else {
+      setPhoneError("");
+    }
+    
+    setFormData((prev) => ({ ...prev, phoneNumber: value }));
+    if (value.trim() !== "") {
+      setErrors((prev) => ({ ...prev, phoneNumber: false }));
+    }
+  }, []);
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const scrollToElement = (elementRef) => {
+    if (elementRef.current) {
+      elementRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+      // Focus on the input field
+      setTimeout(() => {
+        const input = elementRef.current.querySelector('input') || elementRef.current.querySelector('textarea') || elementRef.current.querySelector('select');
+        if (input) {
+          input.focus();
+        }
+      }, 300);
+    }
+  };
 
   const handleFileChange = useCallback((e) => {
     const files = Array.from(e.target.files);
     const oversizedFiles = files.filter((file) => file.size > 5 * 1024 * 1024);
     if (oversizedFiles.length > 0) {
-      toast.error("Some files exceed the 5MB size limit");
+      toast.error("This files exceed the 5MB size limit");
       e.target.value = null;
       setFormData((prev) => ({
         ...prev,
@@ -952,18 +941,90 @@ export default function CreateDeal() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+    
+    // Validate required fields
     const newErrors = {
       dealName: formData.dealName.trim() === "",
       dealValue: formData.dealValue.trim() === "",
       phoneNumber: formData.phoneNumber.trim() === "",
+      email: formData.email.trim() === "",
       companyName: formData.companyName.trim() === "",
     };
+    
     setErrors(newErrors);
-    if (Object.values(newErrors).some(Boolean)) {
+    
+    // Validate phone number if provided
+    if (formData.phoneNumber.trim() !== "") {
+      // Extract just the phone number without country code
+      const phoneWithoutCountryCode = formData.phoneNumber.replace(/\D/g, '');
+      // Remove country code (assume first 1-3 digits are country code)
+      const localNumber = phoneWithoutCountryCode.substring(phoneWithoutCountryCode.length - 10);
+      
+      if (localNumber.length > 10) {
+        setPhoneError("Phone number should not exceed 10 digits");
+        setIsSubmitting(false);
+        return;
+      }
+      if (localNumber.length < 10) {
+        setPhoneError("Phone number should be at least 10 digits");
+        setIsSubmitting(false);
+        return;
+      }
+    }
+    
+    // Validate email if provided
+    if (formData.email.trim() !== "" && !validateEmail(formData.email)) {
+      setEmailError("Please enter a valid email address");
+      setIsSubmitting(false);
+      return;
+    }
+    
+    // Check if any required fields are empty and scroll to first error
+    const errorFields = Object.entries(newErrors).filter(([_, hasError]) => hasError);
+    
+    if (errorFields.length > 0) {
+      const [firstErrorField] = errorFields;
+      
+      // Scroll to the first error field
+      switch(firstErrorField[0]) {
+        case 'dealName':
+          scrollToElement(dealNameRef);
+          break;
+        case 'dealValue':
+          scrollToElement(dealValueRef);
+          break;
+        case 'phoneNumber':
+          scrollToElement(phoneNumberRef);
+          break;
+        case 'email':
+          scrollToElement(emailRef);
+          break;
+        case 'companyName':
+          scrollToElement(companyNameRef);
+          break;
+        default:
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      
       toast.error("Please fill in all required fields");
       setIsSubmitting(false);
       return;
     }
+    
+    // Check for phone error
+    if (phoneError) {
+      scrollToElement(phoneNumberRef);
+      setIsSubmitting(false);
+      return;
+    }
+    
+    // Check for email error
+    if (emailError) {
+      scrollToElement(emailRef);
+      setIsSubmitting(false);
+      return;
+    }
+    
     try {
       const token = localStorage.getItem("token");
       const data = new FormData();
@@ -1046,12 +1107,6 @@ export default function CreateDeal() {
       ],
     },
     {
-      name: "phoneNumber",
-      label: "Phone Number",
-      icon: <Phone size={16} />,
-    },
-    { name: "email", label: "Email", icon: <Mail size={16} /> },
-    {
       name: "companyName",
       label: "Company Name",
       icon: <Building2 size={16} />,
@@ -1084,11 +1139,6 @@ export default function CreateDeal() {
         "Phone",
         "Other",
       ],
-    },
-    {
-      name: "address",
-      label: "Address",
-      icon: <MapPin size={16} />,
     },
     {
       name: "country",
@@ -1136,7 +1186,7 @@ export default function CreateDeal() {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Deal Name */}
-              <div>
+              <div ref={dealNameRef}>
                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                   <FileText size={16} /> Deal Name{" "}
                   <span className="text-red-500">*</span>
@@ -1156,7 +1206,7 @@ export default function CreateDeal() {
                 )}
               </div>
               {/* Deal Value & Currency Dropdown -- INTEGRATED DESIGN */}
-              <div>
+              <div ref={dealValueRef}>
                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                   <DollarSign size={16} /> Deal Value{" "}
                   <span className="text-red-500">*</span>
@@ -1206,20 +1256,75 @@ export default function CreateDeal() {
                   </p>
                 )}
               </div>
+              {/* Phone Number with Country Code */}
+              <div ref={phoneNumberRef}>
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  <Phone size={16} /> Phone Number{" "}
+                  <span className="text-red-500">*</span>
+                </label>
+                <PhoneInput
+                  country={"in"}
+                  value={formData.phoneNumber}
+                  onChange={handlePhoneChange}
+                  inputStyle={{
+                    width: "100%",
+                    height: "44px",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                  }}
+                  buttonStyle={{
+                    border: "1px solid #d1d5db",
+                    borderRadius: "8px 0 0 8px",
+                  }}
+                  containerStyle={{
+                    width: "100%",
+                  }}
+                  enableSearch={true}
+                  disableSearchIcon={true}
+                  inputProps={{
+                    name: "phoneNumber",
+                    required: true,
+                  }}
+                />
+                {phoneError && (
+                  <p className="text-red-500 text-sm mt-1">{phoneError}</p>
+                )}
+                {errors.phoneNumber && !phoneError && (
+                  <p className="text-red-500 text-sm mt-1">
+                    Phone Number is required
+                  </p>
+                )}
+              </div>
+              {/* Email Field */}
+              <div ref={emailRef}>
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  <Mail size={16} /> Email{" "}
+                  <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="Enter email address"
+                  className="w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-400 outline-none transition h-11"
+                />
+                {emailError && (
+                  <p className="text-red-500 text-sm mt-1">{emailError}</p>
+                )}
+                {errors.email && !emailError && (
+                  <p className="text-red-500 text-sm mt-1">
+                    Email is required
+                  </p>
+                )}
+              </div>
               {/* Other fields */}
               {formFields.map((field) => (
-                <div
-                  key={field.name}
-                  className={`${
-                    field.type === "textarea" ? "md:col-span-3" : ""
-                  }`}
-                >
+                <div key={field.name} ref={field.name === "companyName" ? companyNameRef : null}>
                   <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                     {field.icon} {field.label}{" "}
-                    {(field.name === "dealName" ||
-                      field.name === "dealValue" ||
-                      field.name === "phoneNumber" ||
-                      field.name === "companyName") && (
+                    {field.name === "companyName" && (
                       <span className="text-red-500">*</span>
                     )}
                   </label>
@@ -1231,17 +1336,11 @@ export default function CreateDeal() {
                       className="w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-400 outline-none transition h-11"
                     >
                       <option value="">Select {field.label}</option>
-                      {field.options.map((opt) =>
-                        typeof opt === "string" ? (
-                          <option key={opt} value={opt}>
-                            {opt}
-                          </option>
-                        ) : (
-                          <option key={opt.value || opt} value={opt.value || opt}>
-                            {opt.label || opt}
-                          </option>
-                        )
-                      )}
+                      {field.options.map((opt) => (
+                        <option key={opt} value={opt}>
+                          {opt}
+                        </option>
+                      ))}
                     </select>
                   ) : (
                     <input
@@ -1260,6 +1359,20 @@ export default function CreateDeal() {
                   )}
                 </div>
               ))}
+              {/* Address Field - Full Width */}
+              <div className="md:col-span-3">
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  <MapPin size={16} /> Address
+                </label>
+                <textarea
+                  name="address"
+                  rows={3}
+                  value={formData.address}
+                  onChange={handleChange}
+                  placeholder="Enter full address..."
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white shadow-sm text-sm text-gray-700 placeholder-gray-400 transition resize-none"
+                />
+              </div>
             </div>
           </div>
           {/* Management & Notes */}
@@ -1308,90 +1421,117 @@ export default function CreateDeal() {
               className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white shadow-sm text-sm text-gray-700 placeholder-gray-400 transition resize-none"
             />
           </div>
-          {/* Attachments Section */}
+          {/* Attachments Section - New Design */}
           <div className="p-6 border rounded-xl shadow-sm">
             <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">
               Attachments
             </h2>
-            {/* Existing Files */}
+            
+            {/* Existing Attachments */}
             {existingAttachments.length > 0 && (
-              <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-                {existingAttachments.map((file, idx) => (
-                  <div
-                    key={idx}
-                    className="flex flex-col items-center justify-center w-full bg-white border rounded-xl shadow-sm p-3"
-                  >
-                    <button
-                      onClick={() => handleFileDownload(file)}
-                      className="text-xs text-indigo-600 hover:underline truncate w-full text-center"
+              <div className="mt-6">
+                <h3 className="text-sm font-medium text-gray-700 mb-4">Existing Files</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {existingAttachments.map((file, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition"
                     >
-                      {file.split("/").pop()}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveFile(idx, "existing")}
-                      className="text-[12px] text-red-600 hover:underline mt-1"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-blue-100 rounded-md">
+                          <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                        </div>
+                        <div className="min-w-0">
+                          <button
+                            type="button"
+                            onClick={() => handleFileDownload(file)}
+                            className="text-sm font-medium text-gray-700 hover:text-blue-600 truncate block text-left w-full"
+                          >
+                            {file.split("/").pop()}
+                          </button>
+                          <p className="text-xs text-gray-500">Existing file</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFile(idx, "existing")}
+                        className="text-red-600 hover:text-red-800 p-1"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
-            {/* Upload New Files */}
-            <div className="mt-4">
-              <label
-                htmlFor="attachments"
-                className="flex flex-col items-center justify-center w-full min-h-32 border-2 border-dashed border-indigo-300 rounded-xl cursor-pointer hover:border-indigo-500 hover:bg-indigo-50 transition p-6"
-              >
-                {formData.attachments.length === 0 ? (
-                  <>
-                    <svg
-                      className="w-8 h-8 text-gray-400 mb-2"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M7 16V8m0 0l-4 4m4-4l4 4M17 8v8m0 0l4-4m-4 4l-4-4"
-                      />
-                    </svg>
-                    <span className="text-sm text-gray-600">
-                      Click or drag new files here (Max 5MB per file)
-                    </span>
-                  </>
-                ) : (
-                  <div className="w-full flex flex-wrap gap-4">
+            
+            {/* New Attachments */}
+            <div className="mt-6">
+              <h3 className="text-sm font-medium text-gray-700 mb-4">Upload New Files</h3>
+              
+              {/* Uploaded Files Preview */}
+              {formData.attachments.length > 0 && (
+                <div className="mb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {formData.attachments.map((file, idx) => (
                       <div
                         key={idx}
-                        className="flex flex-col items-center justify-center w-28 h-28 bg-white border rounded-xl shadow-sm p-2"
+                        className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg"
                       >
-                        <div className="w-12 h-12 flex items-center justify-center bg-indigo-100 rounded-md mb-1">
-                          <span className="text-xs font-semibold text-indigo-600">
-                            {file.name.split(".").pop().toUpperCase()}
-                          </span>
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-blue-100 rounded-md">
+                            <span className="text-xs font-semibold text-blue-600">
+                              {file.name.split('.').pop().toUpperCase()}
+                            </span>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-gray-700 truncate">
+                              {file.name}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {(file.size / 1024).toFixed(1)} KB
+                            </p>
+                          </div>
                         </div>
-                        <p className="text-xs text-gray-500">
-                          {(file.size / 1024).toFixed(1)} KB
-                        </p>
-                        <p className="text-[10px] text-gray-700 truncate w-full text-center">
-                          {file.name}
-                        </p>
                         <button
                           type="button"
                           onClick={() => handleRemoveFile(idx, "new")}
-                          className="text-[12px] text-red-600 hover:underline mt-1"
+                          className="text-red-600 hover:text-red-800 p-1"
                         >
-                          Remove
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
                         </button>
                       </div>
                     ))}
                   </div>
-                )}
+                </div>
+              )}
+              
+              {/* Upload Area */}
+              <label
+                htmlFor="attachments"
+                className="flex flex-col items-center justify-center w-full min-h-32 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition p-8"
+              >
+                <div className="text-center">
+                  <div className="w-12 h-12 mx-auto mb-4 flex items-center justify-center bg-blue-100 rounded-full">
+                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                  </div>
+                  <p className="text-sm font-medium text-gray-700 mb-1">
+                    Drop files here or click to upload
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Maximum file size: 20MB                  </p>
+                  <p className="text-xs text-gray-400 mt-2">
+                    Supports: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, GIF
+                  </p>
+                </div>
                 <input
                   id="attachments"
                   type="file"

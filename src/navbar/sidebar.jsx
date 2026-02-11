@@ -12,6 +12,7 @@ import {
   Users,
   GitBranch,
   BarChart3,
+    Mail,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
@@ -174,12 +175,14 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       id="main-sidebar"
     >
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between px-12">
-        <img
-          src="https://tzi.zaarapp.com//storage/uploads/logo//logo-dark.png"
-          alt="Logo"
-          className="h-12"
-        />
+        <div className="mb-6 flex items-center justify-between px-12">
+        <NavLink to="/adminDashboard" className="cursor-pointer">
+          <img
+            src="https://tzi.zaarapp.com//storage/uploads/logo//logo-dark.png"
+            alt="Logo"
+            className="h-12 hover:opacity-80 transition-opacity"
+          />
+        </NavLink>
         <button onClick={toggleSidebar} className="lg:hidden p-1">
           <X size={22} className="text-gray-600" />
         </button>
@@ -234,6 +237,12 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             hasPermission={isAdmin || userPermissions.deals_all}
           />
         </Collapsible>
+
+                <SidebarItem
+  to="/emailchat"
+  icon={<Mail />}  // You can import Mail from "lucide-react"
+  label="Email Chat"
+/>
 
         {/* Invoice */}
         <SidebarItem

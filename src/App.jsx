@@ -32,6 +32,10 @@ import PrivateRoute from "./pages/auth/PrivateRoute";
 import ReportsPage from "./pages/reports/ReportsPage";
 
 
+import EmailChat from "./pages/Email_chat/EmailChat";
+// import EmailIntegration from "./pages/Email_chat/EmailIntegration";
+
+
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -81,7 +85,12 @@ function App() {
                   <Route path="/proposal/view/:id" element={<ViewProposal />} />
                   <Route path="/leads/view/:id" element={<ViewLead />} />
                   <Route path="/invoice/:id" element={<InvoiceView />} />
-                      <Route path="reports" element={<ReportsPage />} />
+                  <Route path="reports" element={<ReportsPage />} />
+                  <Route path="/emailchat" element={<EmailChat />} />
+                  {/* <Route
+                    path="/email-integration"
+                    element={<EmailIntegration />}
+                  /> */}
                 </Route>
               </Route>
             </Routes>
@@ -95,3 +104,5 @@ function App() {
 }
 
 export default App;
+
+
