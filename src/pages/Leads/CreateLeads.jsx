@@ -1050,11 +1050,10 @@ export default function CreateLeads() {
                               fontSize: "14px",
                               paddingLeft: "55px",
                               borderRadius: "0.5rem",
-                              border: errors.phoneNumber ? "1px solid #ef4444" : "1px solid #d1d5db",
                               boxSizing: "border-box",
+                              border:"1px black solid"
                             }}
                             buttonStyle={{
-                              border: errors.phoneNumber ? "1px solid #ef4444" : "1px solid #d1d5db",
                               borderRadius: "0.5rem 0 0 0.5rem",
                               height: "42px",
                               background: "white",
