@@ -249,7 +249,7 @@ function UserManagementInner() {
       const usersWithImageUrl = data.users.map((user) => ({
         ...user,
         profileImageUrl: user.profileImage
-          ? `${API_URL}/uploads/users/${user.profileImage.replace(/^\/+/, "")}`
+          ? `${API_SI}/uploads/users/${user.profileImage.replace(/^\/+/, "")}`
           : null,
       }));
       setUsers(usersWithImageUrl || []);
