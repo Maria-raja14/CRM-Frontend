@@ -30,8 +30,13 @@ const Navbar = ({ toggleSidebar }) => {
   // Get profile image URL function
   const getProfileImageUrl = (image) => {
     if (!image) return "https://randomuser.me/api/portraits/men/32.jpg";
+
     if (image.startsWith("http")) return image;
-    return `${API_SI}uploads/users/${image}`;
+
+    const base = API_SI.endsWith("/") ? API_SI.slice(0, -1) : API_SI;
+
+    // 🔥 cache-busting query
+    return `${base}/uploads/users/${image}?t=${Date.now()}`;
   };
 
   // Load user
