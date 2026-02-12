@@ -329,7 +329,6 @@ export default function EditUserModal({ user, roles, onClose, onUserUpdated }) {
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
           },
         },
       );

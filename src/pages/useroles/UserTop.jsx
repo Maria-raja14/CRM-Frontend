@@ -53,9 +53,11 @@ export default function AddUserModal({ onUserCreated }) {
   const getProfileImageUrl = (image) => {
     if (!image)
       return "https://static.vecteezy.com/system/resources/previews/020/429/953/non_2x/admin-icon-vector.jpg";
+
     if (image.startsWith("blob:")) return image;
     if (image.startsWith("http")) return image;
-    return `${API_SI}/${image.replace(/\\/g, "/")}`;
+
+    return `${API_SI}/uploads/users/${image}`;
   };
 
   // Reset form completely
@@ -393,18 +395,37 @@ export default function AddUserModal({ onUserCreated }) {
 
     try {
       const payload = new FormData();
-      Object.entries(formData).forEach(([key, value]) => {
-        if (value !== null && value !== undefined && value !== "") {
-          payload.append(key, value);
-        }
-      });
+
+      payload.append("firstName", formData.firstName);
+      payload.append("lastName", formData.lastName);
+      payload.append("gender", formData.gender);
+      payload.append("dateOfBirth", formData.dateOfBirth);
+      payload.append("mobileNumber", formData.mobileNumber);
+      payload.append("email", formData.email);
+      payload.append("password", formData.password);
+      payload.append("confirmPassword", formData.confirmPassword);
+      payload.append("address", formData.address);
+      payload.append("role", formData.role);
+      payload.append("status", formData.status);
+
+      // ⭐ MOST IMPORTANT
+      if (formData.profileImage) {
+        payload.append("profileImage", formData.profileImage);
+      }
+
+      for (let pair of payload.entries()) {
+        console.log(pair[0], pair[1]);
+      }
 
       const token = localStorage.getItem("token");
 
       await axios.post(`${API_URL}/users/create`, payload, {
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
+        },
+        transformRequest: (data, headers) => {
+          delete headers["Content-Type"]; // ⭐ VERY IMPORTANT
+          return data;
         },
       });
 
@@ -515,7 +536,6 @@ export default function AddUserModal({ onUserCreated }) {
               e.preventDefault(); // dialog close aagadhu
             }
           }}
-        
           onEscapeKeyDown={(e) => {
             // Allow escape key to close the dialog even if toast is open
             // No prevention needed

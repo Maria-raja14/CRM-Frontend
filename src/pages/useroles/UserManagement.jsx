@@ -1,4 +1,4 @@
-import React from "react";  
+import React from "react";
 
 import { useState, useEffect, useRef } from "react";
 import AddUserModal from "./UserTop";
@@ -38,7 +38,7 @@ import {
   Globe,
   Award,
   Target,
-  MessageSquare
+  MessageSquare,
 } from "react-feather";
 import { TourProvider, useTour } from "@reactour/tour";
 
@@ -103,27 +103,27 @@ const tourSteps = [
 
 // Role icon mapping using available react-feather icons
 const getRoleIcon = (roleName) => {
-  const name = roleName?.toLowerCase() || '';
-  
-  if (name.includes('admin') || name.includes('super')) {
+  const name = roleName?.toLowerCase() || "";
+
+  if (name.includes("admin") || name.includes("super")) {
     return <Award size={16} className="text-purple-600" />;
   }
-  if (name.includes('sales')) {
+  if (name.includes("sales")) {
     return <DollarSign size={16} className="text-green-600" />;
   }
-  if (name.includes('manager')) {
+  if (name.includes("manager")) {
     return <Briefcase size={16} className="text-blue-600" />;
   }
-  if (name.includes('support') || name.includes('customer')) {
+  if (name.includes("support") || name.includes("customer")) {
     return <Headphones size={16} className="text-orange-600" />;
   }
-  if (name.includes('analyst') || name.includes('report')) {
+  if (name.includes("analyst") || name.includes("report")) {
     return <BarChart size={16} className="text-teal-600" />;
   }
-  if (name.includes('executive') || name.includes('director')) {
+  if (name.includes("executive") || name.includes("director")) {
     return <Star size={16} className="text-yellow-600" />;
   }
-  if (name.includes('developer') || name.includes('tech')) {
+  if (name.includes("developer") || name.includes("tech")) {
     return <Settings size={16} className="text-indigo-600" />;
   }
   return <Lock size={16} className="text-gray-600" />;
@@ -146,15 +146,15 @@ const toastConfig = {
   },
   style: {
     zIndex: 9999, // Ensure toast is above all other elements
-    pointerEvents: 'auto', // Ensure toast is clickable
+    pointerEvents: "auto", // Ensure toast is clickable
   },
   bodyStyle: {
-    pointerEvents: 'auto', // Ensure toast body is clickable
+    pointerEvents: "auto", // Ensure toast body is clickable
   },
   closeButtonStyle: {
-    pointerEvents: 'auto', // Ensure close button is clickable
-    cursor: 'pointer',
-  }
+    pointerEvents: "auto", // Ensure close button is clickable
+    cursor: "pointer",
+  },
 };
 
 function UserManagementInner() {
@@ -249,7 +249,7 @@ function UserManagementInner() {
       const usersWithImageUrl = data.users.map((user) => ({
         ...user,
         profileImageUrl: user.profileImage
-          ? `${API_SI}/${user.profileImage}`
+          ? `${API_SI}/uploads/users/${user.profileImage}`
           : null,
       }));
       setUsers(usersWithImageUrl || []);
@@ -278,7 +278,7 @@ function UserManagementInner() {
         headers: { Authorization: `Bearer ${token}` },
       });
       showSuccessToast(
-        `${itemType === "user" ? "User" : "Role"} deleted successfully!`
+        `${itemType === "user" ? "User" : "Role"} deleted successfully!`,
       );
       itemType === "user" ? fetchUsers() : fetchRoles();
       setActionType("");
@@ -307,19 +307,19 @@ function UserManagementInner() {
   });
 
   const filteredRoles = roles.filter((role) =>
-    role.name?.toLowerCase().includes(searchRoleQuery.toLowerCase())
+    role.name?.toLowerCase().includes(searchRoleQuery.toLowerCase()),
   );
 
   const totalPagesUsers = Math.ceil(filteredUsers.length / itemsPerPage) || 1;
   const validatedCurrentPageUsers = Math.min(currentPageUsers, totalPagesUsers);
-  
+
   const indexOfLastUser = validatedCurrentPageUsers * itemsPerPage;
   const indexOfFirstUser = indexOfLastUser - itemsPerPage;
   const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
 
   const totalPagesRoles = Math.ceil(filteredRoles.length / itemsPerPage) || 1;
   const validatedCurrentPageRoles = Math.min(currentPageRoles, totalPagesRoles);
-  
+
   const indexOfLastRole = validatedCurrentPageRoles * itemsPerPage;
   const indexOfFirstRole = indexOfLastRole - itemsPerPage;
   const currentRoles = filteredRoles.slice(indexOfFirstRole, indexOfLastRole);
@@ -334,8 +334,8 @@ function UserManagementInner() {
 
   // Function to count active permissions correctly
   const countPermissions = (permissions) => {
-    if (!permissions || typeof permissions !== 'object') return 0;
-    
+    if (!permissions || typeof permissions !== "object") return 0;
+
     // Count only boolean true values
     let count = 0;
     for (const key in permissions) {
@@ -348,9 +348,7 @@ function UserManagementInner() {
 
   // Format permission names for display
   const formatPermissionName = (key) => {
-    return key
-      .replace(/_/g, ' ')
-      .replace(/\b\w/g, l => l.toUpperCase());
+    return key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
   return (
@@ -381,7 +379,10 @@ function UserManagementInner() {
       )}
 
       {/* Main Container - Properly Centered */}
-      <div className="w-full max-w-6xl mx-auto flex flex-col items-center" ref={containerRef}>
+      <div
+        className="w-full max-w-6xl mx-auto flex flex-col items-center"
+        ref={containerRef}
+      >
         {/* Header Section - Centered */}
         <div className="w-full mb-6 flex flex-col items-center">
           <div className="w-full flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
@@ -426,7 +427,7 @@ function UserManagementInner() {
                   Users ({filteredUsers.length})
                 </div>
               </button>
-              
+
               <button
                 onClick={() => setActiveSlide("roles")}
                 className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
@@ -447,7 +448,9 @@ function UserManagementInner() {
         {/* Content Slide - Perfectly Centered */}
         <div className="w-full flex justify-center">
           {/* Users Slide */}
-          <div className={`transition-all duration-300 w-full max-w-6xl ${activeSlide === "users" ? "block" : "hidden"}`}>
+          <div
+            className={`transition-all duration-300 w-full max-w-6xl ${activeSlide === "users" ? "block" : "hidden"}`}
+          >
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden users-table">
               {/* Header */}
               <div className="px-6 py-4 border-b border-gray-200">
@@ -457,9 +460,12 @@ function UserManagementInner() {
                       <Users size={20} className="text-blue-600" />
                     </div>
                     <div>
-                      <h2 className="text-lg font-semibold text-gray-900">Users</h2>
+                      <h2 className="text-lg font-semibold text-gray-900">
+                        Users
+                      </h2>
                       <p className="text-sm text-gray-500">
-                        {filteredUsers.length} user{filteredUsers.length !== 1 ? 's' : ''} total
+                        {filteredUsers.length} user
+                        {filteredUsers.length !== 1 ? "s" : ""} total
                       </p>
                     </div>
                   </div>
@@ -554,7 +560,9 @@ function UserManagementInner() {
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-2">
                               <Mail size={14} className="text-gray-400" />
-                              <span className="text-sm text-gray-700">{user.email}</span>
+                              <span className="text-sm text-gray-700">
+                                {user.email}
+                              </span>
                             </div>
                           </td>
                           <td className="px-6 py-4">
@@ -583,14 +591,18 @@ function UserManagementInner() {
                           <td className="px-6 py-4 text-right">
                             <div className="flex justify-end gap-2">
                               <button
-                                onClick={() => handleAction(user, "user", "edit")}
+                                onClick={() =>
+                                  handleAction(user, "user", "edit")
+                                }
                                 className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
                                 title="Edit user"
                               >
                                 <Edit size={16} />
                               </button>
                               <button
-                                onClick={() => handleAction(user, "user", "delete")}
+                                onClick={() =>
+                                  handleAction(user, "user", "delete")
+                                }
                                 className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
                                 title="Delete user"
                               >
@@ -605,7 +617,9 @@ function UserManagementInner() {
                         <td colSpan="6" className="px-6 py-12 text-center">
                           <div className="flex flex-col items-center justify-center">
                             <Users size={40} className="text-gray-300 mb-3" />
-                            <h3 className="text-gray-500 font-medium mb-1">No users found</h3>
+                            <h3 className="text-gray-500 font-medium mb-1">
+                              No users found
+                            </h3>
                             <p className="text-gray-400 text-sm">
                               {searchUserQuery || statusFilter !== "all"
                                 ? "Try adjusting your search or filter"
@@ -624,15 +638,27 @@ function UserManagementInner() {
                 <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 pagination">
                   <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                     <div className="text-sm text-gray-600">
-                      Showing <span className="font-medium">{indexOfFirstUser + 1}</span> to{" "}
+                      Showing{" "}
+                      <span className="font-medium">
+                        {indexOfFirstUser + 1}
+                      </span>{" "}
+                      to{" "}
                       <span className="font-medium">
                         {Math.min(indexOfLastUser, filteredUsers.length)}
                       </span>{" "}
-                      of <span className="font-medium">{filteredUsers.length}</span> users
+                      of{" "}
+                      <span className="font-medium">
+                        {filteredUsers.length}
+                      </span>{" "}
+                      users
                     </div>
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => handlePageChangeUsers(Math.max(validatedCurrentPageUsers - 1, 1))}
+                        onClick={() =>
+                          handlePageChangeUsers(
+                            Math.max(validatedCurrentPageUsers - 1, 1),
+                          )
+                        }
                         disabled={validatedCurrentPageUsers === 1}
                         className="p-2 rounded border border-gray-300 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
@@ -654,7 +680,14 @@ function UserManagementInner() {
                         ))}
                       </div>
                       <button
-                        onClick={() => handlePageChangeUsers(Math.min(validatedCurrentPageUsers + 1, totalPagesUsers))}
+                        onClick={() =>
+                          handlePageChangeUsers(
+                            Math.min(
+                              validatedCurrentPageUsers + 1,
+                              totalPagesUsers,
+                            ),
+                          )
+                        }
                         disabled={validatedCurrentPageUsers === totalPagesUsers}
                         className="p-2 rounded border border-gray-300 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
@@ -668,7 +701,9 @@ function UserManagementInner() {
           </div>
 
           {/* Roles Slide */}
-          <div className={`transition-all duration-300 w-full max-w-6xl ${activeSlide === "roles" ? "block" : "hidden"}`}>
+          <div
+            className={`transition-all duration-300 w-full max-w-6xl ${activeSlide === "roles" ? "block" : "hidden"}`}
+          >
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden roles-table">
               {/* Header */}
               <div className="px-6 py-4 border-b border-gray-200">
@@ -678,9 +713,12 @@ function UserManagementInner() {
                       <Shield size={20} className="text-green-600" />
                     </div>
                     <div>
-                      <h2 className="text-lg font-semibold text-gray-900">Roles</h2>
+                      <h2 className="text-lg font-semibold text-gray-900">
+                        Roles
+                      </h2>
                       <p className="text-sm text-gray-500">
-                        {filteredRoles.length} role{filteredRoles.length !== 1 ? 's' : ''} total
+                        {filteredRoles.length} role
+                        {filteredRoles.length !== 1 ? "s" : ""} total
                       </p>
                     </div>
                   </div>
@@ -719,13 +757,16 @@ function UserManagementInner() {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {currentRoles.length > 0 ? (
                       currentRoles.map((role, index) => {
-                        const permissionCount = countPermissions(role.permissions);
-                        const activePermissions = role.permissions ? 
-                          Object.entries(role.permissions)
-                            .filter(([key, value]) => value === true)
-                            .map(([key]) => formatPermissionName(key))
-                            .slice(0, 3) : [];
-                        
+                        const permissionCount = countPermissions(
+                          role.permissions,
+                        );
+                        const activePermissions = role.permissions
+                          ? Object.entries(role.permissions)
+                              .filter(([key, value]) => value === true)
+                              .map(([key]) => formatPermissionName(key))
+                              .slice(0, 3)
+                          : [];
+
                         return (
                           <tr
                             key={role._id}
@@ -739,32 +780,39 @@ function UserManagementInner() {
                                   {getRoleIcon(role.name)}
                                 </div>
                                 <div>
-                                  <div className="font-medium text-gray-900">{role.name}</div>
+                                  <div className="font-medium text-gray-900">
+                                    {role.name}
+                                  </div>
                                 </div>
                               </div>
                             </td>
                             <td className="px-6 py-4">
                               <div className="text-sm text-gray-700">
-                                {permissionCount} permission{permissionCount !== 1 ? 's' : ''}
+                                {permissionCount} permission
+                                {permissionCount !== 1 ? "s" : ""}
                               </div>
                               {permissionCount > 0 && (
                                 <div className="text-xs text-gray-500 mt-1">
-                                  {activePermissions.join(', ')}
-                                  {permissionCount > 3 && '...'}
+                                  {activePermissions.join(", ")}
+                                  {permissionCount > 3 && "..."}
                                 </div>
                               )}
                             </td>
                             <td className="px-6 py-4 text-right">
                               <div className="flex justify-end gap-2">
                                 <button
-                                  onClick={() => handleAction(role, "role", "edit")}
+                                  onClick={() =>
+                                    handleAction(role, "role", "edit")
+                                  }
                                   className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
                                   title="Edit role"
                                 >
                                   <Edit size={16} />
                                 </button>
                                 <button
-                                  onClick={() => handleAction(role, "role", "delete")}
+                                  onClick={() =>
+                                    handleAction(role, "role", "delete")
+                                  }
                                   className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
                                   title="Delete role"
                                 >
@@ -780,7 +828,9 @@ function UserManagementInner() {
                         <td colSpan="3" className="px-6 py-12 text-center">
                           <div className="flex flex-col items-center justify-center">
                             <Shield size={40} className="text-gray-300 mb-3" />
-                            <h3 className="text-gray-500 font-medium mb-1">No roles found</h3>
+                            <h3 className="text-gray-500 font-medium mb-1">
+                              No roles found
+                            </h3>
                             <p className="text-gray-400 text-sm">
                               {searchRoleQuery
                                 ? "Try adjusting your search"
@@ -799,15 +849,27 @@ function UserManagementInner() {
                 <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 pagination">
                   <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                     <div className="text-sm text-gray-600">
-                      Showing <span className="font-medium">{indexOfFirstRole + 1}</span> to{" "}
+                      Showing{" "}
+                      <span className="font-medium">
+                        {indexOfFirstRole + 1}
+                      </span>{" "}
+                      to{" "}
                       <span className="font-medium">
                         {Math.min(indexOfLastRole, filteredRoles.length)}
                       </span>{" "}
-                      of <span className="font-medium">{filteredRoles.length}</span> roles
+                      of{" "}
+                      <span className="font-medium">
+                        {filteredRoles.length}
+                      </span>{" "}
+                      roles
                     </div>
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => handlePageChangeRoles(Math.max(validatedCurrentPageRoles - 1, 1))}
+                        onClick={() =>
+                          handlePageChangeRoles(
+                            Math.max(validatedCurrentPageRoles - 1, 1),
+                          )
+                        }
                         disabled={validatedCurrentPageRoles === 1}
                         className="p-2 rounded border border-gray-300 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
@@ -829,7 +891,14 @@ function UserManagementInner() {
                         ))}
                       </div>
                       <button
-                        onClick={() => handlePageChangeRoles(Math.min(validatedCurrentPageRoles + 1, totalPagesRoles))}
+                        onClick={() =>
+                          handlePageChangeRoles(
+                            Math.min(
+                              validatedCurrentPageRoles + 1,
+                              totalPagesRoles,
+                            ),
+                          )
+                        }
                         disabled={validatedCurrentPageRoles === totalPagesRoles}
                         className="p-2 rounded border border-gray-300 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >

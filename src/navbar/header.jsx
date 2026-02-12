@@ -1,6 +1,3 @@
-
-
-
 import React, { useState, useEffect, useRef } from "react";
 import { Menu, Power, ChevronDown, Bell } from "react-feather";
 import { Link, useNavigate } from "react-router-dom";
@@ -26,18 +23,15 @@ const Navbar = ({ toggleSidebar }) => {
   const API_SI = import.meta.env.VITE_SI_URI;
   const API_URL = import.meta.env.VITE_API_URL;
 
-
-
   // Sales team number (international format)
   const salesTeamNumber = "919952885799"; // replace with your number
   const whatsappLink = `https://wa.me/${salesTeamNumber}?text=Hello%20I%20am%20interested%20in%20your%20services`;
 
-
   // Get profile image URL function
   const getProfileImageUrl = (image) => {
     if (!image) return "https://randomuser.me/api/portraits/men/32.jpg";
-    if (image.startsWith('http')) return image;
-    return `${API_SI}/${image.replace(/\\/g, "/")}`;
+    if (image.startsWith("http")) return image;
+    return `${API_SI}/uploads/users/${image}`;
   };
 
   // Load user
@@ -52,42 +46,42 @@ const Navbar = ({ toggleSidebar }) => {
     };
 
     // Add event listener
-    window.addEventListener('userProfileUpdated', handleProfileUpdate);
-    
+    window.addEventListener("userProfileUpdated", handleProfileUpdate);
+
     // Also listen for storage changes (in case other tabs update)
     const handleStorageChange = (e) => {
-      if (e.key === 'user') {
+      if (e.key === "user") {
         const updatedUser = JSON.parse(e.newValue);
         if (updatedUser) setUser(updatedUser);
       }
     };
-    
-    window.addEventListener('storage', handleStorageChange);
+
+    window.addEventListener("storage", handleStorageChange);
 
     return () => {
-      window.removeEventListener('userProfileUpdated', handleProfileUpdate);
-      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener("userProfileUpdated", handleProfileUpdate);
+      window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
 
   // Logout
-  
-const handleLogout = async () => {
-  const token = localStorage.getItem("token");
-  try {
-    await axios.post(
-      `${API_URL}/users/logout`,
-      {},
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-  } catch (err) {
-    console.error("Logout error:", err);
-  } finally {
-    // Clear localStorage and navigate regardless of API success
-    localStorage.clear();
-    navigate("/");
-  }
-};
+
+  const handleLogout = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      await axios.post(
+        `${API_URL}/users/logout`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      // Clear localStorage and navigate regardless of API success
+      localStorage.clear();
+      navigate("/");
+    }
+  };
 
   // Outside click detection
   useEffect(() => {
@@ -138,12 +132,17 @@ const handleLogout = async () => {
             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           >
             {isFullscreen ? (
-              <Minimize size={22} className="text-gray-600 dark:text-gray-300" />
+              <Minimize
+                size={22}
+                className="text-gray-600 dark:text-gray-300"
+              />
             ) : (
-              <Maximize size={22} className="text-gray-600 dark:text-gray-300" />
+              <Maximize
+                size={22}
+                className="text-gray-600 dark:text-gray-300"
+              />
             )}
           </button>
-
 
           {/* WhatsApp Button with Animation */}
           {/* <a
@@ -155,7 +154,6 @@ const handleLogout = async () => {
             <FaWhatsapp size={28} className="text-white group-hover:text-green-50 transition-colors" />
             <span className="absolute w-2 h-2 bg-green-300 rounded-full top-1 right-1 animate-ping"></span>
           </a> */}
-
 
           {/* Notifications */}
           <div className="relative" ref={notificationRef}>
@@ -188,7 +186,8 @@ const handleLogout = async () => {
                             alt="avatar"
                             className="w-10 h-10 rounded-full object-cover border border-gray-300 dark:border-gray-600"
                             onError={(e) => {
-                              e.target.src = "https://randomuser.me/api/portraits/men/32.jpg";
+                              e.target.src =
+                                "https://randomuser.me/api/portraits/men/32.jpg";
                             }}
                           />
                         </div>
@@ -239,7 +238,8 @@ const handleLogout = async () => {
                   alt="User Avatar"
                   className="w-10 h-10 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600"
                   onError={(e) => {
-                    e.target.src = "https://randomuser.me/api/portraits/men/32.jpg";
+                    e.target.src =
+                      "https://randomuser.me/api/portraits/men/32.jpg";
                   }}
                 />
                 <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full animate-pulse"></span>
