@@ -438,7 +438,7 @@ export default function EditUserModal({ user, roles, onClose, onUserUpdated }) {
               className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 p-2 rounded-full transition-colors flex items-center justify-center w-8 h-8"
               aria-label="Close"
             >
-              <X size={20} />
+              {/* <X size={20} /> */}
             </button>
           </div>
         </DialogHeader>
