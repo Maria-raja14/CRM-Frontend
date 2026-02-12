@@ -89,7 +89,7 @@ const tourSteps = [
   },
   {
     selector: ".roles-table .search-input",
-    content: "Search roles by name. The table updates as you type.",
+    content: "Search roles by Email's. The table updates as you type.",
   },
   {
     selector: ".roles-table .first-role-row",
@@ -101,7 +101,7 @@ const tourSteps = [
   },
 ];
 
-// Role icon mapping using available react-feather icons
+
 const getRoleIcon = (roleName) => {
   const name = roleName?.toLowerCase() || "";
 

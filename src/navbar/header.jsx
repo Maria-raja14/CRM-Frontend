@@ -33,41 +33,59 @@ const Navbar = ({ toggleSidebar }) => {
 
     if (image.startsWith("http")) return image;
 
-    const base = API_SI.endsWith("/") ? API_SI.slice(0, -1) : API_SI;
+    const base = API_SI.replace(/\/$/, "");
 
-    // 🔥 cache-busting query
-    return `${base}/uploads/users/${image}?t=${Date.now()}`;
+    return `${base}/uploads/users/${image}`;
   };
 
   // Load user
+
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-    if (storedUser) setUser(storedUser);
+    const fetchUser = async () => {
+      try {
+        const token = localStorage.getItem("token");
 
-    // Listen for profile update events
-    const handleProfileUpdate = () => {
-      const updatedUser = JSON.parse(localStorage.getItem("user"));
-      if (updatedUser) setUser(updatedUser);
-    };
+        const res = await axios.get(`${API_URL}/users/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-    // Add event listener
-    window.addEventListener("userProfileUpdated", handleProfileUpdate);
-
-    // Also listen for storage changes (in case other tabs update)
-    const handleStorageChange = (e) => {
-      if (e.key === "user") {
-        const updatedUser = JSON.parse(e.newValue);
-        if (updatedUser) setUser(updatedUser);
+        setUser(res.data);
+      } catch (err) {
+        console.error("Failed to fetch user:", err);
       }
     };
 
-    window.addEventListener("storage", handleStorageChange);
-
-    return () => {
-      window.removeEventListener("userProfileUpdated", handleProfileUpdate);
-      window.removeEventListener("storage", handleStorageChange);
-    };
+    fetchUser();
   }, []);
+
+  // useEffect(() => {
+  //   const storedUser = JSON.parse(localStorage.getItem("user"));
+  //   if (storedUser) setUser(storedUser);
+
+  //   // Listen for profile update events
+  //   const handleProfileUpdate = () => {
+  //     const updatedUser = JSON.parse(localStorage.getItem("user"));
+  //     if (updatedUser) setUser(updatedUser);
+  //   };
+
+  //   // Add event listener
+  //   window.addEventListener("userProfileUpdated", handleProfileUpdate);
+
+  //   // Also listen for storage changes (in case other tabs update)
+  //   const handleStorageChange = (e) => {
+  //     if (e.key === "user") {
+  //       const updatedUser = JSON.parse(e.newValue);
+  //       if (updatedUser) setUser(updatedUser);
+  //     }
+  //   };
+
+  //   window.addEventListener("storage", handleStorageChange);
+
+  //   return () => {
+  //     window.removeEventListener("userProfileUpdated", handleProfileUpdate);
+  //     window.removeEventListener("storage", handleStorageChange);
+  //   };
+  // }, []);
 
   // Logout
 
