@@ -1,4 +1,4 @@
-// import React, { useEffect, useState, useRef, useCallback } from "react";
+// import React, { useEffect, useState, useRef } from "react";
 // import axios from "axios";
 // import { toast, ToastContainer } from "react-toastify";
 // import "react-toastify/dist/ReactToastify.css";
@@ -8,8 +8,13 @@
 //   DialogHeader,
 //   DialogTitle,
 // } from "../../components/ui/dialog";
+// import { useSearchParams, useNavigate } from "react-router-dom";
+
+
 
 // const EmailChat = () => {
+//   const [searchParams] = useSearchParams();
+//   const navigate = useNavigate();
 //   const [threads, setThreads] = useState([]);
 //   const [messages, setMessages] = useState([]);
 //   const [selectedThread, setSelectedThread] = useState(null);
@@ -56,10 +61,39 @@
 //   const [showBulkActions, setShowBulkActions] = useState(false);
 //   const [isSelectAll, setIsSelectAll] = useState(false);
 //   const fileInputRef = useRef(null);
-
-
-
   
+//   // API Base URL from environment variables
+//   const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+//   const SI_URI = import.meta.env.VITE_SI_URI || "http://localhost:5000";
+
+//   // ✅ Detect if running in production
+//   const isProduction = import.meta.env.PROD;
+
+//     const FRONTEND_URL = window.location.origin;
+
+
+//   // Handle OAuth redirect from Google
+//   useEffect(() => {
+//     const gmailConnected = searchParams.get("gmail_connected");
+//     const gmailError = searchParams.get("gmail_error");
+//     const errorMsg = searchParams.get("error");
+
+//     if (gmailConnected) {
+//       toast.success("✅ Gmail connected successfully!");
+//       // Clear the URL parameters
+//       navigate('/emailchat', { replace: true });
+//       // Check auth status immediately
+//       setTimeout(() => {
+//         checkAuthStatus();
+//       }, 500);
+//     }
+    
+//     if (gmailError) {
+//       toast.error(`❌ ${errorMsg || "Error connecting Gmail."}`);
+//       navigate('/emailchat', { replace: true });
+//     }
+//   }, [searchParams, navigate]);
+
 //   // Check authentication status on component mount
 //   useEffect(() => {
 //     checkAuthStatus();
@@ -98,7 +132,7 @@
 //   const checkAuthStatus = async () => {
 //     try {
 //       setLoading(true);
-//       const res = await axios.get("http://localhost:5000/api/gmail/auth-status");
+//       const res = await axios.get(`${API_BASE_URL}/gmail/auth-status`);
 //       setAuthStatus(res.data);
       
 //       if (res.data.authenticated) {
@@ -122,7 +156,7 @@
 
 //   const fetchAuthUrl = async () => {
 //     try {
-//       const res = await axios.get("http://localhost:5000/api/gmail/auth-url");
+//       const res = await axios.get(`${API_BASE_URL}/gmail/auth-url`);
 //       if (res.data.success) {
 //         setAuthUrl(res.data.url);
 //       } else {
@@ -130,13 +164,13 @@
 //       }
 //     } catch (err) {
 //       console.error("Error fetching auth URL:", err);
-//       setError("Failed to connect to server. Make sure the backend is running on port 5000.");
+//       setError(`Failed to connect to server. Make sure the backend is running on ${SI_URI}.`);
 //     }
 //   };
 
 //   const startRealTimeWatch = async () => {
 //     try {
-//       await axios.post("http://localhost:5000/api/gmail/watch");
+//       await axios.post(`${API_BASE_URL}/gmail/watch`);
 //       setRealTimeEnabled(true);
 //       toast.info("🔔 Real-time email updates enabled");
 //     } catch (err) {
@@ -146,7 +180,7 @@
 
 //   const stopRealTimeWatch = async () => {
 //     try {
-//       await axios.post("http://localhost:5000/api/gmail/stop-watch");
+//       await axios.post(`${API_BASE_URL}/gmail/stop-watch`);
 //       setRealTimeEnabled(false);
 //       toast.info("Real-time email updates disabled");
 //     } catch (err) {
@@ -184,7 +218,7 @@
 //         params.pageToken = nextPageToken;
 //       }
 
-//       const res = await axios.get("http://localhost:5000/api/gmail/threads", { params });
+//       const res = await axios.get(`${API_BASE_URL}/gmail/threads`, { params });
       
 //       if (res.data.success) {
 //         if (loadMore) {
@@ -213,7 +247,7 @@
 
 //   const fetchLabels = async () => {
 //     try {
-//       const res = await axios.get("http://localhost:5000/api/gmail/labels");
+//       const res = await axios.get(`${API_BASE_URL}/gmail/labels`);
 //       if (res.data.success) {
 //         setLabels(res.data.data);
 //       }
@@ -224,7 +258,7 @@
 
 //   const fetchDrafts = async () => {
 //     try {
-//       const res = await axios.get("http://localhost:5000/api/gmail/drafts");
+//       const res = await axios.get(`${API_BASE_URL}/gmail/drafts`);
 //       if (res.data.success) {
 //         setDrafts(res.data.data);
 //         setShowDrafts(true);
@@ -237,7 +271,7 @@
 
 //   const fetchEmailSuggestions = async (query) => {
 //     try {
-//       const res = await axios.get(`http://localhost:5000/api/gmail/suggestions?query=${encodeURIComponent(query)}`);
+//       const res = await axios.get(`${API_BASE_URL}/gmail/suggestions?query=${encodeURIComponent(query)}`);
 //       if (res.data.success) {
 //         setEmailSuggestions(res.data.data || []);
 //       }
@@ -251,9 +285,7 @@
 //     setLoading(true);
 //     setError("");
 //     try {
-//       const res = await axios.get(
-//         `http://localhost:5000/api/gmail/thread/${threadId}`
-//       );
+//       const res = await axios.get(`${API_BASE_URL}/gmail/thread/${threadId}`);
 //       if (res.data.success) {
 //         setMessages(res.data.data.messages || []);
 //         setSelectedThread(threadId);
@@ -282,7 +314,7 @@
 //   const disconnectGmail = async () => {
 //     try {
 //       await stopRealTimeWatch();
-//       await axios.delete("http://localhost:5000/api/gmail/disconnect");
+//       await axios.delete(`${API_BASE_URL}/gmail/disconnect`);
 //       setAuthStatus({ authenticated: false, message: "Gmail disconnected" });
 //       setThreads([]);
 //       setMessages([]);
@@ -474,7 +506,7 @@
 //         });
 //       }, 200);
 
-//       const res = await axios.post("http://localhost:5000/api/gmail/send", formData, {
+//       const res = await axios.post(`${API_BASE_URL}/gmail/send`, formData, {
 //         headers: {
 //           'Content-Type': 'multipart/form-data'
 //         },
@@ -530,7 +562,7 @@
 //         formData.append('attachments', file);
 //       });
 
-//       const res = await axios.post("http://localhost:5000/api/gmail/draft", formData, {
+//       const res = await axios.post(`${API_BASE_URL}/gmail/draft`, formData, {
 //         headers: {
 //           'Content-Type': 'multipart/form-data'
 //         }
@@ -580,7 +612,7 @@
 //           break;
 //       }
       
-//       const res = await axios.post(`http://localhost:5000/api/gmail/${endpoint}`, body);
+//       const res = await axios.post(`${API_BASE_URL}/gmail/${endpoint}`, body);
       
 //       if (res.data.success) {
 //         toast.success(res.data.message);
@@ -631,7 +663,7 @@
 //     try {
 //       switch(action) {
 //         case 'star':
-//           const res = await axios.post('http://localhost:5000/api/gmail/bulk-star', {
+//           const res = await axios.post(`${API_BASE_URL}/gmail/bulk-star`, {
 //             threadIds,
 //             star: value
 //           });
@@ -651,7 +683,7 @@
 //           break;
           
 //         case 'delete':
-//           const deleteRes = await axios.post('http://localhost:5000/api/gmail/bulk-delete', {
+//           const deleteRes = await axios.post(`${API_BASE_URL}/gmail/bulk-delete`, {
 //             threadIds,
 //             permanent: activeLabel === 'TRASH'
 //           });
@@ -668,7 +700,7 @@
 //         case 'read':
 //           // Handle bulk read/unread
 //           await Promise.all(threadIds.map(threadId =>
-//             axios.post(`http://localhost:5000/api/gmail/thread/${threadId}/read`, { read: value })
+//             axios.post(`${API_BASE_URL}/gmail/thread/${threadId}/read`, { read: value })
 //           ));
 //           toast.success(`Marked ${threadIds.length} emails as ${value ? 'read' : 'unread'}`);
 //           setThreads(prev => prev.map(thread => {
@@ -685,7 +717,7 @@
 //         case 'trash':
 //           // Handle bulk move to trash
 //           await Promise.all(threadIds.map(threadId =>
-//             axios.post(`http://localhost:5000/api/gmail/thread/${threadId}/trash`)
+//             axios.post(`${API_BASE_URL}/gmail/thread/${threadId}/trash`)
 //           ));
 //           toast.success(`Moved ${threadIds.length} emails to trash`);
 //           setThreads(prev => prev.map(thread => {
@@ -732,9 +764,9 @@
 //   const deleteThread = async (threadId, permanent = false) => {
 //     try {
 //       if (permanent) {
-//         await axios.delete(`http://localhost:5000/api/gmail/thread/${threadId}`);
+//         await axios.delete(`${API_BASE_URL}/gmail/thread/${threadId}`);
 //       } else {
-//         await axios.post(`http://localhost:5000/api/gmail/thread/${threadId}/trash`);
+//         await axios.post(`${API_BASE_URL}/gmail/thread/${threadId}/trash`);
 //       }
       
 //       toast.success(permanent ? "🗑️ Thread permanently deleted" : "🗑️ Thread moved to trash");
@@ -803,7 +835,7 @@
 //   const downloadAttachment = async (messageId, attachment) => {
 //     try {
 //       const res = await axios.get(
-//         `http://localhost:5000/api/gmail/attachment/${messageId}/${attachment.id}`,
+//         `${API_BASE_URL}/gmail/attachment/${messageId}/${attachment.id}`,
 //         { responseType: 'blob' }
 //       );
       
@@ -905,66 +937,104 @@
 //     return '📧';
 //   };
 
-//   if (loading && !authStatus.authenticated && !error) {
-//     return (
-//       <div className="p-6 max-w-md mx-auto mt-10 bg-white rounded-lg border border-gray-200 shadow-sm">
-//         <div className="text-center">
-//           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-//           <p className="mt-4 text-gray-600">Checking authentication status...</p>
+ 
+
+// if (loading && !authStatus.authenticated && !error) {
+//   return (
+//     <div className="p-8 max-w-md mx-auto mt-20 bg-white rounded-xl border border-gray-200 shadow-lg">
+//       <div className="text-center">
+//         <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-6"></div>
+//         <h3 className="text-xl font-semibold text-gray-800 mb-2">Connecting to Gmail</h3>
+//         <p className="text-gray-600 mb-4">Checking authentication status...</p>
+//         <div className="flex justify-center space-x-4">
+//           <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+//           <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse delay-150"></div>
+//           <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse delay-300"></div>
 //         </div>
 //       </div>
-//     );
-//   }
+//     </div>
+//   );
+// }
 
-//   if (!authStatus.authenticated) {
-//     return (
-//       <div className="p-6 max-w-md mx-auto mt-10 bg-white rounded-lg border border-gray-200 shadow-sm">
-//         <div className="text-center mb-4">
-//           <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-//             <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-//               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-//             </svg>
-//           </div>
-//           <h2 className="text-xl font-semibold text-gray-800">Connect Gmail</h2>
-//           <p className="text-gray-600 mt-2">{authStatus.message}</p>
+// if (!authStatus.authenticated) {
+//   return (
+//     <div className="p-8 max-w-md mx-auto mt-20 bg-white rounded-xl border border-gray-200 shadow-lg">
+//       <div className="text-center mb-8">
+//         <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+//           <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+//           </svg>
 //         </div>
-        
-//         {error && (
-//           <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
-//             {error}
+//         <h2 className="text-2xl font-bold text-gray-800 mb-3">Connect Your Gmail</h2>
+//         <p className="text-gray-600 mb-6">Connect your Gmail account to manage emails directly</p>
+//       </div>
+      
+//       {error && (
+//         <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+//           <div className="flex items-center gap-2 mb-1">
+//             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+//             </svg>
+//             <span className="font-medium">Connection Error</span>
 //           </div>
-//         )}
-        
-//         {authUrl ? (
-//           <div className="space-y-3">
-//             <button
-//               onClick={connectGmail}
-//               className="w-full bg-gray-800 hover:bg-gray-900 text-white font-medium py-2 px-4 rounded-lg border border-gray-900 transition duration-200 flex items-center justify-center gap-2 text-sm"
-//             >
-//               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-//                 <path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-5.318V11.73L12 16.64l-5.045-4.91v9.273H1.636A1.636 1.636 0 010 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z"/>
-//               </svg>
-//               Connect Gmail
-//             </button>
-//             <button
-//               onClick={checkAuthStatus}
-//               className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg border border-gray-300 transition duration-200 text-sm"
-//             >
-//               Check Status Again
-//             </button>
+//           <p>{error}</p>
+//         </div>
+//       )}
+      
+//       {authStatus.message && !error && (
+//         <div className="mb-6 p-4 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg text-sm">
+//           <div className="flex items-center gap-2 mb-1">
+//             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+//             </svg>
+//             <span className="font-medium">Status</span>
 //           </div>
-//         ) : (
+//           <p>{authStatus.message}</p>
+//         </div>
+//       )}
+      
+//       {authUrl ? (
+//         <div className="space-y-4">
+//           <button
+//             onClick={connectGmail}
+//             className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 px-6 rounded-xl border border-blue-700 transition duration-200 flex items-center justify-center gap-3 text-base shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+//           >
+//             <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+//               <path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-5.318V11.73L12 16.64l-5.045-4.91v9.273H1.636A1.636 1.636 0 010 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z"/>
+//             </svg>
+//             Connect Gmail Account
+//           </button>
+//           <div className="text-center text-gray-500 text-sm">
+//             <p>You'll be redirected to Google to authorize access</p>
+//           </div>
+//         </div>
+//       ) : (
+//         <div className="space-y-4">
 //           <button
 //             onClick={fetchAuthUrl}
 //             disabled={loading}
-//             className="w-full bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg border border-gray-600 transition duration-200 disabled:opacity-50 text-sm"
+//             className="w-full bg-gray-700 hover:bg-gray-800 text-white font-semibold py-4 px-6 rounded-xl border border-gray-800 transition duration-200 disabled:opacity-50 text-base shadow-md"
 //           >
-//             {loading ? "Loading..." : "Retry Connection"}
+//             {loading ? (
+//               <div className="flex items-center justify-center gap-3">
+//                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+//                 <span>Connecting...</span>
+//               </div>
+//             ) : "Get Connection Link"}
 //           </button>
-//         )}
-//       </div>
-//     );
-//   }
+//           <button
+//             onClick={checkAuthStatus}
+//             className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-6 rounded-lg border border-gray-300 transition duration-200 text-sm"
+//           >
+//             ↻ Check Status Again
+//           </button>
+//         </div>
+//       )}
+      
+ 
+//     </div>
+//   );
+// }
 
 //   return (
 //     <div className="p-6 bg-gray-50 min-h-screen">
@@ -1970,7 +2040,7 @@
 //   );
 // };
 
-// export default EmailChat;//all come perfect..
+// export default EmailChat;//url change api base url give..
 
 
 
@@ -2013,8 +2083,6 @@ const EmailChat = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [threadToDelete, setThreadToDelete] = useState(null);
   const [selectedFiles, setSelectedFiles] = useState([]);
-  const [realTimeEnabled, setRealTimeEnabled] = useState(false);
-  const [newEmailNotification, setNewEmailNotification] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterUnread, setFilterUnread] = useState(false);
@@ -2022,20 +2090,28 @@ const EmailChat = () => {
   const [labels, setLabels] = useState([]);
   const [drafts, setDrafts] = useState([]);
   const [showDrafts, setShowDrafts] = useState(false);
-  const [showScheduled, setShowScheduled] = useState(false);
-  const [showLabels, setShowLabels] = useState(false);
   const [composeMode, setComposeMode] = useState('new');
   const [emailSuggestions, setEmailSuggestions] = useState([]);
   const [uploadProgress, setUploadProgress] = useState({});
   const [sendingProgress, setSendingProgress] = useState(0);
-  const [showAttachmentModal, setShowAttachmentModal] = useState(false);
-  const [selectedAttachment, setSelectedAttachment] = useState(null);
   const [selectedThreads, setSelectedThreads] = useState(new Set());
-  const [bulkAction, setBulkAction] = useState(null);
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [isSelectAll, setIsSelectAll] = useState(false);
+  
+  // ✅ REAL-TIME UPDATES STATE
+  const [lastCheckTime, setLastCheckTime] = useState(Date.now());
+  const [pollingInterval, setPollingInterval] = useState(null);
+  const [newEmailCount, setNewEmailCount] = useState(0);
+  
   const fileInputRef = useRef(null);
   
+  // API Base URL from environment variables
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+  const SI_URI = import.meta.env.VITE_SI_URI || "http://localhost:5000";
+
+  // ✅ Detect if running in production
+  const isProduction = import.meta.env.PROD;
+  const FRONTEND_URL = window.location.origin;
 
   // Handle OAuth redirect from Google
   useEffect(() => {
@@ -2045,9 +2121,7 @@ const EmailChat = () => {
 
     if (gmailConnected) {
       toast.success("✅ Gmail connected successfully!");
-      // Clear the URL parameters
       navigate('/emailchat', { replace: true });
-      // Check auth status immediately
       setTimeout(() => {
         checkAuthStatus();
       }, 500);
@@ -2064,16 +2138,35 @@ const EmailChat = () => {
     checkAuthStatus();
   }, []);
 
-  // Real-time polling effect
+  // ✅ REAL-TIME POLLING EFFECT - Check every 10 seconds
   useEffect(() => {
     let interval;
-    if (realTimeEnabled && authStatus.authenticated) {
+    
+    if (authStatus.authenticated) {
+      // Check for new emails immediately
+      checkForNewEmails();
+      
+      // Then set up polling every 10 seconds
       interval = setInterval(() => {
-        checkNewEmails();
-      }, 30000);
+        checkForNewEmails();
+      }, 10000); // 10 seconds
+      
+      setPollingInterval(interval);
     }
-    return () => clearInterval(interval);
-  }, [realTimeEnabled, authStatus.authenticated]);
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [authStatus.authenticated]);
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
+  }, [pollingInterval]);
 
   useEffect(() => {
     if (authStatus.authenticated) {
@@ -2094,16 +2187,39 @@ const EmailChat = () => {
     return () => clearTimeout(timer);
   }, [composeData.to]);
 
+  // ✅ Function to check for new emails
+  const checkForNewEmails = async () => {
+    if (!authStatus.authenticated) return;
+    
+    try {
+      const res = await axios.get(`${API_BASE_URL}/gmail/check-new`, {
+        params: { lastCheck: lastCheckTime }
+      });
+      
+      if (res.data.success && res.data.count > 0) {
+        // New emails found!
+        setNewEmailCount(prev => prev + res.data.count);
+        
+        // Show notification
+        toast.info(`📧 ${res.data.count} new email${res.data.count > 1 ? 's' : ''} received!`);
+        
+        // Update last check time
+        setLastCheckTime(Date.now());
+      }
+    } catch (err) {
+      console.error("Error checking new emails:", err);
+    }
+  };
+
   const checkAuthStatus = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("http://localhost:5000/api/gmail/auth-status");
+      const res = await axios.get(`${API_BASE_URL}/gmail/auth-status`);
       setAuthStatus(res.data);
       
       if (res.data.authenticated) {
         setUserEmail(res.data.email || '');
         await fetchThreads();
-        startRealTimeWatch();
       } else {
         await fetchAuthUrl();
       }
@@ -2121,7 +2237,7 @@ const EmailChat = () => {
 
   const fetchAuthUrl = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/gmail/auth-url");
+      const res = await axios.get(`${API_BASE_URL}/gmail/auth-url`);
       if (res.data.success) {
         setAuthUrl(res.data.url);
       } else {
@@ -2129,48 +2245,11 @@ const EmailChat = () => {
       }
     } catch (err) {
       console.error("Error fetching auth URL:", err);
-      setError("Failed to connect to server. Make sure the backend is running on port 5000.");
+      setError(`Failed to connect to server. Make sure the backend is running on ${SI_URI}.`);
     }
   };
 
-  const startRealTimeWatch = async () => {
-    try {
-      await axios.post("http://localhost:5000/api/gmail/watch");
-      setRealTimeEnabled(true);
-      toast.info("🔔 Real-time email updates enabled");
-    } catch (err) {
-      console.error("Error starting real-time watch:", err);
-    }
-  };
-
-  const stopRealTimeWatch = async () => {
-    try {
-      await axios.post("http://localhost:5000/api/gmail/stop-watch");
-      setRealTimeEnabled(false);
-      toast.info("Real-time email updates disabled");
-    } catch (err) {
-      console.error("Error stopping real-time watch:", err);
-    }
-  };
-
-  const checkNewEmails = async () => {
-    try {
-      const oldThreadCount = threads.length;
-      await fetchThreads();
-      const newThreadCount = threads.length;
-      
-      if (newThreadCount > oldThreadCount) {
-        setNewEmailNotification(`📧 ${newThreadCount - oldThreadCount} new email(s) received`);
-        setTimeout(() => setNewEmailNotification(null), 5000);
-        
-        const unread = threads.filter(thread => thread.unread).length;
-        setUnreadCount(unread);
-      }
-    } catch (err) {
-      console.error("Error checking new emails:", err);
-    }
-  };
-
+  // ✅ UPDATED fetchThreads with LATEST FIRST sorting
   const fetchThreads = async (loadMore = false) => {
     setLoading(true);
     setError("");
@@ -2183,22 +2262,41 @@ const EmailChat = () => {
         params.pageToken = nextPageToken;
       }
 
-      const res = await axios.get("http://localhost:5000/api/gmail/threads", { params });
+      const res = await axios.get(`${API_BASE_URL}/gmail/threads`, { params });
       
       if (res.data.success) {
+        let newThreads = res.data.data;
+        
+        // ✅ ALWAYS SORT BY LATEST FIRST (newest at top)
+        newThreads.sort((a, b) => {
+          const dateA = a.timestamp || new Date(a.date).getTime() || 0;
+          const dateB = b.timestamp || new Date(b.date).getTime() || 0;
+          return dateB - dateA; // Descending - newest first
+        });
+        
         if (loadMore) {
-          setThreads(prev => [...prev, ...res.data.data]);
+          // When loading more, add to the end (older emails)
+          setThreads(prev => [...prev, ...newThreads]);
         } else {
-          setThreads(res.data.data);
-          setSelectedThreads(new Set()); // Clear selection on refresh
+          // Fresh load - show newest first
+          setThreads(newThreads);
+          setSelectedThreads(new Set());
           setShowBulkActions(false);
           setIsSelectAll(false);
+          
+          // Reset new email count when refreshing
+          setNewEmailCount(0);
         }
+        
         setNextPageToken(res.data.nextPageToken);
         setTotalEmails(res.data.totalEstimate || res.data.data.length);
         
-        const unread = res.data.data.filter(thread => thread.unread).length;
+        const unread = newThreads.filter(thread => thread.unread).length;
         setUnreadCount(unread);
+        
+        // Update last check time after successful fetch
+        setLastCheckTime(Date.now());
+        
       } else {
         setError(res.data.error || "Failed to fetch emails");
       }
@@ -2212,7 +2310,7 @@ const EmailChat = () => {
 
   const fetchLabels = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/gmail/labels");
+      const res = await axios.get(`${API_BASE_URL}/gmail/labels`);
       if (res.data.success) {
         setLabels(res.data.data);
       }
@@ -2223,7 +2321,7 @@ const EmailChat = () => {
 
   const fetchDrafts = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/gmail/drafts");
+      const res = await axios.get(`${API_BASE_URL}/gmail/drafts`);
       if (res.data.success) {
         setDrafts(res.data.data);
         setShowDrafts(true);
@@ -2236,7 +2334,7 @@ const EmailChat = () => {
 
   const fetchEmailSuggestions = async (query) => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/gmail/suggestions?query=${encodeURIComponent(query)}`);
+      const res = await axios.get(`${API_BASE_URL}/gmail/suggestions?query=${encodeURIComponent(query)}`);
       if (res.data.success) {
         setEmailSuggestions(res.data.data || []);
       }
@@ -2250,9 +2348,7 @@ const EmailChat = () => {
     setLoading(true);
     setError("");
     try {
-      const res = await axios.get(
-        `http://localhost:5000/api/gmail/thread/${threadId}`
-      );
+      const res = await axios.get(`${API_BASE_URL}/gmail/thread/${threadId}`);
       if (res.data.success) {
         setMessages(res.data.data.messages || []);
         setSelectedThread(threadId);
@@ -2280,8 +2376,7 @@ const EmailChat = () => {
 
   const disconnectGmail = async () => {
     try {
-      await stopRealTimeWatch();
-      await axios.delete("http://localhost:5000/api/gmail/disconnect");
+      await axios.delete(`${API_BASE_URL}/gmail/disconnect`);
       setAuthStatus({ authenticated: false, message: "Gmail disconnected" });
       setThreads([]);
       setMessages([]);
@@ -2295,11 +2390,10 @@ const EmailChat = () => {
     }
   };
 
-  // Optimized file handling
+  // File handling
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files);
     const validFiles = files.filter(file => {
-      // Check file size (30MB limit)
       if (file.size > 30 * 1024 * 1024) {
         toast.error(`File ${file.name} exceeds 30MB limit`);
         return false;
@@ -2309,46 +2403,7 @@ const EmailChat = () => {
     
     if (validFiles.length === 0) return;
     
-    // Process files in batches for better performance
-    const processFiles = async () => {
-      const newFiles = [];
-      const batchSize = 5;
-      
-      for (let i = 0; i < validFiles.length; i += batchSize) {
-        const batch = validFiles.slice(i, i + batchSize);
-        const batchPromises = batch.map(async (file, index) => {
-          const fileId = `${Date.now()}_${i + index}`;
-          setUploadProgress(prev => ({ ...prev, [fileId]: 0 }));
-          
-          // Simulate upload progress
-          for (let progress = 0; progress <= 100; progress += 10) {
-            await new Promise(resolve => setTimeout(resolve, 50));
-            setUploadProgress(prev => ({ ...prev, [fileId]: progress }));
-          }
-          
-          return file;
-        });
-        
-        const batchResults = await Promise.all(batchPromises);
-        newFiles.push(...batchResults);
-        
-        // Clear progress after a delay
-        setTimeout(() => {
-          batch.forEach((_, idx) => {
-            const fileId = `${Date.now()}_${i + idx}`;
-            setUploadProgress(prev => {
-              const newProgress = { ...prev };
-              delete newProgress[fileId];
-              return newProgress;
-            });
-          });
-        }, 1000);
-      }
-      
-      setSelectedFiles(prev => [...prev, ...newFiles]);
-    };
-    
-    processFiles();
+    setSelectedFiles(prev => [...prev, ...validFiles]);
   };
 
   const removeFile = (index) => {
@@ -2361,73 +2416,28 @@ const EmailChat = () => {
 
   const getFileIcon = (file) => {
     if (file.type) {
-      if (file.type.startsWith('image/')) {
-        return '🖼️';
-      } else if (file.type.includes('pdf')) {
-        return '📄';
-      } else if (file.type.includes('audio')) {
-        return '🎵';
-      } else if (file.type.includes('video')) {
-        return '🎬';
-      } else if (file.type.includes('zip') || file.type.includes('rar') || file.type.includes('tar') || file.type.includes('gz')) {
-        return '📦';
-      } else if (file.type.includes('word') || file.type.includes('document') || file.type.includes('msword')) {
-        return '📝';
-      } else if (file.type.includes('excel') || file.type.includes('spreadsheet')) {
-        return '📊';
-      } else if (file.type.includes('powerpoint') || file.type.includes('presentation')) {
-        return '📊';
-      }
+      if (file.type.startsWith('image/')) return '🖼️';
+      if (file.type.includes('pdf')) return '📄';
+      if (file.type.includes('audio')) return '🎵';
+      if (file.type.includes('video')) return '🎬';
+      if (file.type.includes('zip') || file.type.includes('rar')) return '📦';
+      if (file.type.includes('word') || file.type.includes('document')) return '📝';
+      if (file.type.includes('excel') || file.type.includes('spreadsheet')) return '📊';
+      if (file.type.includes('powerpoint')) return '📊';
     }
     
-    // Fallback based on filename
     const fileName = file.name || file.filename || '';
     const extension = fileName.split('.').pop().toLowerCase();
     
-    switch(extension) {
-      case 'jpg':
-      case 'jpeg':
-      case 'png':
-      case 'gif':
-      case 'bmp':
-      case 'svg':
-      case 'webp':
-        return '🖼️';
-      case 'pdf':
-        return '📄';
-      case 'mp3':
-      case 'wav':
-      case 'ogg':
-      case 'flac':
-        return '🎵';
-      case 'mp4':
-      case 'avi':
-      case 'mov':
-      case 'wmv':
-      case 'flv':
-        return '🎬';
-      case 'zip':
-      case 'rar':
-      case '7z':
-      case 'tar':
-      case 'gz':
-        return '📦';
-      case 'doc':
-      case 'docx':
-        return '📝';
-      case 'xls':
-      case 'xlsx':
-      case 'csv':
-        return '📊';
-      case 'ppt':
-      case 'pptx':
-        return '📊';
-      case 'txt':
-      case 'rtf':
-        return '📄';
-      default:
-        return '📎';
-    }
+    const iconMap = {
+      'jpg': '🖼️', 'jpeg': '🖼️', 'png': '🖼️', 'gif': '🖼️',
+      'pdf': '📄', 'mp3': '🎵', 'wav': '🎵', 'mp4': '🎬', 'avi': '🎬',
+      'zip': '📦', 'rar': '📦', 'doc': '📝', 'docx': '📝',
+      'xls': '📊', 'xlsx': '📊', 'csv': '📊', 'ppt': '📊', 'pptx': '📊',
+      'txt': '📄', 'rtf': '📄'
+    };
+    
+    return iconMap[extension] || '📎';
   };
 
   const formatFileSize = (bytes) => {
@@ -2438,7 +2448,7 @@ const EmailChat = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  // Optimized send email function
+  // Send email function
   const sendEmail = async () => {
     if (!composeData.to.trim()) {
       toast.error("Please enter recipient email address");
@@ -2457,12 +2467,10 @@ const EmailChat = () => {
       formData.append('subject', composeData.subject || '(No Subject)');
       formData.append('message', composeData.message || '');
       
-      // Add attachments
       selectedFiles.forEach(file => {
         formData.append('attachments', file);
       });
 
-      // Show progress updates
       const progressInterval = setInterval(() => {
         setSendingProgress(prev => {
           if (prev >= 90) {
@@ -2473,7 +2481,7 @@ const EmailChat = () => {
         });
       }, 200);
 
-      const res = await axios.post("http://localhost:5000/api/gmail/send", formData, {
+      const res = await axios.post(`${API_BASE_URL}/gmail/send`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         },
@@ -2483,19 +2491,18 @@ const EmailChat = () => {
             setSendingProgress(percentCompleted);
           }
         },
-        timeout: 300000 // 5 minute timeout for large files
+        timeout: 300000
       });
       
       clearInterval(progressInterval);
       setSendingProgress(100);
       
       if (res.data.success) {
-        toast.success(`📧 Email sent successfully in ${res.data.data?.sendTime || 'a few'} seconds!`);
+        toast.success(`📧 Email sent successfully!`);
         setComposeData({ to: "", cc: "", bcc: "", subject: "", message: "", attachments: [] });
         setSelectedFiles([]);
         setShowCompose(false);
         await fetchThreads();
-        
         setTimeout(() => setSendingProgress(0), 1000);
       } else {
         throw new Error(res.data.error || "Failed to send email");
@@ -2529,7 +2536,7 @@ const EmailChat = () => {
         formData.append('attachments', file);
       });
 
-      const res = await axios.post("http://localhost:5000/api/gmail/draft", formData, {
+      const res = await axios.post(`${API_BASE_URL}/gmail/draft`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -2579,7 +2586,7 @@ const EmailChat = () => {
           break;
       }
       
-      const res = await axios.post(`http://localhost:5000/api/gmail/${endpoint}`, body);
+      const res = await axios.post(`${API_BASE_URL}/gmail/${endpoint}`, body);
       
       if (res.data.success) {
         toast.success(res.data.message);
@@ -2594,7 +2601,7 @@ const EmailChat = () => {
               case 'star':
                 updated.starred = value;
                 if (value && activeLabel === 'STARRED') {
-                  fetchThreads(); // Refresh starred view
+                  fetchThreads();
                 }
                 break;
               case 'spam':
@@ -2630,13 +2637,12 @@ const EmailChat = () => {
     try {
       switch(action) {
         case 'star':
-          const res = await axios.post('http://localhost:5000/api/gmail/bulk-star', {
+          const res = await axios.post(`${API_BASE_URL}/gmail/bulk-star`, {
             threadIds,
             star: value
           });
           if (res.data.success) {
             toast.success(`⭐ ${res.data.message}`);
-            // Update local state
             setThreads(prev => prev.map(thread => {
               if (selectedThreads.has(thread.id)) {
                 return { ...thread, starred: value };
@@ -2650,13 +2656,12 @@ const EmailChat = () => {
           break;
           
         case 'delete':
-          const deleteRes = await axios.post('http://localhost:5000/api/gmail/bulk-delete', {
+          const deleteRes = await axios.post(`${API_BASE_URL}/gmail/bulk-delete`, {
             threadIds,
             permanent: activeLabel === 'TRASH'
           });
           if (deleteRes.data.success) {
             toast.success(`🗑️ ${deleteRes.data.message}`);
-            // Remove deleted threads from state
             setThreads(prev => prev.filter(thread => !selectedThreads.has(thread.id)));
             setSelectedThreads(new Set());
             setShowBulkActions(false);
@@ -2665,9 +2670,8 @@ const EmailChat = () => {
           break;
           
         case 'read':
-          // Handle bulk read/unread
           await Promise.all(threadIds.map(threadId =>
-            axios.post(`http://localhost:5000/api/gmail/thread/${threadId}/read`, { read: value })
+            axios.post(`${API_BASE_URL}/gmail/thread/${threadId}/read`, { read: value })
           ));
           toast.success(`Marked ${threadIds.length} emails as ${value ? 'read' : 'unread'}`);
           setThreads(prev => prev.map(thread => {
@@ -2682,9 +2686,8 @@ const EmailChat = () => {
           break;
           
         case 'trash':
-          // Handle bulk move to trash
           await Promise.all(threadIds.map(threadId =>
-            axios.post(`http://localhost:5000/api/gmail/thread/${threadId}/trash`)
+            axios.post(`${API_BASE_URL}/gmail/thread/${threadId}/trash`)
           ));
           toast.success(`Moved ${threadIds.length} emails to trash`);
           setThreads(prev => prev.map(thread => {
@@ -2731,9 +2734,9 @@ const EmailChat = () => {
   const deleteThread = async (threadId, permanent = false) => {
     try {
       if (permanent) {
-        await axios.delete(`http://localhost:5000/api/gmail/thread/${threadId}`);
+        await axios.delete(`${API_BASE_URL}/gmail/thread/${threadId}`);
       } else {
-        await axios.post(`http://localhost:5000/api/gmail/thread/${threadId}/trash`);
+        await axios.post(`${API_BASE_URL}/gmail/thread/${threadId}/trash`);
       }
       
       toast.success(permanent ? "🗑️ Thread permanently deleted" : "🗑️ Thread moved to trash");
@@ -2802,7 +2805,7 @@ const EmailChat = () => {
   const downloadAttachment = async (messageId, attachment) => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/gmail/attachment/${messageId}/${attachment.id}`,
+        `${API_BASE_URL}/gmail/attachment/${messageId}/${attachment.id}`,
         { responseType: 'blob' }
       );
       
@@ -2874,11 +2877,12 @@ const EmailChat = () => {
   };
 
   const filteredThreads = threads.filter(thread => {
-    const matchesSearch = thread.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         thread.from?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         thread.snippet?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = searchQuery === '' || 
+      thread.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      thread.from?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      thread.snippet?.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesUnread = filterUnread ? thread.unread : true;
+    const matchesUnread = !filterUnread || thread.unread;
     
     return matchesSearch && matchesUnread;
   });
@@ -2904,126 +2908,90 @@ const EmailChat = () => {
     return '📧';
   };
 
- 
-
-if (loading && !authStatus.authenticated && !error) {
-  return (
-    <div className="p-8 max-w-md mx-auto mt-20 bg-white rounded-xl border border-gray-200 shadow-lg">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-6"></div>
-        <h3 className="text-xl font-semibold text-gray-800 mb-2">Connecting to Gmail</h3>
-        <p className="text-gray-600 mb-4">Checking authentication status...</p>
-        <div className="flex justify-center space-x-4">
-          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse delay-150"></div>
-          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse delay-300"></div>
+  // Loading state
+  if (loading && !authStatus.authenticated && !error) {
+    return (
+      <div className="p-8 max-w-md mx-auto mt-20 bg-white rounded-xl border border-gray-200 shadow-lg">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-6"></div>
+          <h3 className="text-xl font-semibold text-gray-800 mb-2">Connecting to Gmail</h3>
+          <p className="text-gray-600 mb-4">Checking authentication status...</p>
         </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
-if (!authStatus.authenticated) {
-  return (
-    <div className="p-8 max-w-md mx-auto mt-20 bg-white rounded-xl border border-gray-200 shadow-lg">
-      <div className="text-center mb-8">
-        <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-          <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-          </svg>
+  // Not authenticated
+  if (!authStatus.authenticated) {
+    return (
+      <div className="p-8 max-w-md mx-auto mt-20 bg-white rounded-xl border border-gray-200 shadow-lg">
+        <div className="text-center mb-8">
+          <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+            <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-3">Connect Your Gmail</h2>
+          <p className="text-gray-600 mb-6">Connect your Gmail account to manage emails directly</p>
         </div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-3">Connect Your Gmail</h2>
-        <p className="text-gray-600 mb-6">Connect your Gmail account to manage emails directly</p>
+        
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+            <p>{error}</p>
+          </div>
+        )}
+        
+        {authStatus.message && !error && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg text-sm">
+            <p>{authStatus.message}</p>
+          </div>
+        )}
+        
+        {authUrl ? (
+          <div className="space-y-4">
+            <button
+              onClick={connectGmail}
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 px-6 rounded-xl border border-blue-700 transition duration-200 flex items-center justify-center gap-3 text-base shadow-lg"
+            >
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-5.318V11.73L12 16.64l-5.045-4.91v9.273H1.636A1.636 1.636 0 010 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z"/>
+              </svg>
+              Connect Gmail Account
+            </button>
+            <div className="text-center text-gray-500 text-sm">
+              <p>You'll be redirected to Google to authorize access</p>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <button
+              onClick={fetchAuthUrl}
+              disabled={loading}
+              className="w-full bg-gray-700 hover:bg-gray-800 text-white font-semibold py-4 px-6 rounded-xl border border-gray-800 transition duration-200 disabled:opacity-50 text-base shadow-md"
+            >
+              {loading ? (
+                <div className="flex items-center justify-center gap-3">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  <span>Connecting...</span>
+                </div>
+              ) : "Get Connection Link"}
+            </button>
+            <button
+              onClick={checkAuthStatus}
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-6 rounded-lg border border-gray-300 transition duration-200 text-sm"
+            >
+              ↻ Check Status Again
+            </button>
+          </div>
+        )}
       </div>
-      
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
-          <div className="flex items-center gap-2 mb-1">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span className="font-medium">Connection Error</span>
-          </div>
-          <p>{error}</p>
-        </div>
-      )}
-      
-      {authStatus.message && !error && (
-        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg text-sm">
-          <div className="flex items-center gap-2 mb-1">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span className="font-medium">Status</span>
-          </div>
-          <p>{authStatus.message}</p>
-        </div>
-      )}
-      
-      {authUrl ? (
-        <div className="space-y-4">
-          <button
-            onClick={connectGmail}
-            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 px-6 rounded-xl border border-blue-700 transition duration-200 flex items-center justify-center gap-3 text-base shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-          >
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-5.318V11.73L12 16.64l-5.045-4.91v9.273H1.636A1.636 1.636 0 010 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z"/>
-            </svg>
-            Connect Gmail Account
-          </button>
-          <div className="text-center text-gray-500 text-sm">
-            <p>You'll be redirected to Google to authorize access</p>
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <button
-            onClick={fetchAuthUrl}
-            disabled={loading}
-            className="w-full bg-gray-700 hover:bg-gray-800 text-white font-semibold py-4 px-6 rounded-xl border border-gray-800 transition duration-200 disabled:opacity-50 text-base shadow-md"
-          >
-            {loading ? (
-              <div className="flex items-center justify-center gap-3">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                <span>Connecting...</span>
-              </div>
-            ) : "Get Connection Link"}
-          </button>
-          <button
-            onClick={checkAuthStatus}
-            className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-6 rounded-lg border border-gray-300 transition duration-200 text-sm"
-          >
-            ↻ Check Status Again
-          </button>
-        </div>
-      )}
-      
- 
-    </div>
-  );
-}
+    );
+  }
 
+  // Main UI - Authenticated
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
-
-      {/* New Email Notification */}
-      {newEmailNotification && (
-        <div className="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-bounce">
-          {newEmailNotification}
-        </div>
-      )}
+      <ToastContainer position="top-right" autoClose={3000} />
 
       {/* Compose Email Dialog */}
       <Dialog open={showCompose} onOpenChange={setShowCompose}>
@@ -3150,22 +3118,11 @@ if (!authStatus.authenticated) {
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-gray-700 truncate">{file.name}</p>
                             <div className="flex items-center gap-2">
-                              <p className="text-xs text-gray-500">{formatFileSize(file.size)} • {file.type}</p>
-                              {progress > 0 && progress < 100 && (
-                                <span className="text-xs text-blue-600">Uploading... {progress}%</span>
-                              )}
+                              <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
                               {progress === 100 && (
                                 <span className="text-xs text-green-600">✓ Ready</span>
                               )}
                             </div>
-                            {progress > 0 && progress < 100 && (
-                              <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
-                                <div
-                                  className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
-                                  style={{ width: `${progress}%` }}
-                                ></div>
-                              </div>
-                            )}
                           </div>
                         </div>
                         <button
@@ -3466,7 +3423,24 @@ if (!authStatus.authenticated) {
                   )}
                 </div>
               </div>
-              <div className="flex gap-2">
+              
+              <div className="flex items-center gap-2">
+                {/* ✅ NEW EMAIL BUTTON - Shows when new emails arrive */}
+                {newEmailCount > 0 && !selectedThread && (
+                  <button
+                    onClick={() => {
+                      fetchThreads(false);
+                      setNewEmailCount(0);
+                    }}
+                    className="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg border border-green-600 transition duration-200 flex items-center gap-2 text-sm shadow-sm animate-pulse"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    {newEmailCount} New
+                  </button>
+                )}
+                
                 <button
                   onClick={() => setShowCompose(true)}
                   className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg border border-blue-600 transition duration-200 flex items-center gap-2 text-sm shadow-sm"
@@ -3476,8 +3450,9 @@ if (!authStatus.authenticated) {
                   </svg>
                   Compose
                 </button>
+                
                 <button
-                  onClick={fetchThreads}
+                  onClick={() => fetchThreads(false)}
                   disabled={loading}
                   className="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg border border-gray-700 transition duration-200 disabled:opacity-50 flex items-center gap-2 text-sm"
                 >
@@ -3783,27 +3758,25 @@ if (!authStatus.authenticated) {
           ) : (
             /* Email Detail View */
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm min-h-[60vh] overflow-y-auto">
-              {!selectedThread ? (
+              {messages.length === 0 ? (
                 <div className="text-center text-gray-500 py-12">
                   <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
-                  <h3 className="text-xl font-semibold text-gray-700 mb-2">Select an email</h3>
-                  <p className="text-gray-500">Choose an email from the list to view its content</p>
+                  <h3 className="text-xl font-semibold text-gray-700 mb-2">No messages</h3>
+                  <p className="text-gray-500">This thread has no messages</p>
                 </div>
               ) : (
                 <>
                   <div className="sticky top-0 bg-white border-b border-gray-200 p-6 z-10 shadow-sm">
                     <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-4">
-                        <div>
-                          <h3 className="text-2xl font-bold text-gray-900 mb-1">
-                            {messages[0]?.subject || 'Conversation'}
-                          </h3>
-                          <p className="text-sm text-gray-600">
-                            {messages.length} message{messages.length !== 1 ? 's' : ''} in conversation
-                          </p>
-                        </div>
+                      <div>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                          {messages[0]?.subject || 'Conversation'}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          {messages.length} message{messages.length !== 1 ? 's' : ''} in conversation
+                        </p>
                       </div>
                       <div className="flex gap-2">
                         <button
@@ -3837,166 +3810,160 @@ if (!authStatus.authenticated) {
                     </div>
                   </div>
                   
-                  {messages.length === 0 ? (
-                    <div className="text-center text-gray-500 py-12">
-                      No messages in this thread
-                    </div>
-                  ) : (
-                    <div className="p-8 space-y-8">
-                      {messages.map((msg, i) => (
-                        <div
-                          key={msg.id}
-                          className="p-8 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition duration-200 shadow-sm"
-                        >
-                          <div className="flex justify-between items-start mb-6">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-4 mb-4">
-                                <div className="w-12 h-12 bg-gradient-to-br from-gray-600 to-gray-800 rounded-full flex items-center justify-center text-white font-semibold text-lg">
-                                  {extractNameFromEmail(msg.from).charAt(0).toUpperCase()}
-                                </div>
-                                <div>
-                                  <h4 className="font-bold text-gray-900 text-xl flex items-center gap-3">
-                                    {extractNameFromEmail(msg.from)}
-                                    <span className="text-sm bg-gray-100 text-gray-600 px-3 py-1.5 rounded-full">
-                                      {renderLabelIcon(msg)}
-                                    </span>
-                                  </h4>
-                                  <p className="text-gray-600">{extractEmailAddress(msg.from)}</p>
-                                </div>
+                  <div className="p-8 space-y-8">
+                    {messages.map((msg, i) => (
+                      <div
+                        key={msg.id}
+                        className="p-8 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition duration-200 shadow-sm"
+                      >
+                        <div className="flex justify-between items-start mb-6">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-4 mb-4">
+                              <div className="w-12 h-12 bg-gradient-to-br from-gray-600 to-gray-800 rounded-full flex items-center justify-center text-white font-semibold text-lg">
+                                {extractNameFromEmail(msg.from).charAt(0).toUpperCase()}
                               </div>
-                              <div className="flex flex-wrap gap-6 mt-4">
-                                {msg.to && (
-                                  <p className="text-gray-700">
-                                    <span className="font-medium text-gray-900">To:</span> {extractNameFromEmail(msg.to)}
-                                  </p>
-                                )}
-                                {msg.cc && (
-                                  <p className="text-gray-700">
-                                    <span className="font-medium text-gray-900">Cc:</span> {msg.cc}
-                                  </p>
-                                )}
+                              <div>
+                                <h4 className="font-bold text-gray-900 text-xl flex items-center gap-3">
+                                  {extractNameFromEmail(msg.from)}
+                                  <span className="text-sm bg-gray-100 text-gray-600 px-3 py-1.5 rounded-full">
+                                    {renderLabelIcon(msg)}
+                                  </span>
+                                </h4>
+                                <p className="text-gray-600">{extractEmailAddress(msg.from)}</p>
                               </div>
                             </div>
-                            <div className="text-right">
-                              <div className="flex gap-3 mb-4 justify-end">
-                                <button
-                                  onClick={() => markThreadAs(selectedThread, 'star', !msg.starred)}
-                                  className={`p-3 rounded-full ${msg.starred ? 'text-yellow-500 bg-yellow-50' : 'text-gray-400 hover:text-yellow-500 hover:bg-gray-100'}`}
-                                  title={msg.starred ? "Unstar" : "Star"}
-                                >
-                                  ⭐
-                                </button>
-                                <button
-                                  onClick={() => markThreadAs(selectedThread, 'important', !msg.important)}
-                                  className={`p-3 rounded-full ${msg.important ? 'text-red-500 bg-red-50' : 'text-gray-400 hover:text-red-500 hover:bg-gray-100'}`}
-                                  title={msg.important ? "Mark as not important" : "Mark as important"}
-                                >
-                                  ❗
-                                </button>
-                              </div>
-                              <span className="text-sm text-gray-500 bg-gray-100 px-4 py-2 rounded-full font-medium">
-                                Message {i + 1} of {messages.length}
-                              </span>
-                              <p className="text-gray-400 mt-3 font-medium">
-                                {formatDate(msg.date)}
-                              </p>
-                            </div>
-                          </div>
-                          
-                          {/* Attachments */}
-                          {msg.hasAttachments && (
-                            <div className="mb-6 p-6 bg-gray-50 rounded-xl border border-gray-200">
-                              <h5 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-3">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                                </svg>
-                                Attachments ({msg.attachments.length})
-                              </h5>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {msg.attachments.map((attachment, idx) => (
-                                  <div key={idx} className="flex items-center justify-between p-4 bg-white rounded-lg border hover:bg-gray-50 transition duration-200">
-                                    <div className="flex items-center gap-4 flex-1 min-w-0">
-                                      <span className="text-2xl">
-                                        {getFileIcon({ type: attachment.mimeType })}
-                                      </span>
-                                      <div className="flex-1 min-w-0">
-                                        <p className="text-base font-medium text-gray-900 truncate">{attachment.filename}</p>
-                                        <p className="text-sm text-gray-500">{formatFileSize(attachment.size)}</p>
-                                      </div>
-                                    </div>
-                                    <button
-                                      onClick={() => downloadAttachment(msg.id, attachment)}
-                                      className="ml-3 text-blue-600 hover:text-blue-800 text-sm bg-blue-50 px-4 py-2.5 rounded-lg flex items-center gap-2 transition duration-200 hover:bg-blue-100 font-medium"
-                                    >
-                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                      </svg>
-                                      Download
-                                    </button>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                          
-                          <div className="bg-gray-50 p-8 rounded-xl border border-gray-200">
-                            <div className="prose prose-lg max-w-none">
-                              {msg.htmlBody ? (
-                                <div
-                                  className="text-gray-900 leading-relaxed"
-                                  dangerouslySetInnerHTML={{ __html: msg.htmlBody }}
-                                />
-                              ) : (
-                                <pre className="text-gray-900 whitespace-pre-wrap leading-relaxed font-sans text-base">
-                                  {msg.body || "No content available"}
-                                </pre>
+                            <div className="flex flex-wrap gap-6 mt-4">
+                              {msg.to && (
+                                <p className="text-gray-700">
+                                  <span className="font-medium text-gray-900">To:</span> {extractNameFromEmail(msg.to)}
+                                </p>
+                              )}
+                              {msg.cc && (
+                                <p className="text-gray-700">
+                                  <span className="font-medium text-gray-900">Cc:</span> {msg.cc}
+                                </p>
                               )}
                             </div>
                           </div>
-                          
-                          <div className="flex justify-end mt-6 space-x-3">
-                            <button
-                              onClick={() => openComposeForReply(msg, 'reply')}
-                              className="text-base bg-blue-600 text-white px-5 py-2.5 rounded-lg border border-blue-700 hover:bg-blue-700 flex items-center gap-2 transition duration-200 shadow-sm"
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                              </svg>
-                              Reply
-                            </button>
-                            <button
-                              onClick={() => openComposeForReply(msg, 'replyAll')}
-                              className="text-base bg-gray-200 text-gray-700 px-5 py-2.5 rounded-lg border border-gray-300 hover:bg-gray-300 flex items-center gap-2 transition duration-200"
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14h6" />
-                              </svg>
-                              Reply All
-                            </button>
-                            <button
-                              onClick={() => openComposeForReply(msg, 'forward')}
-                              className="text-base bg-gray-200 text-gray-700 px-5 py-2.5 rounded-lg border border-gray-300 hover:bg-gray-300 flex items-center gap-2 transition duration-200"
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                              </svg>
-                              Forward
-                            </button>
-                            <button
-                              onClick={() => markThreadAs(selectedThread, 'trash')}
-                              className="text-base bg-red-600 text-white px-5 py-2.5 rounded-lg border border-red-700 hover:bg-red-700 flex items-center gap-2 transition duration-200"
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                              Trash
-                            </button>
+                          <div className="text-right">
+                            <div className="flex gap-3 mb-4 justify-end">
+                              <button
+                                onClick={() => markThreadAs(selectedThread, 'star', !msg.starred)}
+                                className={`p-3 rounded-full ${msg.starred ? 'text-yellow-500 bg-yellow-50' : 'text-gray-400 hover:text-yellow-500 hover:bg-gray-100'}`}
+                                title={msg.starred ? "Unstar" : "Star"}
+                              >
+                                ⭐
+                              </button>
+                              <button
+                                onClick={() => markThreadAs(selectedThread, 'important', !msg.important)}
+                                className={`p-3 rounded-full ${msg.important ? 'text-red-500 bg-red-50' : 'text-gray-400 hover:text-red-500 hover:bg-gray-100'}`}
+                                title={msg.important ? "Mark as not important" : "Mark as important"}
+                              >
+                                ❗
+                              </button>
+                            </div>
+                            <span className="text-sm text-gray-500 bg-gray-100 px-4 py-2 rounded-full font-medium">
+                              Message {i + 1} of {messages.length}
+                            </span>
+                            <p className="text-gray-400 mt-3 font-medium">
+                              {formatDate(msg.date)}
+                            </p>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
+                        
+                        {/* Attachments */}
+                        {msg.hasAttachments && (
+                          <div className="mb-6 p-6 bg-gray-50 rounded-xl border border-gray-200">
+                            <h5 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-3">
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                              </svg>
+                              Attachments ({msg.attachments.length})
+                            </h5>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              {msg.attachments.map((attachment, idx) => (
+                                <div key={idx} className="flex items-center justify-between p-4 bg-white rounded-lg border hover:bg-gray-50 transition duration-200">
+                                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                                    <span className="text-2xl">
+                                      {getFileIcon({ type: attachment.mimeType })}
+                                    </span>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-base font-medium text-gray-900 truncate">{attachment.filename}</p>
+                                      <p className="text-sm text-gray-500">{formatFileSize(attachment.size)}</p>
+                                    </div>
+                                  </div>
+                                  <button
+                                    onClick={() => downloadAttachment(msg.id, attachment)}
+                                    className="ml-3 text-blue-600 hover:text-blue-800 text-sm bg-blue-50 px-4 py-2.5 rounded-lg flex items-center gap-2 transition duration-200 hover:bg-blue-100 font-medium"
+                                  >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                    </svg>
+                                    Download
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        <div className="bg-gray-50 p-8 rounded-xl border border-gray-200">
+                          <div className="prose prose-lg max-w-none">
+                            {msg.htmlBody ? (
+                              <div
+                                className="text-gray-900 leading-relaxed"
+                                dangerouslySetInnerHTML={{ __html: msg.htmlBody }}
+                              />
+                            ) : (
+                              <pre className="text-gray-900 whitespace-pre-wrap leading-relaxed font-sans text-base">
+                                {msg.body || "No content available"}
+                              </pre>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="flex justify-end mt-6 space-x-3">
+                          <button
+                            onClick={() => openComposeForReply(msg, 'reply')}
+                            className="text-base bg-blue-600 text-white px-5 py-2.5 rounded-lg border border-blue-700 hover:bg-blue-700 flex items-center gap-2 transition duration-200 shadow-sm"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                            </svg>
+                            Reply
+                          </button>
+                          <button
+                            onClick={() => openComposeForReply(msg, 'replyAll')}
+                            className="text-base bg-gray-200 text-gray-700 px-5 py-2.5 rounded-lg border border-gray-300 hover:bg-gray-300 flex items-center gap-2 transition duration-200"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14h6" />
+                            </svg>
+                            Reply All
+                          </button>
+                          <button
+                            onClick={() => openComposeForReply(msg, 'forward')}
+                            className="text-base bg-gray-200 text-gray-700 px-5 py-2.5 rounded-lg border border-gray-300 hover:bg-gray-300 flex items-center gap-2 transition duration-200"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                            </svg>
+                            Forward
+                          </button>
+                          <button
+                            onClick={() => markThreadAs(selectedThread, 'trash')}
+                            className="text-base bg-red-600 text-white px-5 py-2.5 rounded-lg border border-red-700 hover:bg-red-700 flex items-center gap-2 transition duration-200"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Trash
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </>
               )}
             </div>
@@ -4007,15 +3974,4 @@ if (!authStatus.authenticated) {
   );
 };
 
-export default EmailChat;//directly redirect email chat correctly..
-
-
-
-
-
-
-
-
-
-
-
+export default EmailChat;
