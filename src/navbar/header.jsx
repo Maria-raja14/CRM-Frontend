@@ -31,7 +31,7 @@ const Navbar = ({ toggleSidebar }) => {
   const getProfileImageUrl = (image) => {
     if (!image) return "https://randomuser.me/api/portraits/men/32.jpg";
     if (image.startsWith("http")) return image;
-    return `${API_SI}/uploads/users/${image}`;
+    return `${API_SI}uploads/users/${image}`;
   };
 
   // Load user
