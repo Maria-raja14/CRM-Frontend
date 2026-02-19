@@ -12,8 +12,10 @@ import {
   Users,
   GitBranch,
   BarChart3,
-    Mail,
+  Mail,
+    MessageCircle
 } from "lucide-react";
+
 import { NavLink, useLocation } from "react-router-dom";
 
 const IconCircle = ({ children, isActive }) => (
@@ -244,6 +246,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   label="Email Chat"
 />
 
+<SidebarItem
+  to="/whatsapp"
+  icon={<MessageCircle />}  // Using MessageCircle icon
+  label="WhatsApp Chat"
+/>
         {/* Invoice */}
         <SidebarItem
           to="/invoice"
