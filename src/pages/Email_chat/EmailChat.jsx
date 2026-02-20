@@ -2049,105 +2049,213 @@ const EmailChat = () => {
     finally { setSavingDraft(false); }
   };
 
-  const markThreadAs = async (threadId, action, value = true) => {
-    const prevReadThreads = new Set(readThreads);
-    const prevThreadsCache = JSON.parse(JSON.stringify(threadsCache));
-    const prevActualCounts = { ...actualCounts };
+  // const markThreadAs = async (threadId, action, value = true) => {
+  //   const prevReadThreads = new Set(readThreads);
+  //   const prevThreadsCache = JSON.parse(JSON.stringify(threadsCache));
+  //   const prevActualCounts = { ...actualCounts };
 
-    try {
-      let endpoint = "", body = { email: userEmail }; // 👈 added email
-      switch(action) {
-        case "read": endpoint = `thread/${threadId}/read`; body.read = value; break;
-        case "star": endpoint = `thread/${threadId}/star`; body.star = value; break;
-        case "spam": endpoint = `thread/${threadId}/spam`; body.spam = value; break;
-        case "important": endpoint = `thread/${threadId}/important`; body.important = value; break;
-        case "trash": endpoint = `thread/${threadId}/trash`; break;
-      }
-      if (action === "read") {
-        setReadThreads(prev => { const s = new Set(prev); value ? s.add(threadId) : s.delete(threadId); return s; });
-      }
-      setThreadsCache(prev => {
-        const u = { ...prev };
-        Object.keys(u).forEach(l => {
-          u[l] = u[l].map(t => {
-            if (t.id !== threadId) return t;
-            const upd = { ...t };
-            switch(action) {
-              case "read": upd.unread = !value; break;
-              case "star": upd.starred = value; break;
-              case "spam": upd.spam = value; break;
-              case "important": upd.important = value; break;
-              case "trash": upd.trash = true; break;
-            }
-            return upd;
-          });
-        });
-        return u;
-      });
-      if (action === "star") setActualCounts(prev => ({ ...prev, STARRED: value ? prev.STARRED + 1 : Math.max(0, prev.STARRED - 1) }));
-      if (action === "important") setActualCounts(prev => ({ ...prev, IMPORTANT: value ? prev.IMPORTANT + 1 : Math.max(0, prev.IMPORTANT - 1) }));
-      if (action === "read" && activeLabel === "INBOX") setActualCounts(prev => ({ ...prev, UNREAD: value ? Math.max(0, prev.UNREAD - 1) : prev.UNREAD + 1 }));
-      setForceUpdate(p => p + 1);
+  //   try {
+  //     let endpoint = "", body = { email: userEmail }; // 👈 added email
+  //     switch(action) {
+  //       case "read": endpoint = `thread/${threadId}/read`; body.read = value; break;
+  //       case "star": endpoint = `thread/${threadId}/star`; body.star = value; break;
+  //       case "spam": endpoint = `thread/${threadId}/spam`; body.spam = value; break;
+  //       case "important": endpoint = `thread/${threadId}/important`; body.important = value; break;
+  //       case "trash": endpoint = `thread/${threadId}/trash`; break;
+  //     }
+  //     if (action === "read") {
+  //       setReadThreads(prev => { const s = new Set(prev); value ? s.add(threadId) : s.delete(threadId); return s; });
+  //     }
+  //     setThreadsCache(prev => {
+  //       const u = { ...prev };
+  //       Object.keys(u).forEach(l => {
+  //         u[l] = u[l].map(t => {
+  //           if (t.id !== threadId) return t;
+  //           const upd = { ...t };
+  //           switch(action) {
+  //             case "read": upd.unread = !value; break;
+  //             case "star": upd.starred = value; break;
+  //             case "spam": upd.spam = value; break;
+  //             case "important": upd.important = value; break;
+  //             case "trash": upd.trash = true; break;
+  //           }
+  //           return upd;
+  //         });
+  //       });
+  //       return u;
+  //     });
+  //     if (action === "star") setActualCounts(prev => ({ ...prev, STARRED: value ? prev.STARRED + 1 : Math.max(0, prev.STARRED - 1) }));
+  //     if (action === "important") setActualCounts(prev => ({ ...prev, IMPORTANT: value ? prev.IMPORTANT + 1 : Math.max(0, prev.IMPORTANT - 1) }));
+  //     if (action === "read" && activeLabel === "INBOX") setActualCounts(prev => ({ ...prev, UNREAD: value ? Math.max(0, prev.UNREAD - 1) : prev.UNREAD + 1 }));
+  //     setForceUpdate(p => p + 1);
 
-      const res = await axios.post(`${API_BASE_URL}/gmail/${endpoint}`, body);
-      if (res.data.success) {
-        toast.success(res.data.message);
-        if (action === "star" && value && activeLabel === "INBOX") {
-          setThreadsCache(prev => {
-            const starred = prev.STARRED || [], toAdd = prev[activeLabel]?.find(t => t.id === threadId);
-            if (toAdd && !starred.some(t => t.id === threadId)) return { ...prev, STARRED: [{ ...toAdd, starred: true }, ...starred] };
-            return prev;
-          });
-        }
-        if ((action === "star" && activeLabel === "STARRED" && !value) ||
-            (action === "important" && activeLabel === "IMPORTANT" && !value) ||
-            (action === "spam" && activeLabel === "SPAM" && !value) ||
-            (action === "trash" && activeLabel === "TRASH")) {
-          setThreadsCache(prev => ({ ...prev, [activeLabel]: (prev[activeLabel] || []).filter(t => t.id !== threadId) }));
-          if (selectedThread === threadId) { setSelectedThread(null); setMessages([]); }
-        }
-        fetchAllCountsFast();
-      } else {
-        throw new Error(res.data.error || "API error");
-      }
-    } catch(err) {
-      setReadThreads(prevReadThreads);
-      setThreadsCache(prevThreadsCache);
-      setActualCounts(prevActualCounts);
-      setForceUpdate(p => p + 1);
-      toast.error(`Failed to ${action} thread`);
-      fetchAllCountsFast();
+  //     const res = await axios.post(`${API_BASE_URL}/gmail/${endpoint}`, body);
+  //     if (res.data.success) {
+  //       toast.success(res.data.message);
+  //       if (action === "star" && value && activeLabel === "INBOX") {
+  //         setThreadsCache(prev => {
+  //           const starred = prev.STARRED || [], toAdd = prev[activeLabel]?.find(t => t.id === threadId);
+  //           if (toAdd && !starred.some(t => t.id === threadId)) return { ...prev, STARRED: [{ ...toAdd, starred: true }, ...starred] };
+  //           return prev;
+  //         });
+  //       }
+  //       if ((action === "star" && activeLabel === "STARRED" && !value) ||
+  //           (action === "important" && activeLabel === "IMPORTANT" && !value) ||
+  //           (action === "spam" && activeLabel === "SPAM" && !value) ||
+  //           (action === "trash" && activeLabel === "TRASH")) {
+  //         setThreadsCache(prev => ({ ...prev, [activeLabel]: (prev[activeLabel] || []).filter(t => t.id !== threadId) }));
+  //         if (selectedThread === threadId) { setSelectedThread(null); setMessages([]); }
+  //       }
+  //       fetchAllCountsFast();
+  //     } else {
+  //       throw new Error(res.data.error || "API error");
+  //     }
+  //   } catch(err) {
+  //     setReadThreads(prevReadThreads);
+  //     setThreadsCache(prevThreadsCache);
+  //     setActualCounts(prevActualCounts);
+  //     setForceUpdate(p => p + 1);
+  //     toast.error(`Failed to ${action} thread`);
+  //     fetchAllCountsFast();
+  //   }
+  // };//remove thread is read toast old one
+
+const markThreadAs = async (threadId, action, value = true) => {
+  const prevReadThreads = new Set(readThreads);
+  const prevThreadsCache = JSON.parse(JSON.stringify(threadsCache));
+  const prevActualCounts = { ...actualCounts };
+
+  try {
+    let endpoint = "", body = { email: userEmail };
+    switch(action) {
+      case "read": endpoint = `thread/${threadId}/read`; body.read = value; break;
+      case "star": endpoint = `thread/${threadId}/star`; body.star = value; break;
+      case "spam": endpoint = `thread/${threadId}/spam`; body.spam = value; break;
+      case "important": endpoint = `thread/${threadId}/important`; body.important = value; break;
+      case "trash": endpoint = `thread/${threadId}/trash`; break;
     }
-  };
+    if (action === "read") {
+      setReadThreads(prev => { const s = new Set(prev); value ? s.add(threadId) : s.delete(threadId); return s; });
+    }
+    setThreadsCache(prev => {
+      const u = { ...prev };
+      Object.keys(u).forEach(l => {
+        u[l] = u[l].map(t => {
+          if (t.id !== threadId) return t;
+          const upd = { ...t };
+          switch(action) {
+            case "read": upd.unread = !value; break;
+            case "star": upd.starred = value; break;
+            case "spam": upd.spam = value; break;
+            case "important": upd.important = value; break;
+            case "trash": upd.trash = true; break;
+          }
+          return upd;
+        });
+      });
+      return u;
+    });
+    if (action === "star") setActualCounts(prev => ({ ...prev, STARRED: value ? prev.STARRED + 1 : Math.max(0, prev.STARRED - 1) }));
+    if (action === "important") setActualCounts(prev => ({ ...prev, IMPORTANT: value ? prev.IMPORTANT + 1 : Math.max(0, prev.IMPORTANT - 1) }));
+    if (action === "read" && activeLabel === "INBOX") setActualCounts(prev => ({ ...prev, UNREAD: value ? Math.max(0, prev.UNREAD - 1) : prev.UNREAD + 1 }));
+    setForceUpdate(p => p + 1);
+
+    const res = await axios.post(`${API_BASE_URL}/gmail/${endpoint}`, body);
+    if (res.data.success) {
+      // ✅ Only show toast for actions other than 'read'
+      if (action !== 'read') {
+        toast.success(res.data.message);
+      }
+      if (action === "star" && value && activeLabel === "INBOX") {
+        setThreadsCache(prev => {
+          const starred = prev.STARRED || [], toAdd = prev[activeLabel]?.find(t => t.id === threadId);
+          if (toAdd && !starred.some(t => t.id === threadId)) return { ...prev, STARRED: [{ ...toAdd, starred: true }, ...starred] };
+          return prev;
+        });
+      }
+      if ((action === "star" && activeLabel === "STARRED" && !value) ||
+          (action === "important" && activeLabel === "IMPORTANT" && !value) ||
+          (action === "spam" && activeLabel === "SPAM" && !value) ||
+          (action === "trash" && activeLabel === "TRASH")) {
+        setThreadsCache(prev => ({ ...prev, [activeLabel]: (prev[activeLabel] || []).filter(t => t.id !== threadId) }));
+        if (selectedThread === threadId) { setSelectedThread(null); setMessages([]); }
+      }
+      fetchAllCountsFast();
+    } else {
+      throw new Error(res.data.error || "API error");
+    }
+  } catch(err) {
+    setReadThreads(prevReadThreads);
+    setThreadsCache(prevThreadsCache);
+    setActualCounts(prevActualCounts);
+    setForceUpdate(p => p + 1);
+    toast.error(`Failed to ${action} thread`);
+    fetchAllCountsFast();
+  }
+};
+
+
+
+  // const handleBulkAction = async (action, value = true) => {
+  //   if (selectedThreads.size === 0) { toast.error("No emails selected"); return; }
+  //   const ids = Array.from(selectedThreads);
+  //   try {
+  //     if (action === "read") {
+  //       setReadThreads(prev => { const s = new Set(prev); ids.forEach(id => value ? s.add(id) : s.delete(id)); return s; });
+  //       setThreadsCache(prev => ({ ...prev, [activeLabel]: (prev[activeLabel] || []).map(t => selectedThreads.has(t.id) ? { ...t, unread: !value } : t) }));
+  //       setActualCounts(prev => ({ ...prev, UNREAD: value ? Math.max(0, prev.UNREAD - ids.length) : prev.UNREAD + ids.length }));
+  //     }
+  //     if (action === "star") {
+  //       setThreadsCache(prev => ({ ...prev, [activeLabel]: (prev[activeLabel] || []).map(t => selectedThreads.has(t.id) ? { ...t, starred: value } : t) }));
+  //       setActualCounts(prev => ({ ...prev, STARRED: value ? prev.STARRED + ids.length : Math.max(0, prev.STARRED - ids.length) }));
+  //     }
+  //     if (action === "trash") {
+  //       setThreadsCache(prev => ({ ...prev, [activeLabel]: (prev[activeLabel] || []).filter(t => !selectedThreads.has(t.id)) }));
+  //       setActualCounts(prev => ({ ...prev, TRASH: prev.TRASH + ids.length }));
+  //     }
+  //     setForceUpdate(p => p + 1);
+  //     const body = { threadIds: ids, email: userEmail }; // 👈 added email
+  //     switch(action) {
+  //       case "star": body.star = value; await axios.post(`${API_BASE_URL}/gmail/bulk-star`, body); toast.success(`⭐ ${value ? "Starred" : "Unstarred"} ${ids.length} emails`); break;
+  //       case "delete": body.permanent = activeLabel === "TRASH"; const dr = await axios.post(`${API_BASE_URL}/gmail/bulk-delete`, body); toast.success(`🗑️ ${dr.data.message}`); break;
+  //       case "read": await Promise.all(ids.map(id => axios.post(`${API_BASE_URL}/gmail/thread/${id}/read`, { read: value, email: userEmail }))); toast.success(`Marked ${ids.length} emails as ${value ? "read" : "unread"}`); break;
+  //       case "trash": await axios.post(`${API_BASE_URL}/gmail/bulk-trash`, body); toast.success(`Moved ${ids.length} emails to trash`); break;
+  //     }
+  //     setSelectedThreads(new Set()); setShowBulkActions(false); setIsSelectAll(false); fetchAllCountsFast();
+  //   } catch(err) { toast.error(`Failed to ${action} emails`); fetchAllCountsFast(); }
+  // };//old one..
 
   const handleBulkAction = async (action, value = true) => {
-    if (selectedThreads.size === 0) { toast.error("No emails selected"); return; }
-    const ids = Array.from(selectedThreads);
-    try {
-      if (action === "read") {
-        setReadThreads(prev => { const s = new Set(prev); ids.forEach(id => value ? s.add(id) : s.delete(id)); return s; });
-        setThreadsCache(prev => ({ ...prev, [activeLabel]: (prev[activeLabel] || []).map(t => selectedThreads.has(t.id) ? { ...t, unread: !value } : t) }));
-        setActualCounts(prev => ({ ...prev, UNREAD: value ? Math.max(0, prev.UNREAD - ids.length) : prev.UNREAD + ids.length }));
-      }
-      if (action === "star") {
-        setThreadsCache(prev => ({ ...prev, [activeLabel]: (prev[activeLabel] || []).map(t => selectedThreads.has(t.id) ? { ...t, starred: value } : t) }));
-        setActualCounts(prev => ({ ...prev, STARRED: value ? prev.STARRED + ids.length : Math.max(0, prev.STARRED - ids.length) }));
-      }
-      if (action === "trash") {
-        setThreadsCache(prev => ({ ...prev, [activeLabel]: (prev[activeLabel] || []).filter(t => !selectedThreads.has(t.id)) }));
-        setActualCounts(prev => ({ ...prev, TRASH: prev.TRASH + ids.length }));
-      }
-      setForceUpdate(p => p + 1);
-      const body = { threadIds: ids, email: userEmail }; // 👈 added email
-      switch(action) {
-        case "star": body.star = value; await axios.post(`${API_BASE_URL}/gmail/bulk-star`, body); toast.success(`⭐ ${value ? "Starred" : "Unstarred"} ${ids.length} emails`); break;
-        case "delete": body.permanent = activeLabel === "TRASH"; const dr = await axios.post(`${API_BASE_URL}/gmail/bulk-delete`, body); toast.success(`🗑️ ${dr.data.message}`); break;
-        case "read": await Promise.all(ids.map(id => axios.post(`${API_BASE_URL}/gmail/thread/${id}/read`, { read: value, email: userEmail }))); toast.success(`Marked ${ids.length} emails as ${value ? "read" : "unread"}`); break;
-        case "trash": await axios.post(`${API_BASE_URL}/gmail/bulk-trash`, body); toast.success(`Moved ${ids.length} emails to trash`); break;
-      }
-      setSelectedThreads(new Set()); setShowBulkActions(false); setIsSelectAll(false); fetchAllCountsFast();
-    } catch(err) { toast.error(`Failed to ${action} emails`); fetchAllCountsFast(); }
-  };
+  if (selectedThreads.size === 0) { toast.error("No emails selected"); return; }
+  const ids = Array.from(selectedThreads);
+  try {
+    if (action === "read") {
+      setReadThreads(prev => { const s = new Set(prev); ids.forEach(id => value ? s.add(id) : s.delete(id)); return s; });
+      setThreadsCache(prev => ({ ...prev, [activeLabel]: (prev[activeLabel] || []).map(t => selectedThreads.has(t.id) ? { ...t, unread: !value } : t) }));
+      setActualCounts(prev => ({ ...prev, UNREAD: value ? Math.max(0, prev.UNREAD - ids.length) : prev.UNREAD + ids.length }));
+    }
+    if (action === "star") {
+      setThreadsCache(prev => ({ ...prev, [activeLabel]: (prev[activeLabel] || []).map(t => selectedThreads.has(t.id) ? { ...t, starred: value } : t) }));
+      setActualCounts(prev => ({ ...prev, STARRED: value ? prev.STARRED + ids.length : Math.max(0, prev.STARRED - ids.length) }));
+    }
+    if (action === "trash") {
+      setThreadsCache(prev => ({ ...prev, [activeLabel]: (prev[activeLabel] || []).filter(t => !selectedThreads.has(t.id)) }));
+      setActualCounts(prev => ({ ...prev, TRASH: prev.TRASH + ids.length }));
+    }
+    setForceUpdate(p => p + 1);
+    const body = { threadIds: ids, email: userEmail };
+    switch(action) {
+      case "star": body.star = value; await axios.post(`${API_BASE_URL}/gmail/bulk-star`, body); toast.success(`⭐ ${value ? "Starred" : "Unstarred"} ${ids.length} emails`); break;
+      case "delete": body.permanent = activeLabel === "TRASH"; const dr = await axios.post(`${API_BASE_URL}/gmail/bulk-delete`, body); toast.success(`🗑️ ${dr.data.message}`); break;
+      case "read":
+        await Promise.all(ids.map(id => axios.post(`${API_BASE_URL}/gmail/thread/${id}/read`, { read: value, email: userEmail })));
+        // ✅ Removed toast for bulk read
+        break;
+      case "trash": await axios.post(`${API_BASE_URL}/gmail/bulk-trash`, body); toast.success(`Moved ${ids.length} emails to trash`); break;
+    }
+    setSelectedThreads(new Set()); setShowBulkActions(false); setIsSelectAll(false); fetchAllCountsFast();
+  } catch(err) { toast.error(`Failed to ${action} emails`); fetchAllCountsFast(); }
+};
 
   const toggleThreadSelection = threadId => {
     const curr = threadsCache[activeLabel] || [], newSel = new Set(selectedThreads);
