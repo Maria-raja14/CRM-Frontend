@@ -2120,7 +2120,9 @@ const EmailChat = () => {
   //   }
   // };//remove thread is read toast old one
 
-const markThreadAs = async (threadId, action, value = true) => {
+
+
+  const markThreadAs = async (threadId, action, value = true) => {
   const prevReadThreads = new Set(readThreads);
   const prevThreadsCache = JSON.parse(JSON.stringify(threadsCache));
   const prevActualCounts = { ...actualCounts };
@@ -2224,6 +2226,8 @@ const markThreadAs = async (threadId, action, value = true) => {
   //     setSelectedThreads(new Set()); setShowBulkActions(false); setIsSelectAll(false); fetchAllCountsFast();
   //   } catch(err) { toast.error(`Failed to ${action} emails`); fetchAllCountsFast(); }
   // };//old one..
+
+
 
   const handleBulkAction = async (action, value = true) => {
   if (selectedThreads.size === 0) { toast.error("No emails selected"); return; }
@@ -2524,7 +2528,7 @@ const markThreadAs = async (threadId, action, value = true) => {
             <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
               <div className="flex items-center justify-between mb-3">
                 <label className="text-sm font-medium text-gray-600 flex items-center gap-2">
-                  <FaPaperclip size={13} />Attachments <span className="text-gray-400 font-normal text-xs">(max 30MB)</span>
+                  <FaPaperclip size={13} />Attachments <span className="text-gray-400 font-normal text-xs">(max 25MB)</span>
                 </label>
                 <button onClick={triggerFileInput}
                   className="text-xs text-white px-3 py-1.5 rounded-lg flex items-center gap-1.5" style={{ background: "#1a73e8" }}>
