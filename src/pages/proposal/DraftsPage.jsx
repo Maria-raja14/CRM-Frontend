@@ -39,8 +39,7 @@ const DraftsPage = () => {
   const handleSendDraft = async (id) => {
     setIsUpdating((prev) => ({ ...prev, [id]: true }));
     try {
-      await axios.put(`${API_URL}/proposal/update
-        status/${id}`, {
+      await axios.put(`${API_URL}/proposal/updatestatus/${id}`, {
         status: "sent",
       });
       

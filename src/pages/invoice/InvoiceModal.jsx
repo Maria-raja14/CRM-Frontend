@@ -307,40 +307,37 @@ setSalesUsers(response.data.users);
     taxAmount: Number(breakdown.taxAmount),
   };
 
-    try {
-      const token = localStorage.getItem("token");
-      let response;
-      if (editingInvoice) {
-        response = await axios.put(
-          `${API_URL}/invoice/updateInvoice/${editingInvoice._id}`,
-          invoiceToSave,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        toast.success("Invoice updated successfully!");
-      // 🔥 Move Deal to Closed Won if status changed to paid
-      if (
-        editingInvoice.status !== "paid" &&
-        invoiceData.status === "paid"
-      ) {
-        const dealId = editingInvoice.items?.[0]?.deal?._id;
-
-        if (dealId) {
-          await axios.patch(
-            `${API_URL}/deals/update-deal/${dealId}`,
-            { stage: "Closed Won" },
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-        }
-      }
+  // Remove 'none' values and use default instead
+  if (invoiceToSave.discountType === 'none') {
+    invoiceToSave.discountType = 'fixed';
+    invoiceToSave.discountValue = 0;
+    invoiceToSave.discount = 0;
+  }
   
-      } else {
-        response = await axios.post(
-          `${API_URL}/invoice/createinvoice`,
-          invoiceToSave,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        toast.success("Invoice created successfully!");
-      }
+  if (invoiceToSave.taxType === 'none') {
+    invoiceToSave.taxType = 'fixed';
+    invoiceToSave.tax = 0;
+    invoiceToSave.taxAmount = 0;
+  }
+
+  try {
+    const token = localStorage.getItem("token");
+    let response;
+    if (editingInvoice) {
+      response = await axios.put(
+        `${API_URL}/invoice/updateInvoice/${editingInvoice._id}`,
+        invoiceToSave,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("Invoice updated successfully!");
+    } else {
+      response = await axios.post(
+        `${API_URL}/invoice/createinvoice`,
+        invoiceToSave,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("Invoice created successfully!");
+    }
 
     if (response.status === 200 || response.status === 201) {
       closeModal();

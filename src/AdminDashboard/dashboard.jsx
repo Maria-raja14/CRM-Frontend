@@ -55,10 +55,6 @@ import { cn } from "../lib/utils";
 import { motion } from "framer-motion";
 import CountUp from "react-countup";
 import confetti from "canvas-confetti";
-import { useNavigate } from "react-router-dom";
-import console from "console";
-
-
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -1532,7 +1528,7 @@ const AdminDashboard = () => {
   // Currency state
   const [revenueByCurrency, setRevenueByCurrency] = useState({});
   const [lineAnimationKey, setLineAnimationKey] = useState(0);
-const navigate =useNavigate()
+
   const REFRESH_MS = 60_000;
 
   /* ---------- Ranges ---------- */
@@ -1561,27 +1557,7 @@ const navigate =useNavigate()
       debouncedFetch(range);
     }
   };
-// clickabe
-   const handleCardClick = (card) => {
 
-      // Navigate to relevant page based on card title
-      switch(card.title) {
-        case "Total Leads":
-          navigate("/leads");
-          break;
-        case "Deals Won":
-          navigate("/deals?status=won");
-          break;
-        case "Total Revenue":
-          navigate("/invoice");
-          break;
-        case "Pending Invoices":
-          navigate("/invoice?status=pending");
-          break;
-          default:
-          break;
-      }
-    };
   /* ---------- Currency calculation helpers ---------- */
   const calculateRevenueByCurrency = (invoices) => {
     const revenue = {};
@@ -1908,7 +1884,15 @@ const navigate =useNavigate()
   );
 
   /* ---------- Enhanced Summary Card Component ---------- */
-  const SummaryCard = ({ title, value, change, color, icon, colorPalette, loading, onClick }) => {
+  const SummaryCard = ({
+    title,
+    value,
+    change,
+    color,
+    icon,
+    colorPalette,
+    loading,
+  }) => {
     if (loading) {
       return (
         <Card className="overflow-hidden border-0 shadow-lg bg-white/80 backdrop-blur-sm">
@@ -1935,7 +1919,6 @@ const navigate =useNavigate()
           scale: 1.02,
           transition: { duration: 0.2 },
         }}
-      onClick={onClick}  
       >
         <Card
           className={cn(
@@ -1947,7 +1930,6 @@ const navigate =useNavigate()
               "bg-orange-50/50": color === "orange",
             },
           )}
-            
         >
           <CardBubbles
             seed={Math.random() * 10}
@@ -2138,7 +2120,6 @@ const navigate =useNavigate()
                 icon={card.icon}
                 colorPalette={card.colorPalette}
                 loading={false}
-                onClick={() => handleCardClick(card)}
               />
             ))}
       </div>
