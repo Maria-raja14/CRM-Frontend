@@ -265,6 +265,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useNotifications } from "../context/NotificationContext";
 import { disconnectSocket } from "../utils/socket";
 import { ShieldCheck, Maximize, Minimize } from "lucide-react";
+import { Settings } from "lucide-react";
 import PasswordUpdate from "../pages/password/PasswordUpdate";
 import { formatDistanceToNow } from "date-fns";
 import { FaWhatsapp } from "react-icons/fa"; // WhatsApp icon
@@ -277,6 +278,7 @@ const Navbar = ({ toggleSidebar }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { notifications } = useNotifications();
   const [user, setUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
 
   const notificationRef = useRef(null);
@@ -292,7 +294,12 @@ const Navbar = ({ toggleSidebar }) => {
   // Load user
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
-    if (storedUser) setUser(storedUser);
+    if (storedUser) {
+      setUser(storedUser);
+      if (storedUser.role?.name === "Admin") {
+        setIsAdmin(true);
+      }
+    }
   }, []);
 
   // Logout
@@ -545,6 +552,29 @@ const handleLogout = async () => {
               </div>
             )}
           </div>
+
+          {/* setting button */}
+          
+          {isAdmin && (
+            <div className="relative group">
+              <button
+                onClick={() => navigate("/settings")}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              >
+                <Settings size={22} className="text-gray-600 dark:text-gray-300" />
+              </button>
+
+              {/* Tooltip */}
+              <div
+                className="absolute top-full mt-2 left-1/2 -translate-x-1/2
+                opacity-0 group-hover:opacity-100 transition-opacity
+                bg-gray-900 text-white text-xs px-3 py-1 rounded-md whitespace-nowrap
+                pointer-events-none z-50"
+              >
+                Settings
+              </div>
+            </div>
+          )}
 
           {/* User Dropdown */}
           <div className="relative" ref={dropdownRef}>

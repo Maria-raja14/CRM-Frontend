@@ -246,14 +246,14 @@ const EditModal = ({ open, setOpen, deal }) => {
                     <button
                       type="button"
                       className="px-10 py-3  bg-gray-50 text-black hover:text-white hover:bg-blue-700 transition"
-                      onClick={() => setStage("Negotiation")}
+                      onClick={() => setStage("Proposal Sent-Negotiation")}
                     >
                       Negotiation
                     </button>
                     <button
                       type="button"
                       className="px-10 py-3  bg-gray-50 text-black hover:text-white hover:bg-blue-700 transition"
-                      onClick={() => setStage("Proposal")}
+                      onClick={() => setStage("Invoices Sent")}
                     >
                       Proposal
                     </button>

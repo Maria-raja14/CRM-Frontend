@@ -30,13 +30,20 @@ import InvoiceView from "./pages/invoice/InvoiceView";
 import ResetPassword from "./pages/password/ResetPassword";
 import PrivateRoute from "./pages/auth/PrivateRoute";
 import ReportsPage from "./pages/reports/ReportsPage";
+import MassEmail from "./pages/email/MassEmail";
+import WebsiteContactForm from "./pages/website/WebsiteContactForm";
+import CreateEmail from "./pages/Email/CreateEmail";
+import EmailHistory from "./pages/email/EmailHistory";
+import ScheduledEmails from "./pages/email/ScheduledEmails";
+import Settings from "./pages/settings/Settings";
 
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const user = JSON.parse(localStorage.getItem("user"));
 
   return (
-    <SocketProvider>
+    <SocketProvider userId={user?._id}>
       {/* <TourProvider> */}
       <NotificationProvider>
         <BrowserRouter>
@@ -45,6 +52,7 @@ function App() {
 
             <Routes>
               <Route path="/" element={<Login />} />
+              <Route path="/contact" element={<WebsiteContactForm />} />
               <Route element={<PrivateRoute />}>
                 <Route
                   path="/reset-password/:token"
@@ -63,6 +71,7 @@ function App() {
                   <Route path="/stage" element={<ProposalBoard />} />
                   <Route path="/calendar" element={<CalendarView />} />
                   <Route path="/list" element={<Activity />} />
+                  <Route path="/settings" element={<Settings />} />
                   <Route path="/leads" element={<Leads />} />
                   <Route path="/createleads" element={<CreateLeads />} />
                   <Route path="/deals" element={<AllDeals />} />
@@ -82,6 +91,12 @@ function App() {
                   <Route path="/leads/view/:id" element={<ViewLead />} />
                   <Route path="/invoice/:id" element={<InvoiceView />} />
                       <Route path="reports" element={<ReportsPage />} />
+                      <Route path="/mass-email" element={<MassEmail />} />
+                      <Route path="/create-email" element={<CreateEmail />} />
+                      <Route path="/create-email/:id" element={<CreateEmail />} />
+                      <Route path="/scheduled-emails" element={<ScheduledEmails />} />
+                      <Route path="/email-history" element={<EmailHistory />} />
+                      
                 </Route>
               </Route>
             </Routes>

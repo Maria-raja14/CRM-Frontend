@@ -765,6 +765,7 @@ export default function CreateLeads() {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const contactFormData = location.state?.contactFormData || null;
   const queryParams = new URLSearchParams(location.search);
   const leadId = queryParams.get("id"); // edit mode if exists
 
@@ -804,6 +805,27 @@ export default function CreateLeads() {
       setUserId(user._id || "");
     }
   }, []);
+  // ✅ Prefill from Website Contact Form (CREATE MODE ONLY)
+  useEffect(() => {
+    if (!contactFormData) return;   // no contact form → do nothing
+    if (leadId) return;             // edit mode → do nothing
+
+    setFormData((prev) => ({
+      ...prev,
+      leadName: contactFormData.name || "",
+      email: contactFormData.email || "",
+      phoneNumber: contactFormData.phone || "",
+      companyName: contactFormData.companyName || "",
+      requirement: contactFormData.requirement || "",
+      source: "Website",
+      address: contactFormData.address || "",
+      country: contactFormData.country || "",
+      industry: contactFormData.industry || "",
+      notes: contactFormData.notes || "",
+    }));
+    setExistingAttachments(contactFormData.attachments || []);
+
+  }, [contactFormData, leadId]);
 
   // ✅ Fetch lead if editing
   useEffect(() => {
@@ -914,6 +936,8 @@ export default function CreateLeads() {
   };
 
   const handleSubmit = async (e) => {
+    console.log("Existing Attachments:", existingAttachments);
+
     e.preventDefault();
     setIsSubmitting(true);
 
@@ -931,6 +955,7 @@ export default function CreateLeads() {
     }
 
     try {
+      console.log("Existing Attachments:", existingAttachments);
       const token = localStorage.getItem("token");
       const dataToSend = new FormData();
 

@@ -25,8 +25,11 @@ export const initSocket = (userId) => {
   });
 
   socket.on("connect", () => {
-    // console.log("✅ Socket connected:", socket.id, "userId:", userId);
+    console.log("✅ Socket connected:", socket.id, "userId:", userId);
     socket.emit("user_connected", userId); // extra safety register
+  });
+  socket.on("connect_error", (err) => {
+    console.error("❌ SOCKET CONNECT ERROR:", err.message);
   });
 
   socket.on("disconnect", () => {

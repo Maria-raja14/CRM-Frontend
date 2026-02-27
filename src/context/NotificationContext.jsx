@@ -86,7 +86,10 @@
 
 
 import { createContext, useContext, useState, useEffect } from "react";
-import { initSocket } from "../utils/socket";
+
+import { useSocket } from "./SocketContext";
+
+
 
 const NotificationContext = createContext();
 
@@ -94,14 +97,34 @@ export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const user = JSON.parse(localStorage.getItem("user"));
 
-  useEffect(() => {
-    if (!user?._id) return;
+  const socket = useSocket();
 
-    // ✅ Initialize socket here instead of App.jsx
-    const socket = initSocket(user._id);
-    if (!socket) return;
+  useEffect(() => {
+    
+    console.log("🧠 NotificationProvider mounted");
+    console.log("👤 Frontend user ID:", user?._id);
+    console.log("🔌 Socket from SocketContext:", socket);
+    
+    
+    if (!user?._id || !socket) {
+      console.log("⏳ Waiting for socket...");
+      return;
+    }
+
+
+    socket.on("connect", () => {
+      console.log("🟢 FRONTEND SOCKET CONNECTED:", socket.id);
+    });
+    socket.on("connect_error", (err) => {
+      console.log("🔴 SOCKET CONNECT ERROR:", err.message, err);
+    });
+
+
 
     const handleNewNotification = (data) => {
+     
+      
+      console.log("📥 NEW NOTIFICATION RECEIVED:", data);
       const notif = {
         _id: data._id || data.id || Date.now() + Math.random(),
         title:
@@ -109,6 +132,8 @@ export const NotificationProvider = ({ children }) => {
             ? "Follow-up Reminder"
             : data.type === "activity" || data.type === "admin"
             ? "Activity Reminder"
+            : data.type === "contact_form"
+            ? "Website Contact Form"
             : "Notification",
         text: data.text,
         read: false,
@@ -133,7 +158,7 @@ export const NotificationProvider = ({ children }) => {
       socket.off("activity_reminder", handleNewNotification);
       socket.off("admin_reminder", handleNewNotification);
     };
-  }, [user?._id]);
+  }, [socket, user?._id]);
 
   return (
     <NotificationContext.Provider value={{ notifications, setNotifications }}>

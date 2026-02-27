@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useNotifications } from "../../context/NotificationContext";
 import { formatDistanceToNow, differenceInHours } from "date-fns";
 import { Bell, Trash2, Clock, CheckCircle } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 
@@ -12,6 +12,8 @@ const NotificationsPage = () => {
   const { notifications, setNotifications } = useNotifications();
   const [deletingId, setDeletingId] = useState(null);
   const location = useLocation();
+  const navigate = useNavigate();
+
   const initialFilter = location.state?.filter || "all";
   const [filter, setFilter] = useState(initialFilter);
   const API_URL = import.meta.env.VITE_API_URL;
@@ -46,11 +48,46 @@ const NotificationsPage = () => {
     }
   };
 
+  //contact form notification click function
+  
+  const handleNotificationClick = async (notification) => {
+    // ONLY website contact form notifications
+    if (notification.type !== "contact_form") return;
+
+    try {
+      // mark as read
+      if (!notification.read) {
+        await axios.patch(
+          `${API_URL}/notification/read/${notification._id}`,
+          { read: true }
+        );
+
+        setNotifications((prev) =>
+          prev.map((n) =>
+            n._id === notification._id ? { ...n, read: true } : n
+          )
+        );
+      }
+
+      // navigate to EXISTING create lead page
+      navigate("/createleads", {
+        state: {
+          fromNotification: true,
+          contactFormData: notification.meta,
+        },
+      });
+    } catch (err) {
+      toast.error("Failed to open contact form");
+    }
+  };
+
+
   // Filter notifications by type
   let filteredNotifications = notifications.filter((n) => {
     if (filter === "all") return true;
     if (filter === "followup") return n.type === "followup";
     if (filter === "activity") return n.type === "activity" || n.type === "admin";
+    if (filter === "contact_form") return n.type === "contact_form";
     if (filter === "unread") return !n.read;
     if (filter === "read") return n.read;
     return true;
@@ -116,7 +153,7 @@ const NotificationsPage = () => {
 
       {/* Tabs for type */}
       <div className="flex gap-2 mb-4">
-        {["all", "followup", "activity"].map((t) => (
+        {["all", "followup", "activity", "contact_form"].map((t) => (
           <button
             key={t}
             onClick={() => setFilter(t)}
@@ -126,7 +163,9 @@ const NotificationsPage = () => {
                 : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
             }`}
           >
-            {t === "all" ? "All" : t === "followup" ? "Lead follow-ups" : "Activity follow-ups"}
+            {t === "contact_form" ? "Website Contacts" :
+             t === "followup" ? "Lead follow-ups" :
+             t === "activity" ? "Activity follow-ups" : "All"}
           </button>
         ))}
       </div>
@@ -143,12 +182,17 @@ const NotificationsPage = () => {
             return (
               <div
                 key={n._id}
-                className={`relative group p-5 rounded-2xl transition-all duration-300 border ${
-                  n.read
-                    ? "bg-white dark:bg-gray-800/70 border-gray-200 dark:border-gray-700/50 shadow-sm"
-                    : "bg-gradient-to-r from-blue-50/80 to-indigo-50/80 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800/30 shadow-md"
-                }`}
+                onClick={() => handleNotificationClick(n)}
+                className={`relative group p-5 rounded-2xl transition-all duration-300 border
+                  ${n.type === "contact_form" ? "cursor-pointer hover:ring-2 hover:ring-blue-400" : ""}
+                  ${
+                    n.read
+                      ? "bg-white dark:bg-gray-800/70 border-gray-200 dark:border-gray-700/50 shadow-sm"
+                      : "bg-gradient-to-r from-blue-50/80 to-indigo-50/80 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800/30 shadow-md"
+                  }
+                `}
               >
+
                 <div className="flex items-start">
                   <div className="flex-shrink-0 relative mr-4">
                     <img
@@ -188,10 +232,14 @@ const NotificationsPage = () => {
                       </div>
 
                       <button
-                        onClick={() => handleDelete(n._id)}
+                        onClick={(e) => {
+                          e.stopPropagation();     // 🔥 THIS LINE STOPS NAVIGATION
+                          handleDelete(n._id);
+                        }}
                         disabled={deletingId === n._id}
                         className="ml-4 flex items-center justify-center p-2 text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-500 rounded-xl transition-all duration-200 transform hover:scale-110"
                       >
+
                         {deletingId === n._id ? (
                           <div className="w-5 h-5 border-2 border-t-transparent border-blue-500 rounded-full animate-spin"></div>
                         ) : (
