@@ -446,8 +446,8 @@ export default function CreateDeal() {
       type: "select",
       options: [
         "Qualification",
-        "Proposal Sent-Negotiation",
-        "Invoices Sent",
+        "Proposal",
+        "Negotiation",
         "Closed Won",
         "Closed Lost",
       ],

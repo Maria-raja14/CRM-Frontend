@@ -24,28 +24,7 @@ import {
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
-const CustomCalendarInput = React.forwardRef(({ value, onClick, placeholder }, ref) => (
-  <div
-    onClick={onClick}
-    ref={ref}
-    className="flex items-center justify-between bg-white border border-gray-200 rounded-2xl px-5 py-2.5 cursor-pointer shadow-sm hover:border-blue-400 transition-all min-w-[260px] h-[48px]"
-  >
-    {/* Left Icon - Light Gray Outline */}
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-    </svg>
 
-    {/* Center Text */}
-    <span className="text-gray-600 text-[17px] font-normal">
-      {value || placeholder}
-    </span>
-
-    {/* Right Icon - Bold Black */}
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-    </svg>
-  </div>
-));
 const InvoiceHead = () => {
   const API_URL = import.meta.env.VITE_API_URL;
 
@@ -141,7 +120,7 @@ const InvoiceHead = () => {
     return acc;
   }, {});
 
-
+  
   const fetchInvoices = async () => {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
@@ -174,25 +153,6 @@ const InvoiceHead = () => {
       setEmailMessage("📨 Sending invoice email...");
 
       await axios.post(`${API_URL}/invoice/sendEmail/${invoiceId}`);
-      // 🔹 Find related deal from invoice
-      const invoice = invoices.find(inv => inv._id === invoiceId);
-      const dealId = invoice?.items?.[0]?.deal?._id;
-
-      // 🔹 Move deal to "Invoices Sent"
-      if (dealId) {
-        const token = localStorage.getItem("token");
-
-        await axios.patch(
-          `${API_URL}/deals/update-deal/${dealId}`,
-          {
-            stage: "Invoices Sent",
-          },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-      }
-
 
       setEmailStatus("success");
       setEmailMessage("✅ Invoice sent to customer email!");
@@ -211,67 +171,45 @@ const InvoiceHead = () => {
       }, 2000);
     }
   };
-  {/*if (startDate) {
-  const selectedMonth = startDate.getMonth(); // 0-indexed
-  const selectedYear = startDate.getFullYear();
 
-  filtered = filtered.filter((invoice) => {
-    const invoiceDate = new Date(invoice.createdAt);
-    return (
-      invoiceDate.getMonth() === selectedMonth &&
-      invoiceDate.getFullYear() === selectedYear
-    );
-  });
-}*/}
+  const applyFilters = () => {
+    let filtered = invoices;
 
-const applyFilters = () => {
-  let filtered = [...invoices];
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (invoice) =>
+          invoice.invoicenumber &&
+          invoice.invoicenumber.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
 
-  // 1. Search Logic
-  if (searchTerm) {
-    filtered = filtered.filter((inv) =>
-      inv.invoicenumber?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }
+    if (startDate) {
+      const selectedDate = new Date(startDate).toDateString();
+      filtered = filtered.filter((invoice) => {
+        const invoiceDate = new Date(invoice.createdAt).toDateString();
+        return invoiceDate === selectedDate;
+      });
+    }
 
-  // 2. Date Logic (Year, Month, and Day)
-  if (startDate) {
-    const sDate = new Date(startDate);
-    const sDay = sDate.getDate();
-    const sMonth = sDate.getMonth();
-    const sYear = sDate.getFullYear();
+    if (filterAssignTo) {
+      filtered = filtered.filter(
+        (invoice) => invoice.assignTo?._id === filterAssignTo
+      );
+    }
 
-    filtered = filtered.filter((invoice) => {
-      // Check both Created Date and Due Date
-      const createdDate = invoice.createdAt ? new Date(invoice.createdAt) : null;
-      const dueDate = invoice.dueDate ? new Date(invoice.dueDate) : null;
+    if (filterStatus) {
+      filtered = filtered.filter((invoice) => invoice.status === filterStatus);
+    }
 
-      const checkMatch = (targetDate) => {
-        if (!targetDate || isNaN(targetDate.getTime())) return false;
-        return (
-          targetDate.getDate() === sDay &&
-          targetDate.getMonth() === sMonth &&
-          targetDate.getFullYear() === sYear
-        );
-      };
+    if (filterMethod) {
+      filtered = filtered.filter(
+        (invoice) => invoice.paymentMethod === filterMethod
+      );
+    }
 
-      // Returns true if either the creation date OR the due date matches the selection
-      return checkMatch(createdDate) || checkMatch(dueDate);
-    });
-  }
+    setFilteredInvoices(filtered);
+  };
 
-  // 3. Status Logic
-  if (filterStatus) {
-    filtered = filtered.filter((inv) => inv.status === filterStatus);
-  }
-
-  // 4. User Logic
-  if (filterAssignTo) {
-    filtered = filtered.filter((inv) => inv.assignTo?._id === filterAssignTo);
-  }
-
-  setFilteredInvoices(filtered);
-};
   const handleDelete = async (invoiceId) => {
     try {
       await axios.delete(`${API_URL}/invoice/delete/${invoiceId}`);
@@ -415,24 +353,14 @@ const applyFilters = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold">Invoices</h1>
         {user?.role.name === "Admin" && (
-          // <button
-          //   onClick={() => {
-          //     setEditingInvoice(null);
-          //     openModal();
-          //   }}
-          //   className="bg-[#4466f2] p-2 px-4 text-white rounded-sm"
-          // >
-          //   Create Invoices
-          // </button>
           <button
             onClick={() => {
               setEditingInvoice(null);
               openModal();
             }}
-            className="bg-[#4466f2] p-2 px-4 text-white rounded-sm
-                      hover:bg-[#3657d6] transition-colors duration-00"
+            className="bg-[#4466f2] p-2 px-4 text-white rounded-sm"
           >
-            Create Invoices
+            Create invoices
           </button>
         )}
       </div>
@@ -561,10 +489,11 @@ const applyFilters = () => {
                       <div
                         className="bg-green-500 h-2 rounded-full transition-all duration-500"
                         style={{
-                          width: `${data.totalAmount > 0
+                          width: `${
+                            data.totalAmount > 0
                               ? (data.totalPaid / data.totalAmount) * 100
                               : 0
-                            }%`,
+                          }%`,
                         }}
                       ></div>
                     </div>
@@ -592,14 +521,8 @@ const applyFilters = () => {
           <DatePicker
             selected={startDate}
             onChange={(date) => setStartDate(date)}
-            dateFormat="dd-MM-yyyy"        // Shows full date (e.g., 22-02-2026)
-            placeholderText="dd-mm-yyyy"
-            showMonthDropdown             // Allows month selection in header
-            showYearDropdown              // Allows year selection in header
-            dropdownMode="select"         // Makes them searchable select boxes
-            todayButton="Today"           // Adds the 'Today'
-            isClearable                   // Adds the 'Clear' option 
-            customInput={<CustomCalendarInput />}
+            className="px-4 py-2 rounded-md border bg-white  focus:ring-2 focus:ring-blue-400"
+            placeholderText="Filter by Date"
           />
           <select
             className="px-4 py-2 rounded-md bg-white border  text-gray-600"
@@ -678,10 +601,11 @@ const applyFilters = () => {
                 </td>
                 <td className="px-6 py-4">
                   <span
-                    className={`px-3 py-1 text-xs font-semibold rounded-full ${invoice.status === "paid"
+                    className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                      invoice.status === "paid"
                         ? "bg-green-100 text-green-700"
                         : "bg-red-100 text-red-700"
-                      }`}
+                    }`}
                   >
                     {invoice.status}
                   </span>
@@ -689,9 +613,9 @@ const applyFilters = () => {
                 <td className="px-6 py-4 font-semibold">
                   {invoice.total
                     ? Number(invoice.total).toLocaleString("en-IN", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })
                     : "-"}{" "}
                   {invoice.currency}
                 </td>
@@ -704,10 +628,10 @@ const applyFilters = () => {
                 <td className="px-6 py-4">
                   {invoice.dueDate
                     ? new Date(invoice.dueDate).toLocaleDateString("en-GB", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })
                     : "-"}
                 </td>
 
@@ -741,8 +665,8 @@ const applyFilters = () => {
                             dropdownButton?.position === "below"
                               ? dropdownButton.rect.bottom + window.scrollY
                               : dropdownButton.rect.top +
-                              window.scrollY -
-                              (dropdownRef.current?.offsetHeight || 150),
+                                window.scrollY -
+                                (dropdownRef.current?.offsetHeight || 150),
                           left: dropdownButton
                             ? dropdownButton.rect.left + window.scrollX
                             : 0,
@@ -842,8 +766,9 @@ const applyFilters = () => {
                 <button
                   key={pageNum}
                   onClick={() => handlePageChange(pageNum)}
-                  className={`px-3 py-1 rounded-md border text-sm ${currentPage === pageNum ? "bg-blue-500 text-white" : ""
-                    }`}
+                  className={`px-3 py-1 rounded-md border text-sm ${
+                    currentPage === pageNum ? "bg-blue-500 text-white" : ""
+                  }`}
                 >
                   {pageNum}
                 </button>

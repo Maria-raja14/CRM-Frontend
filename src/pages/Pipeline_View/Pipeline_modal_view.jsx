@@ -128,7 +128,7 @@ const formatCurrencyValue = (val) => {
           borderColor: "border-blue-200",
           label: "Qualification",
         };
-      case "Proposal Sent-Negotiation":
+      case "Negotiation":
         return {
           icon: Clock,
           color: "text-amber-700",
@@ -136,7 +136,7 @@ const formatCurrencyValue = (val) => {
           borderColor: "border-amber-200",
           label: "Negotiation",
         };
-      case "Invoices Sent":
+      case "Proposal Sent":
         return {
           icon: Mail,
           color: "text-purple-700",
