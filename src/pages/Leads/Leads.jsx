@@ -1013,7 +1013,10 @@ function LeadTableComponent() {
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none"
                 >
                   <option value="Qualification">Qualification</option>
-                  
+                  <option value="Proposal">Proposal</option>
+                  <option value="Negotiation">Negotiation</option>
+                  <option value="Closed Won">Closed Won</option>
+                  <option value="Closed Lost">Closed Lost</option>
                 </select>
               </div>
 

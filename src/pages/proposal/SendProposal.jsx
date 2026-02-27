@@ -145,21 +145,6 @@ const SendProposal = () => {
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
-      // 🔹 Automatically move deal to "Proposal Sent-Negotiation" stage
-      if (status === "sent" && selectedDealId) {
-        const token = localStorage.getItem("token");
-
-        await axios.patch(
-          `${API_URL}/deals/update-deal/${selectedDealId}`,
-          {
-            stage: "Proposal Sent-Negotiation",
-          },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-      }
-
 
       if (status === "sent") {
         toast.success(
