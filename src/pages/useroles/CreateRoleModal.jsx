@@ -22,14 +22,45 @@ import {
   FileText,
   Check,
   X,
-  UserPlus,
-  MessageSquare
+  UserPlus
 } from "react-feather";
 
 export default function CreateRoleModal({ onRoleCreated }) {
-  const API_URL = import.meta.env.VITE_API_URL;
+
+const API_URL = import.meta.env.VITE_API_URL;
+
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [roleData, setRoleData] = useState({
+ const [roleData, setRoleData] = useState({
+  name: "",
+  permissions: {
+    dashboard: false,
+    leads: false,
+    deals_all: false,
+    deals_pipeline: false,
+    invoices: false,
+    proposal: false,
+    activities: false,
+    activities_calendar: false,
+    activities_list: false,
+    users_roles: false,
+    admin_access: false,
+  }
+});
+
+
+  const handlePermissionChange = (permission) => {
+    setRoleData(prev => ({
+      ...prev,
+      permissions: {
+        ...prev.permissions,
+        [permission]: !prev.permissions[permission]
+      }
+    }));
+  };
+
+const handleCancel = () => {
+  setRoleData({
     name: "",
     permissions: {
       dashboard: false,
@@ -43,40 +74,11 @@ export default function CreateRoleModal({ onRoleCreated }) {
       activities_list: false,
       users_roles: false,
       admin_access: false,
-      email_chat: false,
     }
   });
+  setIsDialogOpen(false);
+};
 
-  const handlePermissionChange = (permission) => {
-    setRoleData(prev => ({
-      ...prev,
-      permissions: {
-        ...prev.permissions,
-        [permission]: !prev.permissions[permission]
-      }
-    }));
-  };
-
-  const handleCancel = () => {
-    setRoleData({
-      name: "",
-      permissions: {
-        dashboard: false,
-        leads: false,
-        deals_all: false,
-        deals_pipeline: false,
-        invoices: false,
-        proposal: false,
-        activities: false,
-        activities_calendar: false,
-        activities_list: false,
-        users_roles: false,
-        admin_access: false,
-        email_chat: false,
-      }
-    });
-    setIsDialogOpen(false);
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -85,7 +87,7 @@ export default function CreateRoleModal({ onRoleCreated }) {
       const { data } = await axios.post(
         `${API_URL}/roles`,
         roleData,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token} `} }
       );
 
       toast.success("Role created successfully!");
@@ -98,45 +100,40 @@ export default function CreateRoleModal({ onRoleCreated }) {
   };
 
   // Permission groups for better organization
-  const permissionGroups = [
-    {
-      title: "Core Modules",
-      permissions: [
-        { key: "dashboard", label: "Dashboard", icon: Home },
-        { key: "leads", label: "Leads", icon: Users },
-        { key: "deals_all", label: "All Deals", icon: Tag },
-        { key: "deals_pipeline", label: "Pipeline View", icon: List },
-      ]
-    },
-    {
-      title: "Documents",
-      permissions: [
-        { key: "invoices", label: "Invoices", icon: FileText },
-        { key: "proposal", label: "Proposal", icon: Edit },
-      ]
-    },
-    {
-      title: "Activities",
-      permissions: [
-        { key: "activities", label: "Activities", icon: Briefcase },
-        { key: "activities_calendar", label: "Calendar View", icon: Calendar },
-        { key: "activities_list", label: "Activity List", icon: List },
-      ]
-    },
-    {
-      title: "Communication",
-      permissions: [
-        { key: "email_chat", label: "Email & Chat", icon: MessageSquare },
-      ]
-    },
-    {
-      title: "Administration",
-      permissions: [
-        { key: "users_roles", label: "Users & Roles", icon: Shield },
-        { key: "admin_access", label: "Admin Access", icon: Shield },
-      ]
-    }
-  ];
+ const permissionGroups = [
+  {
+    title: "Core Modules",
+    permissions: [
+      { key: "dashboard", label: "Dashboard", icon: Home },
+      { key: "leads", label: "Leads", icon: Users },
+      { key: "deals_all", label: "All Deals", icon: Tag },
+      { key: "deals_pipeline", label: "Pipeline View", icon: List },
+    ]
+  },
+  {
+    title: "Documents",
+    permissions: [
+      { key: "invoices", label: "Invoices", icon: FileText },
+      { key: "proposal", label: "Proposal", icon: Edit },
+    ]
+  },
+  {
+    title: "Activities",
+    permissions: [
+      { key: "activities", label: "Activities", icon: Briefcase },
+      { key: "activities_calendar", label: "Calendar View", icon: Calendar },
+      { key: "activities_list", label: "Activity List", icon: List },
+    ]
+  },
+  {
+    title: "Administration",
+    permissions: [
+      { key: "users_roles", label: "Users & Roles", icon: Shield },
+      { key: "admin_access", label: "Admin Access", icon: Shield },
+    ]
+  }
+];
+
 
   return (
     <div>

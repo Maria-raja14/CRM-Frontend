@@ -880,4 +880,4 @@ const InvoiceHead = () => {
   );
 };
 
-export default InvoiceHead;//original code..
+export default InvoiceHead;

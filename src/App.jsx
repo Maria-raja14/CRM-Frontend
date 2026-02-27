@@ -32,10 +32,6 @@ import PrivateRoute from "./pages/auth/PrivateRoute";
 import ReportsPage from "./pages/reports/ReportsPage";
 
 
-import EmailChat from "./pages/Email_chat/EmailChat";
-
-import WhatsAppChat from './pages/WhatsApp/WhatsAppChat';
-
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -86,8 +82,11 @@ function App() {
                   <Route path="/leads/view/:id" element={<ViewLead />} />
                   <Route path="/invoice/:id" element={<InvoiceView />} />
                   <Route path="reports" element={<ReportsPage />} />
-                  <Route path="/emailchat" element={<EmailChat />} />
-               <Route path="/whatsapp" element={<WhatsAppChat />} />
+                      <Route path="/mass-email" element={<MassEmail />} />
+                      <Route path="/create-email" element={<CreateEmail />} />
+                      <Route path="/create-email/:id" element={<CreateEmail />} />
+                      <Route path="/scheduled-emails" element={<ScheduledEmails />} />
+                      <Route path="/email-history" element={<EmailHistory />} />
                 </Route>
               </Route>
             </Routes>
@@ -101,5 +100,3 @@ function App() {
 }
 
 export default App;
-
-
