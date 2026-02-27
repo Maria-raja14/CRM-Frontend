@@ -38,6 +38,10 @@ import ScheduledEmails from "./pages/email/ScheduledEmails";
 import Settings from "./pages/settings/Settings";
 
 
+import EmailChat from "./pages/Email_chat/EmailChat";
+
+import WhatsAppChat from './pages/WhatsApp/WhatsAppChat';
+
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const user = JSON.parse(localStorage.getItem("user"));
@@ -97,6 +101,9 @@ function App() {
                       <Route path="/scheduled-emails" element={<ScheduledEmails />} />
                       <Route path="/email-history" element={<EmailHistory />} />
                       
+                 
+                  <Route path="/emailchat" element={<EmailChat />} />
+               <Route path="/whatsapp" element={<WhatsAppChat />} />
                 </Route>
               </Route>
             </Routes>
@@ -110,3 +117,5 @@ function App() {
 }
 
 export default App;
+
+

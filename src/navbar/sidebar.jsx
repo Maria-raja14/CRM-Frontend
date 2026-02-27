@@ -14,7 +14,9 @@ import {
   GitBranch,
   BarChart3,
   Mail,
+    MessageCircle
 } from "lucide-react";
+
 import { NavLink, useLocation } from "react-router-dom";
 
 const IconCircle = ({ children, isActive }) => (
@@ -205,6 +207,14 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           className="h-20 object-contain"
         />
         <div className="relative group">
+        <div className="mb-6 flex items-center justify-between px-12">
+        <NavLink to="/adminDashboard" className="cursor-pointer">
+          <img
+            src="https://tzi.zaarapp.com//storage/uploads/logo//logo-dark.png"
+            alt="Logo"
+            className="h-12 hover:opacity-80 transition-opacity"
+          />
+        </NavLink>
         <button onClick={toggleSidebar} className="lg:hidden p-1">
           <X size={22} className="text-gray-600" />
         </button>
@@ -268,6 +278,17 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           />
         </Collapsible>
 
+                <SidebarItem
+  to="/emailchat"
+  icon={<Mail />}  // You can import Mail from "lucide-react"
+  label="Email Chat"
+/>
+
+<SidebarItem
+  to="/whatsapp"
+  icon={<MessageCircle />}  // Using MessageCircle icon
+  label="WhatsApp Chat"
+/>
         {/* Invoice */}
         <SidebarItem
           to="/invoice"
