@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
@@ -91,7 +92,7 @@ const ViewLead = () => {
                 className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
               >
                 <ArrowLeft size={16} className="mr-1" />
-                All Leads
+                All Leads 
               </Link>
               <ChevronRight size={16} className="mx-2" />
               <span className="text-slate-500">View Lead</span>

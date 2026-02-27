@@ -23,15 +23,15 @@ const STAGES = [
     borderColor: "border-gray-300",
   },
   {
-    id: "Negotiation",
-    title: "Negotiation",
+    id: "Proposal Sent-Negotiation",
+    title: "Proposal Sent-Negotiation",
     color: "text-amber-600",
     bgColor: "bg-gray-100",
     borderColor: "border-gray-300",
   },
   {
-    id: "Proposal",
-    title: "Proposal Sent",
+    id: "Invoices Sent",
+    title: "Invoices Sent",
     color: "text-cyan-600",
     bgColor: "bg-gray-100",
     borderColor: "border-gray-300",
@@ -73,11 +73,11 @@ const tourSteps = [
   },
   {
     selector: ".pipeline-column:nth-child(2)",
-    content: "This is the Negotiation stage where you discuss with clients.",
+    content: "This is the Proposal Sent-Negotiation stage where you discuss with clients.",
   },
   {
     selector: ".pipeline-column:nth-child(3)",
-    content: "This is the Proposal Sent stage where offers are shared.",
+    content: "This is the Invoices Sent stage where offers are shared.",
   },
   {
     selector: ".pipeline-column:nth-child(4)",
@@ -656,9 +656,9 @@ function DealCard({
     switch (stageId) {
       case "Qualification":
         return "bg-blue-100 text-blue-800";
-      case "Negotiation":
+      case "Proposal Sent-Negotiation":
         return "bg-amber-100 text-amber-800";
-      case "Proposal":
+      case "Invoices Sent":
         return "bg-cyan-100 text-cyan-800";
       case "Closed Won":
         return "bg-emerald-100 text-emerald-800";

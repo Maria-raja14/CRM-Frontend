@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useNotifications } from "../context/NotificationContext";
 import { disconnectSocket } from "../utils/socket";
 import { ShieldCheck, Maximize, Minimize } from "lucide-react";
+import { Settings } from "lucide-react";
 import PasswordUpdate from "../pages/password/PasswordUpdate";
 import { formatDistanceToNow } from "date-fns";
 import { FaWhatsapp } from "react-icons/fa"; // WhatsApp icon
@@ -16,6 +17,7 @@ const Navbar = ({ toggleSidebar }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { notifications } = useNotifications();
   const [user, setUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
 
   const notificationRef = useRef(null);
@@ -41,7 +43,16 @@ const Navbar = ({ toggleSidebar }) => {
   // Load user
 
   useEffect(() => {
-    const fetchUser = async () => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    if (storedUser) {
+      setUser(storedUser);
+      if (storedUser.role?.name === "Admin") {
+        setIsAdmin(true);
+      }
+    }
+  }, []);
+ useEffect(() => {
+     const fetchUser = async () => {
       try {
         const token = localStorage.getItem("token");
 
@@ -56,8 +67,9 @@ const Navbar = ({ toggleSidebar }) => {
     };
 
     fetchUser();
-  }, []);
-
+   
+ },[]);
+  
   // useEffect(() => {
   //   const storedUser = JSON.parse(localStorage.getItem("user"));
   //   if (storedUser) setUser(storedUser);
@@ -140,16 +152,26 @@ const Navbar = ({ toggleSidebar }) => {
     <>
       <div className="w-full bg-white dark:bg-gray-900 dark:text-white p-3 flex justify-between items-center shadow-sm border-b border-gray-200 dark:border-gray-700">
         {/* Sidebar Toggle */}
+        <div className="relative group">
         <button
           onClick={toggleSidebar}
           className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
         >
           <Menu size={24} className="text-gray-600 dark:text-gray-300" />
         </button>
+         {/* ✅ TOOLTIP */}
+         <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 
+           opacity-0 group-hover:opacity-100 transition-opacity
+           bg-gray-900 text-white text-xs px-3 py-1 rounded-md whitespace-nowrap
+          pointer-events-none z-50">
+          Menu
+         </div>
+        </div>
 
         {/* Right Section */}
         <div className="flex items-center space-x-4 relative">
           {/* Fullscreen Toggle */}
+          <div className="relative group">
           <button
             onClick={toggleFullscreen}
             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -166,6 +188,16 @@ const Navbar = ({ toggleSidebar }) => {
               />
             )}
           </button>
+          {/* ✅ TOOLTIP */}
+          <div
+            className="absolute top-full mt-2 left-1/2 -translate-x-1/2
+            opacity-0 group-hover:opacity-100 transition-opacity
+            bg-gray-900 text-white text-xs px-3 py-1 rounded-md whitespace-nowrap
+            pointer-events-none z-50"
+          > 
+          {isFullscreen ? "Minimize" : "Maximize"}
+          </div>
+        </div>
 
           {/* WhatsApp Button with Animation */}
           {/* <a
@@ -179,7 +211,7 @@ const Navbar = ({ toggleSidebar }) => {
           </a> */}
 
           {/* Notifications */}
-          <div className="relative" ref={notificationRef}>
+          {/* <div className="relative" ref={notificationRef}>
             <button
               onClick={() => setShowNotifications(!showNotifications)}
               className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 relative transition-colors"
@@ -191,6 +223,79 @@ const Navbar = ({ toggleSidebar }) => {
                 </span>
               )}
             </button>
+            {showNotifications && (
+              <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 shadow-xl rounded-xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 font-semibold text-gray-800 dark:text-gray-100 bg-gray-50 dark:bg-gray-900">
+                  Notifications
+                </div>
+                <div className="max-h-96 overflow-y-auto">
+                  {notifications.length > 0 ? (
+                    notifications.map((n) => (
+                      <div
+                        key={n._id}
+                        className="flex items-start px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all cursor-pointer border-b border-gray-100 dark:border-gray-600 last:border-0"
+                      >
+                        <div className="flex-shrink-0">
+                          <img
+                            src={getProfileImageUrl(n.profileImage)}
+                            alt="avatar"
+                            className="w-10 h-10 rounded-full object-cover border border-gray-300 dark:border-gray-600"
+                          />
+                        </div>
+                        <div className="ml-3 flex-1">
+                          <p className="text-gray-700 dark:text-gray-200 text-sm font-medium">
+                            {n.title || "Notification"}
+                          </p>
+                          <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
+                            {n.text}
+                          </p>
+                          <p className="text-gray-400 dark:text-gray-500 text-xs mt-2">
+                            {formatDistanceToNow(new Date(n.createdAt), {
+                              addSuffix: true,
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-4 text-gray-500 text-sm text-center">
+                      No new notifications
+                    </div>
+                  )}
+                </div>
+                {notifications.length > 0 && (
+                  <Link
+                    to="/dashboard/notifications"
+                    onClick={() => setShowNotifications(false)}
+                    className="block text-center px-4 py-3 bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all font-medium border-t border-gray-200 dark:border-gray-700"
+                  >
+                    View All Notifications
+                  </Link>
+                )}
+              </div>
+            )}
+          </div> */}
+          <div className="relative" ref={notificationRef}>
+            <div className="relative group">
+            <button
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 relative transition-colors"
+            >
+              <Bell size={22} className="text-gray-600 dark:text-gray-300" />
+              {notifications.filter((n) => !n.read).length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
+                  {notifications.filter((n) => !n.read).length}
+                </span>
+              )}
+            </button>
+            {/* ✅ TOOLTIP */}
+              <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 
+                opacity-0 group-hover:opacity-100 transition-opacity
+                bg-gray-900 text-white text-xs px-3 py-1 rounded-md whitespace-nowrap
+                pointer-events-none z-50">
+                Notifications
+              </div>
+            </div>
             {showNotifications && (
               <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 shadow-xl rounded-xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
                 <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 font-semibold text-gray-800 dark:text-gray-100 bg-gray-50 dark:bg-gray-900">
@@ -248,12 +353,37 @@ const Navbar = ({ toggleSidebar }) => {
             )}
           </div>
 
+          {/* setting button */}
+          
+          {isAdmin && (
+            <div className="relative group">
+              <button
+                onClick={() => navigate("/settings")}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              >
+                <Settings size={22} className="text-gray-600 dark:text-gray-300" />
+              </button>
+
+              {/* Tooltip */}
+              <div
+                className="absolute top-full mt-2 left-1/2 -translate-x-1/2
+                opacity-0 group-hover:opacity-100 transition-opacity
+                bg-gray-900 text-white text-xs px-3 py-1 rounded-md whitespace-nowrap
+                pointer-events-none z-50"
+              >
+                Settings
+              </div>
+            </div>
+          )}
+
           {/* User Dropdown */}
           <div className="relative" ref={dropdownRef}>
+            <div className="relative group">
             <button
               onClick={() => setShowDropdown(!showDropdown)}
               className="flex items-center space-x-3 bg-white dark:bg-gray-800 rounded-xl px-4 py-2 shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
+              
               {/* User Avatar */}
               <div className="relative">
                 <img
@@ -286,6 +416,14 @@ const Navbar = ({ toggleSidebar }) => {
                 }`}
               />
             </button>
+            {/* ✅ TOOLTIP */}
+            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 
+             opacity-0 group-hover:opacity-100 transition-opacity
+             bg-gray-900 text-white text-xs px-3 py-1 rounded-md whitespace-nowrap
+             pointer-events-none z-50">
+             Profile
+            </div>
+            </div>
 
             {showDropdown && (
               <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 shadow-xl rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 z-50">
