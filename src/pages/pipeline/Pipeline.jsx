@@ -285,8 +285,8 @@ const pipeline = () => {
   const stages = [
     "Prospect",
     "Qualified",
-    "Negotiation",
-    "Proposal",
+    "Proposal Sent-Negotiation",
+    "Invoice Sent",
     "Won",
     "Lost",
   ];
@@ -622,25 +622,25 @@ const pipeline = () => {
                                 type="button"
                                 className={`px-10 py-3 transition 
                                  ${
-                                   stage === "Negotiation"
+                                   stage === "Proposal Sent-Negotiation"
                                      ? "bg-blue-700 text-white"
                                      : "bg-gray-50 text-black hover:text-white hover:bg-blue-700"
                                  }`}
-                                onClick={() => setStage("Negotiation")}
+                                onClick={() => setStage("Proposal Sent-Negotiation")}
                               >
-                                Negotiation
+                                Proposal Sent-Negotiation
                               </button>
                               <button
                                 type="button"
                                 className={`px-10 py-3 transition 
                                  ${
-                                   stage === "Proposal"
+                                   stage === "Invoice Sent"
                                      ? "bg-blue-700 text-white"
                                      : "bg-gray-50 text-black hover:text-white hover:bg-blue-700"
                                  }`}
-                                onClick={() => setStage("Proposal")}
+                                onClick={() => setStage("Invoice Sent")}
                               >
-                                Proposal
+                                Invoice Sent
                               </button>
                               <button
                                 type="button"
