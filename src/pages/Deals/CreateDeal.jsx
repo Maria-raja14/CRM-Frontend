@@ -1269,7 +1269,7 @@ export default function CreateDeal() {
       options: [
         "Qualification",
         "Proposal Sent-Negotiation",
-        "Invoice Sent",
+        "Invoices Sent",
         "Closed Won",
         "Closed Lost",
       ],

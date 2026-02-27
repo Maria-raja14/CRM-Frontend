@@ -30,6 +30,8 @@ import InvoiceView from "./pages/invoice/InvoiceView";
 import ResetPassword from "./pages/password/ResetPassword";
 import PrivateRoute from "./pages/auth/PrivateRoute";
 import ReportsPage from "./pages/reports/ReportsPage";
+import AllStreakLeaderboard from "./pages/streak/AllStreakLeaderboard";import ChatWidget from "./components/chatwidget";
+
 import DealIntelligenceDashboard from "./pages/Dealmetrics/pipeline";
 import LostDealAnalytics from "../src/pages/LostDealModal/Lostdealreason";
 import CLVDashboard from "./pages/Clv/CLVDashboard";
@@ -50,9 +52,11 @@ function App() {
                   path="/reset-password/:token"
                   element={<ResetPassword />}
                 />
+
                 <Route path="/layout" element={<Layout />} />
                 <Route element={<Layout isModalOpen={isModalOpen} />}>
                   <Route path="/adminDashboard" element={<AdminDashboard />} />
+                  <Route path="/leaderboard" element={<AllStreakLeaderboard />} />
                   <Route path="/user/roles" element={<UserManagement />} />
                   <Route path="/invoice" element={<InvoiceHead />} />
                   <Route path="/proposal" element={<ProposalHead />} />
@@ -88,11 +92,14 @@ function App() {
                   <Route path="/proposal/view/:id" element={<ViewProposal />} />
                   <Route path="/leads/view/:id" element={<ViewLead />} />
                   <Route path="/invoice/:id" element={<InvoiceView />} />
+                  <Route path="/streak-leaderboard" element={<AllStreakLeaderboard />} />
+
                   <Route path="reports" element={<ReportsPage />} />
                 </Route>
               </Route>
             </Routes>
             <ToastContainer position="top-right" autoClose={3000} />
+
           </div>
         </BrowserRouter>
       </NotificationProvider>

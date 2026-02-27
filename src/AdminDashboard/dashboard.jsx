@@ -1113,7 +1113,7 @@
 //                       realtime
 //                     </motion.span>
 //                   </div>
-                  
+
 //                   {/* Currency breakdown */}
 //                   {Object.keys(revenueBreakdown).length > 0 && (
 //                     <div className="mt-2 flex flex-wrap gap-2">
@@ -1490,9 +1490,8 @@ import { motion } from "framer-motion";
 import CountUp from "react-countup";
 import confetti from "canvas-confetti";
 import { useNavigate } from "react-router-dom";
-import console from "console";
-
-
+import { Progress } from "../components/ui/progress";
+import StreakLeaderboard from "../pages/StreakLeaderboard";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -1671,10 +1670,10 @@ const CardBubbles = ({ seed = 0, count = 12, colorPalette = BASE_COLORS }) => {
 const CurrencyDisplay = ({ value, currency = "USD", className = "" }) => {
   const currencyInfo = allowedCurrencies.find(c => c.code === currency) || allowedCurrencies[0];
   const numericValue = Number(value) || 0;
- 
+
   // Remove leading zeros and format properly
   const formattedValue = numericValue.toLocaleString();
- 
+
   return (
     <div className={cn("flex items-baseline gap-1", className)}>
       <span className="text-lg font-semibold text-gray-600">{currencyInfo.symbol}</span>
@@ -1734,7 +1733,7 @@ const CurrencyBreakdownCard = ({ revenueData, loading }) => {
               {currencies.length} Currencies
             </Badge>
           </div>
-         
+
           {/* Total Revenue Display */}
           <div className="mt-4 p-4 bg-white/60 rounded-lg border border-gray-200/50 backdrop-blur-sm">
             <div className="text-sm font-medium text-gray-600 mb-1">Total Revenue</div>
@@ -1746,12 +1745,12 @@ const CurrencyBreakdownCard = ({ revenueData, loading }) => {
             </div>
           </div>
         </CardHeader>
-       
+
         <CardContent className="space-y-3">
           {currencies.length > 0 ? (
             currencies.map(({ currency, amount, count }, index) => {
               const currencyInfo = allowedCurrencies.find(c => c.code === currency);
-             
+
               return (
                 <motion.div
                   key={currency}
@@ -1770,7 +1769,7 @@ const CurrencyBreakdownCard = ({ revenueData, loading }) => {
                       <div className="text-xs text-gray-500">{currencyInfo?.code}</div>
                     </div>
                   </div>
-                 
+
                   <div className="text-right">
                     <div className="font-bold text-gray-900 text-sm">
                       {currencyInfo?.symbol}{amount.toLocaleString()}
@@ -1857,7 +1856,7 @@ const PendingInvoicesCard = ({ invoicesData, loading }) => {
               {currencies.length} Currencies
             </Badge>
           </div>
-         
+
           {/* Total Pending Display */}
           <div className="mt-4 p-4 bg-white/50 rounded-lg border border-blue-200/30 backdrop-blur-sm">
             <div className="text-sm font-medium text-gray-600 mb-1">Total Pending</div>
@@ -1869,12 +1868,12 @@ const PendingInvoicesCard = ({ invoicesData, loading }) => {
             </div>
           </div>
         </CardHeader>
-       
+
         <CardContent className="space-y-3">
           {currencies.length > 0 ? (
             currencies.map(({ currency, amount, count }, index) => {
               const currencyInfo = allowedCurrencies.find(c => c.code === currency);
-             
+
               return (
                 <motion.div
                   key={currency}
@@ -1890,7 +1889,7 @@ const PendingInvoicesCard = ({ invoicesData, loading }) => {
                       <div className="text-xs text-gray-500">{currencyInfo?.code}</div>
                     </div>
                   </div>
-                 
+
                   <div className="text-right">
                     <div className="font-bold text-gray-900 text-sm">
                       {currencyInfo?.symbol}{amount.toLocaleString()}
@@ -1935,13 +1934,13 @@ const RevenueTrendChart = ({ revenueData, loading, activePreset, selectedMonth, 
     if (!recentInvoices || recentInvoices.length === 0) return [];
 
     const monthlyData = {};
-   
+
     recentInvoices.forEach(invoice => {
       const invoiceDate = new Date(invoice.createdAt || invoice.date || new Date());
       const monthKey = invoiceDate.toLocaleString('default', { month: 'short' });
       const amount = Number(invoice.total) || 0;
       const currency = invoice.currency || 'USD';
-     
+
       if (amount > 0) {
         if (!monthlyData[monthKey]) {
           monthlyData[monthKey] = { month: monthKey };
@@ -1950,7 +1949,7 @@ const RevenueTrendChart = ({ revenueData, loading, activePreset, selectedMonth, 
           });
           monthlyData[monthKey].total = 0;
         }
-       
+
         monthlyData[monthKey][currency] = (monthlyData[monthKey][currency] || 0) + amount;
         monthlyData[monthKey].total += amount;
       }
@@ -1971,7 +1970,7 @@ const RevenueTrendChart = ({ revenueData, loading, activePreset, selectedMonth, 
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload || payload.length === 0) return null;
-   
+
     return (
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -2051,7 +2050,7 @@ const RevenueTrendChart = ({ revenueData, loading, activePreset, selectedMonth, 
                 {selectedCurrency === 'ALL' ? 'Monthly revenue across all currencies' : `Monthly revenue in ${selectedCurrency}`}
               </CardDescription>
             </div>
-           
+
             <div className="flex items-center gap-3">
               <Select value={selectedCurrency} onValueChange={setSelectedCurrency}>
                 <SelectTrigger className="w-[180px] bg-white/90 backdrop-blur-sm border-gray-200 shadow-sm">
@@ -2075,10 +2074,10 @@ const RevenueTrendChart = ({ revenueData, loading, activePreset, selectedMonth, 
                   {activePreset === "today"
                     ? "Today"
                     : activePreset === "7days"
-                    ? "Last 7 Days"
-                    : activePreset === "month"
-                    ? months[selectedMonth].label
-                    : `Year ${selectedYear}`}
+                      ? "Last 7 Days"
+                      : activePreset === "month"
+                        ? months[selectedMonth].label
+                        : `Year ${selectedYear}`}
                 </span>
               </motion.div>
             </div>
@@ -2135,30 +2134,30 @@ const RevenueTrendChart = ({ revenueData, loading, activePreset, selectedMonth, 
                       </linearGradient>
                     )}
                   </defs>
-                 
+
                   <CartesianGrid
                     strokeDasharray="3 3"
                     vertical={false}
                     stroke="#E5E7EB"
                     opacity={0.5}
                   />
-                 
+
                   <XAxis
                     dataKey="month"
                     axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
                     tickLine={false}
                     tick={{ fill: '#6B7280', fontSize: 12, fontWeight: 500 }}
                   />
-                 
+
                   <YAxis
                     axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
                     tickLine={false}
                     tick={{ fill: '#6B7280', fontSize: 12, fontWeight: 500 }}
                     tickFormatter={(value) => `$${value.toLocaleString()}`}
                   />
-                 
+
                   <Tooltip content={<CustomTooltip />} />
-                 
+
                   {selectedCurrency === 'ALL' ? (
                     currencies.map((currency, index) => (
                       <Line
@@ -2237,7 +2236,7 @@ const SalesPipelineChart = ({ pipelineBarData, loading, totalPipelineLeads }) =>
 
   const CustomPipelineTooltip = ({ active, payload, label }) => {
     if (!active || !payload || payload.length === 0) return null;
-   
+
     return (
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -2337,13 +2336,13 @@ const SalesPipelineChart = ({ pipelineBarData, loading, totalPipelineLeads }) =>
                         <stop offset="100%" stopColor="#10B981" stopOpacity={0.2} />
                       </linearGradient>
                     </defs>
-                   
+
                     <CartesianGrid
                       strokeDasharray="3 3"
                       vertical={false}
                       stroke="rgba(0,0,0,0.05)"
                     />
-                   
+
                     <XAxis
                       dataKey="month"
                       tickLine={false}
@@ -2351,15 +2350,15 @@ const SalesPipelineChart = ({ pipelineBarData, loading, totalPipelineLeads }) =>
                       tick={{ fill: '#6B7280', fontSize: 12 }}
                       interval={0}
                     />
-                   
+
                     <YAxis
                       tickLine={false}
                       axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
                       tick={{ fill: '#6B7280', fontSize: 12 }}
                     />
-                   
+
                     <Tooltip content={<CustomPipelineTooltip />} />
-                   
+
                     <Bar
                       dataKey="Open"
                       name="Open Opportunities"
@@ -2411,12 +2410,12 @@ const SalesPipelineChart = ({ pipelineBarData, loading, totalPipelineLeads }) =>
                     </Badge>
                   </motion.div>
                 </div>
-               
+
                 <div className="flex justify-center gap-6 text-xs text-gray-500">
                   <div className="text-center">
                     <div className="font-semibold text-gray-700">
                       {((pipelineBarData.reduce((sum, d) => sum + d.Won, 0) /
-                         pipelineBarData.reduce((sum, d) => sum + (d.Open + d.Won), 0)) * 100 || 0).toFixed(1)}%
+                        pipelineBarData.reduce((sum, d) => sum + (d.Open + d.Won), 0)) * 100 || 0).toFixed(1)}%
                     </div>
                     <div>Win Rate</div>
                   </div>
@@ -2444,7 +2443,7 @@ const DealDistributionChart = ({ pieData, loading, totalDeals }) => {
   // Enhanced animated gradient component with attractive colors
   const AnimatedGradientCell = ({ index, isActive, entry }) => {
     const gradientId = `gradient-${index}`;
-   
+
     // Use special attractive colors for Open and Won states
     let colorSet;
     if (entry.name === 'Open') {
@@ -2454,7 +2453,7 @@ const DealDistributionChart = ({ pieData, loading, totalDeals }) => {
     } else {
       colorSet = ATTRACTIVE_COLORS.lost[index % ATTRACTIVE_COLORS.lost.length];
     }
-   
+
     return (
       <>
         <defs>
@@ -2485,10 +2484,10 @@ const DealDistributionChart = ({ pieData, loading, totalDeals }) => {
 
   const CustomPieTooltip = ({ active, payload }) => {
     if (!active || !payload || payload.length === 0) return null;
-   
+
     const data = payload[0].payload;
     const entryIndex = pieData.findIndex(p => p.name === data.name);
-   
+
     let colorSet;
     if (data.name === 'Open') {
       colorSet = ATTRACTIVE_COLORS.open[entryIndex % ATTRACTIVE_COLORS.open.length];
@@ -2497,7 +2496,7 @@ const DealDistributionChart = ({ pieData, loading, totalDeals }) => {
     } else {
       colorSet = ATTRACTIVE_COLORS.lost[entryIndex % ATTRACTIVE_COLORS.lost.length];
     }
-   
+
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
@@ -2600,7 +2599,7 @@ const DealDistributionChart = ({ pieData, loading, totalDeals }) => {
                     <Tooltip content={<CustomPieTooltip />} />
                   </PieChart>
                 </ResponsiveContainer>
-               
+
                 {/* Enhanced Center Text with Pulsing Animation */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <motion.div
@@ -2641,7 +2640,7 @@ const DealDistributionChart = ({ pieData, loading, totalDeals }) => {
                     } else {
                       colorSet = ATTRACTIVE_COLORS.lost[i % ATTRACTIVE_COLORS.lost.length];
                     }
-                   
+
                     return (
                       <motion.div
                         key={p.name}
@@ -2667,7 +2666,7 @@ const DealDistributionChart = ({ pieData, loading, totalDeals }) => {
                             background: `linear-gradient(135deg, ${colorSet.from}12, ${colorSet.to}08)`,
                           }}
                         />
-                       
+
                         <div className="flex items-center gap-3 relative z-10">
                           <motion.div
                             animate={{
@@ -2707,7 +2706,7 @@ const DealDistributionChart = ({ pieData, loading, totalDeals }) => {
                             </div>
                           </div>
                         </div>
-                       
+
                         <div className="text-right relative z-10">
                           <div className="font-bold text-gray-900 text-sm group-hover:text-gray-950 transition-colors">
                             {p.value} <span className="text-gray-400">deals</span>
@@ -2727,7 +2726,7 @@ const DealDistributionChart = ({ pieData, loading, totalDeals }) => {
                       </motion.div>
                     );
                   })}
-               
+
                 {/* Enhanced Performance Summary with Gradient */}
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
@@ -2772,6 +2771,105 @@ const DealDistributionChart = ({ pieData, loading, totalDeals }) => {
   );
 };
 
+ /* ---------- Enhanced Summary Card Component ---------- */
+const SummaryCard = ({ title, value, change, color, icon, colorPalette, loading, onClick }) => {
+  if (loading) {
+    return (
+      <Card className="overflow-hidden border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+        <CardContent className="p-5">
+          <Skeleton className="h-5 w-20 mb-3" />
+          <Skeleton className="h-8 w-16 mb-2" />
+          <Skeleton className="h-4 w-24" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{
+        type: "spring",
+        stiffness: 100,
+        damping: 12,
+      }}
+      whileHover={{
+        y: -4,
+        scale: 1.02,
+        transition: { duration: 0.2 }
+      }}
+      onClick={onClick}
+    >
+      <Card
+        className={cn(
+          "overflow-hidden border-0 shadow-lg transition-all duration-300 relative bg-white/80 backdrop-blur-sm hover:shadow-xl cursor-pointer",
+          {
+            "bg-blue-50/50": color === "blue",
+            "bg-green-50/50": color === "green",
+            "bg-purple-50/50": color === "purple",
+            "bg-orange-50/50": color === "orange",
+            "bg-emerald-50/50": color === "emerald",
+            "bg-yellow-50/50": color === "yellow",
+          }
+        )}
+      >
+        <CardBubbles
+          seed={Math.random() * 10}
+          count={6}
+          colorPalette={colorPalette || BASE_COLORS}
+        />
+
+        <CardContent className="p-5 relative">
+          <div className="flex justify-between items-start mb-3">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-600 mb-2">
+                {title}
+              </p>
+              <div className="text-2xl font-bold text-gray-900">
+                {(value || 0).toLocaleString()}
+              </div>
+            </div>
+            <motion.div
+              className={cn("p-2 rounded-xl", {
+                "bg-blue-100 text-blue-600": color === "blue",
+                "bg-green-100 text-green-600": color === "green",
+                "bg-purple-100 text-purple-600": color === "purple",
+                "bg-orange-100 text-orange-600": color === "orange",
+                "bg-emerald-100 text-emerald-600": color === "emerald",
+                "bg-yellow-100 text-yellow-600": color === "yellow",
+              })}
+              whileHover={{ scale: 1.08, rotate: 5 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {icon}
+            </motion.div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              {change >= 0 ? (
+                <ArrowUpRight className="h-4 w-4 text-green-500 mr-1" />
+              ) : (
+                <ArrowDownRight className="h-4 w-4 text-red-500 mr-1" />
+              )}
+              <span
+                className={cn("text-sm font-medium", {
+                  "text-green-500": change >= 0,
+                  "text-red-500": change < 0,
+                })}
+              >
+                {change >= 0 ? `+${change}%` : `${change}%`}
+              </span>
+            </div>
+            <span className="text-xs text-gray-500">vs previous</span>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+};
+
 /* ---------- Component ---------- */
 const AdminDashboard = () => {
   const [summary, setSummary] = useState([]);
@@ -2787,11 +2885,22 @@ const AdminDashboard = () => {
   const [activePreset, setActivePreset] = useState("today");
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-
+  
+  // Streak state
+  const [streakData, setStreakData] = useState({
+    activeSalespeople: 0,
+    totalSalespeople: 0,
+    topStreak: 0,
+    avgStreak: 0,
+    topPerformers: [],
+    updatedAt: null,
+    isTestData: false
+  });
+  const [streakLoading, setStreakLoading] = useState(false);
   // Currency state
   const [revenueByCurrency, setRevenueByCurrency] = useState({});
   const [lineAnimationKey, setLineAnimationKey] = useState(0);
-const navigate =useNavigate()
+  const navigate = useNavigate()
   const REFRESH_MS = 60_000;
 
   /* ---------- Ranges ---------- */
@@ -2820,35 +2929,36 @@ const navigate =useNavigate()
       debouncedFetch(range);
     }
   };
-// clickabe
-   const handleCardClick = (card) => {
+  // clickabe
+  const handleCardClick = (card) => {
 
-      // Navigate to relevant page based on card title
-      switch(card.title) {
-        case "Total Leads":
-          navigate("/leads");
-          break;
-        case "Deals Won":
-          navigate("/deals?status=won");
-          break;
-        case "Total Revenue":
-          navigate("/invoice");
-          break;
-        case "Pending Invoices":
-          navigate("/invoice?status=pending");
-          break;
-          default:
-          break;
-      }
-    };
+    // Navigate to relevant page based on card title
+    switch (card.title) {
+      case "Total Leads":
+        navigate("/leads");
+        break;
+      case "Deals Won":
+        navigate("/deals?status=won");
+        break;
+      case "Total Revenue":
+        navigate("/invoice");
+        break;
+      case "Pending Invoices":
+        navigate("/invoice?status=pending");
+        break;
+      
+      default:
+        break;
+    }
+  };
   /* ---------- Currency calculation helpers ---------- */
   const calculateRevenueByCurrency = (invoices) => {
     const revenue = {};
-   
+
     invoices.forEach(invoice => {
       const currency = invoice.currency || 'USD';
       const amount = Number(invoice.total) || 0;
-     
+
       // Only add if amount is positive
       if (amount > 0) {
         if (!revenue[currency]) {
@@ -2884,6 +2994,7 @@ const navigate =useNavigate()
     try {
       const token = localStorage.getItem("token");
 
+      // Fetch dashboard data (3 promises)
       const [resSummary, resPipeline, resInvoices] = await Promise.all([
         axios.get(`${API_URL}/dashboard/summary`, {
           params,
@@ -2899,6 +3010,8 @@ const navigate =useNavigate()
         }),
       ]);
 
+      // ✅ ADD THIS: Extract the new users data
+      const resUsers = resSummary; // This is now the 4th item in array
       const prevRange = previousRangeFor(preset, selMonth);
       const prevParams = buildParams(prevRange);
 
@@ -2916,11 +3029,11 @@ const navigate =useNavigate()
       // Calculate changes
       const totalLeadsChange = computeChange(curr.totalLeads || 0, prev.totalLeads || 0);
       const totalDealsWonChange = computeChange(curr.totalDealsWon || 0, prev.totalDealsWon || 0);
-     
+
       const currentTotalRevenue = getTotalRevenue(currencyRevenue);
       const previousTotalRevenue = getTotalRevenue(calculateRevenueByCurrency(prev.recentInvoices || []));
       const totalRevenueChange = computeChange(currentTotalRevenue, previousTotalRevenue);
-     
+
       const pendingInvoicesChange = computeChange(curr.pendingInvoices || 0, prev.pendingInvoices || 0);
 
       const summaryCards = [
@@ -2957,17 +3070,13 @@ const navigate =useNavigate()
           colorPalette: ["#F59E0B", "#FBBF24", "#FCD34D"],
         },
       ];
-
+      
       setSummary(summaryCards);
       setPipeline(resPipeline.data || []);
       setRecentInvoices(resInvoices.data || []);
       setRevenueByCurrency(currencyRevenue);
-
-      if ((curr.totalDealsWon || 0) > 5 && totalDealsWonChange > 0) {
-        confetti({ particleCount: 140, spread: 90, origin: { y: 0.6 } });
-      }
-
       setLineAnimationKey(prev => prev + 1);
+    
     } catch (err) {
       console.error("Dashboard fetch error:", err);
       setError("Failed to load dashboard data.");
@@ -3028,12 +3137,12 @@ const navigate =useNavigate()
       console.error("Error fetching deals:", err);
     }
   };
-
   /* ---------- Debounced combined fetch ---------- */
   const debouncedFetch = useDebouncedCallback((range) => {
     const params = buildParams(range);
     fetchAll(params, activePreset, selectedMonth);
     fetchDeals(params);
+    //setTimeout(() => fetchStreakData(), 500);
   }, 250);
 
   /* ---------- Apply preset ---------- */
@@ -3048,26 +3157,27 @@ const navigate =useNavigate()
     debouncedFetch(range);
   };
 
-  /* ---------- Real-time interval ---------- */
-  useEffect(() => {
-    applyPreset(activePreset);
+useEffect(() => {
+  // Initial fetch
+  const initialFetch = async () => {
+    await applyPreset(activePreset);
+    //await fetchStreakData(); // Wait for streak data
+  };
+  
+  initialFetch();
 
-    const interval = setInterval(() => {
-      let range;
-      if (activePreset === "month") range = getMonthRange(selectedMonth, selectedYear);
-      else if (activePreset === "7days") range = lastNDaysRange(7);
-      else if (activePreset === "year") range = getYearRange(selectedYear);
-      else range = todayRange();
+    // Set up auto-refresh interval
+    const refreshInterval = setInterval(() => {
+      // Refresh main data
+      applyPreset(activePreset);
 
-      fetchAll(buildParams(range), activePreset, selectedMonth);
-      fetchDeals(buildParams(range));
+      // Refresh streak data separately
+      //  fetchStreakData();
     }, REFRESH_MS);
 
-    return () => clearInterval(interval);
+    return () => clearInterval(refreshInterval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activePreset, selectedMonth, selectedYear]);
-
-  /* ---------- Chart data builders ---------- */
+  }, [activePreset, selectedMonth, selectedYear]); /* ---------- Chart data builders ---------- */
   const buildRevenueTrend = (invoices, preset) => {
     if (!invoices || invoices.length === 0) return [];
 
@@ -3117,102 +3227,6 @@ const navigate =useNavigate()
   ];
 
   const totalPipelineLeads = pipeline.reduce((acc, s) => acc + (s.leads || 0), 0);
-
-  /* ---------- Enhanced Summary Card Component ---------- */
-  const SummaryCard = ({ title, value, change, color, icon, colorPalette, loading, onClick }) => {
-    if (loading) {
-      return (
-        <Card className="overflow-hidden border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-          <CardContent className="p-5">
-            <Skeleton className="h-5 w-20 mb-3" />
-            <Skeleton className="h-8 w-16 mb-2" />
-            <Skeleton className="h-4 w-24" />
-          </CardContent>
-        </Card>
-      );
-    }
-
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 12, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{
-          type: "spring",
-          stiffness: 100,
-          damping: 12,
-        }}
-        whileHover={{
-          y: -4,
-          scale: 1.02,
-          transition: { duration: 0.2 }
-        }}
-      onClick={onClick}  
-      >
-        <Card
-          className={cn(
-            "overflow-hidden border-0 shadow-lg transition-all duration-300 relative bg-white/80 backdrop-blur-sm hover:shadow-xl",
-            {
-              "bg-blue-50/50": color === "blue",
-              "bg-green-50/50": color === "green",
-              "bg-purple-50/50": color === "purple",
-              "bg-orange-50/50": color === "orange",
-            }
-          )}
-            
-        >
-          <CardBubbles
-            seed={Math.random() * 10}
-            count={6}
-            colorPalette={colorPalette || BASE_COLORS}
-          />
-
-          <CardContent className="p-5 relative">
-            <div className="flex justify-between items-start mb-3">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-600 mb-2">
-                  {title}
-                </p>
-                <div className="text-2xl font-bold text-gray-900">
-                  {(value || 0).toLocaleString()}
-                </div>
-              </div>
-              <motion.div
-                className={cn("p-2 rounded-xl", {
-                  "bg-blue-100 text-blue-600": color === "blue",
-                  "bg-green-100 text-green-600": color === "green",
-                  "bg-purple-100 text-purple-600": color === "purple",
-                  "bg-orange-100 text-orange-600": color === "orange",
-                })}
-                whileHover={{ scale: 1.08, rotate: 5 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {icon}
-              </motion.div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                {change >= 0 ? (
-                  <ArrowUpRight className="h-4 w-4 text-green-500 mr-1" />
-                ) : (
-                  <ArrowDownRight className="h-4 w-4 text-red-500 mr-1" />
-                )}
-                <span
-                  className={cn("text-sm font-medium", {
-                    "text-green-500": change >= 0,
-                    "text-red-500": change < 0,
-                  })}
-                >
-                  {change >= 0 ? `+${change}%` : `${change}%`}
-                </span>
-              </div>
-              <span className="text-xs text-gray-500">vs previous</span>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-    );
-  };
 
   /* ---------- UI ---------- */
   return (
@@ -3333,31 +3347,33 @@ const navigate =useNavigate()
         </motion.div>
       )}
 
-      {/* Summary cards */}
+       {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 relative z-10">
         {loading
-          ? Array.from({ length: 4 }).map((_, i) => (
-              <SummaryCard key={i} loading={true} />
-            ))
+          ? Array.from({ length: 7 }).map((_, i) => (
+            <SummaryCard key={i} loading={true} />
+          ))
           : summary.map((card, idx) => (
-              <SummaryCard
-                key={card.title}
-                title={card.title}
-                value={card.value}
-                change={card.change}
-                color={card.color}
-                icon={card.icon}
-                colorPalette={card.colorPalette}
-                loading={false}
-                onClick={() => handleCardClick(card)}
-              />
-            ))}
+            <SummaryCard
+              key={card.title}
+              title={card.title}
+              value={card.value}
+              change={card.change}
+              color={card.color}
+              icon={card.icon}
+              colorPalette={card.colorPalette}
+              loading={false}
+              onClick={() => handleCardClick(card)}
+            />
+          ))}
+          
       </div>
 
       {/* Currency Breakdown + Revenue Chart */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 relative z-10">
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-5 relative z-10">
         {/* Currency Breakdown */}
-        <div className="lg:col-span-1 space-y-5">
+       <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-5">
+
           <CurrencyBreakdownCard
             revenueData={revenueByCurrency}
             loading={loading}
@@ -3366,7 +3382,10 @@ const navigate =useNavigate()
             invoicesData={recentInvoices}
             loading={loading}
           />
+          <StreakLeaderboard />
         </div>
+        
+
 
         {/* Revenue Chart */}
         <div className="lg:col-span-2">
@@ -3380,6 +3399,7 @@ const navigate =useNavigate()
           />
         </div>
       </div>
+
 
       {/* Pipeline + Deals Performance */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 relative z-10">
@@ -3396,6 +3416,7 @@ const navigate =useNavigate()
           loading={loading}
           totalDeals={totalDeals}
         />
+        
       </div>
     </div>
   );

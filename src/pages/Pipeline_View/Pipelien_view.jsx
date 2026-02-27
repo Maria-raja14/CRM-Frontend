@@ -78,11 +78,11 @@ const tourSteps = [
   },
   {
     selector: ".pipeline-column:nth-child(2)",
-    content: "This is the Negotiation stage where you discuss with clients.",
+    content: "This is the Proposal Sent-Negotiation stage where you discuss with clients.",
   },
   {
     selector: ".pipeline-column:nth-child(3)",
-    content: "This is the Proposal Sent stage where offers are shared.",
+    content: "This is the Invoices Sent stage where offers are shared.",
   },
   {
     selector: ".pipeline-column:nth-child(4)",

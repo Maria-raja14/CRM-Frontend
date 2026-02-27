@@ -11,7 +11,7 @@ import {
   ClipboardList,
   Users,
   GitBranch,
-  BarChart3,
+  BarChart3,Trophy,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
@@ -52,9 +52,8 @@ const SidebarItem = ({
       <div className="flex items-center space-x-3">
         <IconCircle isActive={isActive}>{icon}</IconCircle>
         <span
-          className={`text-base font-medium ${
-            isActive ? "text-[#008ecc]" : "text-gray-700"
-          }`}
+          className={`text-base font-medium ${isActive ? "text-[#008ecc]" : "text-gray-700"
+            }`}
         >
           {label}
         </span>
@@ -86,9 +85,8 @@ const Collapsible = ({
         </div>
         <ChevronRight
           size={18}
-          className={`ml-2 transition-transform duration-200 ${
-            open ? "rotate-90" : ""
-          }`}
+          className={`ml-2 transition-transform duration-200 ${open ? "rotate-90" : ""
+            }`}
         />
       </button>
 
@@ -181,17 +179,17 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           className="h-12"
         />
         <div className="relative group">
-        <button onClick={toggleSidebar} className="lg:hidden p-1">
-          <X size={22} className="text-gray-600" />
-        </button>
-        {/* ✅ TOOLTIP */}
-        <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 
+          <button onClick={toggleSidebar} className="lg:hidden p-1">
+            <X size={22} className="text-gray-600" />
+          </button>
+          {/* ✅ TOOLTIP */}
+          <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 
           opacity-0 group-hover:opacity-100 transition-opacity
           bg-gray-900 text-white text-xs px-3 py-1 rounded-md whitespace-nowrap
           pointer-events-none z-50">
-          Close
+            Close
+          </div>
         </div>
-      </div>
       </div>
 
       <nav className="flex flex-col gap-3 px-2">
@@ -262,7 +260,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         />
 
         {/* Activities */}
-       {/*  <Collapsible
+        {/*  <Collapsible
           label="Activities"
           icon={<Calendar />}
           open={showActivities}
@@ -293,6 +291,13 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           icon={<BarChart3 />}
           label="Reports"
           hasPermission={isAdmin || userPermissions.reports}
+        />
+        {/* Streak Leaderboard */}
+        <SidebarItem
+          to="/streak-leaderboard"
+          icon={<Trophy />}
+          label="Streak Leaderboard"
+          hasPermission={isAdmin || userPermissions.streak_leaderboard}
         />
 
         <SidebarItem

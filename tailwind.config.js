@@ -92,11 +92,45 @@ theme: {
         "accordion-up": {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
+          // Robot animations
+        "spin-slow": {
+          from: { transform: "rotate(0deg)" },
+          to: { transform: "rotate(360deg)" },
+        },
+        "arm-wave-left": {
+          "0%, 100%": { transform: "rotate(0deg)" },
+          "50%": { transform: "rotate(-20deg)" },
+        },
+        "arm-wave-right": {
+          "0%, 100%": { transform: "rotate(0deg)" },
+          "50%": { transform: "rotate(20deg)" },
+        },
+        "trail": {
+          "0%": { opacity: "0", transform: "translateX(0)" },
+          "50%": { opacity: "1" },
+          "100%": { opacity: "0", transform: "translateX(-4px)" },
+        },
+        // Optional: Add bounce animations for more robot movements
+        "robot-bounce": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-2px)" },
+        },
+        "robot-pulse-soft": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.7" },
+        },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+         // Robot animations
+        "spin-slow": "spin-slow 8s linear infinite",
+        "arm-wave-left": "arm-wave-left 2s ease-in-out infinite",
+        "arm-wave-right": "arm-wave-right 2s ease-in-out infinite",
+        "trail": "trail 1s ease-in-out infinite",
+        "robot-bounce": "robot-bounce 3s ease-in-out infinite",
+        "robot-pulse-soft": "robot-pulse-soft 2s ease-in-out infinite",
       },
     },
   },
