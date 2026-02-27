@@ -32,18 +32,19 @@ import PrivateRoute from "./pages/auth/PrivateRoute";
 import ReportsPage from "./pages/reports/ReportsPage";
 import AllStreakLeaderboard from "./pages/streak/AllStreakLeaderboard";import ChatWidget from "./components/chatwidget";
 
+import DealIntelligenceDashboard from "./pages/Dealmetrics/pipeline";
+import LostDealAnalytics from "../src/pages/LostDealModal/Lostdealreason";
+import CLVDashboard from "./pages/Clv/CLVDashboard";
+import ClientCLVDetails from "./pages/Clv/ClientCLVDetails";
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <SocketProvider>
-      {/* <TourProvider> */}
       <NotificationProvider>
         <BrowserRouter>
           <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white transition-all">
-            {/* <Tour /> */}
-
             <Routes>
               <Route path="/" element={<Login />} />
               <Route element={<PrivateRoute />}>
@@ -72,6 +73,13 @@ function App() {
                   <Route path="/createDeal" element={<CreateDeal />} />
                   <Route path="/createDeal/:id" element={<CreateDeal />} />
                   <Route path="/Pipelineview" element={<Pipeline_view />} />
+                  <Route path="/test" element={<DealIntelligenceDashboard />} />
+                  <Route path="/test1" element={<LostDealAnalytics />} />
+                  
+                  {/* FIXED: CLV Routes - Add these directly, not under /test paths */}
+                  <Route path="/cltv/dashboard" element={<CLVDashboard />} />
+                  <Route path="/cltv/client/:companyName" element={<ClientCLVDetails />} />
+                  
                   <Route
                     path="/Pipelineview/:dealId?"
                     element={<Pipeline_modal_view />}
@@ -95,7 +103,6 @@ function App() {
           </div>
         </BrowserRouter>
       </NotificationProvider>
-      {/* </TourProvider> */}
     </SocketProvider>
   );
 }

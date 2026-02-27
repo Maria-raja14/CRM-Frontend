@@ -253,9 +253,9 @@ const EditModal = ({ open, setOpen, deal }) => {
                     <button
                       type="button"
                       className="px-10 py-3  bg-gray-50 text-black hover:text-white hover:bg-blue-700 transition"
-                      onClick={() => setStage("Invoices Sent")}
+                      onClick={() => setStage("Invoice Sent")}
                     >
-                      Invoices Sent
+                      Invoice Sent
                     </button>
                     <button
                       type="button"

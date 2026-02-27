@@ -299,6 +299,28 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           label="Streak Leaderboard"
           hasPermission={isAdmin || userPermissions.streak_leaderboard}
         />
+
+        <SidebarItem
+          to="/test"
+          icon={<ClipboardList />}
+          label="Deal Metrics"
+          hasPermission={isAdmin || userPermissions.proposal}
+        />
+        <SidebarItem
+          to="/test1"
+          icon={<ClipboardList />}
+          label="Loss Analysis"
+          hasPermission={isAdmin || userPermissions.proposal}
+        />
+
+        <SidebarItem
+          to="/cltv/dashboard"
+          icon={<ClipboardList />}
+          label="Won Analysis"
+          hasPermission={isAdmin || userPermissions.proposal}
+        />
+
+
       </nav>
     </aside>
   );

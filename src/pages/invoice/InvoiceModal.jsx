@@ -260,6 +260,22 @@ setSalesUsers(response.data.users);
           { headers: { Authorization: `Bearer ${token}` } }
         );
         toast.success("Invoice updated successfully!");
+      // 🔥 Move Deal to Closed Won if status changed to paid
+      if (
+        editingInvoice.status !== "paid" &&
+        invoiceData.status === "paid"
+      ) {
+        const dealId = editingInvoice.items?.[0]?.deal?._id;
+
+        if (dealId) {
+          await axios.patch(
+            `${API_URL}/deals/update-deal/${dealId}`,
+            { stage: "Closed Won" },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        }
+      }
+  
       } else {
         response = await axios.post(
           `${API_URL}/invoice/createinvoice`,

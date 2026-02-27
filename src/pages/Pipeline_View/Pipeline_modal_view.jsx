@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import {
   ArrowLeft,
   Calendar,
@@ -18,14 +20,20 @@ import {
   XCircle,
   AlertCircle,
   Download,
-  Eye,
   ChevronRight,
   Phone,
   MapPin,
   Globe,
   Briefcase,
   BookOpen,
+  Plus,
+  Archive,
+  RefreshCw,
+  X,
+  Edit,
+  StickyNote,
 } from "lucide-react";
+import { useNotifications } from "../../context/NotificationContext";
 
 function Pipeline_modal_view() {
   const API_URL = import.meta.env.VITE_API_URL;
@@ -35,6 +43,38 @@ function Pipeline_modal_view() {
   const [deal, setDeal] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("details");
+  const { addNotification } = useNotifications();
+
+  // Follow-up Modal State
+  const [isFollowUpModalOpen, setIsFollowUpModalOpen] = useState(false);
+  const [followUpData, setFollowUpData] = useState({
+    followUpDate: null,
+    followUpComment: ""
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Helper function to get and validate token
+  const getAuthToken = () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("No token found. Please login again.");
+      setTimeout(() => navigate("/login"), 1000);
+      return null;
+    }
+    return token;
+  };
+
+  // Helper function to handle 401 errors
+  const handleAuthError = (error) => {
+    if (error.response?.status === 401) {
+      toast.error("Authentication failed. Please login again.");
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      setTimeout(() => navigate("/login"), 1000);
+      return true;
+    }
+    return false;
+  };
 
   useEffect(() => {
     if (dealId) {
@@ -45,22 +85,151 @@ function Pipeline_modal_view() {
   const fetchDealDetails = async () => {
     try {
       setIsLoading(true);
-      const token = localStorage.getItem("token");
+      const token = getAuthToken();
+      if (!token) return;
+
       const response = await axios.get(`${API_URL}/deals/getAll/${dealId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setDeal(response.data);
     } catch (err) {
-      console.error("Failed to fetch deal details:", err);
-      toast.error("Failed to load deal details");
+      if (!handleAuthError(err)) {
+        console.error("Failed to fetch deal details:", err);
+        toast.error("Failed to load deal details");
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Handle Schedule/Reschedule Follow-up
+const handleScheduleFollowUp = async () => {
+  try {
+    setIsSubmitting(true);
+    const token = getAuthToken();
+    if (!token) return;
+
+    if (!followUpData.followUpDate) {
+      toast.error("Please select a follow-up date and time");
+      return;
+    }
+
+    // Get user info from localStorage
+    const userData = localStorage.getItem("user");
+    let firstName = "User";
+    let lastName = "";
+    let userId = "";
+    
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        firstName = user.firstName || "User";
+        lastName = user.lastName || "";
+        userId = user._id || "";
+      } catch (e) {
+        console.error("Failed to parse user data", e);
+      }
+    }
+
+    // Create history entry
+    const historyEntry = {
+      date: new Date().toISOString(),
+      followUpDate: followUpData.followUpDate.toISOString(),
+      followUpComment: followUpData.followUpComment || "",
+      outcome: deal.followUpDate ? "Updated" : "Created",
+      changedBy: {
+        firstName: firstName,
+        lastName: lastName,
+        _id: userId
+      }
+    };
+
+    // Prepare FormData for the request (matching your existing pattern)
+    const formData = new FormData();
+    
+    // Add all fields to FormData
+    formData.append('followUpDate', followUpData.followUpDate.toISOString());
+    formData.append('followUpComment', followUpData.followUpComment || "");
+    formData.append('followUpStatus', "Scheduled");
+    
+    // Add follow-up history
+    const updatedHistory = deal.followUpHistory ? [...deal.followUpHistory, historyEntry] : [historyEntry];
+    formData.append('followUpHistory', JSON.stringify(updatedHistory));
+
+    const response = await axios.patch(
+      `${API_URL}/deals/update-deal/${dealId}`,
+      formData,
+      {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        },
+      }
+    );
+
+    if (response.data) {
+      // Create notification in database
+      try {
+        await axios.post(
+          `${API_URL}/notifications`,
+          {
+            userId: userId,
+            title: "Follow-up Scheduled",
+            message: `Follow-up for deal "${deal.dealName}" scheduled for ${followUpData.followUpDate.toLocaleString()}`,
+            type: "followup",
+            relatedId: dealId,
+            relatedModel: "Deal",
+            scheduledFor: followUpData.followUpDate.toISOString(),
+            read: false
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
+
+        // Add to local notification context if available
+        if (addNotification) {
+          addNotification({
+            id: Date.now().toString(),
+            title: "Follow-up Scheduled",
+            message: `Follow-up for deal "${deal.dealName}" scheduled for ${followUpData.followUpDate.toLocaleString()}`,
+            type: "followup",
+            time: new Date().toISOString(),
+            read: false
+          });
+        }
+
+        toast.success(deal.followUpDate ? "Follow-up rescheduled successfully!" : "Follow-up scheduled successfully!");
+      } catch (notifError) {
+        console.error("Failed to create notification:", notifError);
+        toast.success(deal.followUpDate ? "Follow-up rescheduled!" : "Follow-up scheduled!");
+      }
+
+      setIsFollowUpModalOpen(false);
+      setFollowUpData({ followUpDate: null, followUpComment: "" });
+      fetchDealDetails(); // Refresh deal data
+    }
+  } catch (err) {
+    console.error("Failed to schedule follow-up:", err);
+    if (err.response) {
+      console.error("Error response:", err.response.data);
+      console.error("Error status:", err.response.status);
+      toast.error(err.response.data?.message || "Failed to schedule follow-up");
+    } else if (err.request) {
+      toast.error("No response from server. Please check your connection.");
+    } else {
+      toast.error("Failed to schedule follow-up");
+    }
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
   const downloadFile = async (filePath) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getAuthToken();
+      if (!token) return;
+
       const response = await axios.get(
         `${API_URL}/files/download?filePath=${encodeURIComponent(filePath)}`,
         {
@@ -79,28 +248,22 @@ function Pipeline_modal_view() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (err) {
-      console.error("Download failed:", err);
-      toast.error("Failed to download file");
+      if (!handleAuthError(err)) {
+        console.error("Download failed:", err);
+        toast.error("Failed to download file");
+      }
     }
   };
 
-const formatCurrencyValue = (val) => {
-  if (!val) return "-";
-
-  // Expect format like "12,554,755 INR" or "12554755 INR"
-  const match = val.match(/^([\d,]+)\s*([A-Za-z]+)$/);
-  if (!match) return val;
-
-  const number = match[1].replace(/,/g, ""); // remove commas
-  const currency = match[2].toUpperCase();
-
-  // Format number in Indian numbering system
-  const formattedNumber = Number(number).toLocaleString("en-IN");
-
-  return `${formattedNumber} ${currency}`; // e.g. "1,25,54,755 INR"
-};
-
-
+  const formatCurrencyValue = (val) => {
+    if (!val) return "-";
+    const match = val.match(/^([\d,]+)\s*([A-Za-z]+)$/);
+    if (!match) return val;
+    const number = match[1].replace(/,/g, "");
+    const currency = match[2].toUpperCase();
+    const formattedNumber = Number(number).toLocaleString("en-IN");
+    return `${formattedNumber} ${currency}`;
+  };
 
   const getStageBadgeClass = (stage) => {
     switch (stage) {
@@ -136,13 +299,13 @@ const formatCurrencyValue = (val) => {
           borderColor: "border-amber-200",
           label: "Proposal Sent-Negotiation",
         };
-      case "Invoices Sent":
+      case "Invoice Sent":
         return {
           icon: Mail,
           color: "text-purple-700",
           bgColor: "bg-purple-50",
           borderColor: "border-purple-200",
-          label: "Invoices Sent",
+          label: "Invoice Sent",
         };
       default:
         return {
@@ -197,6 +360,122 @@ const formatCurrencyValue = (val) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 px-4">
       <ToastContainer position="top-right" autoClose={3000} />
+
+      {/* Follow-up Modal */}
+      {isFollowUpModalOpen && (
+        <div className="fixed inset-0 z-[9999] overflow-y-auto">
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" 
+            onClick={() => {
+              setIsFollowUpModalOpen(false);
+              setFollowUpData({ followUpDate: null, followUpComment: "" });
+            }}
+          />
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4">
+              <div className="relative transform overflow-hidden rounded-xl bg-white text-left shadow-xl transition-all w-full max-w-lg">
+                <div className="bg-white px-6 py-4 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                      <Clock className="text-purple-600" size={20} />
+                      {deal.followUpDate ? "Reschedule Follow-up" : "Schedule First Follow-up"}
+                    </h3>
+                    <button
+                      onClick={() => {
+                        setIsFollowUpModalOpen(false);
+                        setFollowUpData({ followUpDate: null, followUpComment: "" });
+                      }}
+                      className="rounded-lg p-1 hover:bg-gray-100 transition-colors"
+                    >
+                      <X size={20} className="text-gray-500" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bg-white px-6 py-6">
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Follow-up Date & Time <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <DatePicker
+                          selected={followUpData.followUpDate}
+                          onChange={(date) => {
+                            setFollowUpData(prev => ({ ...prev, followUpDate: date }));
+                          }}
+                          showTimeSelect
+                          timeFormat="HH:mm"
+                          timeIntervals={15}
+                          timeCaption="Time"
+                          dateFormat="MMMM d, yyyy h:mm aa"
+                          placeholderText="Select date and time"
+                          className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm bg-white focus:ring-2 focus:ring-purple-500 focus:border-purple-400 outline-none transition pl-10"
+                          minDate={new Date()}
+                          isClearable
+                          calendarClassName="font-sans"
+                          popperClassName="z-[10000]"
+                        />
+                        <Calendar className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Select a date and time for the follow-up reminder
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Follow-up Notes
+                      </label>
+                      <textarea
+                        rows={4}
+                        value={followUpData.followUpComment}
+                        onChange={(e) => {
+                          setFollowUpData(prev => ({ ...prev, followUpComment: e.target.value }));
+                        }}
+                        placeholder="Enter meeting agenda, discussion points, or specific items to cover..."
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white shadow-sm text-sm text-gray-700 placeholder-gray-400 transition resize-none focus:ring-2 focus:ring-purple-500 focus:border-purple-400"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsFollowUpModalOpen(false);
+                      setFollowUpData({ followUpDate: null, followUpComment: "" });
+                    }}
+                    className="px-5 py-2.5 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleScheduleFollowUp}
+                    disabled={isSubmitting || !followUpData.followUpDate}
+                    className="px-5 py-2.5 bg-purple-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 min-w-[160px] justify-center"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                        Scheduling...
+                      </>
+                    ) : (
+                      <>
+                        <Calendar size={16} />
+                        {deal.followUpDate ? "Reschedule Follow-up" : "Schedule Follow-up"}
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-6xl mx-auto">
         {/* Header Section */}
@@ -264,12 +543,24 @@ const formatCurrencyValue = (val) => {
           >
             Activity
           </button>
+
+          <button
+            type="button"
+            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 ${
+              activeTab === "followup"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-slate-600 hover:text-slate-900"
+            }`}
+            onClick={() => setActiveTab("followup")}
+          >
+            Follow-up History
+          </button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content Column */}
           <div className="lg:col-span-2">
-            {/* Details Card (Default Tab) */}
+            {/* Details Card */}
             {activeTab === "details" && (
               <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
                 <div className="p-6 border-b border-slate-100">
@@ -305,7 +596,6 @@ const formatCurrencyValue = (val) => {
                               <p className="text-sm font-medium">Value</p>
                               <p className="text-slate-900">
                                 {formatCurrencyValue(deal.value)}
-                                
                               </p>
                             </div>
                           </div>
@@ -332,31 +622,39 @@ const formatCurrencyValue = (val) => {
                                   Follow-up Date
                                 </p>
                                 <p className="text-slate-900">
-                                  {new Date(
-                                    deal.followUpDate
-                                  ).toLocaleDateString("en-US", {
-                                    weekday: "short",
-                                    year: "numeric",
-                                    month: "short",
-                                    day: "numeric",
-                                  })}
+                                  {deal.followUpDate ? (
+                                    <>
+                                      {new Date(
+                                        deal.followUpDate
+                                      ).toLocaleDateString("en-US", {
+                                        weekday: "short",
+                                        year: "numeric",
+                                        month: "short",
+                                        day: "numeric",
+                                      })}
+                                      <span className="text-slate-500 ml-2">
+                                        •{" "}
+                                        {new Date(
+                                          deal.followUpDate
+                                        ).toLocaleTimeString("en-US", {
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                          hour12: true,
+                                        })}
+                                      </span>
+                                    </>
+                                  ) : (
+                                    <span className="text-slate-400">
+                                      Not set
+                                    </span>
+                                  )}
                                 </p>
-                              </div>
-                            </div>
-                          )}
-                          {deal.followUpStatus && (
-                            <div className="flex items-center text-slate-700">
-                              <AlertCircle
-                                size={18}
-                                className="mr-3 text-slate-500"
-                              />
-                              <div>
-                                <p className="text-sm font-medium">
-                                  Follow-up Status
-                                </p>
-                                <p className="text-slate-900">
-                                  {deal.followUpStatus}
-                                </p>
+                                {deal.followUpComment && (
+                                  <p className="text-sm text-slate-600 mt-2">
+                                    <span className="font-medium">Notes:</span>{" "}
+                                    {deal.followUpComment}
+                                  </p>
+                                )}
                               </div>
                             </div>
                           )}
@@ -385,20 +683,6 @@ const formatCurrencyValue = (val) => {
                               </p>
                             </div>
                           </div>
-                          {deal.industry && (
-                            <div className="flex items-center text-slate-700">
-                              <Briefcase
-                                size={18}
-                                className="mr-3 text-slate-500"
-                              />
-                              <div>
-                                <p className="text-sm font-medium">Industry</p>
-                                <p className="text-slate-900">
-                                  {deal.industry}
-                                </p>
-                              </div>
-                            </div>
-                          )}
                           {deal.email && (
                             <div className="flex items-center text-slate-700">
                               <Mail size={18} className="mr-3 text-slate-500" />
@@ -426,60 +710,6 @@ const formatCurrencyValue = (val) => {
                                 <p className="text-slate-900">
                                   {deal.phoneNumber}
                                 </p>
-                              </div>
-                            </div>
-                          )}
-                          {deal.source && (
-                            <div className="flex items-center text-slate-700">
-                              <Globe
-                                size={18}
-                                className="mr-3 text-slate-500"
-                              />
-                              <div>
-                                <p className="text-sm font-medium">Source</p>
-                                <p className="text-slate-900">{deal.source}</p>
-                              </div>
-                            </div>
-                          )}
-                          {deal.requirement && (
-                            <div className="flex items-center text-slate-700">
-                              <FileText
-                                size={18}
-                                className="mr-3 text-slate-500"
-                              />
-                              <div>
-                                <p className="text-sm font-medium">
-                                  Requirement
-                                </p>
-                                <p className="text-slate-900">
-                                  {deal.requirement}
-                                </p>
-                              </div>
-                            </div>
-                          )}
-                          {deal.address && (
-                            <div className="flex items-center text-slate-700">
-                              <MapPin
-                                size={18}
-                                className="mr-3 text-slate-500"
-                              />
-                              <div>
-                                <p className="text-sm font-medium">Address</p>
-                                <p className="text-slate-900 whitespace-pre-wrap">
-                                  {deal.address}
-                                </p>
-                              </div>
-                            </div>
-                          )}
-                          {deal.country && (
-                            <div className="flex items-center text-slate-700">
-                              <Globe
-                                size={18}
-                                className="mr-3 text-slate-500"
-                              />
-                              <div>
-                                <p className="text-sm font-medium">Country</p>
-                                <p className="text-slate-900">{deal.country}</p>
                               </div>
                             </div>
                           )}
@@ -520,15 +750,6 @@ const formatCurrencyValue = (val) => {
                               </p>
                               <p className="text-xs text-slate-500 mt-1 capitalize">
                                 {file.type}
-                                {file.uploadedAt && (
-                                  <span>
-                                    {" "}
-                                    • Uploaded{" "}
-                                    {new Date(
-                                      file.uploadedAt
-                                    ).toLocaleDateString()}
-                                  </span>
-                                )}
                               </p>
                             </div>
                           </div>
@@ -569,6 +790,47 @@ const formatCurrencyValue = (val) => {
                 </div>
                 <div className="p-6">
                   <div className="relative">
+                    {/* Follow-up Activity */}
+                    {deal.followUpDate && (
+                      <div className="flex items-start mb-8">
+                        <div className="flex-shrink-0">
+                          <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                            <Calendar size={16} className="text-purple-600" />
+                          </div>
+                        </div>
+                        <div className="ml-4">
+                          <h3 className="text-sm font-medium text-slate-900">
+                            Follow-up scheduled
+                          </h3>
+                          <div className="mt-1">
+                            <p className="text-sm text-slate-700">
+                              📅{" "}
+                              {new Date(deal.followUpDate).toLocaleDateString(
+                                "en-US",
+                                {
+                                  weekday: "long",
+                                  month: "long",
+                                  day: "numeric",
+                                  year: "numeric",
+                                }
+                              )}
+                            </p>
+                            <p className="text-sm text-slate-700">
+                              ⏰{" "}
+                              {new Date(deal.followUpDate).toLocaleTimeString(
+                                "en-US",
+                                {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  hour12: true,
+                                }
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Creation Activity */}
                     <div className="flex items-start mb-8">
                       <div className="flex-shrink-0">
@@ -581,58 +843,18 @@ const formatCurrencyValue = (val) => {
                           Deal created
                         </h3>
                         <p className="text-sm text-slate-500 mt-1">
-                          {new Date(deal.createdAt).toLocaleString("en-US", {
-                            dateStyle: "medium",
-                            timeStyle: "short",
-                          })}
+                          📅{" "}
+                          {new Date(deal.createdAt).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "long",
+                              day: "numeric",
+                              year: "numeric",
+                            }
+                          )}
                         </p>
                       </div>
                     </div>
-
-                    {/* Stage History */}
-                    {deal.stageHistory &&
-                      deal.stageHistory.length > 0 &&
-                      deal.stageHistory.map((history, index) => {
-                        const historyStageConfig = getStageBadgeClass(
-                          history.stage
-                        );
-                        const HistoryStageIcon = historyStageConfig.icon;
-
-                        return (
-                          <div key={index} className="flex items-start mb-8">
-                            <div className="flex-shrink-0">
-                              <div
-                                className={`w-10 h-10 ${historyStageConfig.bgColor} rounded-full flex items-center justify-center`}
-                              >
-                                <HistoryStageIcon
-                                  size={16}
-                                  className={historyStageConfig.color}
-                                />
-                              </div>
-                            </div>
-                            <div className="ml-4">
-                              <h3 className="text-sm font-medium text-slate-900">
-                                Stage changed to {historyStageConfig.label}
-                              </h3>
-                              {history.changedBy && (
-                                <p className="text-xs text-slate-600 mt-1">
-                                  By: {history.changedBy.firstName}{" "}
-                                  {history.changedBy.lastName}
-                                </p>
-                              )}
-                              <p className="text-sm text-slate-500 mt-1">
-                                {new Date(history.date).toLocaleString(
-                                  "en-US",
-                                  {
-                                    dateStyle: "medium",
-                                    timeStyle: "short",
-                                  }
-                                )}
-                              </p>
-                            </div>
-                          </div>
-                        );
-                      })}
 
                     {/* Last Update Activity */}
                     <div className="flex items-start">
@@ -646,10 +868,15 @@ const formatCurrencyValue = (val) => {
                           Deal updated
                         </h3>
                         <p className="text-sm text-slate-500 mt-1">
-                          {new Date(deal.updatedAt).toLocaleString("en-US", {
-                            dateStyle: "medium",
-                            timeStyle: "short",
-                          })}
+                          📅{" "}
+                          {new Date(deal.updatedAt).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "long",
+                              day: "numeric",
+                              year: "numeric",
+                            }
+                          )}
                         </p>
                       </div>
                     </div>
@@ -657,6 +884,362 @@ const formatCurrencyValue = (val) => {
                 </div>
               </div>
             )}
+
+            {/* Follow-up History Tab */}
+{/* Follow-up History Tab */}
+{activeTab === "followup" && (
+  <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
+    <div className="p-6 border-b border-slate-100">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-slate-900">
+            Follow-up History
+          </h2>
+          <p className="text-sm text-slate-600 mt-1">
+            Track all follow-ups for this deal (Most recent first)
+          </p>
+        </div>
+        {!deal.followUpDate && (
+          <button
+            onClick={() => setIsFollowUpModalOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors shadow-sm"
+          >
+            <Plus size={16} />
+            Schedule First Follow-up
+          </button>
+        )}
+      </div>
+    </div>
+
+    <div className="p-6">
+      {/* Current Follow-up */}
+      {deal.followUpDate ? (
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+              <Clock size={16} className="text-purple-600" />
+              Upcoming Follow-up
+            </h3>
+            <button
+              onClick={() => {
+                setFollowUpData({
+                  followUpDate: new Date(deal.followUpDate),
+                  followUpComment: deal.followUpComment || ""
+                });
+                setIsFollowUpModalOpen(true);
+              }}
+              className="text-sm text-purple-600 hover:text-purple-800 font-medium flex items-center gap-1"
+            >
+              <Edit size={14} />
+              Reschedule
+            </button>
+          </div>
+          <div className="bg-purple-50 border border-purple-200 rounded-xl p-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm font-medium text-slate-700">
+                  Date & Time
+                </p>
+                <div className="mt-1 flex items-center gap-2">
+                  <Calendar size={18} className="text-purple-500" />
+                  <span className="text-lg font-semibold text-slate-900">
+                    {new Date(deal.followUpDate).toLocaleDateString("en-US", {
+                      weekday: "long",
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </span>
+                </div>
+                <div className="mt-1 flex items-center gap-2">
+                  <Clock size={18} className="text-purple-500" />
+                  <span className="text-lg font-semibold text-slate-900">
+                    {new Date(deal.followUpDate).toLocaleTimeString("en-US", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true,
+                    })}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-700">
+                  Status
+                </p>
+                <div className="mt-2">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
+                    <Clock size={14} className="mr-1" />
+                    Scheduled
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {deal.followUpComment && (
+              <div className="mt-4 pt-4 border-t border-purple-200">
+                <p className="text-sm font-medium text-slate-700 mb-2">
+                  Notes
+                </p>
+                <div className="bg-white rounded-lg p-4 border border-purple-100">
+                  <p className="text-slate-700">
+                    {deal.followUpComment}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="text-center py-12">
+          <div className="w-20 h-20 bg-purple-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Calendar size={32} className="text-purple-400" />
+          </div>
+          <h3 className="text-lg font-medium text-slate-900 mb-2">
+            No upcoming follow-ups
+          </h3>
+          <p className="text-slate-600 mb-6 max-w-sm mx-auto">
+            Schedule a follow-up to stay on track with this deal and never miss an important conversation.
+          </p>
+          <button
+            onClick={() => setIsFollowUpModalOpen(true)}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition shadow-sm hover:shadow"
+          >
+            <Plus size={18} />
+            Schedule First Follow-up
+          </button>
+        </div>
+      )}
+
+      {/* Past Follow-ups - Sorted Most Recent First */}
+      {deal.followUpHistory && deal.followUpHistory.length > 0 && (
+        <div className="mt-8">
+          <h3 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
+            <Archive size={16} className="text-slate-600" />
+            Past Follow-ups ({deal.followUpHistory.length})
+          </h3>
+
+          <div className="space-y-4">
+            {/* Sort the history array by date in descending order (most recent first) */}
+            {[...deal.followUpHistory]
+              .sort((a, b) => {
+                // Sort by date (most recent first)
+                // Use the date field (when the action occurred) for sorting
+                const dateA = a.date ? new Date(a.date).getTime() : 0;
+                const dateB = b.date ? new Date(b.date).getTime() : 0;
+                return dateB - dateA; // Descending order (most recent first)
+              })
+              .map((followUp, index) => {
+                const actionDate = followUp.date
+                  ? new Date(followUp.date)
+                  : null;
+                const scheduledDate = followUp.followUpDate
+                  ? new Date(followUp.followUpDate)
+                  : null;
+
+                const outcome = followUp.outcome || "Completed";
+
+                return (
+                  <div
+                    key={index}
+                    className="border border-slate-200 rounded-xl p-5 hover:bg-slate-50 transition"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                              outcome === "Successful" ||
+                              outcome === "Completed"
+                                ? "bg-green-100"
+                                : outcome === "Rescheduled"
+                                ? "bg-yellow-100"
+                                : outcome === "Cancelled"
+                                ? "bg-red-100"
+                                : outcome === "Created" ||
+                                  outcome === "Updated"
+                                ? "bg-blue-100"
+                                : "bg-gray-100"
+                            }`}
+                          >
+                            {outcome === "Successful" ||
+                            outcome === "Completed" ? (
+                              <CheckCircle
+                                size={20}
+                                className="text-green-600"
+                              />
+                            ) : outcome === "Rescheduled" ? (
+                              <RefreshCw
+                                size={20}
+                                className="text-yellow-600"
+                              />
+                            ) : outcome === "Cancelled" ? (
+                              <XCircle
+                                size={20}
+                                className="text-red-600"
+                              />
+                            ) : outcome === "Created" ? (
+                              <Plus
+                                size={20}
+                                className="text-blue-600"
+                              />
+                            ) : outcome === "Updated" ? (
+                              <Edit
+                                size={20}
+                                className="text-blue-600"
+                              />
+                            ) : (
+                              <CheckCircle
+                                size={20}
+                                className="text-gray-600"
+                              />
+                            )}
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-slate-900">
+                              Follow-up {outcome}
+                            </h4>
+                            <div className="flex items-center gap-4 mt-1">
+                              {actionDate ? (
+                                <>
+                                  <div className="flex items-center gap-1 text-sm text-slate-600">
+                                    <Calendar size={14} />
+                                    <span>
+                                      {actionDate.toLocaleDateString(
+                                        "en-US",
+                                        {
+                                          month: "short",
+                                          day: "numeric",
+                                          year: "numeric",
+                                        }
+                                      )}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-1 text-sm text-slate-600">
+                                    <Clock size={14} />
+                                    <span>
+                                      {actionDate.toLocaleTimeString(
+                                        "en-US",
+                                        {
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                          hour12: true,
+                                        }
+                                      )}
+                                    </span>
+                                  </div>
+                                </>
+                              ) : (
+                                <span className="text-sm text-slate-500">
+                                  Date not available
+                                </span>
+                              )}
+                            </div>
+                            
+                            {/* Show when it was scheduled for (if different from action date) */}
+                            {scheduledDate && actionDate && 
+                             Math.abs(scheduledDate - actionDate) > 1000 && (
+                              <div className="flex items-center gap-1 text-xs text-slate-500 mt-1">
+                                <span>Scheduled for: </span>
+                                <span className="font-medium">
+                                  {scheduledDate.toLocaleDateString(
+                                    "en-US",
+                                    {
+                                      month: "short",
+                                      day: "numeric",
+                                    }
+                                  )}
+                                </span>
+                                <span className="mx-1">at</span>
+                                <span className="font-medium">
+                                  {scheduledDate.toLocaleTimeString(
+                                    "en-US",
+                                    {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    }
+                                  )}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {followUp.followUpComment && (
+                          <div className="mt-4">
+                            <p className="text-sm font-medium text-slate-700 mb-2">
+                              Notes
+                            </p>
+                            <div className="bg-slate-50 rounded-lg p-4">
+                              <p className="text-slate-700">
+                                {followUp.followUpComment}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {followUp.changedBy && (followUp.changedBy.firstName || followUp.changedBy.lastName) && (
+                          <div className="mt-4">
+                            <p className="text-sm font-medium text-slate-700">
+                              Updated by
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center">
+                                <User
+                                  size={14}
+                                  className="text-slate-600"
+                                />
+                              </div>
+                              <span className="text-sm text-slate-700">
+                                {followUp.changedBy.firstName || "User"}{" "}
+                                {followUp.changedBy.lastName || ""}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="text-right">
+                        <span
+                          className={`text-xs px-3 py-1 rounded-full font-medium ${
+                            outcome === "Successful" ||
+                            outcome === "Completed"
+                              ? "bg-green-100 text-green-800"
+                              : outcome === "Rescheduled"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : outcome === "Cancelled"
+                              ? "bg-red-100 text-red-800"
+                              : outcome === "Created" ||
+                                outcome === "Updated"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {outcome}
+                        </span>
+                        {actionDate && (
+                          <p className="text-xs text-slate-500 mt-2">
+                            {actionDate.toLocaleDateString(
+                              "en-US",
+                              {
+                                month: "short",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              }
+                            )}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+)}
           </div>
 
           {/* Sidebar Column */}
@@ -692,9 +1275,6 @@ const formatCurrencyValue = (val) => {
                   <h4 className="font-medium text-slate-900">
                     {deal.companyName || "Unknown Company"}
                   </h4>
-                  {deal.industry && (
-                    <p className="text-sm text-slate-600">{deal.industry}</p>
-                  )}
                 </div>
               </div>
               <div className="space-y-2">
@@ -716,46 +1296,29 @@ const formatCurrencyValue = (val) => {
               </div>
             </div>
 
-            {/* Assigned To Card */}
-            {deal.assignedTo && (
-              <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200 p-5">
-                <h3 className="text-sm font-medium text-slate-700 mb-4 uppercase tracking-wide">
-                  Assigned To
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="flex items-center text-slate-700">
-                    <User size={18} className="mr-3 text-slate-500" />
-                    <div>
-                      <p className="text-sm font-medium">Assigned To</p>
-                      <p className="text-slate-900">
-                        {deal.assignedTo
-                          ? `${deal.assignedTo.firstName} ${deal.assignedTo.lastName}`
-                          : "Not assigned"}
-                      </p>
-                      {deal.assignedTo && (
-                        <p className="text-sm text-slate-500 mt-1">
-                          {deal.assignedTo.email}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center text-slate-700">
-                    <Calendar size={18} className="mr-3 text-slate-500" />
-                    <div>
-                      <p className="text-sm font-medium">Created Date</p>
-                      <p className="text-slate-900">
-                        {new Date(deal.createdAt).toLocaleDateString("en-US", {
-                          weekday: "short",
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+            {/* Quick Actions Card */}
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200 p-5">
+              <h3 className="text-sm font-medium text-slate-700 mb-4 uppercase tracking-wide">
+                Quick Actions
+              </h3>
+              <div className="space-y-2">
+                <button
+                  onClick={() => {
+                    if (deal.followUpDate) {
+                      setFollowUpData({
+                        followUpDate: new Date(deal.followUpDate),
+                        followUpComment: deal.followUpComment || ""
+                      });
+                    }
+                    setIsFollowUpModalOpen(true);
+                  }}
+                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-left text-slate-700 hover:bg-purple-50 rounded-lg transition-colors"
+                >
+                  <Calendar size={16} className="text-purple-600" />
+                  {deal.followUpDate ? "Reschedule Follow-up" : "Schedule Follow-up"}
+                </button>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
