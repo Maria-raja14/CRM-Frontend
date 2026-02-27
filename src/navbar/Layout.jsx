@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Sidebar from "../navbar/sidebar";
 import Navbar from "./header";
 import { Outlet } from "react-router-dom";
+import ChatWidget from "../components/chatwidget";
 
 const Layout = ({ isModalOpen }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -11,6 +12,7 @@ const Layout = ({ isModalOpen }) => {
   const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
   return (
+    <>
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
       {sidebarOpen && <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />}
@@ -24,6 +26,8 @@ const Layout = ({ isModalOpen }) => {
         </div>
       </div>
     </div>
+    <ChatWidget/>
+    </>
   );
 };
 

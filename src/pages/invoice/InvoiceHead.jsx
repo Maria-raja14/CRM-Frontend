@@ -923,7 +923,7 @@ const applyFilters = () => {
         hideProgressBar={false}
       />
 
-      <style jsx>{`
+      <style>{`
         .scrollbar-hide {
           -ms-overflow-style: none;
           scrollbar-width: none;
