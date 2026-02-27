@@ -12,6 +12,8 @@ import {
   Users,
   GitBranch,
   BarChart3,Trophy,
+  BarChart3,
+  Mail,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
@@ -174,9 +176,12 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       {/* Header */}
       <div className="mb-6 flex items-center justify-between px-12">
         <img
-          src="https://tzi.zaarapp.com//storage/uploads/logo//logo-dark.png"
-          alt="Logo"
-          className="h-12"
+          src={
+            logo ||
+            "https://via.placeholder.com/150x50?text=Company+Logo"
+          }
+          alt="Company Logo"
+          className="h-20 object-contain"
         />
         <div className="relative group">
           <button onClick={toggleSidebar} className="lg:hidden p-1">

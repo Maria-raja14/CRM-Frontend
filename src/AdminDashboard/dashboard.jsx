@@ -1493,6 +1493,7 @@ import { useNavigate } from "react-router-dom";
 import { Progress } from "../components/ui/progress";
 import StreakLeaderboard from "../pages/StreakLeaderboard";
 
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 // Supported currencies with symbols and formatting
@@ -3227,6 +3228,107 @@ useEffect(() => {
   ];
 
   const totalPipelineLeads = pipeline.reduce((acc, s) => acc + (s.leads || 0), 0);
+  /* ---------- Enhanced Summary Card Component ---------- */
+  const SummaryCard = ({
+    title,
+    value,
+    change,
+    color,
+    icon,
+    colorPalette,
+    loading,
+  }) => {
+    if (loading) {
+      return (
+        <Card className="overflow-hidden border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+          <CardContent className="p-5">
+            <Skeleton className="h-5 w-20 mb-3" />
+            <Skeleton className="h-8 w-16 mb-2" />
+            <Skeleton className="h-4 w-24" />
+          </CardContent>
+        </Card>
+      );
+    }
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 12, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{
+          type: "spring",
+          stiffness: 100,
+          damping: 12,
+        }}
+        whileHover={{
+          y: -4,
+          scale: 1.02,
+          transition: { duration: 0.2 }
+        }}
+      >
+        <Card
+          className={cn(
+            "overflow-hidden border-0 shadow-lg transition-all duration-300 relative bg-white/80 backdrop-blur-sm hover:shadow-xl",
+            {
+              "bg-blue-50/50": color === "blue",
+              "bg-green-50/50": color === "green",
+              "bg-purple-50/50": color === "purple",
+              "bg-orange-50/50": color === "orange",
+            }
+          )}
+        >
+          <CardBubbles
+            seed={Math.random() * 10}
+            count={6}
+            colorPalette={colorPalette || BASE_COLORS}
+          />
+
+          <CardContent className="p-5 relative">
+            <div className="flex justify-between items-start mb-3">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-600 mb-2">
+                  {title}
+                </p>
+                <div className="text-2xl font-bold text-gray-900">
+                  {(value || 0).toLocaleString()}
+                </div>
+              </div>
+              <motion.div
+                className={cn("p-2 rounded-xl", {
+                  "bg-blue-100 text-blue-600": color === "blue",
+                  "bg-green-100 text-green-600": color === "green",
+                  "bg-purple-100 text-purple-600": color === "purple",
+                  "bg-orange-100 text-orange-600": color === "orange",
+                })}
+                whileHover={{ scale: 1.08, rotate: 5 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {icon}
+              </motion.div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                {change >= 0 ? (
+                  <ArrowUpRight className="h-4 w-4 text-green-500 mr-1" />
+                ) : (
+                  <ArrowDownRight className="h-4 w-4 text-red-500 mr-1" />
+                )}
+                <span
+                  className={cn("text-sm font-medium", {
+                    "text-green-500": change >= 0,
+                    "text-red-500": change < 0,
+                  })}
+                >
+                  {change >= 0 ? `+${change}%` : `${change}%`}
+                </span>
+              </div>
+              <span className="text-xs text-gray-500">vs previous</span>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
+  };
 
   /* ---------- UI ---------- */
   return (
@@ -3366,7 +3468,6 @@ useEffect(() => {
               onClick={() => handleCardClick(card)}
             />
           ))}
-          
       </div>
 
       {/* Currency Breakdown + Revenue Chart */}

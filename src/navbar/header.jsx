@@ -25,7 +25,12 @@ const Navbar = ({ toggleSidebar }) => {
   // Load user
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
-    if (storedUser) setUser(storedUser);
+    if (storedUser) {
+      setUser(storedUser);
+      if (storedUser.role?.name === "Admin") {
+        setIsAdmin(true);
+      }
+    }
   }, []);
 
   // Logout
@@ -86,7 +91,7 @@ const Navbar = ({ toggleSidebar }) => {
   // Format notification text with proper salesman name
   const formatNotificationText = (notification) => {
     let text = notification.text || '';
-    
+
     // For follow-up notifications, replace "Salesman" with actual name if available
     if (notification.type === 'followup' && notification.meta?.salesmanName) {
       const salesmanName = notification.meta.salesmanName;
@@ -96,17 +101,17 @@ const Navbar = ({ toggleSidebar }) => {
         text = text.replace('salesman', salesmanName);
       }
     }
-    
+
     // For deal follow-ups, ensure proper formatting
     if (notification.meta?.dealName && !text.includes('deal')) {
       text = `Follow-up reminder for deal: ${notification.meta.dealName}`;
     }
-    
+
     // For proposal follow-ups, ensure proper formatting
     if (notification.meta?.proposalTitle && !text.includes('proposal')) {
       text = `Follow-up reminder for proposal: ${notification.meta.proposalTitle}`;
     }
-    
+
     return text;
   };
 
@@ -128,7 +133,7 @@ const Navbar = ({ toggleSidebar }) => {
     if (!notification.read) {
       await markAsRead(notification._id);
     }
-    
+
     // Navigate based on notification type
     if (notification.meta?.leadId) {
       navigate(`/leads/view/${notification.meta.leadId}`);
@@ -139,76 +144,116 @@ const Navbar = ({ toggleSidebar }) => {
     } else if (notification.meta?.activityId) {
       navigate('/activities');
     }
-    
+
     setShowNotifications(false);
   };
 
   return (
-    <>
-      <div className="w-full bg-white dark:bg-gray-900 dark:text-white p-3 flex justify-between items-center shadow-sm border-b border-gray-200 dark:border-gray-700">
-        {/* Sidebar Toggle */}
-        <div className="relative group">
-          <button
-            onClick={toggleSidebar}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-          >
-            <Menu size={24} className="text-gray-600 dark:text-gray-300" />
-          </button>
-          {/* ✅ TOOLTIP */}
-          <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 
+    <div className="w-full bg-white dark:bg-gray-900 dark:text-white p-3 flex justify-between items-center shadow-sm border-b border-gray-200 dark:border-gray-700">
+      {/* Sidebar Toggle */}
+      <div className="relative group">
+        <button
+          onClick={toggleSidebar}
+          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+        >
+          <Menu size={24} className="text-gray-600 dark:text-gray-300" />
+        </button>
+        {/* ✅ TOOLTIP */}
+        <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 
             opacity-0 group-hover:opacity-100 transition-opacity
             bg-gray-900 text-white text-xs px-3 py-1 rounded-md whitespace-nowrap
             pointer-events-none z-50">
-            Menu
-          </div>
+          Menu
         </div>
+      </div>
+      <button
+        onClick={toggleSidebar}
+        className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+      >
+        <Menu size={24} className="text-gray-600 dark:text-gray-300" />
+      </button>
 
-        {/* Right Section */}
-        <div className="flex items-center space-x-4 relative">
-          {/* Fullscreen Toggle */}
-          <div className="relative group">
-            <button
-              onClick={toggleFullscreen}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            >
-              {isFullscreen ? (
-                <Minimize size={22} className="text-gray-600 dark:text-gray-300" />
-              ) : (
-                <Maximize size={22} className="text-gray-600 dark:text-gray-300" />
-              )}
-            </button>
-            {/* ✅ TOOLTIP */}
-            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2
+      {/* Right Section */}
+      <div className="flex items-center space-x-4 relative">
+        {/* Fullscreen Toggle */}
+        <div className="relative group">
+          <button
+            onClick={toggleFullscreen}
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            {isFullscreen ? (
+              <Minimize size={22} className="text-gray-600 dark:text-gray-300" />
+            ) : (
+              <Maximize size={22} className="text-gray-600 dark:text-gray-300" />
+            )}
+          </button>
+          {/* ✅ TOOLTIP */}
+          <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2
               opacity-0 group-hover:opacity-100 transition-opacity
               bg-gray-900 text-white text-xs px-3 py-1 rounded-md whitespace-nowrap
               pointer-events-none z-50">
-              {isFullscreen ? "Minimize" : "Maximize"}
-            </div>
+            {isFullscreen ? "Minimize" : "Maximize"}
           </div>
+        </div>
 
-          {/* Notifications */}
-          <div className="relative" ref={notificationRef}>
-            <div className="relative group">
-              <button
-                onClick={() => setShowNotifications(!showNotifications)}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 relative transition-colors"
-              >
-                <Bell size={22} className="text-gray-600 dark:text-gray-300" />
-                {notifications.filter((n) => !n.read).length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
-                    {notifications.filter((n) => !n.read).length}
-                  </span>
-                )}
-              </button>
-              {/* ✅ TOOLTIP */}
-              <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 
+        {/* Notifications */}
+        <div className="relative" ref={notificationRef}>
+          <div className="relative group">
+            <button
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 relative transition-colors"
+            >
+              <Bell size={22} className="text-gray-600 dark:text-gray-300" />
+              {notifications.filter((n) => !n.read).length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
+                  {notifications.filter((n) => !n.read).length}
+                </span>
+              )}
+            </button>
+            {/* ✅ TOOLTIP */}
+            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 
                 opacity-0 group-hover:opacity-100 transition-opacity
                 bg-gray-900 text-white text-xs px-3 py-1 rounded-md whitespace-nowrap
                 pointer-events-none z-50">
-                Notifications
-              </div>
+              Notifications
             </div>
-            
+          </div>
+
+          <button
+            onClick={toggleFullscreen}
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            {isFullscreen ? (
+              <Minimize size={22} className="text-gray-600 dark:text-gray-300" />
+            ) : (
+              <Maximize size={22} className="text-gray-600 dark:text-gray-300" />
+            )}
+          </button>
+
+          {/* WhatsApp Button with Animation */}
+          {/* <a'
+            href={whatsappLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="relative group flex items-center justify-center w-10 h-10 rounded-full bg-green-500 shadow-lg hover:shadow-xl transition-all transform hover:scale-110 motion-safe:animate-bounce cursor-pointer"
+          >
+            <FaWhatsapp size={28} className="text-white group-hover:text-green-50 transition-colors" />
+            <span className="absolute w-2 h-2 bg-green-300 rounded-full top-1 right-1 animate-ping"></span>
+          </a> */}
+
+          {/* Notifications */}
+          <div className="relative" ref={notificationRef}>
+            <button
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 relative transition-colors"
+            >
+              <Bell size={22} className="text-gray-600 dark:text-gray-300" />
+              {notifications.filter((n) => !n.read).length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
+                  {notifications.filter((n) => !n.read).length}
+                </span>
+              )}
+            </button>
             {showNotifications && (
               <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 shadow-xl rounded-xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
                 <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 font-semibold text-gray-800 dark:text-gray-100 bg-gray-50 dark:bg-gray-900">
@@ -220,9 +265,8 @@ const Navbar = ({ toggleSidebar }) => {
                       <div
                         key={n._id}
                         onClick={() => handleNotificationClick(n)}
-                        className={`flex items-start px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all cursor-pointer border-b border-gray-100 dark:border-gray-600 last:border-0 ${
-                          !n.read ? 'bg-blue-50/50 dark:bg-blue-900/20' : ''
-                        }`}
+                        className={`flex items-start px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all cursor-pointer border-b border-gray-100 dark:border-gray-600 last:border-0 ${!n.read ? 'bg-blue-50/50 dark:bg-blue-900/20' : ''
+                          }`}
                       >
                         <div className="flex-shrink-0 relative">
                           {n.profileImage && n.profileImage !== '/default-avatar.png' ? (
@@ -321,9 +365,8 @@ const Navbar = ({ toggleSidebar }) => {
                 {/* Dropdown Icon */}
                 <ChevronDown
                   size={20}
-                  className={`text-gray-500 dark:text-gray-400 transition-transform duration-200 ${
-                    showDropdown ? "rotate-180" : ""
-                  }`}
+                  className={`text-gray-500 dark:text-gray-400 transition-transform duration-200 ${showDropdown ? "rotate-180" : ""
+                    }`}
                 />
               </button>
               {/* ✅ TOOLTIP */}
@@ -378,7 +421,7 @@ const Navbar = ({ toggleSidebar }) => {
           onClose={() => setShowPasswordModal(false)}
         />
       )}
-    </>
+    </div>
   );
 };
 

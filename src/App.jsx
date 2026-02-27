@@ -95,6 +95,11 @@ function App() {
                   <Route path="/streak-leaderboard" element={<AllStreakLeaderboard />} />
 
                   <Route path="reports" element={<ReportsPage />} />
+                      <Route path="/mass-email" element={<MassEmail />} />
+                      <Route path="/create-email" element={<CreateEmail />} />
+                      <Route path="/create-email/:id" element={<CreateEmail />} />
+                      <Route path="/scheduled-emails" element={<ScheduledEmails />} />
+                      <Route path="/email-history" element={<EmailHistory />} />
                 </Route>
               </Route>
             </Routes>
