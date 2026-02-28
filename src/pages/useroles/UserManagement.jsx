@@ -1,5 +1,5 @@
-import React from "react";
 
+import React from "react";
 import { useState, useEffect, useRef } from "react";
 import AddUserModal from "./UserTop";
 import CreateRoleModal from "./CreateRoleModal";
@@ -101,7 +101,6 @@ const tourSteps = [
   },
 ];
 
-
 const getRoleIcon = (roleName) => {
   const name = roleName?.toLowerCase() || "";
 
@@ -139,20 +138,19 @@ const toastConfig = {
   draggable: true,
   progress: undefined,
   theme: "light",
-  closeButton: true, // Enable close button
+  closeButton: true,
   onClick: (e) => {
-    // Prevent event bubbling when clicking on toast
     e.stopPropagation();
   },
   style: {
-    zIndex: 9999, // Ensure toast is above all other elements
-    pointerEvents: "auto", // Ensure toast is clickable
+    zIndex: 9999,
+    pointerEvents: "auto",
   },
   bodyStyle: {
-    pointerEvents: "auto", // Ensure toast body is clickable
+    pointerEvents: "auto",
   },
   closeButtonStyle: {
-    pointerEvents: "auto", // Ensure close button is clickable
+    pointerEvents: "auto",
     cursor: "pointer",
   },
 };
@@ -182,9 +180,7 @@ function UserManagementInner() {
     toast.success(message, {
       ...toastConfig,
       onClick: (e) => {
-        // Prevent event bubbling when clicking on toast
         e.stopPropagation();
-        // Close the toast when clicked anywhere on it
         toast.dismiss();
       },
     });
@@ -195,9 +191,7 @@ function UserManagementInner() {
     toast.error(message, {
       ...toastConfig,
       onClick: (e) => {
-        // Prevent event bubbling when clicking on toast
         e.stopPropagation();
-        // Close the toast when clicked anywhere on it
         toast.dismiss();
       },
     });
@@ -246,12 +240,23 @@ function UserManagementInner() {
       const { data } = await axios.get(`${API_URL}/users`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const usersWithImageUrl = data.users.map((user) => ({
-        ...user,
-        profileImageUrl: user.profileImage
-          ? `${API_SI}uploads/users/${user.profileImage.replace(/^\/+/, "")}`
-          : null,
-      }));
+
+      // Ensure base URL ends with a slash
+      const baseUrl = API_SI.endsWith('/') ? API_SI : API_SI + '/';
+
+      const usersWithImageUrl = data.users.map((user) => {
+        let profileImageUrl = null;
+        if (user.profileImage) {
+          // Build full image URL and add timestamp to bypass cache
+          const imagePath = `uploads/users/${user.profileImage.replace(/^\/+/, '')}`;
+          profileImageUrl = `${baseUrl}${imagePath}?t=${Date.now()}`;
+        }
+        return {
+          ...user,
+          profileImageUrl,
+        };
+      });
+
       setUsers(usersWithImageUrl || []);
     } catch (err) {
       console.error(err);
@@ -278,7 +283,7 @@ function UserManagementInner() {
         headers: { Authorization: `Bearer ${token}` },
       });
       showSuccessToast(
-        `${itemType === "user" ? "User" : "Role"} deleted successfully!`,
+        `${itemType === "user" ? "User" : "Role"} deleted successfully!`
       );
       itemType === "user" ? fetchUsers() : fetchRoles();
       setActionType("");
@@ -307,7 +312,7 @@ function UserManagementInner() {
   });
 
   const filteredRoles = roles.filter((role) =>
-    role.name?.toLowerCase().includes(searchRoleQuery.toLowerCase()),
+    role.name?.toLowerCase().includes(searchRoleQuery.toLowerCase())
   );
 
   const totalPagesUsers = Math.ceil(filteredUsers.length / itemsPerPage) || 1;
@@ -449,7 +454,9 @@ function UserManagementInner() {
         <div className="w-full flex justify-center">
           {/* Users Slide */}
           <div
-            className={`transition-all duration-300 w-full max-w-6xl ${activeSlide === "users" ? "block" : "hidden"}`}
+            className={`transition-all duration-300 w-full max-w-6xl ${
+              activeSlide === "users" ? "block" : "hidden"
+            }`}
           >
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden users-table">
               {/* Header */}
@@ -545,6 +552,11 @@ function UserManagementInner() {
                                 }
                                 alt={user.firstName}
                                 className="h-10 w-10 rounded-full object-cover border border-gray-300"
+                                onError={(e) => {
+                                  e.target.onerror = null; // Prevent infinite loop
+                                  e.target.src =
+                                    "https://static.vecteezy.com/system/resources/previews/020/429/953/non_2x/admin-icon-vector.jpg";
+                                }}
                               />
                             </div>
                           </td>
@@ -656,7 +668,7 @@ function UserManagementInner() {
                       <button
                         onClick={() =>
                           handlePageChangeUsers(
-                            Math.max(validatedCurrentPageUsers - 1, 1),
+                            Math.max(validatedCurrentPageUsers - 1, 1)
                           )
                         }
                         disabled={validatedCurrentPageUsers === 1}
@@ -684,8 +696,8 @@ function UserManagementInner() {
                           handlePageChangeUsers(
                             Math.min(
                               validatedCurrentPageUsers + 1,
-                              totalPagesUsers,
-                            ),
+                              totalPagesUsers
+                            )
                           )
                         }
                         disabled={validatedCurrentPageUsers === totalPagesUsers}
@@ -702,7 +714,9 @@ function UserManagementInner() {
 
           {/* Roles Slide */}
           <div
-            className={`transition-all duration-300 w-full max-w-6xl ${activeSlide === "roles" ? "block" : "hidden"}`}
+            className={`transition-all duration-300 w-full max-w-6xl ${
+              activeSlide === "roles" ? "block" : "hidden"
+            }`}
           >
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden roles-table">
               {/* Header */}
@@ -758,7 +772,7 @@ function UserManagementInner() {
                     {currentRoles.length > 0 ? (
                       currentRoles.map((role, index) => {
                         const permissionCount = countPermissions(
-                          role.permissions,
+                          role.permissions
                         );
                         const activePermissions = role.permissions
                           ? Object.entries(role.permissions)
@@ -809,15 +823,18 @@ function UserManagementInner() {
                                 >
                                   <Edit size={16} />
                                 </button>
-                                <button
-                                  onClick={() =>
-                                    handleAction(role, "role", "delete")
-                                  }
-                                  className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
-                                  title="Delete role"
-                                >
-                                  <Trash2 size={16} />
-                                </button>
+                                {/* Hide delete button for Admin role */}
+                                {role.name !== "Admin" && (
+                                  <button
+                                    onClick={() =>
+                                      handleAction(role, "role", "delete")
+                                    }
+                                    className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                                    title="Delete role"
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                )}
                               </div>
                             </td>
                           </tr>
@@ -867,7 +884,7 @@ function UserManagementInner() {
                       <button
                         onClick={() =>
                           handlePageChangeRoles(
-                            Math.max(validatedCurrentPageRoles - 1, 1),
+                            Math.max(validatedCurrentPageRoles - 1, 1)
                           )
                         }
                         disabled={validatedCurrentPageRoles === 1}
@@ -895,8 +912,8 @@ function UserManagementInner() {
                           handlePageChangeRoles(
                             Math.min(
                               validatedCurrentPageRoles + 1,
-                              totalPagesRoles,
-                            ),
+                              totalPagesRoles
+                            )
                           )
                         }
                         disabled={validatedCurrentPageRoles === totalPagesRoles}

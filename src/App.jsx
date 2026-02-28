@@ -49,11 +49,12 @@ function App() {
 
             <Routes>
               <Route path="/" element={<Login />} />
-              <Route element={<PrivateRoute />}>
+              
                 <Route
                   path="/reset-password/:token"
                   element={<ResetPassword />}
-                />
+              />
+              <Route element={<PrivateRoute />}>
                 <Route path="/layout" element={<Layout />} />
                 <Route element={<Layout isModalOpen={isModalOpen} />}>
                   <Route path="/adminDashboard" element={<AdminDashboard />} />

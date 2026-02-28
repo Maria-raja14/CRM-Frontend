@@ -1,245 +1,3 @@
-// import { useState, useEffect } from "react";
-// import axios from "axios";
-// import {
-//   Dialog,
-//   DialogContent,
-//   DialogHeader,
-//   DialogTitle,
-// } from "../../components/ui/dialog";
-// import { toast } from "react-toastify";
-
-// // Import all sidebar icons
-// import {
-//   Home,
-//   Briefcase,
-//   Users,
-//   Tag,
-//   List,
-//   Calendar,
-//   Shield,
-//   DollarSign,
-//   MapPin,
-//   CreditCard,
-//   Edit,
-//   Layout,
-//   FileText,
-// } from "react-feather";
-
-// export default function EditRoleModal({ role, onClose, onRoleUpdated }) {
-//   const [roleData, setRoleData] = useState({
-//     name: "",
-//     permissions: {
-//       dashboard: false,
-//       leads: false,
-//       deals: false,
-//       pipeline: false,
-//       invoice: false,
-//       proposal: false,
-     
-//       calendar: false,
-//       activityList: false,
-     
-//       usersRoles: false,
-//     }
-//   });
-
-//   useEffect(() => {
-//     if (role) {
-//       setRoleData({
-//         name: role.name || "",
-//         permissions: role.permissions || {
-//           dashboard: false,
-//           leads: false,
-//           deals: false,
-//           pipeline: false,
-//           invoice: false,
-//           proposal: false,
-         
-//           calendar: false,
-//           activityList: false,
-          
-//           usersRoles: false,
-//         }
-//       });
-//     }
-//   }, [role]);
-
-//   const handlePermissionChange = (permission) => {
-//     setRoleData(prev => ({
-//       ...prev,
-//       permissions: {
-//         ...prev.permissions,
-//         [permission]: !prev.permissions[permission]
-//       }
-//     }));
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     try {
-//       const token = localStorage.getItem("token");
-//       await axios.put(
-//         `http://localhost:5000/api/roles/update-role/${role._id}`,
-//         roleData,
-//         { headers: { Authorization: `Bearer ${token}` } }
-//       );
-
-//       toast.success("Role updated successfully!");
-//       if (onRoleUpdated) onRoleUpdated();
-//       onClose();
-//     } catch (err) {
-//       console.error(err);
-//       toast.error(err.response?.data?.message || "Failed to update role");
-//     }
-//   };
-
-//   return (
-//     <Dialog open={true} onOpenChange={onClose}>
-//       <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-//         <DialogHeader>
-//           <DialogTitle className="text-lg font-bold">Edit Role with Permissions</DialogTitle>
-//         </DialogHeader>
-
-//         <form onSubmit={handleSubmit} className="space-y-4 p-3">
-//           <input
-//             type="text"
-//             name="name"
-//             placeholder="Role Name"
-//             value={roleData.name}
-//             onChange={(e) => setRoleData({...roleData, name: e.target.value})}
-//             className="p-2 border rounded-md w-full"
-//             required
-//           />
-          
-//           <div className="border rounded-md p-4">
-//             <h3 className="font-semibold mb-3">Sidebar Permissions</h3>
-            
-//             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-//               {/* Dashboard */}
-//               <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
-//                 <input
-//                   type="checkbox"
-//                   checked={roleData.permissions.dashboard}
-//                   onChange={() => handlePermissionChange("dashboard")}
-//                 />
-//                 <Home size={16} />
-//                 <span>Dashboard</span>
-//               </label>
-              
-//               {/* Leads */}
-//               <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
-//                 <input
-//                   type="checkbox"
-//                   checked={roleData.permissions.leads}
-//                   onChange={() => handlePermissionChange("leads")}
-//                 />
-//                 <Users size={16} />
-//                 <span>Leads</span>
-//               </label>
-              
-//               {/* Deals */}
-//               <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
-//                 <input
-//                   type="checkbox"
-//                   checked={roleData.permissions.deals}
-//                   onChange={() => handlePermissionChange("deals")}
-//                 />
-//                 <Tag size={16} />
-//                 <span>All Deals</span>
-//               </label>
-              
-//               {/* Pipeline */}
-//               <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
-//                 <input
-//                   type="checkbox"
-//                   checked={roleData.permissions.pipeline}
-//                   onChange={() => handlePermissionChange("pipeline")}
-//                 />
-//                 <List size={16} />
-//                 <span>Pipeline View</span>
-//               </label>
-              
-//               {/* Invoice */}
-//               <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
-//                 <input
-//                   type="checkbox"
-//                   checked={roleData.permissions.invoice}
-//                   onChange={() => handlePermissionChange("invoice")}
-//                 />
-//                 <FileText size={16} />
-//                 <span>Invoices</span>
-//               </label>
-              
-//               {/* Proposal */}
-//               <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
-//                 <input
-//                   type="checkbox"
-//                   checked={roleData.permissions.proposal}
-//                   onChange={() => handlePermissionChange("proposal")}
-//                 />
-//                 <Edit size={16} />
-//                 <span>Proposal</span>
-//               </label>
-              
-              
-              
-//               {/* Calendar */}
-//               <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
-//                 <input
-//                   type="checkbox"
-//                   checked={roleData.permissions.calendar}
-//                   onChange={() => handlePermissionChange("calendar")}
-//                 />
-//                 <Calendar size={16} />
-//                 <span>Calendar View</span>
-//               </label>
-              
-//               {/* Activity List */}
-//               <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
-//                 <input
-//                   type="checkbox"
-//                   checked={roleData.permissions.activityList}
-//                   onChange={() => handlePermissionChange("activityList")}
-//                 />
-//                 <List size={16} />
-//                 <span>Activity List</span>
-//               </label>
-              
-              
-//               {/* Users & Roles */}
-//               <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
-//                 <input
-//                   type="checkbox"
-//                   checked={roleData.permissions.usersRoles}
-//                   onChange={() => handlePermissionChange("usersRoles")}
-//                 />
-//                 <Shield size={16} />
-//                 <span>Users & Roles</span>
-//               </label>
-//             </div>
-//           </div>
-          
-//           <div className="flex justify-end gap-3">
-//             <button
-//               type="button"
-//               onClick={onClose}
-//               className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400"
-//             >
-//               Cancel
-//             </button>
-//             <button
-//               type="submit"
-//               className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-//             >
-//               Update
-//             </button>
-//           </div>
-//         </form>
-//       </DialogContent>
-//     </Dialog>
-//   );
-// }
-
 
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -257,35 +15,34 @@ import {
   Users,
   Tag,
   List,
-  Calendar,
   Shield,
   Edit,
   FileText,
   Check,
   X,
-  UserPlus
+  UserPlus,
+  MessageSquare,
+  MessageCircle,
+  BarChart
 } from "react-feather";
 
 export default function EditRoleModal({ role, onClose, onRoleUpdated }) {
-const API_URL = import.meta.env.VITE_API_URL;
-
+  const API_URL = import.meta.env.VITE_API_URL;
 
   const [roleData, setRoleData] = useState({
     name: "",
-   
-     permissions: {
-    dashboard: false,
-    leads: false,
-    deals_all: false,
-    deals_pipeline: false,
-    invoices: false,
-    proposal: false,
-    activities: false,
-    activities_calendar: false,
-    activities_list: false,
-    users_roles: false,
-    admin_access: false,
-  }
+    permissions: {
+      dashboard: false,
+      leads: false,
+      deals_all: false,
+      deals_pipeline: false,
+      invoices: false,
+      proposal: false,
+      users_roles: false,
+      email_chat: false,
+      whatsapp_chat: false,
+      reports: false,
+    }
   });
 
   useEffect(() => {
@@ -293,17 +50,16 @@ const API_URL = import.meta.env.VITE_API_URL;
       setRoleData({
         name: role.name || "",
         permissions: role.permissions || {
-         dashboard: false,
-    leads: false,
-    deals_all: false,
-    deals_pipeline: false,
-    invoices: false,
-    proposal: false,
-    activities: false,
-    activities_calendar: false,
-    activities_list: false,
-    users_roles: false,
-    admin_access: false,
+          dashboard: false,
+          leads: false,
+          deals_all: false,
+          deals_pipeline: false,
+          invoices: false,
+          proposal: false,
+          users_roles: false,
+          email_chat: false,
+          whatsapp_chat: false,
+          reports: false,
         }
       });
     }
@@ -340,37 +96,37 @@ const API_URL = import.meta.env.VITE_API_URL;
 
   // Permission groups for better organization (same as CreateRoleModal)
   const permissionGroups = [
-  {
-    title: "Core Modules",
-    permissions: [
-      { key: "dashboard", label: "Dashboard", icon: Home },
-      { key: "leads", label: "Leads", icon: Users },
-      { key: "deals_all", label: "All Deals", icon: Tag },
-      { key: "deals_pipeline", label: "Pipeline View", icon: List },
-    ]
-  },
-  {
-    title: "Documents",
-    permissions: [
-      { key: "invoices", label: "Invoices", icon: FileText },
-      { key: "proposal", label: "Proposal", icon: Edit },
-    ]
-  },
-  {
-    title: "Activities",
-    permissions: [
-      { key: "activities_calendar", label: "Calendar View", icon: Calendar },
-      { key: "activities_list", label: "Activity List", icon: List },
-    ]
-  },
-  {
-    title: "Administration",
-    permissions: [
-      { key: "users_roles", label: "Users & Roles", icon: Shield },
-    ]
-  }
-];
-
+    {
+      title: "Core Modules",
+      permissions: [
+        { key: "dashboard", label: "Dashboard", icon: Home },
+        { key: "leads", label: "Leads", icon: Users },
+        { key: "deals_all", label: "Deals", icon: Tag },
+        // { key: "deals_pipeline", label: "Pipeline View", icon: List },
+        { key: "reports", label: "Reports", icon: BarChart },
+      ]
+    },
+    {
+      title: "Documents",
+      permissions: [
+        { key: "invoices", label: "Invoices", icon: FileText },
+        { key: "proposal", label: "Proposal", icon: Edit },
+      ]
+    },
+    {
+      title: "Communication",
+      permissions: [
+        { key: "email_chat", label: "Email & Chat", icon: MessageSquare },
+        { key: "whatsapp_chat", label: "WhatsApp Chat", icon: MessageCircle },
+      ]
+    },
+    {
+      title: "Administration",
+      permissions: [
+        { key: "users_roles", label: "Users & Roles", icon: Shield },
+      ]
+    }
+  ];
 
   return (
     <Dialog open={true} onOpenChange={onClose}>

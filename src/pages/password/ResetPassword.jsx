@@ -31,29 +31,45 @@ const ResetPassword = () => {
     setPasswordStrength(checkPasswordStrength(value));
   };
 
-  const handleReset = async (e) => {
-    e.preventDefault();
-    
-    // Validate passwords match
-    if (password !== confirmPassword) {
-      setMessage("Passwords do not match");
-      setIsError(true);
-      return;
-    }
-    
-    setIsLoading(true);
-    try {
-      const res = await axios.post(`${API_URL}/users/reset-password/${token}`, { password });
-      setMessage(res.data.message);
-      setIsError(false);
-      setTimeout(() => navigate("/login"), 2000);
-    } catch (error) {
-      setMessage(error.response?.data?.message || "Error resetting password. The link may have expired.");
-      setIsError(true);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+const handleReset = async (e) => {
+  e.preventDefault();
+
+  if (password !== confirmPassword) {
+    setMessage("Passwords do not match");
+    setIsError(true);
+    return;
+  }
+
+  setIsLoading(true);
+
+  try {
+
+    const res = await axios.post(
+      `${API_URL}/users/reset-password/${token}`,
+      { password }
+    );
+
+    setMessage("Password reset successful! Redirecting to login...");
+    setIsError(false);
+
+    // redirect after 2 seconds
+    setTimeout(() => {
+      navigate("/", { replace: true });
+    }, 2000);
+
+  } catch (error) {
+
+    setMessage(
+      error.response?.data?.message ||
+      "Error resetting password. The link may have expired."
+    );
+
+    setIsError(true);
+
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const getPasswordStrengthText = () => {
     const strengthText = ["Very Weak", "Weak", "Fair", "Strong", "Very Strong"];
@@ -184,6 +200,7 @@ const ResetPassword = () => {
               </button>
             </div>
             
+         {/* password */}
             {confirmPassword && password !== confirmPassword && (
               <p className="mt-1 text-xs text-red-500">Passwords do not match</p>
             )}

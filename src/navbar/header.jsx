@@ -6,7 +6,7 @@ import { disconnectSocket } from "../utils/socket";
 import { ShieldCheck, Maximize, Minimize } from "lucide-react";
 import PasswordUpdate from "../pages/password/PasswordUpdate";
 import { formatDistanceToNow } from "date-fns";
-import { FaWhatsapp } from "react-icons/fa"; // WhatsApp icon
+import { FaWhatsapp, FaUserCircle } from "react-icons/fa"; // Added FaUserCircle
 import axios from "axios";
 
 const Navbar = ({ toggleSidebar }) => {
@@ -23,84 +23,42 @@ const Navbar = ({ toggleSidebar }) => {
   const API_SI = import.meta.env.VITE_SI_URI;
   const API_URL = import.meta.env.VITE_API_URL;
 
-  // Sales team number (international format)
-  const salesTeamNumber = "919952885799"; // replace with your number
-  const whatsappLink = `https://wa.me/${salesTeamNumber}?text=Hello%20I%20am%20interested%20in%20your%20services`;
-
-  // Get profile image URL function
+  // Get profile image URL (returns null if no image)
   const getProfileImageUrl = (image) => {
-    if (!image) return "https://randomuser.me/api/portraits/men/32.jpg";
-
+    if (!image) return null;
     if (image.startsWith("http")) return image;
-
     const base = API_SI.replace(/\/$/, "");
-
     return `${base}/uploads/users/${image}`;
   };
 
   // Load user
-
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const token = localStorage.getItem("token");
-
         const res = await axios.get(`${API_URL}/users/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-
         setUser(res.data);
       } catch (err) {
         console.error("Failed to fetch user:", err);
       }
     };
-
     fetchUser();
   }, []);
 
-  // useEffect(() => {
-  //   const storedUser = JSON.parse(localStorage.getItem("user"));
-  //   if (storedUser) setUser(storedUser);
-
-  //   // Listen for profile update events
-  //   const handleProfileUpdate = () => {
-  //     const updatedUser = JSON.parse(localStorage.getItem("user"));
-  //     if (updatedUser) setUser(updatedUser);
-  //   };
-
-  //   // Add event listener
-  //   window.addEventListener("userProfileUpdated", handleProfileUpdate);
-
-  //   // Also listen for storage changes (in case other tabs update)
-  //   const handleStorageChange = (e) => {
-  //     if (e.key === "user") {
-  //       const updatedUser = JSON.parse(e.newValue);
-  //       if (updatedUser) setUser(updatedUser);
-  //     }
-  //   };
-
-  //   window.addEventListener("storage", handleStorageChange);
-
-  //   return () => {
-  //     window.removeEventListener("userProfileUpdated", handleProfileUpdate);
-  //     window.removeEventListener("storage", handleStorageChange);
-  //   };
-  // }, []);
-
   // Logout
-
   const handleLogout = async () => {
     const token = localStorage.getItem("token");
     try {
       await axios.post(
         `${API_URL}/users/logout`,
         {},
-        { headers: { Authorization: `Bearer ${token}` } },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
     } catch (err) {
       console.error("Logout error:", err);
     } finally {
-      // Clear localStorage and navigate regardless of API success
       localStorage.clear();
       navigate("/");
     }
@@ -167,17 +125,6 @@ const Navbar = ({ toggleSidebar }) => {
             )}
           </button>
 
-          {/* WhatsApp Button with Animation */}
-          {/* <a
-            href={whatsappLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="relative group flex items-center justify-center w-10 h-10 rounded-full bg-green-500 shadow-lg hover:shadow-xl transition-all transform hover:scale-110 motion-safe:animate-bounce cursor-pointer"
-          >
-            <FaWhatsapp size={28} className="text-white group-hover:text-green-50 transition-colors" />
-            <span className="absolute w-2 h-2 bg-green-300 rounded-full top-1 right-1 animate-ping"></span>
-          </a> */}
-
           {/* Notifications */}
           <div className="relative" ref={notificationRef}>
             <button
@@ -204,15 +151,18 @@ const Navbar = ({ toggleSidebar }) => {
                         className="flex items-start px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all cursor-pointer border-b border-gray-100 dark:border-gray-600 last:border-0"
                       >
                         <div className="flex-shrink-0">
-                          <img
-                            src={getProfileImageUrl(n.profileImage)}
-                            alt="avatar"
-                            className="w-10 h-10 rounded-full object-cover border border-gray-300 dark:border-gray-600"
-                            onError={(e) => {
-                              e.target.src =
-                                "https://randomuser.me/api/portraits/men/32.jpg";
-                            }}
-                          />
+                          {n.profileImage ? (
+                            <img
+                              src={getProfileImageUrl(n.profileImage)}
+                              alt="avatar"
+                              className="w-10 h-10 rounded-full object-cover border border-gray-300 dark:border-gray-600"
+                            />
+                          ) : (
+                            <FaUserCircle
+                              size={40}
+                              className="text-gray-400 dark:text-gray-500"
+                            />
+                          )}
                         </div>
                         <div className="ml-3 flex-1">
                           <p className="text-gray-700 dark:text-gray-200 text-sm font-medium">
@@ -256,15 +206,18 @@ const Navbar = ({ toggleSidebar }) => {
             >
               {/* User Avatar */}
               <div className="relative">
-                <img
-                  src={getProfileImageUrl(user?.profileImage)}
-                  alt="User Avatar"
-                  className="w-10 h-10 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600"
-                  onError={(e) => {
-                    e.target.src =
-                      "https://randomuser.me/api/portraits/men/32.jpg";
-                  }}
-                />
+                {user?.profileImage ? (
+                  <img
+                    src={getProfileImageUrl(user.profileImage)}
+                    alt="User Avatar"
+                    className="w-10 h-10 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600"
+                  />
+                ) : (
+                  <FaUserCircle
+                    size={40}
+                    className="text-gray-400 dark:text-gray-500 border-2 border-gray-300 dark:border-gray-600 rounded-full"
+                  />
+                )}
                 <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full animate-pulse"></span>
               </div>
 

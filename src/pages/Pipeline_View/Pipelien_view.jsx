@@ -12,8 +12,9 @@ import {
 } from "../../components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import { TourProvider, useTour } from "@reactour/tour";
-import { Eye } from "lucide-react"; 
+import { Eye } from "lucide-react"; // Make sure to install lucide-react
 
+// ----- Stages (match backend exactly) -----
 const STAGES = [
   {
     id: "Qualification",
@@ -30,7 +31,7 @@ const STAGES = [
     borderColor: "border-gray-300",
   },
   {
-    id: "Proposal",
+    id: "Proposal Sent",
     title: "Proposal Sent",
     color: "text-cyan-600",
     bgColor: "bg-gray-100",
@@ -52,10 +53,12 @@ const STAGES = [
   },
 ];
 
+// ----- Drag types -----
 const ItemTypes = {
   DEAL: "DEAL",
 };
 
+// Tour steps configuration
 const tourSteps = [
   {
     selector: ".search-input",
@@ -107,14 +110,15 @@ const tourSteps = [
 const formatCurrencyValue = (val) => {
   if (!val) return "-";
 
-
+  // Expected formats: "12545125 INR" or "12,545,125 INR"
   const match = val.match(/^([\d,]+)\s*([A-Z]+)$/i);
   if (!match) return val;
 
-  const number = match[1].replace(/,/g, "");
-  const currency = match[2].toUpperCase();
-  const formattedNumber = Number(number).toLocaleString("en-IN"); 
-  return `${formattedNumber}${currency}`; 
+  const number = match[1].replace(/,/g, ""); // Remove existing commas
+  const currency = match[2].toUpperCase(); // Ensure uppercase
+
+  const formattedNumber = Number(number).toLocaleString("en-IN"); // Indian format
+  return `${formattedNumber}${currency}`; // no space
 };
 
 function formatDate(dateString) {
@@ -658,7 +662,7 @@ function DealCard({
         return "bg-blue-100 text-blue-800";
       case "Negotiation":
         return "bg-amber-100 text-amber-800";
-      case "Proposal":
+      case "Proposal Sent":
         return "bg-cyan-100 text-cyan-800";
       case "Closed Won":
         return "bg-emerald-100 text-emerald-800";
@@ -809,9 +813,9 @@ function DealCard({
                   {deal.value ? (
                     <>
                       {(() => {
-                        const formatted = formatCurrencyValue(deal.value);
+                        const formatted = formatCurrencyValue(deal.value); // e.g., "25,45,125INR"
 
-                       
+                        // Split number and currency for styling
                         const match = formatted.match(/^([\d,]+)([A-Z]+)$/);
                         if (!match) return formatted;
 
@@ -836,7 +840,7 @@ function DealCard({
         </div>
       </div>
 
-
+      {/* Tags */}
       {deal.tags?.length ? (
         <div className="flex flex-wrap gap-1">
           {deal.tags.map((t, i) => (
@@ -850,7 +854,7 @@ function DealCard({
         </div>
       ) : null}
 
-  
+      {/* Stage Indicator with badge design */}
       <div className="flex justify-between items-center text-xs mt-1">
         <span className="text-gray-500">Stage:</span>
         <span
@@ -863,7 +867,7 @@ function DealCard({
   );
 }
 
-
+// ----- DndProvider wrapper -----
 function SalesPipelineBoard() {
   return (
     <DndProvider backend={HTML5Backend}>
@@ -872,7 +876,7 @@ function SalesPipelineBoard() {
   );
 }
 
-
+// Export with TourProvider wrapper
 export default function SalesPipelineBoardWithTour() {
   return (
     <TourProvider
@@ -901,4 +905,4 @@ export default function SalesPipelineBoardWithTour() {
       <SalesPipelineBoard />
     </TourProvider>
   );
-}
+}//original

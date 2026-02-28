@@ -1,3 +1,7 @@
+
+
+
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
@@ -34,7 +38,7 @@ export default function CreateLeads() {
   const [userRole, setUserRole] = useState("");
   const [userId, setUserId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState({}); // For specific error messages
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const [formData, setFormData] = useState({
     leadName: "",
@@ -71,6 +75,31 @@ export default function CreateLeads() {
     }
   }, []);
 
+  // ✅ Fetch sales users if current user is Admin (for assignTo dropdown)
+  useEffect(() => {
+    const fetchSalesUsers = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const userData = localStorage.getItem("user");
+        const user = userData ? JSON.parse(userData) : null;
+
+        if (user && user.role?.name === "Admin") {
+          const response = await axios.get(`${API_URL}/users/sales`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          const salesData =
+            response.data.salesUsers || response.data.users || response.data;
+          setSalesUsers(Array.isArray(salesData) ? salesData : []);
+        }
+      } catch (error) {
+        console.error("Error fetching sales users:", error);
+      }
+    };
+
+    fetchSalesUsers();
+  }, [API_URL]); // runs once on mount, or when API_URL changes
+
   // ✅ Fetch lead if editing
   useEffect(() => {
     if (leadId) {
@@ -82,7 +111,7 @@ export default function CreateLeads() {
             `${API_URL}/leads/getLead/${leadId}`,
             {
               headers: { Authorization: `Bearer ${token}` },
-            },
+            }
           );
 
           const leadData = response.data;
@@ -117,31 +146,6 @@ export default function CreateLeads() {
     }
   }, [leadId, API_URL]);
 
-  // ✅ Fetch sales users ONLY for Admin (edit mode needs assignTo dropdown)
-  useEffect(() => {
-    const fetchSalesUsers = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const userData = localStorage.getItem("user");
-        const user = userData ? JSON.parse(userData) : null;
-
-        if (user && user.role?.name === "Admin") {
-          const response = await axios.get(`${API_URL}/users/sales`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-
-          const salesData =
-            response.data.salesUsers || response.data.users || response.data;
-          setSalesUsers(Array.isArray(salesData) ? salesData : []);
-        }
-      } catch (error) {
-        console.error("Error fetching sales users:", error);
-      }
-    };
-
-    if (leadId) fetchSalesUsers(); // only edit needs it
-  }, [API_URL, leadId]);
-
   const getSalesUsersOptions = () => {
     return salesUsers.map((u) => ({
       label: `${u.firstName} ${u.lastName}`,
@@ -153,15 +157,12 @@ export default function CreateLeads() {
   const validateEmailDomain = (email) => {
     if (!email) return false;
 
-    // Basic email format check
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) return false;
 
-    // Check if domain has valid structure
     const domain = email.split("@")[1];
     if (!domain) return false;
 
-    // Domain should have at least one dot and valid characters
     const domainRegex =
       /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?\.[a-zA-Z]{2,}$/;
     return domainRegex.test(domain);
@@ -173,10 +174,9 @@ export default function CreateLeads() {
 
     const digits = String(phone).replace(/\D/g, "");
 
-    // Accept all valid Indian formats
-    if (digits.length === 10 && /^[6-9]\d{9}$/.test(digits)) return true; // 9876543210
-    if (digits.length === 11 && digits.startsWith("0")) return true; // 09876543210
-    if (digits.length === 12 && digits.startsWith("91")) return true; // 919876543210
+    if (digits.length === 10 && /^[6-9]\d{9}$/.test(digits)) return true;
+    if (digits.length === 11 && digits.startsWith("0")) return true;
+    if (digits.length === 12 && digits.startsWith("91")) return true;
 
     return false;
   };
@@ -204,7 +204,6 @@ export default function CreateLeads() {
     const { name, value } = e.target;
     setFormData((p) => ({ ...p, [name]: value }));
 
-    // Clear errors when user starts typing
     if (errors[name]) {
       setErrors((p) => ({ ...p, [name]: false }));
     }
@@ -244,7 +243,6 @@ export default function CreateLeads() {
   };
 
   const processFiles = (files) => {
-    // Check total files count
     const totalFiles =
       formData.attachments.length + files.length + existingAttachments.length;
     if (totalFiles > 5) {
@@ -252,7 +250,6 @@ export default function CreateLeads() {
       return;
     }
 
-    // Check file sizes
     const oversizedFiles = files.filter((file) => file.size > 20 * 1024 * 1024);
     if (oversizedFiles.length > 0) {
       toast.error("Some files exceed the 20MB size limit");
@@ -282,7 +279,6 @@ export default function CreateLeads() {
     const newErrors = {};
     const newFieldErrors = {};
 
-    // Required fields
     if (!formData.leadName.trim()) {
       newErrors.leadName = true;
       newFieldErrors.leadName = "Lead name is required";
@@ -319,10 +315,8 @@ export default function CreateLeads() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Clear previous API errors
     setFieldErrors({});
 
-    // Validate form
     if (!validateForm()) {
       toast.error("Please fix the errors in the form");
       return;
@@ -335,17 +329,10 @@ export default function CreateLeads() {
       const dataToSend = new FormData();
 
       for (let key in formData) {
-        // ✅ CREATE MODE: do not send Lead Management fields (backend auto sets)
-        if (
-          !leadId &&
-          (key === "status" || key === "assignTo" || key === "followUpDate")
-        ) {
-          continue;
-        }
-
+        // ✅ Send all fields for both create and edit (no skipping)
         if (key === "attachments") {
           formData.attachments.forEach((file) =>
-            dataToSend.append("attachments", file),
+            dataToSend.append("attachments", file)
           );
         } else {
           dataToSend.append(key, formData[key]);
@@ -354,7 +341,7 @@ export default function CreateLeads() {
 
       dataToSend.append(
         "existingAttachments",
-        JSON.stringify(existingAttachments),
+        JSON.stringify(existingAttachments)
       );
 
       const config = {
@@ -363,9 +350,8 @@ export default function CreateLeads() {
           Authorization: `Bearer ${token}`,
         },
         onUploadProgress: (progressEvent) => {
-          // Optional: Show upload progress
           const progress = Math.round(
-            (progressEvent.loaded * 100) / progressEvent.total,
+            (progressEvent.loaded * 100) / progressEvent.total
           );
           console.log(`Upload progress: ${progress}%`);
         },
@@ -375,7 +361,7 @@ export default function CreateLeads() {
         await axios.put(
           `${API_URL}/leads/updateLead/${leadId}`,
           dataToSend,
-          config,
+          config
         );
         toast.success("Lead updated successfully");
       } else {
@@ -387,11 +373,9 @@ export default function CreateLeads() {
     } catch (err) {
       console.error("Error submitting form:", err);
 
-      // Handle specific error messages from backend
       if (err.response?.data?.message) {
         const errorMsg = err.response.data.message.toLowerCase();
 
-        // Handle duplicate entries
         if (errorMsg.includes("email") && errorMsg.includes("already")) {
           setFieldErrors({
             email: "This email is already associated with another lead",
@@ -415,7 +399,6 @@ export default function CreateLeads() {
         ) {
           toast.error("File size exceeds the 20MB limit");
         } else if (err.response.data.errors) {
-          // Handle validation errors from backend
           const backendErrors = err.response.data.errors;
           const newFieldErrors = {};
           Object.keys(backendErrors).forEach((key) => {
@@ -428,7 +411,7 @@ export default function CreateLeads() {
         } else {
           toast.error(
             err.response.data.message ||
-              (leadId ? "Failed to update lead" : "Failed to create lead"),
+              (leadId ? "Failed to update lead" : "Failed to create lead")
           );
         }
       } else if (err.message?.includes("Network Error")) {
@@ -443,7 +426,7 @@ export default function CreateLeads() {
 
   const handleBackClick = () => navigate(-1);
 
-  // ✅ Show Lead Management ONLY on edit mode
+  // ✅ Field groups - Lead Management now always visible
   const fieldGroups = [
     {
       title: "Basic Information",
@@ -511,38 +494,32 @@ export default function CreateLeads() {
         },
       ],
     },
-
-    ...(leadId
-      ? [
-          {
-            title: "Lead Management",
-            color: "text-yellow-600",
-            fields: [
-              {
-                name: "status",
-                label: "Status",
-                icon: <UserCheck size={16} />,
-                type: "select",
-                options: ["Hot", "Warm", "Cold", "Junk"],
-              },
-              {
-                name: "assignTo",
-                label: "Assign To",
-                icon: <User size={16} />,
-                type: "select",
-                options: getSalesUsersOptions(),
-              },
-              {
-                name: "followUpDate",
-                label: "Follow-up Date",
-                icon: <Calendar size={16} />,
-                type: "date",
-              },
-            ],
-          },
-        ]
-      : []),
-
+    {
+      title: "Lead Management",
+      color: "text-yellow-600",
+      fields: [
+        {
+          name: "status",
+          label: "Status",
+          icon: <UserCheck size={16} />,
+          type: "select",
+          options: ["Hot", "Warm", "Cold", "Junk"],
+        },
+        {
+          name: "assignTo",
+          label: "Assign To",
+          icon: <User size={16} />,
+          type: "select",
+          options: getSalesUsersOptions(),
+        },
+        {
+          name: "followUpDate",
+          label: "Follow-up Date",
+          icon: <Calendar size={16} />,
+          type: "date",
+        },
+      ],
+    },
     {
       title: "Additional Information",
       color: "text-purple-600",
@@ -683,7 +660,7 @@ export default function CreateLeads() {
                                 <option key={opt.value} value={opt.value}>
                                   {opt.label}
                                 </option>
-                              ),
+                              )
                             )}
                           </select>
                           {fieldErrors[field.name] && (
@@ -736,7 +713,7 @@ export default function CreateLeads() {
               </div>
             ))}
 
-            {/* Attachments Section with Header */}
+            {/* Attachments Section */}
             <div className="space-y-6 p-6 border border-gray-200 rounded-xl shadow-sm">
               <h2 className="text-lg font-semibold border-b pb-2 text-indigo-600 flex items-center gap-2">
                 <Upload size={20} /> Attachments

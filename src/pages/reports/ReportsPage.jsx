@@ -1,16 +1,15 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { FaUserAlt, FaDownload, FaChartLine, FaUsers, FaCheckCircle, FaClock } from "react-icons/fa";
+import { FaUserAlt, FaDownload, FaChartLine, FaUsers, FaCheckCircle } from "react-icons/fa";
 import {
-  FiCalendar,
   FiChevronDown,
   FiChevronUp,
-  FiActivity,
   FiSearch,
   FiTrendingUp,
   FiTrendingDown
 } from "react-icons/fi";
 import * as XLSX from "xlsx";
+import { useNavigate } from "react-router-dom";
 
 const ReportsPage = () => {
   const [reports, setReports] = useState([]);
@@ -18,96 +17,149 @@ const ReportsPage = () => {
   const [selectedDate, setSelectedDate] = useState("");
   const [expandedUsers, setExpandedUsers] = useState(new Set());
   const [searchTerm, setSearchTerm] = useState("");
+  const [error, setError] = useState(null);
+  const [fetchErrors, setFetchErrors] = useState([]);
 
+  const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem("token");
 
   useEffect(() => {
+    if (!token) {
+      navigate("/login");
+      return;
+    }
     fetchReports();
   }, [selectedDate]);
+
+  // ==================== HELPER: FORMAT DURATION ====================
+  const formatDuration = (seconds) => {
+    if (!seconds || seconds <= 0) return "0 sec";
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    const parts = [];
+    if (hrs > 0) parts.push(`${hrs} hr`);
+    if (mins > 0) parts.push(`${mins} min`);
+    if (secs > 0 || parts.length === 0) parts.push(`${secs} sec`); // always show seconds if nothing else
+    return parts.join(' ');
+  };
 
   const fetchReports = async () => {
     try {
       setLoading(true);
+      setError(null);
+      setFetchErrors([]);
+
       const { data: salesUsers } = await axios.get(`${API_URL}/users/sales`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const reportPromises = salesUsers.users.map(async (user) => {
-        const { data } = await axios.get(`${API_URL}/sales/performance`, {
-          headers: { Authorization: `Bearer ${token}` },
-          params: {
-            userId: user._id,
-            startDate: selectedDate || undefined,
-            endDate: selectedDate || undefined,
-          },
-        });
+      const users = salesUsers.users || [];
+      if (users.length === 0) {
+        setReports([]);
+        setLoading(false);
+        return;
+      }
 
-        const totalHours = data.loginHistory.reduce((acc, log) => {
-          if (log.login && log.logout) {
-            return (
-              acc +
-              (new Date(log.logout) - new Date(log.login)) / 1000 / 60 / 60
+      const results = await Promise.allSettled(
+        users.map(async (user) => {
+          try {
+            const { data } = await axios.get(`${API_URL}/sales/performance`, {
+              headers: { Authorization: `Bearer ${token}` },
+              params: {
+                userId: user._id,
+                startDate: selectedDate || undefined,
+                endDate: selectedDate || undefined,
+              },
+            });
+
+            const loginHistory = data.loginHistory || [];
+            const activities = data.activities || [];
+            const leads = data.leads || [];
+
+            // Calculate total seconds from loginHistory
+            let totalSeconds = 0;
+            loginHistory.forEach((log) => {
+              if (log.login && log.logout) {
+                totalSeconds += (new Date(log.logout) - new Date(log.login)) / 1000;
+              }
+            });
+            const totalHours = totalSeconds / 3600; // keep for productivity calculation
+
+            const totalActivities = activities.length;
+            const completedActivities = activities.filter(
+              (a) => a.status === "Completed"
+            ).length;
+
+            const totalFollowUps = leads.filter(
+              (lead) => lead.followUpDate && new Date(lead.followUpDate) >= new Date()
+            ).length;
+
+            const productivityScore = calculateProductivityScore(
+              totalHours,
+              completedActivities,
+              totalFollowUps,
+              totalActivities
             );
+
+            return {
+              userId: user._id,
+              name: `${user.firstName} ${user.lastName}`,
+              email: user.email,
+              totalLogins: loginHistory.length,
+              totalLeads: data.metrics?.totalLeadsAssigned || 0,
+              totalActivities,
+              completedActivities,
+              totalFollowUps,
+              totalSeconds,           // store seconds for formatting
+              totalDuration: formatDuration(totalSeconds), // human‑readable total
+              loginHistory,
+              activityCompletionRate:
+                totalActivities > 0 ? (completedActivities / totalActivities) * 100 : 0,
+              productivityScore,
+            };
+          } catch (err) {
+            const errorDetail = {
+              userId: user._id,
+              name: `${user.firstName} ${user.lastName}`,
+              status: err.response?.status,
+              message: err.response?.data?.message || err.message,
+            };
+            console.error("Failed to fetch performance for", user.email, errorDetail);
+            throw errorDetail;
           }
-          return acc;
-        }, 0);
+        })
+      );
 
-        const totalActivities = data.activities.length;
-        const completedActivities = data.activities.filter(
-          (a) => a.status === "Completed"
-        ).length;
-
-        const totalFollowUps = data.leads.filter(
-          (lead) =>
-            lead.followUpDate && new Date(lead.followUpDate) >= new Date()
-        ).length;
-
-        const productivityScore = calculateProductivityScore(
-          totalHours,
-          completedActivities,
-          totalFollowUps,
-          totalActivities
-        );
-
-        return {
-          userId: user._id,
-          name: `${user.firstName} ${user.lastName}`,
-          email: user.email,
-          totalLogins: data.loginHistory.length,
-          totalLeads: data.metrics.totalLeadsAssigned,
-          totalActivities,
-          completedActivities,
-          totalFollowUps,
-          totalHours,
-          loginHistory: data.loginHistory,
-          activityCompletionRate:
-            totalActivities > 0
-              ? (completedActivities / totalActivities) * 100
-              : 0,
-          productivityScore,
-        };
+      const successful = [];
+      const failed = [];
+      results.forEach((result) => {
+        if (result.status === "fulfilled") {
+          successful.push(result.value);
+        } else {
+          failed.push(result.reason);
+        }
       });
 
-      const reportsData = await Promise.all(reportPromises);
-      setReports(reportsData);
-      setLoading(false);
+      setReports(successful);
+      setFetchErrors(failed);
+
+      if (failed.length > 0) {
+        setError(`Could not load data for ${failed.length} team member(s). Check console for details.`);
+      }
     } catch (err) {
-      console.error("Error fetching reports:", err);
+      console.error("Error fetching sales users:", err);
+      setError("Failed to load team members. Please try again.");
+    } finally {
       setLoading(false);
     }
   };
 
-  const calculateProductivityScore = (
-    hours,
-    completed,
-    followUps,
-    totalActivities
-  ) => {
-    const activityScore =
-      totalActivities > 0 ? (completed / totalActivities) * 40 : 0;
-    const timeScore = Math.min(hours * 2, 30); // Max 30 points for time
-    const followUpScore = Math.min(followUps * 2, 30); // Max 30 points for follow-ups
+  const calculateProductivityScore = (hours, completed, followUps, totalActivities) => {
+    const activityScore = totalActivities > 0 ? (completed / totalActivities) * 40 : 0;
+    const timeScore = Math.min(hours * 2, 30);
+    const followUpScore = Math.min(followUps * 2, 30);
     return Math.min(activityScore + timeScore + followUpScore, 100);
   };
 
@@ -125,12 +177,8 @@ const ReportsPage = () => {
     return "Needs Improvement";
   };
 
-  // Get today's date in YYYY-MM-DD format
-  const getTodayDate = () => {
-    return new Date().toISOString().split("T")[0];
-  };
+  const getTodayDate = () => new Date().toISOString().split("T")[0];
 
-  // Filter login history to show only today's sessions
   const getTodaysLoginHistory = (loginHistory) => {
     const today = getTodayDate();
     return loginHistory.filter((log) => {
@@ -140,7 +188,7 @@ const ReportsPage = () => {
     });
   };
 
-  // Download Excel for all salesmen
+  // ==================== DOWNLOAD FUNCTIONS ====================
   const downloadAllReports = () => {
     const worksheetData = [];
 
@@ -151,8 +199,7 @@ const ReportsPage = () => {
           const logoutTime = log.logout ? new Date(log.logout) : null;
           const duration =
             loginTime && logoutTime
-              ? ((logoutTime - loginTime) / 1000 / 60 / 60).toFixed(2) +
-                " hours"
+              ? ((logoutTime - loginTime) / 1000 / 60 / 60).toFixed(2) + " hours"
               : "N/A";
 
           worksheetData.push({
@@ -166,9 +213,7 @@ const ReportsPage = () => {
             "Total Leads": rep.totalLeads,
             "Total Activities": rep.totalActivities,
             "Completed Activities": rep.completedActivities,
-            "Activity Completion Rate": `${rep.activityCompletionRate.toFixed(
-              2
-            )}%`,
+            "Activity Completion Rate": `${rep.activityCompletionRate.toFixed(2)}%`,
             "Productivity Score": `${rep.productivityScore.toFixed(0)}%`,
           });
         });
@@ -184,9 +229,7 @@ const ReportsPage = () => {
           "Total Leads": rep.totalLeads,
           "Total Activities": rep.totalActivities,
           "Completed Activities": rep.completedActivities,
-          "Activity Completion Rate": `${rep.activityCompletionRate.toFixed(
-            2
-          )}%`,
+          "Activity Completion Rate": `${rep.activityCompletionRate.toFixed(2)}%`,
           "Productivity Score": `${rep.productivityScore.toFixed(0)}%`,
         });
       }
@@ -196,18 +239,9 @@ const ReportsPage = () => {
     const ws = XLSX.utils.json_to_sheet(worksheetData);
 
     const colWidths = [
-      { wch: 20 },
-      { wch: 25 },
-      { wch: 15 },
-      { wch: 15 },
-      { wch: 15 },
-      { wch: 15 },
-      { wch: 12 },
-      { wch: 12 },
-      { wch: 15 },
-      { wch: 20 },
-      { wch: 22 },
-      { wch: 18 },
+      { wch: 20 }, { wch: 25 }, { wch: 15 }, { wch: 15 },
+      { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 12 },
+      { wch: 15 }, { wch: 20 }, { wch: 22 }, { wch: 18 },
     ];
     ws["!cols"] = colWidths;
 
@@ -217,7 +251,6 @@ const ReportsPage = () => {
     XLSX.writeFile(wb, filename);
   };
 
-  // Download individual salesman report with ALL login history
   const downloadSalesmanReport = (rep) => {
     const worksheetData = [];
 
@@ -242,7 +275,7 @@ const ReportsPage = () => {
           "Total Activities": rep.totalActivities,
           "Completed Activities": rep.completedActivities,
           "Pending Follow-ups": rep.totalFollowUps,
-          "Total Working Hours": `${rep.totalHours.toFixed(2)} hours`,
+          "Total Working Hours": rep.totalDuration, // human‑readable
           "Activity Completion Rate": `${rep.activityCompletionRate.toFixed(2)}%`,
           "Productivity Score": `${rep.productivityScore.toFixed(0)}%`,
           "Performance Level": getPerformanceLevel(rep.productivityScore),
@@ -261,7 +294,7 @@ const ReportsPage = () => {
         "Total Activities": rep.totalActivities,
         "Completed Activities": rep.completedActivities,
         "Pending Follow-ups": rep.totalFollowUps,
-        "Total Working Hours": `${rep.totalHours.toFixed(2)} hours`,
+        "Total Working Hours": rep.totalDuration,
         "Activity Completion Rate": `${rep.activityCompletionRate.toFixed(2)}%`,
         "Productivity Score": `${rep.productivityScore.toFixed(0)}%`,
         "Performance Level": getPerformanceLevel(rep.productivityScore),
@@ -270,50 +303,39 @@ const ReportsPage = () => {
 
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(worksheetData);
-    
-    // Set column widths for better Excel formatting
     const colWidths = [
-      { wch: 20 }, { wch: 25 }, { wch: 15 }, { wch: 15 }, 
+      { wch: 20 }, { wch: 25 }, { wch: 15 }, { wch: 15 },
       { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 18 },
       { wch: 15 }, { wch: 15 }, { wch: 18 }, { wch: 22 },
       { wch: 18 }, { wch: 18 }
     ];
     ws["!cols"] = colWidths;
-
     XLSX.utils.book_append_sheet(wb, ws, `${rep.name} Report`);
     const dateStr = selectedDate ? selectedDate.replace(/-/g, "") : "all";
     const filename = `${rep.name.replace(/\s+/g, "_")}_complete_report_${dateStr}.xlsx`;
     XLSX.writeFile(wb, filename);
   };
+  // ==================== END DOWNLOAD FUNCTIONS ====================
 
   const toggleUserExpansion = (userId) => {
     const newExpanded = new Set(expandedUsers);
-    newExpanded.has(userId)
-      ? newExpanded.delete(userId)
-      : newExpanded.add(userId);
+    newExpanded.has(userId) ? newExpanded.delete(userId) : newExpanded.add(userId);
     setExpandedUsers(newExpanded);
   };
 
   const formatTime = (dateString) =>
     dateString
-      ? new Date(dateString).toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true
-        })
+      ? new Date(dateString).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true })
       : "-";
 
   const formatDate = (dateString) =>
-    dateString ? new Date(dateString).toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric' 
-    }) : "-";
+    dateString ? new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "-";
 
-  const calculateSessionHours = (login, logout) => {
+  // Format duration for a single session (login/logout)
+  const formatSessionDuration = (login, logout) => {
     if (!login || !logout) return "-";
-    const hours = (new Date(logout) - new Date(login)) / 1000 / 60 / 60;
-    return `${hours.toFixed(1)}h`;
+    const seconds = (new Date(logout) - new Date(login)) / 1000;
+    return formatDuration(seconds);
   };
 
   const filteredReports = reports.filter((rep) =>
@@ -338,17 +360,11 @@ const ReportsPage = () => {
         <div className="mb-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-                Team Analytics
-              </h1>
-             
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Team Analytics</h1>
             </div>
-
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FiSearch className="text-gray-400" />
-                </div>
+                <FiSearch className="absolute left-3 top-3 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Search team members..."
@@ -357,9 +373,6 @@ const ReportsPage = () => {
                   className="pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white w-full sm:w-64"
                 />
               </div>
-
-         
-
               <button
                 onClick={downloadAllReports}
                 className="flex items-center justify-center gap-2 bg-blue-600 text-white font-medium px-4 py-2.5 rounded-lg hover:bg-blue-700 transition-colors"
@@ -369,6 +382,12 @@ const ReportsPage = () => {
               </button>
             </div>
           </div>
+
+          {error && (
+            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 text-sm">
+              ⚠️ {error}
+            </div>
+          )}
         </div>
 
         {/* Summary Stats */}
@@ -391,7 +410,6 @@ const ReportsPage = () => {
             icon={<FaCheckCircle className="w-5 h-5" />}
             color="purple"
           />
-        
         </div>
 
         {/* Reports Table */}
@@ -400,27 +418,13 @@ const ReportsPage = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Team Member
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Performance
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Leads
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Activities
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Hours
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Completion
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Team Member</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Performance</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Leads</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Activities</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time Logged</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completion</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -433,38 +437,26 @@ const ReportsPage = () => {
                             {rep.name.split(' ').map(n => n[0]).join('')}
                           </div>
                           <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">
-                              {rep.name}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {rep.email}
-                            </div>
+                            <div className="text-sm font-medium text-gray-900">{rep.name}</div>
+                            <div className="text-xs text-gray-500">{rep.email}</div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex flex-col gap-1">
-                          <div className="text-sm font-semibold text-gray-900">
-                            {rep.productivityScore.toFixed(0)}%
-                          </div>
+                          <div className="text-sm font-semibold text-gray-900">{rep.productivityScore.toFixed(0)}%</div>
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getProductivityColor(rep.productivityScore)}`}>
                             {getPerformanceLevel(rep.productivityScore)}
                           </span>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 font-medium">
-                          {rep.totalLeads}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          Assigned
-                        </div>
+                        <div className="text-sm text-gray-900 font-medium">{rep.totalLeads}</div>
+                        <div className="text-xs text-gray-500">Assigned</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          <div className="text-sm text-gray-900 font-medium">
-                            {rep.completedActivities}/{rep.totalActivities}
-                          </div>
+                          <div className="text-sm text-gray-900 font-medium">{rep.completedActivities}/{rep.totalActivities}</div>
                           {rep.completedActivities > 0 && rep.totalActivities > 0 && (
                             <span className={`text-xs ${rep.completedActivities/rep.totalActivities >= 0.8 ? 'text-green-600' : 'text-yellow-600'}`}>
                               {rep.completedActivities/rep.totalActivities >= 0.8 ? <FiTrendingUp /> : <FiTrendingDown />}
@@ -473,17 +465,13 @@ const ReportsPage = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 font-medium">
-                          {rep.totalHours.toFixed(1)}h
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          Total logged
-                        </div>
+                        <div className="text-sm text-gray-900 font-medium">{rep.totalDuration}</div>
+                        <div className="text-xs text-gray-500">Total logged</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="w-24 bg-gray-200 rounded-full h-2 mr-3">
-                            <div 
+                            <div
                               className={`h-2 rounded-full ${
                                 rep.activityCompletionRate >= 80 ? 'bg-green-500' :
                                 rep.activityCompletionRate >= 60 ? 'bg-blue-500' :
@@ -492,9 +480,7 @@ const ReportsPage = () => {
                               style={{ width: `${Math.min(rep.activityCompletionRate, 100)}%` }}
                             />
                           </div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {rep.activityCompletionRate.toFixed(0)}%
-                          </div>
+                          <div className="text-sm font-medium text-gray-900">{rep.activityCompletionRate.toFixed(0)}%</div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -511,15 +497,12 @@ const ReportsPage = () => {
                             className="text-gray-600 hover:text-gray-900 p-2 hover:bg-gray-100 rounded-lg transition-colors"
                             title="View Details"
                           >
-                            {expandedUsers.has(rep.userId) ? 
-                              <FiChevronUp className="w-4 h-4" /> : 
-                              <FiChevronDown className="w-4 h-4" />
-                            }
+                            {expandedUsers.has(rep.userId) ? <FiChevronUp className="w-4 h-4" /> : <FiChevronDown className="w-4 h-4" />}
                           </button>
                         </div>
                       </td>
                     </tr>
-                    
+
                     {/* Expanded Row - Today's Sessions */}
                     {expandedUsers.has(rep.userId) && (
                       <tr className="bg-gray-50">
@@ -527,51 +510,31 @@ const ReportsPage = () => {
                           <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
                             <div className="px-6 py-4 border-b border-gray-200">
                               <div className="flex justify-between items-center">
-                                <h4 className="text-sm font-semibold text-gray-900">
-                                  Today's Login Sessions - {rep.name}
-                                </h4>
-                                <span className="text-xs text-gray-500">
-                                  {getTodaysLoginHistory(rep.loginHistory).length} sessions
-                                </span>
+                                <h4 className="text-sm font-semibold text-gray-900">Today's Login Sessions - {rep.name}</h4>
+                                <span className="text-xs text-gray-500">{getTodaysLoginHistory(rep.loginHistory).length} sessions</span>
                               </div>
                             </div>
                             <div className="overflow-x-auto">
                               <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
                                   <tr>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                      Date
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                      Login Time
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                      Logout Time
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                      Duration
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                      Status
-                                    </th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Login Time</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Logout Time</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                   </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200">
                                   {getTodaysLoginHistory(rep.loginHistory).length > 0 ? (
                                     getTodaysLoginHistory(rep.loginHistory).map((log, idx) => (
                                       <tr key={idx} className="hover:bg-gray-50">
-                                        <td className="px-4 py-3 text-sm text-gray-900">
-                                          {formatDate(log.login)}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm text-gray-600">
-                                          {formatTime(log.login)}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm text-gray-600">
-                                          {formatTime(log.logout)}
-                                        </td>
+                                        <td className="px-4 py-3 text-sm text-gray-900">{formatDate(log.login)}</td>
+                                        <td className="px-4 py-3 text-sm text-gray-600">{formatTime(log.login)}</td>
+                                        <td className="px-4 py-3 text-sm text-gray-600">{formatTime(log.logout)}</td>
                                         <td className="px-4 py-3">
                                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                            {calculateSessionHours(log.login, log.logout)}
+                                            {formatSessionDuration(log.login, log.logout)}
                                           </span>
                                         </td>
                                         <td className="px-4 py-3">
@@ -610,13 +573,11 @@ const ReportsPage = () => {
               <div className="w-24 h-24 mx-auto mb-4 text-gray-300">
                 <FaUsers className="w-full h-full" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                No team members found
-              </h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No team members found</h3>
               <p className="text-gray-600 text-sm max-w-md mx-auto">
                 {searchTerm
                   ? "No team members match your search criteria. Try adjusting your search terms."
-                  : "No performance data available for the selected date range."}
+                  : error || "No performance data available for the selected date range."}
               </p>
             </div>
           )}
@@ -626,7 +587,6 @@ const ReportsPage = () => {
   );
 };
 
-// Summary Card Component
 const SummaryCard = ({ title, value, icon, color }) => {
   const colorClasses = {
     blue: "bg-blue-50 text-blue-700",

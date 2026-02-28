@@ -1,4 +1,5 @@
 
+
 import { useState } from "react";
 import axios from "axios";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../../components/ui/dialog";
@@ -23,7 +24,9 @@ import {
   Check,
   X,
   UserPlus,
-  MessageSquare
+  MessageSquare,
+  MessageCircle,
+  BarChart
 } from "react-feather";
 
 export default function CreateRoleModal({ onRoleCreated }) {
@@ -38,14 +41,15 @@ export default function CreateRoleModal({ onRoleCreated }) {
       deals_pipeline: false,
       invoices: false,
       proposal: false,
-      activities: false,
-      activities_calendar: false,
-      activities_list: false,
       users_roles: false,
-      admin_access: false,
       email_chat: false,
+      whatsapp_chat: false,
+      reports: false,
     }
   });
+
+  // Check if all permissions are true
+  const allPermissionsSelected = Object.values(roleData.permissions).every(Boolean);
 
   const handlePermissionChange = (permission) => {
     setRoleData(prev => ({
@@ -54,6 +58,18 @@ export default function CreateRoleModal({ onRoleCreated }) {
         ...prev.permissions,
         [permission]: !prev.permissions[permission]
       }
+    }));
+  };
+
+  const handleSelectAll = () => {
+    const newValue = !allPermissionsSelected;
+    const updatedPermissions = {};
+    Object.keys(roleData.permissions).forEach(key => {
+      updatedPermissions[key] = newValue;
+    });
+    setRoleData(prev => ({
+      ...prev,
+      permissions: updatedPermissions
     }));
   };
 
@@ -67,12 +83,10 @@ export default function CreateRoleModal({ onRoleCreated }) {
         deals_pipeline: false,
         invoices: false,
         proposal: false,
-        activities: false,
-        activities_calendar: false,
-        activities_list: false,
         users_roles: false,
-        admin_access: false,
         email_chat: false,
+        whatsapp_chat: false,
+        reports: false,
       }
     });
     setIsDialogOpen(false);
@@ -104,8 +118,9 @@ export default function CreateRoleModal({ onRoleCreated }) {
       permissions: [
         { key: "dashboard", label: "Dashboard", icon: Home },
         { key: "leads", label: "Leads", icon: Users },
-        { key: "deals_all", label: "All Deals", icon: Tag },
-        { key: "deals_pipeline", label: "Pipeline View", icon: List },
+        { key: "deals_all", label: "Deals", icon: Tag },
+        // { key: "deals_pipeline", label: "Pipeline View", icon: List },
+        { key: "reports", label: "Reports", icon: BarChart },
       ]
     },
     {
@@ -116,24 +131,16 @@ export default function CreateRoleModal({ onRoleCreated }) {
       ]
     },
     {
-      title: "Activities",
-      permissions: [
-        { key: "activities", label: "Activities", icon: Briefcase },
-        { key: "activities_calendar", label: "Calendar View", icon: Calendar },
-        { key: "activities_list", label: "Activity List", icon: List },
-      ]
-    },
-    {
       title: "Communication",
       permissions: [
         { key: "email_chat", label: "Email & Chat", icon: MessageSquare },
+        { key: "whatsapp_chat", label: "WhatsApp Chat", icon: MessageCircle },
       ]
     },
     {
       title: "Administration",
       permissions: [
         { key: "users_roles", label: "Users & Roles", icon: Shield },
-        { key: "admin_access", label: "Admin Access", icon: Shield },
       ]
     }
   ];
@@ -169,19 +176,31 @@ export default function CreateRoleModal({ onRoleCreated }) {
                 id="roleName"
                 type="text"
                 name="name"
-                placeholder="e.g., Sales Manager, Marketing Specialist"
                 value={roleData.name}
                 onChange={(e) => setRoleData({...roleData, name: e.target.value})}
+                placeholder="e.g., Sales, Admin"
+                autoComplete="off"
                 className="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                 required
               />
             </div>
             
             <div className="border rounded-lg p-5 bg-gray-50">
-              <h3 className="font-semibold text-lg mb-4 text-gray-800 flex items-center gap-2">
-                <Shield size={18} />
-                Permissions Configuration
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-lg text-gray-800 flex items-center gap-2">
+                  <Shield size={18} />
+                  Permissions Configuration
+                </h3>
+                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={allPermissionsSelected}
+                    onChange={handleSelectAll}
+                    className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                  />
+                  <span>Select All</span>
+                </label>
+              </div>
               
               <div className="grid grid-cols-1 gap-6">
                 {permissionGroups.map((group, groupIndex) => (

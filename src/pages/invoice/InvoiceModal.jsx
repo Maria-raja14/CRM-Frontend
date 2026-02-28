@@ -860,4 +860,4 @@ setSalesUsers(response.data.users);
   );
 };
 
-export default InvoiceModal; //original code...
+export default InvoiceModal; 

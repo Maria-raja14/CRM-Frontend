@@ -1,6 +1,3 @@
-// src/pages/Leads/Leads.jsx (or Leads.jsx)
-// FULL UPDATED FRONTEND CODE (with inline follow-up calendar update)
-
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
@@ -167,7 +164,13 @@ function LeadTableComponent() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        const leadsData = response.data?.leads || response.data || [];
+        let leadsData = response.data?.leads || response.data || [];
+
+        // ✅ Sort leads by createdAt descending (newest first)
+        leadsData = leadsData.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+
         setLeads(leadsData);
         setAllLeads(leadsData);
 

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   Home,
@@ -13,7 +14,7 @@ import {
   GitBranch,
   BarChart3,
   Mail,
-    MessageCircle
+  MessageCircle
 } from "lucide-react";
 
 import { NavLink, useLocation } from "react-router-dom";
@@ -129,8 +130,6 @@ const SmallLink = ({ to, icon, label, hasPermission = true }) => {
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
   const [showActivities, setShowActivities] = useState(false);
-
-  // ✅ NEW: Deals collapsible state
   const [showDeals, setShowDeals] = useState(false);
 
   const [userPermissions, setUserPermissions] = useState({});
@@ -150,9 +149,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         deals_pipeline: true,
         invoices: true,
         proposal: true,
-        activities_calendar: true,
-        activities_list: true,
         users_roles: true,
+        email_chat: true,
+        whatsapp_chat: true,
         reports: true,
       });
     } else if (user.role && user.role.permissions) {
@@ -160,7 +159,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     }
   }, []);
 
-  // ✅ Auto-open Deals menu if user is on deals pages
+  // Auto-open Deals menu if user is on deals pages
   useEffect(() => {
     if (
       location.pathname.startsWith("/deals") ||
@@ -177,7 +176,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       id="main-sidebar"
     >
       {/* Header */}
-        <div className="mb-6 flex items-center justify-between px-12">
+      <div className="mb-6 flex items-center justify-between px-12">
         <NavLink to="/adminDashboard" className="cursor-pointer">
           <img
             src="https://tzi.zaarapp.com//storage/uploads/logo//logo-dark.png"
@@ -206,6 +205,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           label="Users & Roles"
           hasPermission={isAdmin || userPermissions.users_roles}
         />
+
         {/* Leads */}
         <SidebarItem
           to="/leads"
@@ -214,7 +214,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           hasPermission={isAdmin || userPermissions.leads}
         />
 
-        {/* ✅ Deals (Collapsible) */}
+        {/* Deals (Collapsible) */}
         <Collapsible
           label="Deals"
           icon={<TrendingUp />}
@@ -240,17 +240,22 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           />
         </Collapsible>
 
-                <SidebarItem
-  to="/emailchat"
-  icon={<Mail />}  // You can import Mail from "lucide-react"
-  label="Email Chat"
-/>
+        {/* Email Chat */}
+        <SidebarItem
+          to="/emailchat"
+          icon={<Mail />}
+          label="Email Chat"
+          hasPermission={isAdmin || userPermissions.email_chat}
+        />
 
-<SidebarItem
-  to="/whatsapp"
-  icon={<MessageCircle />}  // Using MessageCircle icon
-  label="WhatsApp Chat"
-/>
+        {/* WhatsApp Chat */}
+        <SidebarItem
+          to="/whatsapp"
+          icon={<MessageCircle />}
+          label="WhatsApp Chat"
+          hasPermission={isAdmin || userPermissions.whatsapp_chat}
+        />
+
         {/* Invoice */}
         <SidebarItem
           to="/invoice"
@@ -267,32 +272,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           label="Proposal"
           hasPermission={isAdmin || userPermissions.proposal}
         />
-
-        {/* Activities */}
-       {/*  <Collapsible
-          label="Activities"
-          icon={<Calendar />}
-          open={showActivities}
-          onToggle={() => setShowActivities((s) => !s)}
-          hasPermission={
-            isAdmin ||
-            userPermissions.activities_calendar ||
-            userPermissions.activities_list
-          }
-        >
-          <SmallLink
-            to="/calendar"
-            icon={<Calendar />}
-            label="Calendar View"
-            hasPermission={isAdmin || userPermissions.activities_calendar}
-          />
-          <SmallLink
-            to="/list"
-            icon={<List />}
-            label="Activity list"
-            hasPermission={isAdmin || userPermissions.activities_list}
-          />
-        </Collapsible> */}
 
         {/* Reports */}
         <SidebarItem
