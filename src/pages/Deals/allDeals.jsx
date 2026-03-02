@@ -330,7 +330,7 @@ function AllDealsComponent() {
             <option value="">All Stages</option>
             <option value="Qualification">Qualification</option>
             <option value="Proposal Sent-Negotiation">Proposal Sent-Negotiation</option>
-            <option value="Invoices Sent">Invoices Sent</option>
+            <option value="Invoice Sent">Invoice Sent</option>
             <option value="Closed Won">Closed Won</option>
             <option value="Closed Lost">Closed Lost</option>
           </select>

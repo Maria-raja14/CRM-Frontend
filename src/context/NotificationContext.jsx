@@ -20,7 +20,7 @@ export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const user = JSON.parse(localStorage.getItem("user") || "null");
 
-  const socket = useSocket();
+  const socket = initSocket();
 
   useEffect(() => {
     
