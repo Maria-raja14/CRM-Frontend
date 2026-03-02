@@ -1,255 +1,14 @@
-// import React, { useEffect, useState } from "react";
-// import axios from "axios";
-// import { FaUserAlt } from "react-icons/fa";
-
-// const ReportsPage = () => {
-//   const [reports, setReports] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [selectedDate, setSelectedDate] = useState("");
-//   const [expandedUsers, setExpandedUsers] = useState(new Set());
-
-//   const API_URL = import.meta.env.VITE_API_URL;
-//   const token = localStorage.getItem("token");
-
-//   useEffect(() => {
-//     fetchReports();
-//   }, [selectedDate]);
-
-//   const fetchReports = async () => {
-//     try {
-//       setLoading(true);
-//       const { data: salesUsers } = await axios.get(`${API_URL}/users/sales`, {
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-
-//       const reportPromises = salesUsers.users.map(async (user) => {
-//         const { data } = await axios.get(`${API_URL}/sales/performance`, {
-//           headers: { Authorization: `Bearer ${token}` },
-//           params: {
-//             userId: user._id,
-//             startDate: selectedDate || undefined,
-//             endDate: selectedDate || undefined,
-//           },
-//         });
-
-//         const totalHours = data.loginHistory.reduce((acc, log) => {
-//           if (log.login && log.logout) {
-//             return acc + (new Date(log.logout) - new Date(log.login)) / 1000 / 60 / 60;
-//           }
-//           return acc;
-//         }, 0);
-
-//         const totalActivities = data.activities.length;
-//         const completedActivities = data.activities.filter(a => a.status === "Completed").length;
-
-//         const totalFollowUps = data.leads.filter(
-//           (lead) => lead.followUpDate && new Date(lead.followUpDate) >= new Date()
-//         ).length;
-
-//         return {
-//           userId: user._id,
-//           name: `${user.firstName} ${user.lastName}`,
-//           totalLogins: data.loginHistory.length,
-//           totalLeads: data.metrics.totalLeadsAssigned,
-//           totalActivities,
-//           completedActivities,
-//           totalFollowUps,
-//           totalHours,
-//           loginHistory: data.loginHistory,
-//           activityCompletionRate: totalActivities > 0 ? (completedActivities / totalActivities) * 100 : 0,
-//         };
-//       });
-
-//       const reportsData = await Promise.all(reportPromises);
-//       setReports(reportsData);
-//       setLoading(false);
-//     } catch (err) {
-//       console.error("Error fetching reports:", err);
-//       setLoading(false);
-//     }
-//   };
-
-//   const toggleUserExpansion = (userId) => {
-//     const newExpanded = new Set(expandedUsers);
-//     newExpanded.has(userId) ? newExpanded.delete(userId) : newExpanded.add(userId);
-//     setExpandedUsers(newExpanded);
-//   };
-
-//   const formatTime = (dateString) =>
-//     dateString ? new Date(dateString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "-";
-
-//   const formatDate = (dateString) =>
-//     dateString ? new Date(dateString).toLocaleDateString() : "-";
-
-//   const calculateSessionHours = (login, logout) => {
-//     if (!login || !logout) return "-";
-//     const hours = (new Date(logout) - new Date(login)) / 1000 / 60 / 60;
-//     return `${hours.toFixed(1)}h`;
-//   };
-
-//   if (loading)
-//     return (
-//       <div className="flex items-center justify-center min-h-[60vh]">
-//         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#008ecc]"></div>
-//       </div>
-//     );
-
-//   return (
-//     <div className="p-6 max-w-7xl mx-auto">
-//       {/* Header */}
-//       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-//         <div>
-//           <h2 className="text-3xl font-bold text-gray-900">Sales Performance</h2>
-//           <p className="text-gray-600 mt-2">
-//             Track your team's activities and performance metrics
-//           </p>
-//         </div>
-
-//         <div className="flex items-center gap-3">
-//           <label className="text-sm font-medium text-gray-700">Filter by Date:</label>
-//           <input
-//             type="date"
-//             value={selectedDate}
-//             onChange={(e) => setSelectedDate(e.target.value)}
-//             className="pl-4 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#008ecc] focus:border-transparent transition-all duration-200"
-//           />
-//         </div>
-//       </div>
-
-//       {/* Reports Grid */}
-//       <div className="space-y-5">
-//         {reports.map((rep) => (
-//           <div
-//             key={rep.userId}
-//             className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"
-//           >
-//             {/* Summary Card */}
-//             <div
-//               className="p-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 cursor-pointer"
-//               onClick={() => toggleUserExpansion(rep.userId)}
-//             >
-//               <div className="flex items-center gap-4">
-//                 <div className="w-12 h-12 bg-gradient-to-br from-[#008ecc] to-[#0066cc] rounded-full flex items-center justify-center text-white font-semibold text-lg">
-//                   {rep.name.split(" ").map(n => n[0]).join("")}
-//                 </div>
-//                 <div>
-//                   <h3 className="font-semibold text-gray-900 text-lg">{rep.name}</h3>
-//                   <p className="text-sm text-gray-500">{rep.totalLogins} login sessions</p>
-//                 </div>
-//               </div>
-
-//               <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 flex-1 lg:px-8">
-//                 <MetricCard label="Leads" value={rep.totalLeads} color="bg-blue-100 text-blue-800" />
-//                 <MetricCard label="Activities" value={rep.totalActivities} color="bg-green-100 text-green-800" />
-//                 <MetricCard label="Completed" value={rep.completedActivities} color="bg-teal-100 text-teal-800" />
-//                 <MetricCard label="Total Hours" value={`${rep.totalHours.toFixed(1)}h`} color="bg-purple-100 text-purple-800" />
-//               </div>
-
-//               <div className="flex items-center gap-4">
-//                 <div className="text-right">
-//                   <div className="text-sm font-medium text-gray-900">{rep.activityCompletionRate.toFixed(0)}% Completed</div>
-//                   <div className="w-28 bg-gray-200 rounded-full h-2 mt-1">
-//                     <div
-//                       className="bg-green-500 h-2 rounded-full transition-all duration-500"
-//                       style={{ width: `${Math.min(rep.activityCompletionRate, 100)}%` }}
-//                     ></div>
-//                   </div>
-//                 </div>
-//                 <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-//                   <svg
-//                     className={`w-5 h-5 transform transition-transform ${expandedUsers.has(rep.userId) ? 'rotate-180' : ''}`}
-//                     fill="none"
-//                     stroke="currentColor"
-//                     viewBox="0 0 24 24"
-//                   >
-//                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-//                   </svg>
-//                 </button>
-//               </div>
-//             </div>
-
-//             {/* Expanded Sessions */}
-//             {expandedUsers.has(rep.userId) && (
-//               <div className="bg-gray-50 border-t border-gray-200">
-//                 <div className="p-6">
-//                   <h4 className="font-medium text-gray-900 mb-4">Login Sessions</h4>
-//                   <div className="overflow-x-auto rounded-lg border border-gray-200">
-//                     <table className="min-w-full divide-y divide-gray-200">
-//                       <thead className="bg-gray-100">
-//                         <tr>
-//                           <TableHeader label="Date" />
-//                           <TableHeader label="Login Time" />
-//                           <TableHeader label="Logout Time" />
-//                           <TableHeader label="Duration" />
-//                         </tr>
-//                       </thead>
-//                       <tbody className="bg-white divide-y divide-gray-200">
-//                         {rep.loginHistory.length > 0 ? (
-//                           rep.loginHistory.map((log, idx) => (
-//                             <tr key={idx} className="hover:bg-gray-50 transition-colors">
-//                               <td className="px-4 py-3 text-sm text-gray-900">{formatDate(log.login)}</td>
-//                               <td className="px-4 py-3 text-sm text-gray-900">{formatTime(log.login)}</td>
-//                               <td className="px-4 py-3 text-sm text-gray-900">{formatTime(log.logout)}</td>
-//                               <td className="px-4 py-3 text-sm">
-//                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-//                                   {calculateSessionHours(log.login, log.logout)}
-//                                 </span>
-//                               </td>
-//                             </tr>
-//                           ))
-//                         ) : (
-//                           <tr>
-//                             <td colSpan={4} className="px-4 py-4 text-center text-sm text-gray-500">
-//                               No login sessions found
-//                             </td>
-//                           </tr>
-//                         )}
-//                       </tbody>
-//                     </table>
-//                   </div>
-//                 </div>
-//               </div>
-//             )}
-//           </div>
-//         ))}
-//       </div>
-
-//       {/* Empty State */}
-//       {reports.length === 0 && !loading && (
-//         <div className="text-center py-12">
-//           <FaUserAlt className="text-gray-300 mx-auto mb-4 w-12 h-12" />
-//           <h3 className="text-lg font-medium text-gray-900 mb-2">No reports available</h3>
-//           <p className="text-gray-600">Try adjusting your date filter or check back later.</p>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// // Metric Card Component
-// const MetricCard = ({ label, value, color }) => (
-//   <div className="text-center">
-//     <div className={`text-2xl font-bold ${color}`}>{value}</div>
-//     <div className="text-xs text-gray-500 uppercase tracking-wide">{label}</div>
-//   </div>
-// );
-
-// // Table Header Component
-// const TableHeader = ({ label }) => (
-//   <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-//     {label}
-//   </th>
-// );
-
-// export default ReportsPage;
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { FaUserAlt, FaDownload } from "react-icons/fa";
+import { FaUserAlt, FaDownload, FaChartLine, FaUsers, FaCheckCircle, FaClock } from "react-icons/fa";
 import {
   FiCalendar,
   FiChevronDown,
   FiChevronUp,
   FiActivity,
+  FiSearch,
+  FiTrendingUp,
+  FiTrendingDown
 } from "react-icons/fi";
 import * as XLSX from "xlsx";
 
@@ -353,10 +112,10 @@ const ReportsPage = () => {
   };
 
   const getProductivityColor = (score) => {
-    if (score >= 80) return "text-green-600 bg-green-50 border-green-200";
-    if (score >= 60) return "text-blue-600 bg-blue-50 border-blue-200";
-    if (score >= 40) return "text-yellow-600 bg-yellow-50 border-yellow-200";
-    return "text-red-600 bg-red-50 border-red-200";
+    if (score >= 80) return "bg-green-100 text-green-800";
+    if (score >= 60) return "bg-blue-100 text-blue-800";
+    if (score >= 40) return "bg-yellow-100 text-yellow-800";
+    return "bg-red-100 text-red-800";
   };
 
   const getPerformanceLevel = (score) => {
@@ -540,11 +299,16 @@ const ReportsPage = () => {
       ? new Date(dateString).toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
+          hour12: true
         })
       : "-";
 
   const formatDate = (dateString) =>
-    dateString ? new Date(dateString).toLocaleDateString() : "-";
+    dateString ? new Date(dateString).toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    }) : "-";
 
   const calculateSessionHours = (login, logout) => {
     if (!login || !logout) return "-";
@@ -558,274 +322,332 @@ const ReportsPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg">Loading performance data...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading performance data...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 p-6">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <div className="mb-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-              <h1 className="text-4xl font-bold text-gray-700  ">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
                 Team Analytics
               </h1>
-              <p className="text-gray-600 mt-3 text-lg">
-                Comprehensive performance insights and activity tracking
-              </p>
+             
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FiActivity className="text-gray-400" />
+                  <FiSearch className="text-gray-400" />
                 </div>
                 <input
                   type="text"
-                  placeholder="Search salespeople..."
+                  placeholder="Search team members..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur-sm transition-all duration-200 w-full sm:w-64"
+                  className="pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white w-full sm:w-64"
                 />
               </div>
+
+         
 
               <button
                 onClick={downloadAllReports}
-                className="flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                className="flex items-center justify-center gap-2 bg-blue-600 text-white font-medium px-4 py-2.5 rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <FaDownload className="w-4 h-4" />
-                <span>Export All Reports</span>
+                <span>Export All</span>
               </button>
-
-              <div className="flex items-center gap-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-xl px-4 py-3">
-                <FiCalendar className="text-gray-400" />
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="bg-transparent border-none focus:outline-none text-gray-700 w-36"
-                />
-              </div>
             </div>
           </div>
         </div>
 
-        {/* Reports Grid */}
-        <div className="space-y-6">
-          {filteredReports.map((rep) => {
-            const todaysLoginHistory = getTodaysLoginHistory(rep.loginHistory);
+        {/* Summary Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <SummaryCard
+            title="Total Team Members"
+            value={reports.length}
+            icon={<FaUsers className="w-5 h-5" />}
+            color="blue"
+          />
+          <SummaryCard
+            title="Avg Productivity"
+            value={`${reports.length > 0 ? (reports.reduce((acc, rep) => acc + rep.productivityScore, 0) / reports.length).toFixed(0) : 0}%`}
+            icon={<FaChartLine className="w-5 h-5" />}
+            color="green"
+          />
+          <SummaryCard
+            title="Avg Completion Rate"
+            value={`${reports.length > 0 ? (reports.reduce((acc, rep) => acc + rep.activityCompletionRate, 0) / reports.length).toFixed(0) : 0}%`}
+            icon={<FaCheckCircle className="w-5 h-5" />}
+            color="purple"
+          />
+        
+        </div>
 
-            return (
-              <div
-                key={rep.userId}
-                className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
-              >
-                {/* Summary Card */}
-                <div className="p-8">
-                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                    {/* User Info */}
-                    <div className="flex items-center gap-4 flex-1">
-                      <div className="relative">
-                        <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg">
-                          {rep.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
+        {/* Reports Table */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Team Member
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Performance
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Leads
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Activities
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Hours
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Completion
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredReports.map((rep) => (
+                  <React.Fragment key={rep.userId}>
+                    <tr className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center text-white font-semibold text-sm">
+                            {rep.name.split(' ').map(n => n[0]).join('')}
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">
+                              {rep.name}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {rep.email}
+                            </div>
+                          </div>
                         </div>
-                     
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-1">
-                          <h3 className="font-bold text-gray-900 text-xl">
-                            {rep.name}
-                          </h3>
-                          <span
-                            className={`px-3 py-1 rounded-full text-xs font-semibold border ${getProductivityColor(
-                              rep.productivityScore
-                            )}`}
-                          >
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex flex-col gap-1">
+                          <div className="text-sm font-semibold text-gray-900">
+                            {rep.productivityScore.toFixed(0)}%
+                          </div>
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getProductivityColor(rep.productivityScore)}`}>
                             {getPerformanceLevel(rep.productivityScore)}
                           </span>
                         </div>
-                        <p className="text-gray-600 text-sm">{rep.email}</p>
-                      
-                      </div>
-                    </div>
-
-                    {/* Metrics */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 flex-1 lg:px-8">
-                      <MetricCard
-                        value={rep.totalLeads}
-                        label="Leads"
-                        trend="up"
-                      />
-                      <MetricCard
-                        value={rep.completedActivities}
-                        label="Completed"
-                        trend="up"
-                      />
-                      <MetricCard
-                        value={`${rep.totalHours.toFixed(1)}h`}
-                        label="Hours"
-                        trend="neutral"
-                      />
-                      <MetricCard
-                        value={`${rep.activityCompletionRate.toFixed(0)}%`}
-                        label="Rate"
-                        trend="up"
-                      />
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => downloadSalesmanReport(rep)}
-                        className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 font-medium px-4 py-2.5 rounded-xl hover:bg-gray-50 transition-all duration-200 hover:shadow-sm"
-                      >
-                        <FaDownload className="w-4 h-4" />
-                        <span className="hidden sm:inline">Export</span>
-                      </button>
-                      <button
-                        onClick={() => toggleUserExpansion(rep.userId)}
-                        className="flex items-center gap-2 bg-blue-600 text-white font-medium px-4 py-2.5 rounded-xl hover:bg-blue-700 transition-all duration-200"
-                      >
-                        {expandedUsers.has(rep.userId) ? (
-                          <FiChevronUp className="w-4 h-4" />
-                        ) : (
-                          <FiChevronDown className="w-4 h-4" />
-                        )}
-                        <span className="hidden sm:inline">Details</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Expanded Sessions - Show only today's login details */}
-                {expandedUsers.has(rep.userId) && (
-                  <div className="border-t border-gray-200 bg-gray-50/50">
-                    <div className="p-8">
-                      <div className="flex justify-between items-center mb-6">
-                        <h4 className="font-semibold text-gray-900 text-lg">
-                          Today's Login Sessions
-                        </h4>
-                        <span className="text-sm text-gray-600">
-                          {todaysLoginHistory.length} sessions today
-                        </span>
-                      </div>
-                      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                        <table className="w-full">
-                          <thead className="bg-gray-100/80 border-b border-gray-200">
-                            <tr>
-                              <TableHeader label="Date" />
-                              <TableHeader label="Login Time" />
-                              <TableHeader label="Logout Time" />
-                              <TableHeader label="Duration" />
-                              <TableHeader label="Status" />
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-200">
-                            {todaysLoginHistory.length > 0 ? (
-                              todaysLoginHistory.map((log, idx) => (
-                                <tr
-                                  key={idx}
-                                  className="hover:bg-gray-50/80 transition-colors"
-                                >
-                                  <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                                    {formatDate(log.login)}
-                                  </td>
-                                  <td className="px-6 py-4 text-sm text-gray-600">
-                                    {formatTime(log.login)}
-                                  </td>
-                                  <td className="px-6 py-4 text-sm text-gray-600">
-                                    {formatTime(log.logout)}
-                                  </td>
-                                  <td className="px-6 py-4 text-sm">
-                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                      {calculateSessionHours(
-                                        log.login,
-                                        log.logout
-                                      )}
-                                    </span>
-                                  </td>
-                                  <td className="px-6 py-4 text-sm">
-                                    <span
-                                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                                        log.logout
-                                          ? "bg-green-100 text-green-800"
-                                          : "bg-yellow-100 text-yellow-800"
-                                      }`}
-                                    >
-                                      {log.logout ? "Completed" : "Active"}
-                                    </span>
-                                  </td>
-                                </tr>
-                              ))
-                            ) : (
-                              <tr>
-                                <td
-                                  colSpan={5}
-                                  className="px-6 py-8 text-center text-gray-500"
-                                >
-                                  <FaUserAlt className="mx-auto w-8 h-8 mb-2 text-gray-300" />
-                                  <p>No login sessions found for today</p>
-                                </td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Empty State */}
-        {filteredReports.length === 0 && !loading && (
-          <div className="text-center py-16">
-            <div className="w-32 h-32 mx-auto mb-6 text-gray-300">
-              <FaUserAlt className="w-full h-full" />
-            </div>
-            <h3 className="text-2xl font-semibold text-gray-900 mb-3">
-              No reports available
-            </h3>
-            <p className="text-gray-600 max-w-md mx-auto text-lg">
-              {searchTerm
-                ? "No salespeople match your search. Try adjusting your search terms."
-                : "Try adjusting your date filter or check back later for performance data."}
-            </p>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900 font-medium">
+                          {rep.totalLeads}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Assigned
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <div className="text-sm text-gray-900 font-medium">
+                            {rep.completedActivities}/{rep.totalActivities}
+                          </div>
+                          {rep.completedActivities > 0 && rep.totalActivities > 0 && (
+                            <span className={`text-xs ${rep.completedActivities/rep.totalActivities >= 0.8 ? 'text-green-600' : 'text-yellow-600'}`}>
+                              {rep.completedActivities/rep.totalActivities >= 0.8 ? <FiTrendingUp /> : <FiTrendingDown />}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900 font-medium">
+                          {rep.totalHours.toFixed(1)}h
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Total logged
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="w-24 bg-gray-200 rounded-full h-2 mr-3">
+                            <div 
+                              className={`h-2 rounded-full ${
+                                rep.activityCompletionRate >= 80 ? 'bg-green-500' :
+                                rep.activityCompletionRate >= 60 ? 'bg-blue-500' :
+                                rep.activityCompletionRate >= 40 ? 'bg-yellow-500' : 'bg-red-500'
+                              }`}
+                              style={{ width: `${Math.min(rep.activityCompletionRate, 100)}%` }}
+                            />
+                          </div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {rep.activityCompletionRate.toFixed(0)}%
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => downloadSalesmanReport(rep)}
+                            className="text-gray-600 hover:text-gray-900 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                            title="Export Report"
+                          >
+                            <FaDownload className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => toggleUserExpansion(rep.userId)}
+                            className="text-gray-600 hover:text-gray-900 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                            title="View Details"
+                          >
+                            {expandedUsers.has(rep.userId) ? 
+                              <FiChevronUp className="w-4 h-4" /> : 
+                              <FiChevronDown className="w-4 h-4" />
+                            }
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    
+                    {/* Expanded Row - Today's Sessions */}
+                    {expandedUsers.has(rep.userId) && (
+                      <tr className="bg-gray-50">
+                        <td colSpan="7" className="px-6 py-6">
+                          <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+                            <div className="px-6 py-4 border-b border-gray-200">
+                              <div className="flex justify-between items-center">
+                                <h4 className="text-sm font-semibold text-gray-900">
+                                  Today's Login Sessions - {rep.name}
+                                </h4>
+                                <span className="text-xs text-gray-500">
+                                  {getTodaysLoginHistory(rep.loginHistory).length} sessions
+                                </span>
+                              </div>
+                            </div>
+                            <div className="overflow-x-auto">
+                              <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                  <tr>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                      Date
+                                    </th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                      Login Time
+                                    </th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                      Logout Time
+                                    </th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                      Duration
+                                    </th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                      Status
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200">
+                                  {getTodaysLoginHistory(rep.loginHistory).length > 0 ? (
+                                    getTodaysLoginHistory(rep.loginHistory).map((log, idx) => (
+                                      <tr key={idx} className="hover:bg-gray-50">
+                                        <td className="px-4 py-3 text-sm text-gray-900">
+                                          {formatDate(log.login)}
+                                        </td>
+                                        <td className="px-4 py-3 text-sm text-gray-600">
+                                          {formatTime(log.login)}
+                                        </td>
+                                        <td className="px-4 py-3 text-sm text-gray-600">
+                                          {formatTime(log.logout)}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            {calculateSessionHours(log.login, log.logout)}
+                                          </span>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                            log.logout ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                                          }`}>
+                                            {log.logout ? 'Completed' : 'Active'}
+                                          </span>
+                                        </td>
+                                      </tr>
+                                    ))
+                                  ) : (
+                                    <tr>
+                                      <td colSpan="5" className="px-4 py-8 text-center">
+                                        <FaUserAlt className="mx-auto w-8 h-8 mb-2 text-gray-300" />
+                                        <p className="text-sm text-gray-500">No login sessions found for today</p>
+                                      </td>
+                                    </tr>
+                                  )}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
+
+          {/* Empty State */}
+          {filteredReports.length === 0 && !loading && (
+            <div className="text-center py-12">
+              <div className="w-24 h-24 mx-auto mb-4 text-gray-300">
+                <FaUsers className="w-full h-full" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                No team members found
+              </h3>
+              <p className="text-gray-600 text-sm max-w-md mx-auto">
+                {searchTerm
+                  ? "No team members match your search criteria. Try adjusting your search terms."
+                  : "No performance data available for the selected date range."}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 };
 
-// Metric Card Component
-const MetricCard = ({ icon, value, label, trend }) => (
-  <div className="text-center group hover:scale-105 transition-transform duration-200">
-    <div className="text-2xl font-bold text-gray-900 mb-1">{value}</div>
-    <div className="flex items-center justify-center gap-1 text-xs text-gray-500 uppercase tracking-wide">
-      <span>{icon}</span>
-      <span>{label}</span>
-    </div>
-  </div>
-);
+// Summary Card Component
+const SummaryCard = ({ title, value, icon, color }) => {
+  const colorClasses = {
+    blue: "bg-blue-50 text-blue-700",
+    green: "bg-green-50 text-green-700",
+    purple: "bg-purple-50 text-purple-700",
+    orange: "bg-orange-50 text-orange-700"
+  };
 
-// Table Header Component
-const TableHeader = ({ label }) => (
-  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-    {label}
-  </th>
-);
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-gray-600 mb-1">{title}</p>
+          <p className="text-2xl font-bold text-gray-900">{value}</p>
+        </div>
+        <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
+          {icon}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default ReportsPage;

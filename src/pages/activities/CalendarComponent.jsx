@@ -1,6 +1,7 @@
 
 
 
+
 import React, { useState, useEffect } from "react";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
@@ -101,6 +102,7 @@ const CalendarComponent = ({ activities }) => {
     if (activity.endTime) {
       const [hours, minutes] = activity.endTime.split(":").map(Number);
       end.set({ hour: hours, minute: minutes });
+      
     }
 
     return {
@@ -174,10 +176,7 @@ const CalendarComponent = ({ activities }) => {
           onSelectSlot={handleSelectSlot}
         />
       </div>
-
-   
-    
-      {/* ModalCalendar */}
+ {/* ModalCalendar */}
       {showDetailsModal && (
         <ModalCalendar
           isOpen={true}

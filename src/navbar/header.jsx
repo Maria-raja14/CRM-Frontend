@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useNotifications } from "../context/NotificationContext";
 import { disconnectSocket } from "../utils/socket";
 import { ShieldCheck, Maximize, Minimize } from "lucide-react";
+import { Settings } from "lucide-react";
 import PasswordUpdate from "../pages/password/PasswordUpdate";
 import { formatDistanceToNow } from "date-fns";
 import axios from "axios";
@@ -15,6 +16,7 @@ const Navbar = ({ toggleSidebar }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { notifications, markAsRead } = useNotifications();
   const [user, setUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
 
   const notificationRef = useRef(null);
@@ -23,6 +25,7 @@ const Navbar = ({ toggleSidebar }) => {
   const API_URL = import.meta.env.VITE_API_URL;
 
   // Load user
+
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     if (storedUser) {
@@ -32,6 +35,53 @@ const Navbar = ({ toggleSidebar }) => {
       }
     }
   }, []);
+ useEffect(() => {
+     const fetchUser = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const res = await axios.get(`${API_URL}/users/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setUser(res.data);
+      } catch (err) {
+        console.error("Failed to fetch user:", err);
+      }
+    };
+
+    fetchUser();
+   
+ },[]);
+  
+  // useEffect(() => {
+  //   const storedUser = JSON.parse(localStorage.getItem("user"));
+  //   if (storedUser) setUser(storedUser);
+
+  //   // Listen for profile update events
+  //   const handleProfileUpdate = () => {
+  //     const updatedUser = JSON.parse(localStorage.getItem("user"));
+  //     if (updatedUser) setUser(updatedUser);
+  //   };
+
+  //   // Add event listener
+  //   window.addEventListener("userProfileUpdated", handleProfileUpdate);
+
+  //   // Also listen for storage changes (in case other tabs update)
+  //   const handleStorageChange = (e) => {
+  //     if (e.key === "user") {
+  //       const updatedUser = JSON.parse(e.newValue);
+  //       if (updatedUser) setUser(updatedUser);
+  //     }
+  //   };
+
+  //   window.addEventListener("storage", handleStorageChange);
+
+  //   return () => {
+  //     window.removeEventListener("userProfileUpdated", handleProfileUpdate);
+  //     window.removeEventListener("storage", handleStorageChange);
+  //   };
+  // }, []);
 
   // Logout
   const handleLogout = async () => {
@@ -40,12 +90,12 @@ const Navbar = ({ toggleSidebar }) => {
       await axios.post(
         `${API_URL}/users/logout`,
         {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
     } catch (err) {
       console.error("Logout error:", err);
     } finally {
-      disconnectSocket();
+      // Clear localStorage and navigate regardless of API success
       localStorage.clear();
       navigate("/");
     }
@@ -224,14 +274,30 @@ const Navbar = ({ toggleSidebar }) => {
             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           >
             {isFullscreen ? (
-              <Minimize size={22} className="text-gray-600 dark:text-gray-300" />
+              <Minimize
+                size={22}
+                className="text-gray-600 dark:text-gray-300"
+              />
             ) : (
-              <Maximize size={22} className="text-gray-600 dark:text-gray-300" />
+              <Maximize
+                size={22}
+                className="text-gray-600 dark:text-gray-300"
+              />
             )}
           </button>
+          {/* ✅ TOOLTIP */}
+          <div
+            className="absolute top-full mt-2 left-1/2 -translate-x-1/2
+            opacity-0 group-hover:opacity-100 transition-opacity
+            bg-gray-900 text-white text-xs px-3 py-1 rounded-md whitespace-nowrap
+            pointer-events-none z-50"
+          > 
+          {isFullscreen ? "Minimize" : "Maximize"}
+          </div>
+        </div>
 
           {/* WhatsApp Button with Animation */}
-          {/* <a'
+          {/* <a
             href={whatsappLink}
             target="_blank"
             rel="noopener noreferrer"
@@ -242,7 +308,7 @@ const Navbar = ({ toggleSidebar }) => {
           </a> */}
 
           {/* Notifications */}
-          <div className="relative" ref={notificationRef}>
+          {/* <div className="relative" ref={notificationRef}>
             <button
               onClick={() => setShowNotifications(!showNotifications)}
               className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 relative transition-colors"
@@ -333,7 +399,107 @@ const Navbar = ({ toggleSidebar }) => {
                 )}
               </div>
             )}
+          </div> */}
+          <div className="relative" ref={notificationRef}>
+            <div className="relative group">
+            <button
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 relative transition-colors"
+            >
+              <Bell size={22} className="text-gray-600 dark:text-gray-300" />
+              {notifications.filter((n) => !n.read).length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
+                  {notifications.filter((n) => !n.read).length}
+                </span>
+              )}
+            </button>
+            {/* ✅ TOOLTIP */}
+              <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 
+                opacity-0 group-hover:opacity-100 transition-opacity
+                bg-gray-900 text-white text-xs px-3 py-1 rounded-md whitespace-nowrap
+                pointer-events-none z-50">
+                Notifications
+              </div>
+            </div>
+            {showNotifications && (
+              <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 shadow-xl rounded-xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 font-semibold text-gray-800 dark:text-gray-100 bg-gray-50 dark:bg-gray-900">
+                  Notifications
+                </div>
+                <div className="max-h-96 overflow-y-auto">
+                  {notifications.length > 0 ? (
+                    notifications.map((n) => (
+                      <div
+                        key={n._id}
+                        className="flex items-start px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all cursor-pointer border-b border-gray-100 dark:border-gray-600 last:border-0"
+                      >
+                        <div className="flex-shrink-0">
+                          <img
+                            src={getProfileImageUrl(n.profileImage)}
+                            alt="avatar"
+                            className="w-10 h-10 rounded-full object-cover border border-gray-300 dark:border-gray-600"
+                            onError={(e) => {
+                              e.target.src =
+                                "https://randomuser.me/api/portraits/men/32.jpg";
+                            }}
+                          />
+                        </div>
+                        <div className="ml-3 flex-1">
+                          <p className="text-gray-700 dark:text-gray-200 text-sm font-medium">
+                            {n.title || "Notification"}
+                          </p>
+                          <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
+                            {n.text}
+                          </p>
+                          <p className="text-gray-400 dark:text-gray-500 text-xs mt-2">
+                            {formatDistanceToNow(new Date(n.createdAt), {
+                              addSuffix: true,
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-4 text-gray-500 text-sm text-center">
+                      No new notifications
+                    </div>
+                  )}
+                </div>
+                {notifications.length > 0 && (
+                  <Link
+                    to="/dashboard/notifications"
+                    onClick={() => setShowNotifications(false)}
+                    className="block text-center px-4 py-3 bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all font-medium border-t border-gray-200 dark:border-gray-700"
+                  >
+                    View All Notifications
+                  </Link>
+                )}
+              </div>
+            )}
           </div>
+
+          {/* setting button */}
+          
+          {isAdmin && (
+            <div className="relative group">
+              <button
+                onClick={() => navigate("/settings")}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              >
+                <Settings size={22} className="text-gray-600 dark:text-gray-300" />
+              </button>
+
+              {/* Tooltip */}
+              <div
+                className="absolute top-full mt-2 left-1/2 -translate-x-1/2
+                opacity-0 group-hover:opacity-100 transition-opacity
+                bg-gray-900 text-white text-xs px-3 py-1 rounded-md whitespace-nowrap
+                pointer-events-none z-50"
+              >
+                Settings
+              </div>
+            </div>
+          )}
 
           {/* User Dropdown */}
           <div className="relative" ref={dropdownRef}>
