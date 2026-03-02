@@ -255,10 +255,7 @@ const ClientReviewTable = () => {
         console.error("Response data:", error.response.data);
         console.error("Response status:", error.response.status);
         
-        // Check if it's the enum validation error
-        if (error.response.data?.message?.includes("enum")) {
-          toast.error("Classification error. Please contact admin to update the database schema.");
-        } else if (error.response.data?.message) {
+        if (error.response.data?.message) {
           toast.error(error.response.data.message);
         } else {
           toast.error(`Error ${error.response.status}: Failed to save review`);
@@ -423,6 +420,9 @@ const ClientReviewTable = () => {
                   Days Inactive
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Progress
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Classification
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -494,6 +494,9 @@ const ClientReviewTable = () => {
                       {deal.daysSinceFollowUp || 0} days
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      {getProgressBadge(deal.reviewProgress || deal.progress)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {getClassificationBadge(deal.classification)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -534,7 +537,7 @@ const ClientReviewTable = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="10" className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan="11" className="px-6 py-8 text-center text-gray-500">
                     {userRole === "Admin" 
                       ? "No closed won deals found"
                       : "No deals assigned to you"}

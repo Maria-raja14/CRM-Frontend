@@ -36,9 +36,6 @@ const ClassificationModal = ({ isOpen, onClose, title, data, type }) => {
       case "upsell":
       case "Upsell":
         return <Zap className="text-purple-500" size={24} />;
-      case "active":
-      case "Active":
-        return <Users className="text-blue-500" size={24} />;
       case "totalCLV":
         return <DollarSign className="text-green-500" size={24} />;
       case "revenue":
@@ -62,9 +59,6 @@ const ClassificationModal = ({ isOpen, onClose, title, data, type }) => {
       case "upsell":
       case "Upsell":
         return "bg-gradient-to-r from-purple-50 to-violet-50";
-      case "active":
-      case "Active":
-        return "bg-gradient-to-r from-blue-50 to-indigo-50";
       case "totalCLV":
         return "bg-gradient-to-r from-green-50 to-emerald-50";
       default:
@@ -76,8 +70,6 @@ const ClassificationModal = ({ isOpen, onClose, title, data, type }) => {
     switch (classification) {
       case "Top Value":
         return "text-emerald-700 bg-emerald-100 border-emerald-200";
-      case "Active":
-        return "text-blue-700 bg-blue-100 border-blue-200";
       case "Upsell":
         return "text-purple-700 bg-purple-100 border-purple-200";
       case "At Risk":
@@ -276,6 +268,13 @@ const ClassificationModal = ({ isOpen, onClose, title, data, type }) => {
                   <div className={`rounded-lg p-2 ${item.delivered ? 'bg-green-50' : 'bg-gray-50'}`}>
                     <p className="text-xs text-gray-600 mb-1">Delivered</p>
                     <p className="text-sm font-semibold text-gray-800">{item.delivered ? 'Yes' : 'No'}</p>
+                  </div>
+                )}
+                
+                {item.progress && (
+                  <div className="bg-indigo-50 rounded-lg p-2">
+                    <p className="text-xs text-indigo-600 mb-1">Progress</p>
+                    <p className="text-sm font-semibold text-gray-800">{item.progress}</p>
                   </div>
                 )}
               </div>
