@@ -1975,7 +1975,7 @@ useEffect(() => {
       //  fetchStreakData();
     }, REFRESH_MS);
 
-    return () => clearInterval(refreshInterval);
+    return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePreset, selectedMonth, selectedYear]); /* ---------- Chart data builders ---------- */
   const buildRevenueTrend = (invoices, preset) => {

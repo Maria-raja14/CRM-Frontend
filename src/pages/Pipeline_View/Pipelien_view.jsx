@@ -79,7 +79,7 @@ const tourSteps = [
   },
   {
     selector: ".pipeline-column:nth-child(3)",
-    content: "This is the Invoices Sent stage where offers are shared.",
+    content: "This is the Invoice Sent stage where offers are shared.",
   },
   {
     selector: ".pipeline-column:nth-child(4)",
