@@ -119,7 +119,7 @@ export default function CreateRoleModal({ onRoleCreated }) {
         { key: "dashboard", label: "Dashboard", icon: Home },
         { key: "leads", label: "Leads", icon: Users },
         { key: "deals_all", label: "Deals", icon: Tag },
-        // { key: "deals_pipeline", label: "Pipeline View", icon: List },
+        { key: "deals_pipeline", label: "Pipeline View", icon: List },
         { key: "reports", label: "Reports", icon: BarChart },
       ]
     },
