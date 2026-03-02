@@ -223,75 +223,135 @@ setSalesUsers(response.data.users);
   };
 
   // Save
+  // const handleSaveInvoice = async () => {
+  //   if (!validateInputs()) {
+  //     toast.error("Please correct the errors in the form.");
+  //     return;
+  //   }
+
+  //   const breakdown = calculateTotalBreakdown();
+
+  //   const invoiceToSave = {
+  //     ...invoiceData,
+  //     items: [
+  //       {
+  //         deal: invoiceData.deal,
+  //         price: Number(invoiceData.price),
+  //         amount: Number(invoiceData.price),
+  //       },
+  //     ],
+  //     discountValue: Number(invoiceData.discountValue),
+  //     discountType:
+  //       invoiceData.discountType === "none"
+  //         ? "fixed"
+  //         : invoiceData.discountType,
+  //     tax: Number(invoiceData.tax),
+  //     taxType: invoiceData.taxType === "none" ? "fixed" : invoiceData.taxType,
+  //     total: Number(breakdown.total),
+  //   };
+
+  //   try {
+  //     const token = localStorage.getItem("token");
+  //     let response;
+  //     if (editingInvoice) {
+  //       response = await axios.put(
+  //         `${API_URL}/invoice/updateInvoice/${editingInvoice._id}`,
+  //         invoiceToSave,
+  //         { headers: { Authorization: `Bearer ${token}` } }
+  //       );
+  //       toast.success("Invoice updated successfully!");
+  //     } else {
+  //       response = await axios.post(
+  //         `${API_URL}/invoice/createinvoice`,
+  //         invoiceToSave,
+  //         { headers: { Authorization: `Bearer ${token}` } }
+  //       );
+  //       toast.success("Invoice created successfully!");
+  //     }
+
+  //     if (response.status === 200 || response.status === 201) {
+  //       closeModal();
+  //       if (onInvoiceSaved) onInvoiceSaved();
+  //     } else {
+  //       toast.error("Failed to save invoice.");
+  //     }
+  //   } catch {
+  //     toast.error("Failed to save invoice.");
+  //   }
+  // };
+
   const handleSaveInvoice = async () => {
-    if (!validateInputs()) {
-      toast.error("Please correct the errors in the form.");
-      return;
-    }
-
-    const breakdown = calculateTotalBreakdown();
-
-    const invoiceToSave = {
-      ...invoiceData,
-      items: [
-        {
-          deal: invoiceData.deal,
-          price: Number(invoiceData.price),
-          amount: Number(invoiceData.price),
-        },
-      ],
-      discountValue: Number(invoiceData.discountValue),
-      discountType:
-        invoiceData.discountType === "none"
-          ? "fixed"
-          : invoiceData.discountType,
-      tax: Number(invoiceData.tax),
-      taxType: invoiceData.taxType === "none" ? "fixed" : invoiceData.taxType,
-      total: Number(breakdown.total),
-    };
-
-  // Remove 'none' values and use default instead
-  if (invoiceToSave.discountType === 'none') {
-    invoiceToSave.discountType = 'fixed';
-    invoiceToSave.discountValue = 0;
-    invoiceToSave.discount = 0;
-  }
-  
-  if (invoiceToSave.taxType === 'none') {
-    invoiceToSave.taxType = 'fixed';
-    invoiceToSave.tax = 0;
-    invoiceToSave.taxAmount = 0;
+  if (!validateInputs()) {
+    toast.error("Please correct the errors in the form.");
+    return;
   }
 
-  try {
-    const token = localStorage.getItem("token");
-    let response;
-    if (editingInvoice) {
-      response = await axios.put(
-        `${API_URL}/invoice/updateInvoice/${editingInvoice._id}`,
-        invoiceToSave,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success("Invoice updated successfully!");
-    } else {
-      response = await axios.post(
-        `${API_URL}/invoice/createinvoice`,
-        invoiceToSave,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success("Invoice created successfully!");
-    }
+  const breakdown = calculateTotalBreakdown();
 
-      if (response.status === 200 || response.status === 201) {
-        closeModal();
-        if (onInvoiceSaved) onInvoiceSaved();
-      } else {
-        toast.error("Failed to save invoice.");
+  const invoiceToSave = {
+    ...invoiceData,
+    items: [
+      {
+        deal: invoiceData.deal,
+        price: Number(invoiceData.price),
+        amount: Number(invoiceData.price),
+      },
+    ],
+    discountValue: Number(invoiceData.discountValue),
+    discountType: invoiceData.discountType,
+    tax: Number(invoiceData.tax),
+    taxType: invoiceData.taxType,
+    subtotal: Number(breakdown.price),
+    discount: Number(breakdown.discountAmount),
+    total: Number(breakdown.total),
+    taxAmount: Number(breakdown.taxAmount),
+  };
+
+    try {
+      const token = localStorage.getItem("token");
+      let response;
+      if (editingInvoice) {
+        response = await axios.put(
+          `${API_URL}/invoice/updateInvoice/${editingInvoice._id}`,
+          invoiceToSave,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        toast.success("Invoice updated successfully!");
+      // 🔥 Move Deal to Closed Won if status changed to paid
+      if (
+        editingInvoice.status !== "paid" &&
+        invoiceData.status === "paid"
+      ) {
+        const dealId = editingInvoice.items?.[0]?.deal?._id;
+
+        if (dealId) {
+          await axios.patch(
+            `${API_URL}/deals/update-deal/${dealId}`,
+            { stage: "Closed Won" },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        }
       }
-    } catch {
+  
+      } else {
+        response = await axios.post(
+          `${API_URL}/invoice/createinvoice`,
+          invoiceToSave,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        toast.success("Invoice created successfully!");
+      }
+
+    if (response.status === 200 || response.status === 201) {
+      closeModal();
+      if (onInvoiceSaved) onInvoiceSaved();
+    } else {
       toast.error("Failed to save invoice.");
     }
-  };
+  } catch {
+    toast.error("Failed to save invoice.");
+  }
+};
 
   return (
     <Dialog open={isOpen} onOpenChange={closeModal}>

@@ -196,3 +196,32 @@ body {
   @apply bg-black text-white;
   font-family: 'Poppins', sans-serif;
 }
+/* remove ALL inner borders */
+.PhoneInputInput {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* remove country dropdown border */
+.PhoneInputCountry,
+.PhoneInputCountryIcon,
+.PhoneInputCountrySelect {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* remove focus styles also */
+.PhoneInputInput:focus {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+.react-tel-input .form-control{
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
