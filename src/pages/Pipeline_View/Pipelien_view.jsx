@@ -18,7 +18,6 @@ import { Eye } from "lucide-react";
 import useLostDealModal from "../LostDealModal/LossDeal";
 import LostDealModal from "../LostDealModal/ModalLoss";
 
-// ----- Stages (match backend exactly) -----
 const STAGES = [
   {
     id: "Qualification",
@@ -57,12 +56,10 @@ const STAGES = [
   },
 ];
 
-// ----- Drag types -----
 const ItemTypes = {
   DEAL: "DEAL",
 };
 
-// Tour steps configuration
 const tourSteps = [
   {
     selector: ".search-input",
@@ -109,15 +106,14 @@ const tourSteps = [
 const formatCurrencyValue = (val) => {
   if (!val) return "-";
 
-  // Expected formats: "12545125 INR" or "12,545,125 INR"
+
   const match = val.match(/^([\d,]+)\s*([A-Z]+)$/i);
   if (!match) return val;
 
-  const number = match[1].replace(/,/g, ""); // Remove existing commas
-  const currency = match[2].toUpperCase(); // Ensure uppercase
-
-  const formattedNumber = Number(number).toLocaleString("en-IN"); // Indian format
-  return `${formattedNumber}${currency}`; // no space
+  const number = match[1].replace(/,/g, "");
+  const currency = match[2].toUpperCase();
+  const formattedNumber = Number(number).toLocaleString("en-IN"); 
+  return `${formattedNumber}${currency}`; 
 };
 
 function formatDate(dateString) {
@@ -205,7 +201,7 @@ function SalesPipelineBoardPure() {
         (user) =>
           user.role &&
           user.role.name &&
-          user.role.name.toLowerCase() === "sales"
+          user.role.name.toLowerCase() === "sales",
       );
       setUsers(filteredSales);
     } catch (err) {
@@ -240,7 +236,7 @@ function SalesPipelineBoardPure() {
         // Find associated lead data
         const associatedLead = leadsRes.data.find(
           (lead) =>
-            lead._id === deal.leadId || lead.companyName === deal.companyName
+            lead._id === deal.leadId || lead.companyName === deal.companyName,
         );
 
         // Enhance deal with lead information
@@ -287,7 +283,7 @@ function SalesPipelineBoardPure() {
         },
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
       fetchData();
       toast.success("Deal created successfully!");
@@ -435,7 +431,7 @@ function SalesPipelineBoardPure() {
         },
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       // 🔥 If moving OUT of "Closed Won", trigger CLV recalculation
@@ -586,17 +582,25 @@ function SalesPipelineBoardPure() {
   // Filter deals for search query
   const filtered = useMemo(() => {
     if (!query.trim()) return columns;
+
     const q = query.toLowerCase();
     const obj = {};
+
     for (const key of Object.keys(columns)) {
-      obj[key] = columns[key].filter(
+      const matchedDeals = columns[key].filter(
         (d) =>
           d.dealName.toLowerCase().includes(q) ||
           (d.companyName || "").toLowerCase().includes(q) ||
           (d.assignedTo?.firstName || "").toLowerCase().includes(q) ||
-          (d.assignedTo?.lastName || "").toLowerCase().includes(q)
+          (d.assignedTo?.lastName || "").toLowerCase().includes(q),
       );
+
+      // 👉 only add stage if deals exist
+      if (matchedDeals.length > 0) {
+        obj[key] = matchedDeals;
+      }
     }
+
     return obj;
   }, [columns, query]);
 
@@ -741,25 +745,27 @@ function SalesPipelineBoardPure() {
         ref={scrollRef}
         className="mx-auto flex gap-4 overflow-x-auto pb-4 max-w-[1600px]"
       >
-        {STAGES.map((stage, index) => (
-          <Column
-            key={stage.id}
-            id={stage.id}
-            title={stage.title}
-            titleColor={stage.color}
-            bgColor={stage.bgColor}
-            borderColor={stage.borderColor}
-            deals={filtered[stage.id] || []}
-            moveDeal={moveDeal}
-            onEdit={handleEditClick}
-            onDelete={handleDeleteClick}
-            onView={handleViewClick}
-            userRole={userRole}
-            userId={userId}
-            className={`pipeline-column ${index === 0 ? "first-column" : ""}`}
-            index={index}
-          />
-        ))}
+        {(query.trim() ? STAGES.filter((s) => filtered[s.id]) : STAGES).map(
+          (stage, index) => (
+            <Column
+              key={stage.id}
+              id={stage.id}
+              title={stage.title}
+              titleColor={stage.color}
+              bgColor={stage.bgColor}
+              borderColor={stage.borderColor}
+              deals={filtered[stage.id] || []}
+              moveDeal={moveDeal}
+              onEdit={handleEditClick}
+              onDelete={handleDeleteClick}
+              onView={handleViewClick}
+              userRole={userRole}
+              userId={userId}
+              className={`pipeline-column ${index === 0 ? "first-column" : ""}`}
+              index={index}
+            />
+          ),
+        )}
       </div>
     </div>
   );
@@ -1055,7 +1061,7 @@ function DealCard({
         </div>
       </div>
 
-      {/* Tags */}
+
       {deal.tags?.length ? (
         <div className="flex flex-wrap gap-1">
           {deal.tags.map((t, i) => (
@@ -1106,7 +1112,7 @@ function DealCard({
   );
 }
 
-// ----- DndProvider wrapper -----
+
 function SalesPipelineBoard() {
   return (
     <DndProvider backend={HTML5Backend}>
@@ -1115,7 +1121,7 @@ function SalesPipelineBoard() {
   );
 }
 
-// Export with TourProvider wrapper
+
 export default function SalesPipelineBoardWithTour() {
   return (
     <TourProvider
@@ -1129,9 +1135,9 @@ export default function SalesPipelineBoardWithTour() {
           color: "#1f1f1f",
         }),
         maskArea: (base) => ({ ...base, rx: 8 }),
-        badge: (base) => ({ 
-          ...base, 
-          display: "none"
+        badge: (base) => ({
+          ...base,
+          display: "none", // This hides the step number badge
         }),
         close: (base) => ({
           ...base,

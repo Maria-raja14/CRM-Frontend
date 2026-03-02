@@ -58,6 +58,9 @@ import confetti from "canvas-confetti";
 import { useNavigate } from "react-router-dom";
 import { Progress } from "../components/ui/progress";
 import StreakLeaderboard from "../pages/StreakLeaderboard";
+import console from "console";
+
+
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -136,8 +139,16 @@ const previousRangeFor = (preset, selectedMonth = new Date().getMonth()) => {
     const thisMonth = new Date(year, selectedMonth, 1);
     const prevMonth = new Date(thisMonth);
     prevMonth.setMonth(thisMonth.getMonth() - 1);
-    const prevStart = new Date(prevMonth.getFullYear(), prevMonth.getMonth(), 1);
-    const prevEnd = new Date(prevMonth.getFullYear(), prevMonth.getMonth() + 1, 0);
+    const prevStart = new Date(
+      prevMonth.getFullYear(),
+      prevMonth.getMonth(),
+      1,
+    );
+    const prevEnd = new Date(
+      prevMonth.getFullYear(),
+      prevMonth.getMonth() + 1,
+      0,
+    );
     return { start: formatDate(prevStart), end: formatDate(prevEnd) };
   }
   return todayRange();
@@ -151,15 +162,21 @@ const useDebouncedCallback = (fn, delay = 400) => {
       if (timer.current) clearTimeout(timer.current);
       timer.current = setTimeout(() => fn(...args), delay);
     },
-    [fn, delay]
+    [fn, delay],
   );
   useEffect(() => () => timer.current && clearTimeout(timer.current), []);
   return call;
 };
 
 const BASE_COLORS = [
-  "#8B5CF6", "#3B82F6", "#10B981", "#F59E0B",
-  "#EF4444", "#6366F1", "#EC4899", "#06B6D4"
+  "#8B5CF6",
+  "#3B82F6",
+  "#10B981",
+  "#F59E0B",
+  "#EF4444",
+  "#6366F1",
+  "#EC4899",
+  "#06B6D4",
 ];
 
 // Enhanced gradient color palette for Deal Performance with attractive colors
@@ -181,7 +198,7 @@ const ATTRACTIVE_COLORS = {
   ],
   lost: [
     { from: "#EF4444", to: "#F97316" }, // Red to orange
-  ]
+  ],
 };
 
 /* ---------- Enhanced Card Bubbles overlay ---------- */
@@ -234,7 +251,8 @@ const CardBubbles = ({ seed = 0, count = 12, colorPalette = BASE_COLORS }) => {
 
 /* Currency Display Component */
 const CurrencyDisplay = ({ value, currency = "USD", className = "" }) => {
-  const currencyInfo = allowedCurrencies.find(c => c.code === currency) || allowedCurrencies[0];
+  const currencyInfo =
+    allowedCurrencies.find((c) => c.code === currency) || allowedCurrencies[0];
   const numericValue = Number(value) || 0;
 
   // Remove leading zeros and format properly
@@ -242,11 +260,13 @@ const CurrencyDisplay = ({ value, currency = "USD", className = "" }) => {
 
   return (
     <div className={cn("flex items-baseline gap-1", className)}>
-      <span className="text-lg font-semibold text-gray-600">{currencyInfo.symbol}</span>
-      <span className="text-2xl font-bold text-gray-900">
-        {formattedValue}
+      <span className="text-lg font-semibold text-gray-600">
+        {currencyInfo.symbol}
       </span>
-      <span className="text-sm font-medium text-gray-500 ml-1">{currencyInfo.code}</span>
+      <span className="text-2xl font-bold text-gray-900">{formattedValue}</span>
+      <span className="text-sm font-medium text-gray-500 ml-1">
+        {currencyInfo.code}
+      </span>
     </div>
   );
 };
@@ -259,7 +279,7 @@ const CurrencyBreakdownCard = ({ revenueData, loading }) => {
         <CardContent className="p-6">
           <Skeleton className="h-6 w-32 mb-4" />
           <div className="space-y-3">
-            {[1, 2, 3].map(i => (
+            {[1, 2, 3].map((i) => (
               <Skeleton key={i} className="h-12 w-full" />
             ))}
           </div>
@@ -274,7 +294,7 @@ const CurrencyBreakdownCard = ({ revenueData, loading }) => {
     .map(([currency, data]) => ({
       currency,
       amount: Number(data.amount),
-      count: data.count
+      count: data.count,
     }))
     .sort((a, b) => b.amount - a.amount);
 
@@ -288,21 +308,30 @@ const CurrencyBreakdownCard = ({ revenueData, loading }) => {
       whileHover={{ y: -2 }}
     >
       <Card className="shadow-lg border-0 overflow-hidden relative bg-gradient-to-br from-slate-50 to-gray-100/80 backdrop-blur-sm">
-        <CardBubbles seed={5} count={6} colorPalette={["#8B5CF6", "#A78BFA", "#C4B5FD"]} />
+        <CardBubbles
+          seed={5}
+          count={6}
+          colorPalette={["#8B5CF6", "#A78BFA", "#C4B5FD"]}
+        />
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg text-gray-800 flex items-center gap-2">
               <Globe className="h-5 w-5 text-purple-600" />
               Revenue by Currency
             </CardTitle>
-            <Badge variant="secondary" className="bg-white/80 backdrop-blur-sm text-xs">
+            <Badge
+              variant="secondary"
+              className="bg-white/80 backdrop-blur-sm text-xs"
+            >
               {currencies.length} Currencies
             </Badge>
           </div>
 
           {/* Total Revenue Display */}
           <div className="mt-4 p-4 bg-white/60 rounded-lg border border-gray-200/50 backdrop-blur-sm">
-            <div className="text-sm font-medium text-gray-600 mb-1">Total Revenue</div>
+            <div className="text-sm font-medium text-gray-600 mb-1">
+              Total Revenue
+            </div>
             <div className="text-2xl font-bold text-gray-900">
               ${totalRevenue.toLocaleString()}
             </div>
@@ -315,7 +344,9 @@ const CurrencyBreakdownCard = ({ revenueData, loading }) => {
         <CardContent className="space-y-3">
           {currencies.length > 0 ? (
             currencies.map(({ currency, amount, count }, index) => {
-              const currencyInfo = allowedCurrencies.find(c => c.code === currency);
+              const currencyInfo = allowedCurrencies.find(
+                (c) => c.code === currency,
+              );
 
               return (
                 <motion.div
@@ -328,19 +359,29 @@ const CurrencyBreakdownCard = ({ revenueData, loading }) => {
                   <div className="flex items-center gap-3">
                     <div
                       className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: BASE_COLORS[index % BASE_COLORS.length] }}
+                      style={{
+                        backgroundColor:
+                          BASE_COLORS[index % BASE_COLORS.length],
+                      }}
                     />
                     <div>
-                      <div className="font-semibold text-gray-800 text-sm">{currencyInfo?.name}</div>
-                      <div className="text-xs text-gray-500">{currencyInfo?.code}</div>
+                      <div className="font-semibold text-gray-800 text-sm">
+                        {currencyInfo?.name}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {currencyInfo?.code}
+                      </div>
                     </div>
                   </div>
 
                   <div className="text-right">
                     <div className="font-bold text-gray-900 text-sm">
-                      {currencyInfo?.symbol}{amount.toLocaleString()}
+                      {currencyInfo?.symbol}
+                      {amount.toLocaleString()}
                     </div>
-                    <div className="text-xs text-gray-500">{count || 0} invoices</div>
+                    <div className="text-xs text-gray-500">
+                      {count || 0} invoices
+                    </div>
                   </div>
                 </motion.div>
               );
@@ -365,7 +406,7 @@ const PendingInvoicesCard = ({ invoicesData, loading }) => {
         <CardContent className="p-6">
           <Skeleton className="h-6 w-32 mb-4" />
           <div className="space-y-3">
-            {[1, 2].map(i => (
+            {[1, 2].map((i) => (
               <Skeleton key={i} className="h-12 w-full" />
             ))}
           </div>
@@ -374,13 +415,14 @@ const PendingInvoicesCard = ({ invoicesData, loading }) => {
     );
   }
 
-  const pendingInvoices = invoicesData?.filter(inv =>
-    inv.status === 'pending' || inv.status === 'unpaid'
-  ) || [];
+  const pendingInvoices =
+    invoicesData?.filter(
+      (inv) => inv.status === "pending" || inv.status === "unpaid",
+    ) || [];
 
   const pendingByCurrency = {};
-  pendingInvoices.forEach(invoice => {
-    const currency = invoice.currency || 'USD';
+  pendingInvoices.forEach((invoice) => {
+    const currency = invoice.currency || "USD";
     const amount = Number(invoice.total) || 0;
     if (amount > 0) {
       if (!pendingByCurrency[currency]) {
@@ -397,7 +439,7 @@ const PendingInvoicesCard = ({ invoicesData, loading }) => {
     .map(([currency, data]) => ({
       currency,
       amount: Number(data.amount),
-      count: data.count
+      count: data.count,
     }))
     .sort((a, b) => b.amount - a.amount);
 
@@ -411,34 +453,43 @@ const PendingInvoicesCard = ({ invoicesData, loading }) => {
       whileHover={{ y: -2 }}
     >
       <Card className="shadow-lg border-0 overflow-hidden relative bg-gradient-to-br from-blue-50/60 to-indigo-50/50 backdrop-blur-sm">
-        <CardBubbles seed={6} count={5} colorPalette={["#3B82F6", "#60A5FA", "#93C5FD"]} />
+        <CardBubbles
+          seed={6}
+          count={5}
+          colorPalette={["#3B82F6", "#60A5FA", "#93C5FD"]}
+        />
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg text-gray-800 flex items-center gap-2">
               <Receipt className="h-5 w-5 text-blue-600" />
               Pending Invoices
             </CardTitle>
-            <Badge variant="secondary" className="bg-white/80 backdrop-blur-sm text-xs">
+            <Badge
+              variant="secondary"
+              className="bg-white/80 backdrop-blur-sm text-xs"
+            >
               {currencies.length} Currencies
             </Badge>
           </div>
 
           {/* Total Pending Display */}
           <div className="mt-4 p-4 bg-white/50 rounded-lg border border-blue-200/30 backdrop-blur-sm">
-            <div className="text-sm font-medium text-gray-600 mb-1">Total Pending</div>
+            <div className="text-sm font-medium text-gray-600 mb-1">
+              Total Pending
+            </div>
             <div className="text-2xl font-bold text-gray-900">
               ${totalPending.toLocaleString()}
             </div>
-            <div className="text-xs text-gray-500 mt-1">
-              Awaiting payment
-            </div>
+            <div className="text-xs text-gray-500 mt-1">Awaiting payment</div>
           </div>
         </CardHeader>
 
         <CardContent className="space-y-3">
           {currencies.length > 0 ? (
             currencies.map(({ currency, amount, count }, index) => {
-              const currencyInfo = allowedCurrencies.find(c => c.code === currency);
+              const currencyInfo = allowedCurrencies.find(
+                (c) => c.code === currency,
+              );
 
               return (
                 <motion.div
@@ -451,16 +502,23 @@ const PendingInvoicesCard = ({ invoicesData, loading }) => {
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 rounded-full bg-blue-400" />
                     <div>
-                      <div className="font-semibold text-gray-800 text-sm">{currencyInfo?.name}</div>
-                      <div className="text-xs text-gray-500">{currencyInfo?.code}</div>
+                      <div className="font-semibold text-gray-800 text-sm">
+                        {currencyInfo?.name}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {currencyInfo?.code}
+                      </div>
                     </div>
                   </div>
 
                   <div className="text-right">
                     <div className="font-bold text-gray-900 text-sm">
-                      {currencyInfo?.symbol}{amount.toLocaleString()}
+                      {currencyInfo?.symbol}
+                      {amount.toLocaleString()}
                     </div>
-                    <div className="text-xs text-gray-500">{count || 0} pending</div>
+                    <div className="text-xs text-gray-500">
+                      {count || 0} pending
+                    </div>
                   </div>
                 </motion.div>
               );
@@ -478,21 +536,23 @@ const PendingInvoicesCard = ({ invoicesData, loading }) => {
 };
 
 /* Enhanced Revenue Trend Chart with Sharp Design */
-const RevenueTrendChart = ({ revenueData, loading, activePreset, selectedMonth, selectedYear, recentInvoices }) => {
-  const [selectedCurrency, setSelectedCurrency] = useState('ALL');
+const RevenueTrendChart = ({
+  revenueData,
+  loading,
+  activePreset,
+  selectedMonth,
+  selectedYear,
+  recentInvoices,
+}) => {
+  const [selectedCurrency, setSelectedCurrency] = useState("ALL");
 
-  // Filter out zero amounts and remove leading zeros
-  const currencies = Object.entries(revenueData)
-    .filter(([_, data]) => data.amount > 0)
-    .map(([currency]) => currency)
-    .sort();
-
+  // Show ALL allowed currencies in dropdown, not just those with data
   const currencyOptions = [
-    { code: 'ALL', name: 'All Currencies' },
-    ...currencies.map(code => ({
-      code,
-      name: allowedCurrencies.find(c => c.code === code)?.name || code
-    }))
+    { code: "ALL", name: "All Currencies" },
+    ...allowedCurrencies.map((currency) => ({
+      code: currency.code,
+      name: currency.name,
+    })),
   ];
 
   // Build chart data from actual invoices
@@ -501,32 +561,59 @@ const RevenueTrendChart = ({ revenueData, loading, activePreset, selectedMonth, 
 
     const monthlyData = {};
 
-    recentInvoices.forEach(invoice => {
-      const invoiceDate = new Date(invoice.createdAt || invoice.date || new Date());
-      const monthKey = invoiceDate.toLocaleString('default', { month: 'short' });
+    // Get currencies from revenueData that have actual amounts
+    const currenciesWithData = Object.entries(revenueData)
+      .filter(([_, data]) => data.amount > 0)
+      .map(([currency]) => currency);
+
+    recentInvoices.forEach((invoice) => {
+      const invoiceDate = new Date(
+        invoice.createdAt || invoice.date || new Date(),
+      );
+      const monthKey = invoiceDate.toLocaleString("default", {
+        month: "short",
+      });
       const amount = Number(invoice.total) || 0;
-      const currency = invoice.currency || 'USD';
+      const currency = invoice.currency || "USD";
 
       if (amount > 0) {
         if (!monthlyData[monthKey]) {
           monthlyData[monthKey] = { month: monthKey };
-          currencies.forEach(curr => {
-            monthlyData[monthKey][curr] = 0;
+          // Initialize all allowed currencies with 0
+          allowedCurrencies.forEach((curr) => {
+            monthlyData[monthKey][curr.code] = 0;
           });
           monthlyData[monthKey].total = 0;
         }
 
-        monthlyData[monthKey][currency] = (monthlyData[monthKey][currency] || 0) + amount;
+        monthlyData[monthKey][currency] =
+          (monthlyData[monthKey][currency] || 0) + amount;
         monthlyData[monthKey].total += amount;
       }
     });
 
     // Fill in missing months with zero values
-    const allMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    return allMonths.map(month => {
+    const allMonths = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    return allMonths.map((month) => {
       const data = monthlyData[month] || { month, total: 0 };
-      currencies.forEach(currency => {
-        if (!data[currency]) data[currency] = 0;
+      // Ensure all currencies are present
+      allowedCurrencies.forEach((currency) => {
+        if (data[currency.code] === undefined) {
+          data[currency.code] = 0;
+        }
       });
       return data;
     });
@@ -544,15 +631,24 @@ const RevenueTrendChart = ({ revenueData, loading, activePreset, selectedMonth, 
         className="bg-white p-4 rounded-lg shadow-xl border border-gray-200/80 backdrop-blur-sm min-w-48"
       >
         <div className="text-sm font-semibold text-gray-800 mb-2">{label}</div>
-        {selectedCurrency === 'ALL' ? (
+        {selectedCurrency === "ALL" ? (
           <>
             <div className="text-sm text-gray-600 mb-2">
-              Total: <strong>${payload.reduce((sum, p) => sum + (p.value || 0), 0).toLocaleString()}</strong>
+              Total:{" "}
+              <strong>
+                $
+                {payload
+                  .reduce((sum, p) => sum + (p.value || 0), 0)
+                  .toLocaleString()}
+              </strong>
             </div>
             {payload
-              .filter(p => p.value > 0)
+              .filter((p) => p.value > 0)
               .map((p, i) => (
-                <div key={i} className="text-sm text-gray-600 mt-1 flex items-center justify-between">
+                <div
+                  key={i}
+                  className="text-sm text-gray-600 mt-1 flex items-center justify-between"
+                >
                   <div className="flex items-center">
                     <span
                       style={{
@@ -585,7 +681,9 @@ const RevenueTrendChart = ({ revenueData, loading, activePreset, selectedMonth, 
               />
               {selectedCurrency}
             </div>
-            <strong className="ml-2">${payload[0]?.value?.toLocaleString()}</strong>
+            <strong className="ml-2">
+              ${payload[0]?.value?.toLocaleString()}
+            </strong>
           </div>
         )}
       </motion.div>
@@ -613,17 +711,22 @@ const RevenueTrendChart = ({ revenueData, loading, activePreset, selectedMonth, 
                 Revenue Trend
               </CardTitle>
               <CardDescription>
-                {selectedCurrency === 'ALL' ? 'Monthly revenue across all currencies' : `Monthly revenue in ${selectedCurrency}`}
+                {selectedCurrency === "ALL"
+                  ? "Monthly revenue across all currencies"
+                  : `Monthly revenue in ${selectedCurrency}`}
               </CardDescription>
             </div>
 
             <div className="flex items-center gap-3">
-              <Select value={selectedCurrency} onValueChange={setSelectedCurrency}>
+              <Select
+                value={selectedCurrency}
+                onValueChange={setSelectedCurrency}
+              >
                 <SelectTrigger className="w-[180px] bg-white/90 backdrop-blur-sm border-gray-200 shadow-sm">
                   <SelectValue placeholder="Select currency" />
                 </SelectTrigger>
                 <SelectContent>
-                  {currencyOptions.map(option => (
+                  {currencyOptions.map((option) => (
                     <SelectItem key={option.code} value={option.code}>
                       {option.name}
                     </SelectItem>
@@ -651,13 +754,15 @@ const RevenueTrendChart = ({ revenueData, loading, activePreset, selectedMonth, 
           </div>
         </CardHeader>
 
-        <CardContent className="pt-6">
+        <CardContent className="pt-6 flex-1">
           <div className="flex items-center justify-between mb-6">
             <div>
               <p className="text-sm text-gray-500">Current Period</p>
               <div className="text-2xl font-semibold text-gray-900">
-                {selectedCurrency === 'ALL' ? (
-                  `$${Object.values(revenueData).reduce((sum, curr) => sum + (Number(curr.amount) || 0), 0).toLocaleString()}`
+                {selectedCurrency === "ALL" ? (
+                  `$${Object.values(revenueData)
+                    .reduce((sum, curr) => sum + (Number(curr.amount) || 0), 0)
+                    .toLocaleString()}`
                 ) : (
                   <CurrencyDisplay
                     value={revenueData[selectedCurrency]?.amount || 0}
@@ -669,7 +774,9 @@ const RevenueTrendChart = ({ revenueData, loading, activePreset, selectedMonth, 
             </div>
 
             <Badge variant="secondary" className="bg-white/80 backdrop-blur-sm">
-              {selectedCurrency === 'ALL' ? `${currencies.length} Currencies` : selectedCurrency}
+              {selectedCurrency === "ALL"
+                ? `${allowedCurrencies.length} Currencies`
+                : selectedCurrency}
             </Badge>
           </div>
 
@@ -683,21 +790,40 @@ const RevenueTrendChart = ({ revenueData, loading, activePreset, selectedMonth, 
                   margin={{ top: 6, right: 20, left: 0, bottom: 6 }}
                 >
                   <defs>
-                    {selectedCurrency === 'ALL' ? (
-                      currencies.map((currency, index) => (
+                    {selectedCurrency === "ALL" ? (
+                      allowedCurrencies.map((currency, index) => (
                         <linearGradient
-                          key={currency}
-                          id={`gradient-${currency}`}
-                          x1="0" x2="0" y1="0" y2="1"
+                          key={currency.code}
+                          id={`gradient-${currency.code}`}
+                          x1="0"
+                          x2="0"
+                          y1="0"
+                          y2="1"
                         >
-                          <stop offset="0%" stopColor={BASE_COLORS[index % BASE_COLORS.length]} stopOpacity={0.8} />
-                          <stop offset="100%" stopColor={BASE_COLORS[index % BASE_COLORS.length]} stopOpacity={0.1} />
+                          <stop
+                            offset="0%"
+                            stopColor={BASE_COLORS[index % BASE_COLORS.length]}
+                            stopOpacity={0.8}
+                          />
+                          <stop
+                            offset="100%"
+                            stopColor={BASE_COLORS[index % BASE_COLORS.length]}
+                            stopOpacity={0.1}
+                          />
                         </linearGradient>
                       ))
                     ) : (
                       <linearGradient id="revGrad" x1="0" x2="0" y1="0" y2="1">
-                        <stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.8} />
-                        <stop offset="100%" stopColor="#8B5CF6" stopOpacity={0.1} />
+                        <stop
+                          offset="0%"
+                          stopColor="#8B5CF6"
+                          stopOpacity={0.8}
+                        />
+                        <stop
+                          offset="100%"
+                          stopColor="#8B5CF6"
+                          stopOpacity={0.1}
+                        />
                       </linearGradient>
                     )}
                   </defs>
@@ -711,26 +837,26 @@ const RevenueTrendChart = ({ revenueData, loading, activePreset, selectedMonth, 
 
                   <XAxis
                     dataKey="month"
-                    axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
+                    axisLine={{ stroke: "#E5E7EB", strokeWidth: 1 }}
                     tickLine={false}
-                    tick={{ fill: '#6B7280', fontSize: 12, fontWeight: 500 }}
+                    tick={{ fill: "#6B7280", fontSize: 12, fontWeight: 500 }}
                   />
 
                   <YAxis
-                    axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
+                    axisLine={{ stroke: "#E5E7EB", strokeWidth: 1 }}
                     tickLine={false}
-                    tick={{ fill: '#6B7280', fontSize: 12, fontWeight: 500 }}
+                    tick={{ fill: "#6B7280", fontSize: 12, fontWeight: 500 }}
                     tickFormatter={(value) => `$${value.toLocaleString()}`}
                   />
 
                   <Tooltip content={<CustomTooltip />} />
 
-                  {selectedCurrency === 'ALL' ? (
-                    currencies.map((currency, index) => (
+                  {selectedCurrency === "ALL" ? (
+                    allowedCurrencies.map((currency, index) => (
                       <Line
-                        key={currency}
+                        key={currency.code}
                         type="monotone"
-                        dataKey={currency}
+                        dataKey={currency.code}
                         stroke={BASE_COLORS[index % BASE_COLORS.length]}
                         strokeWidth={3}
                         dot={{
@@ -764,7 +890,7 @@ const RevenueTrendChart = ({ revenueData, loading, activePreset, selectedMonth, 
                         stroke: "#8B5CF6",
                         strokeWidth: 2,
                         r: 4,
-                        fill: "#fff"
+                        fill: "#fff",
                       }}
                       activeDot={{
                         r: 8,
@@ -798,7 +924,11 @@ const RevenueTrendChart = ({ revenueData, loading, activePreset, selectedMonth, 
 };
 
 /* Enhanced Sales Pipeline Component */
-const SalesPipelineChart = ({ pipelineBarData, loading, totalPipelineLeads }) => {
+const SalesPipelineChart = ({
+  pipelineBarData,
+  loading,
+  totalPipelineLeads,
+}) => {
   const [hoveredBar, setHoveredBar] = useState(null);
 
   const CustomPipelineTooltip = ({ active, payload, label }) => {
@@ -812,7 +942,10 @@ const SalesPipelineChart = ({ pipelineBarData, loading, totalPipelineLeads }) =>
       >
         <div className="text-sm font-semibold text-gray-800 mb-3">{label}</div>
         {payload.map((p, i) => (
-          <div key={i} className="text-sm text-gray-600 mt-2 flex items-center justify-between">
+          <div
+            key={i}
+            className="text-sm text-gray-600 mt-2 flex items-center justify-between"
+          >
             <div className="flex items-center">
               <span
                 style={{
@@ -857,15 +990,13 @@ const SalesPipelineChart = ({ pipelineBarData, loading, totalPipelineLeads }) =>
               <Users className="h-5 w-5 text-blue-600" />
               Sales Pipeline Analytics
             </CardTitle>
-            <Badge
-              variant="secondary"
-              className="bg-white/80 backdrop-blur-sm"
-            >
+            <Badge variant="secondary" className="bg-white/80 backdrop-blur-sm">
               {totalPipelineLeads} Total Deals
             </Badge>
           </div>
           <CardDescription>
-            Monthly breakdown of open opportunities vs won deals with performance metrics
+            Monthly breakdown of open opportunities vs won deals with
+            performance metrics
           </CardDescription>
         </CardHeader>
 
@@ -895,12 +1026,28 @@ const SalesPipelineChart = ({ pipelineBarData, loading, totalPipelineLeads }) =>
                   >
                     <defs>
                       <linearGradient id="gOpen" x1="0" x2="0" y1="0" y2="1">
-                        <stop offset="0%" stopColor="#3B82F6" stopOpacity={0.9} />
-                        <stop offset="100%" stopColor="#3B82F6" stopOpacity={0.2} />
+                        <stop
+                          offset="0%"
+                          stopColor="#3B82F6"
+                          stopOpacity={0.9}
+                        />
+                        <stop
+                          offset="100%"
+                          stopColor="#3B82F6"
+                          stopOpacity={0.2}
+                        />
                       </linearGradient>
                       <linearGradient id="gWon" x1="0" x2="0" y1="0" y2="1">
-                        <stop offset="0%" stopColor="#10B981" stopOpacity={0.9} />
-                        <stop offset="100%" stopColor="#10B981" stopOpacity={0.2} />
+                        <stop
+                          offset="0%"
+                          stopColor="#10B981"
+                          stopOpacity={0.9}
+                        />
+                        <stop
+                          offset="100%"
+                          stopColor="#10B981"
+                          stopOpacity={0.2}
+                        />
                       </linearGradient>
                     </defs>
 
@@ -913,15 +1060,15 @@ const SalesPipelineChart = ({ pipelineBarData, loading, totalPipelineLeads }) =>
                     <XAxis
                       dataKey="month"
                       tickLine={false}
-                      axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
-                      tick={{ fill: '#6B7280', fontSize: 12 }}
+                      axisLine={{ stroke: "#E5E7EB", strokeWidth: 1 }}
+                      tick={{ fill: "#6B7280", fontSize: 12 }}
                       interval={0}
                     />
 
                     <YAxis
                       tickLine={false}
-                      axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
-                      tick={{ fill: '#6B7280', fontSize: 12 }}
+                      axisLine={{ stroke: "#E5E7EB", strokeWidth: 1 }}
+                      tick={{ fill: "#6B7280", fontSize: 12 }}
                     />
 
                     <Tooltip content={<CustomPipelineTooltip />} />
@@ -935,7 +1082,7 @@ const SalesPipelineChart = ({ pipelineBarData, loading, totalPipelineLeads }) =>
                       isAnimationActive={true}
                       animationBegin={400}
                       animationDuration={1500}
-                      onMouseEnter={() => setHoveredBar('Open')}
+                      onMouseEnter={() => setHoveredBar("Open")}
                       onMouseLeave={() => setHoveredBar(null)}
                     />
                     <Bar
@@ -947,7 +1094,7 @@ const SalesPipelineChart = ({ pipelineBarData, loading, totalPipelineLeads }) =>
                       isAnimationActive={true}
                       animationBegin={800}
                       animationDuration={1500}
-                      onMouseEnter={() => setHoveredBar('Won')}
+                      onMouseEnter={() => setHoveredBar("Won")}
                       onMouseLeave={() => setHoveredBar(null)}
                     />
                   </BarChart>
@@ -961,7 +1108,9 @@ const SalesPipelineChart = ({ pipelineBarData, loading, totalPipelineLeads }) =>
                     className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg border border-blue-200"
                   >
                     <span className="w-3 h-3 rounded-full bg-[#3B82F6]" />
-                    <span className="text-sm font-medium text-gray-700">Open Opportunities</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      Open Opportunities
+                    </span>
                     <Badge variant="secondary" className="bg-white">
                       {pipelineBarData.reduce((sum, d) => sum + d.Open, 0)}
                     </Badge>
@@ -971,7 +1120,9 @@ const SalesPipelineChart = ({ pipelineBarData, loading, totalPipelineLeads }) =>
                     className="flex items-center gap-2 px-3 py-2 bg-green-50 rounded-lg border border-green-200"
                   >
                     <span className="w-3 h-3 rounded-full bg-[#10B981]" />
-                    <span className="text-sm font-medium text-gray-700">Won Deals</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      Won Deals
+                    </span>
                     <Badge variant="secondary" className="bg-white">
                       {pipelineBarData.reduce((sum, d) => sum + d.Won, 0)}
                     </Badge>
@@ -981,8 +1132,15 @@ const SalesPipelineChart = ({ pipelineBarData, loading, totalPipelineLeads }) =>
                 <div className="flex justify-center gap-6 text-xs text-gray-500">
                   <div className="text-center">
                     <div className="font-semibold text-gray-700">
-                      {((pipelineBarData.reduce((sum, d) => sum + d.Won, 0) /
-                        pipelineBarData.reduce((sum, d) => sum + (d.Open + d.Won), 0)) * 100 || 0).toFixed(1)}%
+                      {(
+                        (pipelineBarData.reduce((sum, d) => sum + d.Won, 0) /
+                          pipelineBarData.reduce(
+                            (sum, d) => sum + (d.Open + d.Won),
+                            0,
+                          )) *
+                          100 || 0
+                      ).toFixed(1)}
+                      %
                     </div>
                     <div>Win Rate</div>
                   </div>
@@ -1013,9 +1171,9 @@ const DealDistributionChart = ({ pieData, loading, totalDeals }) => {
 
     // Use special attractive colors for Open and Won states
     let colorSet;
-    if (entry.name === 'Open') {
+    if (entry.name === "Open") {
       colorSet = ATTRACTIVE_COLORS.open[index % ATTRACTIVE_COLORS.open.length];
-    } else if (entry.name === 'Won') {
+    } else if (entry.name === "Won") {
       colorSet = ATTRACTIVE_COLORS.won[index % ATTRACTIVE_COLORS.won.length];
     } else {
       colorSet = ATTRACTIVE_COLORS.lost[index % ATTRACTIVE_COLORS.lost.length];
@@ -1053,15 +1211,18 @@ const DealDistributionChart = ({ pieData, loading, totalDeals }) => {
     if (!active || !payload || payload.length === 0) return null;
 
     const data = payload[0].payload;
-    const entryIndex = pieData.findIndex(p => p.name === data.name);
+    const entryIndex = pieData.findIndex((p) => p.name === data.name);
 
     let colorSet;
-    if (data.name === 'Open') {
-      colorSet = ATTRACTIVE_COLORS.open[entryIndex % ATTRACTIVE_COLORS.open.length];
-    } else if (data.name === 'Won') {
-      colorSet = ATTRACTIVE_COLORS.won[entryIndex % ATTRACTIVE_COLORS.won.length];
+    if (data.name === "Open") {
+      colorSet =
+        ATTRACTIVE_COLORS.open[entryIndex % ATTRACTIVE_COLORS.open.length];
+    } else if (data.name === "Won") {
+      colorSet =
+        ATTRACTIVE_COLORS.won[entryIndex % ATTRACTIVE_COLORS.won.length];
     } else {
-      colorSet = ATTRACTIVE_COLORS.lost[entryIndex % ATTRACTIVE_COLORS.lost.length];
+      colorSet =
+        ATTRACTIVE_COLORS.lost[entryIndex % ATTRACTIVE_COLORS.lost.length];
     }
 
     return (
@@ -1074,17 +1235,19 @@ const DealDistributionChart = ({ pieData, loading, totalDeals }) => {
           <div
             className="w-3 h-3 rounded-full"
             style={{
-              background: `linear-gradient(135deg, ${colorSet.from}, ${colorSet.to})`
+              background: `linear-gradient(135deg, ${colorSet.from}, ${colorSet.to})`,
             }}
           />
           {data.name}
         </div>
-        <div className="text-lg font-bold text-gray-900 mb-1">{data.value} deals</div>
+        <div className="text-lg font-bold text-gray-900 mb-1">
+          {data.value} deals
+        </div>
         <div className="text-sm text-gray-600">{data.percentage}% of total</div>
         <div className="mt-2 text-xs text-gray-500">
-          {data.name === 'Open' && 'Active opportunities in pipeline'}
-          {data.name === 'Won' && 'Successfully closed deals'}
-          {data.name === 'Lost' && 'Unsuccessful opportunities'}
+          {data.name === "Open" && "Active opportunities in pipeline"}
+          {data.name === "Won" && "Successfully closed deals"}
+          {data.name === "Lost" && "Unsuccessful opportunities"}
         </div>
       </motion.div>
     );
@@ -1092,7 +1255,7 @@ const DealDistributionChart = ({ pieData, loading, totalDeals }) => {
 
   // Trigger re-animation when data changes
   useEffect(() => {
-    setAnimationKey(prev => prev + 1);
+    setAnimationKey((prev) => prev + 1);
   }, [pieData]);
 
   return (
@@ -1106,7 +1269,10 @@ const DealDistributionChart = ({ pieData, loading, totalDeals }) => {
         <CardBubbles
           seed={41}
           count={8}
-          colorPalette={[...ATTRACTIVE_COLORS.open.flatMap(c => [c.from, c.to]), ...ATTRACTIVE_COLORS.won.flatMap(c => [c.from, c.to])]}
+          colorPalette={[
+            ...ATTRACTIVE_COLORS.open.flatMap((c) => [c.from, c.to]),
+            ...ATTRACTIVE_COLORS.won.flatMap((c) => [c.from, c.to]),
+          ]}
         />
         <CardHeader className="pb-4 border-b border-gray-200/50">
           <div className="flex justify-between items-center">
@@ -1135,7 +1301,7 @@ const DealDistributionChart = ({ pieData, loading, totalDeals }) => {
               className="space-y-6"
             >
               {/* Enhanced Animated Pie Chart with Attractive Colors */}
-              <div className="h-56 relative">
+              <div className="h-72 relative">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -1178,18 +1344,20 @@ const DealDistributionChart = ({ pieData, loading, totalDeals }) => {
                     <motion.div
                       animate={{
                         scale: [1, 1.08, 1],
-                        rotate: [0, 2, -2, 0]
+                        rotate: [0, 2, -2, 0],
                       }}
                       transition={{
                         duration: 3,
                         repeat: Infinity,
-                        ease: "easeInOut"
+                        ease: "easeInOut",
                       }}
                       className="text-2xl font-bold text-gray-900"
                     >
                       {totalDeals}
                     </motion.div>
-                    <div className="text-xs text-gray-500 mt-1">Total Deals</div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      Total Deals
+                    </div>
                   </motion.div>
                 </div>
               </div>
@@ -1200,12 +1368,19 @@ const DealDistributionChart = ({ pieData, loading, totalDeals }) => {
                   .filter((p) => p.value > 0)
                   .map((p, i) => {
                     let colorSet;
-                    if (p.name === 'Open') {
-                      colorSet = ATTRACTIVE_COLORS.open[i % ATTRACTIVE_COLORS.open.length];
-                    } else if (p.name === 'Won') {
-                      colorSet = ATTRACTIVE_COLORS.won[i % ATTRACTIVE_COLORS.won.length];
+                    if (p.name === "Open") {
+                      colorSet =
+                        ATTRACTIVE_COLORS.open[
+                          i % ATTRACTIVE_COLORS.open.length
+                        ];
+                    } else if (p.name === "Won") {
+                      colorSet =
+                        ATTRACTIVE_COLORS.won[i % ATTRACTIVE_COLORS.won.length];
                     } else {
-                      colorSet = ATTRACTIVE_COLORS.lost[i % ATTRACTIVE_COLORS.lost.length];
+                      colorSet =
+                        ATTRACTIVE_COLORS.lost[
+                          i % ATTRACTIVE_COLORS.lost.length
+                        ];
                     }
 
                     return (
@@ -1243,11 +1418,11 @@ const DealDistributionChart = ({ pieData, loading, totalDeals }) => {
                             transition={{
                               type: "spring",
                               stiffness: 300,
-                              rotate: { duration: 0.6 }
+                              rotate: { duration: 0.6 },
                             }}
                             className="w-3 h-3 rounded-full relative"
                             style={{
-                              background: `linear-gradient(135deg, ${colorSet.from}, ${colorSet.to})`
+                              background: `linear-gradient(135deg, ${colorSet.from}, ${colorSet.to})`,
                             }}
                           >
                             {activeSlice === i && (
@@ -1257,7 +1432,7 @@ const DealDistributionChart = ({ pieData, loading, totalDeals }) => {
                                 className="absolute inset-0 rounded-full bg-current opacity-30"
                                 style={{
                                   animation: "ping 2s infinite",
-                                  transform: "scale(1.5)"
+                                  transform: "scale(1.5)",
                                 }}
                               />
                             )}
@@ -1267,24 +1442,25 @@ const DealDistributionChart = ({ pieData, loading, totalDeals }) => {
                               {p.name}
                             </div>
                             <div className="text-xs text-gray-500">
-                              {p.name === 'Open' && 'Active in pipeline'}
-                              {p.name === 'Won' && 'Successfully closed'}
-                              {p.name === 'Lost' && 'Did not convert'}
+                              {p.name === "Open" && "Active in pipeline"}
+                              {p.name === "Won" && "Successfully closed"}
+                              {p.name === "Lost" && "Did not convert"}
                             </div>
                           </div>
                         </div>
 
                         <div className="text-right relative z-10">
                           <div className="font-bold text-gray-900 text-sm group-hover:text-gray-950 transition-colors">
-                            {p.value} <span className="text-gray-400">deals</span>
+                            {p.value}{" "}
+                            <span className="text-gray-400">deals</span>
                           </div>
                           <div
                             className="text-xs font-medium group-hover:font-semibold transition-all"
                             style={{
                               background: `linear-gradient(135deg, ${colorSet.from}, ${colorSet.to})`,
-                              WebkitBackgroundClip: 'text',
-                              WebkitTextFillColor: 'transparent',
-                              backgroundClip: 'text',
+                              WebkitBackgroundClip: "text",
+                              WebkitTextFillColor: "transparent",
+                              backgroundClip: "text",
                             }}
                           >
                             {p.percentage}%
@@ -1302,23 +1478,37 @@ const DealDistributionChart = ({ pieData, loading, totalDeals }) => {
                   className="mt-4 p-4 rounded-lg border backdrop-blur-sm relative overflow-hidden"
                   style={{
                     background: `linear-gradient(135deg, #3B82F610, #60A5FA08)`,
-                    borderColor: '#3B82F620',
+                    borderColor: "#3B82F620",
                   }}
                 >
-                  <div className="text-xs text-gray-600 mb-2 font-medium relative z-10">Performance Summary</div>
+                  <div className="text-xs text-gray-600 mb-2 font-medium relative z-10">
+                    Performance Summary
+                  </div>
                   <div className="flex justify-between text-sm relative z-10">
                     <div className="text-center flex-1">
                       <div className="font-bold text-gray-800 text-lg">
-                        {((pieData.find(p => p.name === 'Won')?.value || 0) / totalDeals * 100).toFixed(1)}%
+                        {(
+                          ((pieData.find((p) => p.name === "Won")?.value || 0) /
+                            totalDeals) *
+                          100
+                        ).toFixed(1)}
+                        %
                       </div>
                       <div className="text-xs text-gray-600">Win Rate</div>
                     </div>
                     <div className="text-center flex-1 border-l border-blue-200">
                       <div className="font-bold text-gray-800 text-lg">
-                        {((pieData.find(p => p.name === 'Won')?.value || 0) /
-                          (pieData.find(p => p.name === 'Open')?.value || 1) * 100).toFixed(1)}%
+                        {(
+                          ((pieData.find((p) => p.name === "Won")?.value || 0) /
+                            (pieData.find((p) => p.name === "Open")?.value ||
+                              1)) *
+                          100
+                        ).toFixed(1)}
+                        %
                       </div>
-                      <div className="text-xs text-gray-600">Conversion Rate</div>
+                      <div className="text-xs text-gray-600">
+                        Conversion Rate
+                      </div>
                     </div>
                   </div>
                 </motion.div>
@@ -1447,7 +1637,11 @@ const AdminDashboard = () => {
 
   const [dealsData, setDealsData] = useState([]);
   const [totalDeals, setTotalDeals] = useState(0);
-  const [statusCounts, setStatusCounts] = useState({ open: 0, won: 0, lost: 0 });
+  const [statusCounts, setStatusCounts] = useState({
+    open: 0,
+    won: 0,
+    lost: 0,
+  });
 
   const [activePreset, setActivePreset] = useState("today");
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
@@ -1496,34 +1690,33 @@ const AdminDashboard = () => {
       debouncedFetch(range);
     }
   };
-  // clickabe
-  const handleCardClick = (card) => {
+// clickabe
+   const handleCardClick = (card) => {
 
-    // Navigate to relevant page based on card title
-    switch (card.title) {
-      case "Total Leads":
-        navigate("/leads");
-        break;
-      case "Deals Won":
-        navigate("/deals?status=won");
-        break;
-      case "Total Revenue":
-        navigate("/invoice");
-        break;
-      case "Pending Invoices":
-        navigate("/invoice?status=pending");
-        break;
-      
-      default:
-        break;
-    }
-  };
+      // Navigate to relevant page based on card title
+      switch(card.title) {
+        case "Total Leads":
+          navigate("/leads");
+          break;
+        case "Deals Won":
+          navigate("/deals?status=won");
+          break;
+        case "Total Revenue":
+          navigate("/invoice");
+          break;
+        case "Pending Invoices":
+          navigate("/invoice?status=pending");
+          break;
+          default:
+          break;
+      }
+    };
   /* ---------- Currency calculation helpers ---------- */
   const calculateRevenueByCurrency = (invoices) => {
     const revenue = {};
 
-    invoices.forEach(invoice => {
-      const currency = invoice.currency || 'USD';
+    invoices.forEach((invoice) => {
+      const currency = invoice.currency || "USD";
       const amount = Number(invoice.total) || 0;
 
       // Only add if amount is positive
@@ -1540,7 +1733,10 @@ const AdminDashboard = () => {
   };
 
   const getTotalRevenue = (revenueData) => {
-    return Object.values(revenueData).reduce((total, curr) => total + (Number(curr.amount) || 0), 0);
+    return Object.values(revenueData).reduce(
+      (total, curr) => total + (Number(curr.amount) || 0),
+      0,
+    );
   };
 
   /* ---------- Fetch helpers ---------- */
@@ -1555,7 +1751,11 @@ const AdminDashboard = () => {
   };
 
   /* ---------- Main Fetch ---------- */
-  const fetchAll = async (params, preset = "today", selMonth = selectedMonth) => {
+  const fetchAll = async (
+    params,
+    preset = "today",
+    selMonth = selectedMonth,
+  ) => {
     setLoading(true);
     setError(null);
     try {
@@ -1591,17 +1791,33 @@ const AdminDashboard = () => {
       const prev = resPrevSummary.data || {};
 
       // Calculate revenue by currency
-      const currencyRevenue = calculateRevenueByCurrency(resInvoices.data || []);
+      const currencyRevenue = calculateRevenueByCurrency(
+        resInvoices.data || [],
+      );
 
       // Calculate changes
-      const totalLeadsChange = computeChange(curr.totalLeads || 0, prev.totalLeads || 0);
-      const totalDealsWonChange = computeChange(curr.totalDealsWon || 0, prev.totalDealsWon || 0);
+      const totalLeadsChange = computeChange(
+        curr.totalLeads || 0,
+        prev.totalLeads || 0,
+      );
+      const totalDealsWonChange = computeChange(
+        curr.totalDealsWon || 0,
+        prev.totalDealsWon || 0,
+      );
 
       const currentTotalRevenue = getTotalRevenue(currencyRevenue);
-      const previousTotalRevenue = getTotalRevenue(calculateRevenueByCurrency(prev.recentInvoices || []));
-      const totalRevenueChange = computeChange(currentTotalRevenue, previousTotalRevenue);
+      const previousTotalRevenue = getTotalRevenue(
+        calculateRevenueByCurrency(prev.recentInvoices || []),
+      );
+      const totalRevenueChange = computeChange(
+        currentTotalRevenue,
+        previousTotalRevenue,
+      );
 
-      const pendingInvoicesChange = computeChange(curr.pendingInvoices || 0, prev.pendingInvoices || 0);
+      const pendingInvoicesChange = computeChange(
+        curr.pendingInvoices || 0,
+        prev.pendingInvoices || 0,
+      );
 
       const summaryCards = [
         {
@@ -1642,8 +1858,12 @@ const AdminDashboard = () => {
       setPipeline(resPipeline.data || []);
       setRecentInvoices(resInvoices.data || []);
       setRevenueByCurrency(currencyRevenue);
-      setLineAnimationKey(prev => prev + 1);
-    
+
+      if ((curr.totalDealsWon || 0) > 5 && totalDealsWonChange > 0) {
+        confetti({ particleCount: 140, spread: 90, origin: { y: 0.6 } });
+      }
+
+      setLineAnimationKey((prev) => prev + 1);
     } catch (err) {
       console.error("Dashboard fetch error:", err);
       setError("Failed to load dashboard data.");
@@ -1652,7 +1872,7 @@ const AdminDashboard = () => {
     }
   };
 
-  /* ---------- Fetch Deals ---------- */
+  
   const fetchDeals = async (params) => {
     try {
       const token = localStorage.getItem("token");
@@ -1686,8 +1906,18 @@ const AdminDashboard = () => {
       setStatusCounts(counts);
 
       const full = [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
       ].map((m) => {
         const found = monthlyData[m];
         return {
@@ -1718,7 +1948,8 @@ const AdminDashboard = () => {
     let range;
     if (preset === "today") range = todayRange();
     else if (preset === "7days") range = lastNDaysRange(7);
-    else if (preset === "month") range = getMonthRange(selectedMonth, selectedYear);
+    else if (preset === "month")
+      range = getMonthRange(selectedMonth, selectedYear);
     else if (preset === "year") range = getYearRange(selectedYear);
     else range = todayRange();
     debouncedFetch(range);
@@ -1733,10 +1964,13 @@ useEffect(() => {
   
   initialFetch();
 
-    // Set up auto-refresh interval
-    const refreshInterval = setInterval(() => {
-      // Refresh main data
-      applyPreset(activePreset);
+    const interval = setInterval(() => {
+      let range;
+      if (activePreset === "month")
+        range = getMonthRange(selectedMonth, selectedYear);
+      else if (activePreset === "7days") range = lastNDaysRange(7);
+      else if (activePreset === "year") range = getYearRange(selectedYear);
+      else range = todayRange();
 
       // Refresh streak data separately
       //  fetchStreakData();
@@ -1759,8 +1993,18 @@ useEffect(() => {
     });
 
     return [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ].map((m) => ({
       month: m,
       total: byMonth[m] || 0,
@@ -1793,7 +2037,106 @@ useEffect(() => {
     { name: "Lost", value: statusCounts.lost, percentage: percentages.lost },
   ];
 
-  const totalPipelineLeads = pipeline.reduce((acc, s) => acc + (s.leads || 0), 0);
+  const totalPipelineLeads = pipeline.reduce(
+    (acc, s) => acc + (s.leads || 0),
+    0,
+  );
+
+  /* ---------- Enhanced Summary Card Component ---------- */
+  const SummaryCard = ({ title, value, change, color, icon, colorPalette, loading, onClick }) => {
+    if (loading) {
+      return (
+        <Card className="overflow-hidden border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+          <CardContent className="p-5">
+            <Skeleton className="h-5 w-20 mb-3" />
+            <Skeleton className="h-8 w-16 mb-2" />
+            <Skeleton className="h-4 w-24" />
+          </CardContent>
+        </Card>
+      );
+    }
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 12, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{
+          type: "spring",
+          stiffness: 100,
+          damping: 12,
+        }}
+        whileHover={{
+          y: -4,
+          scale: 1.02,
+          transition: { duration: 0.2 },
+        }}
+      onClick={onClick}  
+      >
+        <Card
+          className={cn(
+            "overflow-hidden border-0 shadow-lg transition-all duration-300 relative bg-white/80 backdrop-blur-sm hover:shadow-xl",
+            {
+              "bg-blue-50/50": color === "blue",
+              "bg-green-50/50": color === "green",
+              "bg-purple-50/50": color === "purple",
+              "bg-orange-50/50": color === "orange",
+            },
+          )}
+            
+        >
+          <CardBubbles
+            seed={Math.random() * 10}
+            count={6}
+            colorPalette={colorPalette || BASE_COLORS}
+          />
+
+          <CardContent className="p-5 relative">
+            <div className="flex justify-between items-start mb-3">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-600 mb-2">
+                  {title}
+                </p>
+                <div className="text-2xl font-bold text-gray-900">
+                  {(value || 0).toLocaleString()}
+                </div>
+              </div>
+              <motion.div
+                className={cn("p-2 rounded-xl", {
+                  "bg-blue-100 text-blue-600": color === "blue",
+                  "bg-green-100 text-green-600": color === "green",
+                  "bg-purple-100 text-purple-600": color === "purple",
+                  "bg-orange-100 text-orange-600": color === "orange",
+                })}
+                whileHover={{ scale: 1.08, rotate: 5 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {icon}
+              </motion.div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                {change >= 0 ? (
+                  <ArrowUpRight className="h-4 w-4 text-green-500 mr-1" />
+                ) : (
+                  <ArrowDownRight className="h-4 w-4 text-red-500 mr-1" />
+                )}
+                <span
+                  className={cn("text-sm font-medium", {
+                    "text-green-500": change >= 0,
+                    "text-red-500": change < 0,
+                  })}
+                >
+                  {change >= 0 ? `+${change}%` : `${change}%`}
+                </span>
+              </div>
+              <span className="text-xs text-gray-500">vs previous</span>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
+  };
 
   /* ---------- UI ---------- */
   return (
@@ -1933,7 +2276,6 @@ useEffect(() => {
               onClick={() => handleCardClick(card)}
             />
           ))}
-          
       </div>
 
       {/* Currency Breakdown + Revenue Chart */}
@@ -1989,4 +2331,4 @@ useEffect(() => {
   );
 };
 
-export default AdminDashboard;
+export default AdminDashboard;    

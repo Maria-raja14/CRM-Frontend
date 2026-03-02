@@ -521,6 +521,10 @@ const ClientCLVDetails = () => {
                   <p className="text-sm text-gray-500">Days Inactive</p>
                   <p className="text-xl font-semibold">{client.daysSinceFollowUp || 0}</p>
                 </div>
+                <div>
+                  <p className="text-sm text-gray-500">Progress</p>
+                  <p className="text-xl font-semibold">{client.progress || "N/A"}</p>
+                </div>
               </div>
             </div>
 

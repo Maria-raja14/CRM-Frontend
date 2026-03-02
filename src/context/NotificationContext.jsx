@@ -20,82 +20,46 @@ export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const user = JSON.parse(localStorage.getItem("user") || "null");
 
+  const socket = useSocket();
+
   useEffect(() => {
-    if (!user?._id) return;
-
-    // ✅ Fetch existing notifications from backend
-    const fetchNotifications = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get(`${API_URL}/notification/${user._id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const data = res.data || [];
-        
-        // Normalize notifications
-        const normalized = data.map((n) => {
-          // Determine title based on type
-          let title = "Notification";
-          if (n.type === "followup") {
-            if (n.meta?.leadId) title = "Lead Follow-up";
-            else if (n.meta?.dealId) title = "Deal Follow-up";
-            else if (n.meta?.proposalId) title = "Proposal Follow-up";
-            else title = "Follow-up Reminder";
-          } else if (n.type === "admin") {
-            title = "Admin Notification";
-          }
-
-          return {
-            _id: n._id || n.id || Date.now() + Math.random(),
-            title: title,
-            text: n.text || '',
-            read: !!n.read,
-            profileImage: n.profileImage || "/default-avatar.png",
-            createdAt: n.createdAt || new Date().toISOString(),
-            meta: n.meta || {},
-            type: n.type || "notification",
-          };
-        });
-
-        setNotifications(normalized);
-      } catch (err) {
-        console.error("Error fetching notifications:", err);
-      }
-    };
     
-    fetchNotifications();
+    console.log("🧠 NotificationProvider mounted");
+    console.log("👤 Frontend user ID:", user?._id);
+    console.log("🔌 Socket from SocketContext:", socket);
+    
+    
+    if (!user?._id || !socket) {
+      console.log("⏳ Waiting for socket...");
+      return;
+    }
 
-    // ✅ Initialize socket
-    const socket = initSocket(user._id);
-    if (!socket) return;
+
+    socket.on("connect", () => {
+      console.log("🟢 FRONTEND SOCKET CONNECTED:", socket.id);
+    });
+    socket.on("connect_error", (err) => {
+      console.log("🔴 SOCKET CONNECT ERROR:", err.message, err);
+    });
+
+
 
     // Handle new notifications from socket
     const handleNewNotification = (data) => {
-      console.log("🔔 New notification received:", data);
+     
       
-      // Determine title based on type
-      let title = "Notification";
-      if (data.type === "followup") {
-        if (data.meta?.leadId) title = "Lead Follow-up";
-        else if (data.meta?.dealId) title = "Deal Follow-up";
-        else if (data.meta?.proposalId) title = "Proposal Follow-up";
-        else title = "Follow-up Reminder";
-      } else if (data.type === "admin") {
-        title = "Admin Notification";
-      }
-      
-      // Format display text
-      let displayText = data.text || '';
-      
-      // Replace Salesman placeholder with actual name if available
-      if (data.meta?.salesmanName && displayText.includes('Salesman')) {
-        displayText = displayText.replace('Salesman', data.meta.salesmanName);
-      }
-
+      console.log("📥 NEW NOTIFICATION RECEIVED:", data);
       const notif = {
         _id: data._id || data.id || Date.now() + Math.random(),
-        title: title,
-        text: displayText,
+        title:
+          data.type === "followup"
+            ? "Follow-up Reminder"
+            : data.type === "activity" || data.type === "admin"
+            ? "Activity Reminder"
+            : data.type === "contact_form"
+            ? "Website Contact Form"
+            : "Notification",
+        text: data.text,
         read: false,
         profileImage: data.profileImage || "/default-avatar.png",
         createdAt: data.createdAt || new Date().toISOString(),

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import {
   Home,
   ChevronRight,
@@ -12,7 +13,11 @@ import {
   Users,
   GitBranch,
   BarChart3,Trophy,
+  BarChart3,
+  Mail,
+    MessageCircle
 } from "lucide-react";
+
 import { NavLink, useLocation } from "react-router-dom";
 
 const IconCircle = ({ children, isActive }) => (
@@ -123,6 +128,8 @@ const SmallLink = ({ to, icon, label, hasPermission = true }) => {
 };
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
+  const API_URL = import.meta.env.VITE_API_URL;
+  const [logo, setLogo] = useState(null);
   const [showActivities, setShowActivities] = useState(false);
 
   // ✅ NEW: Deals collapsible state
@@ -155,6 +162,23 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     }
   }, []);
 
+  useEffect(() => {
+    const fetchLogo = async () => {
+      try {
+        const { data } = await axios.get(`${API_URL}/settings`);
+        if (data?.logo) {
+          const cleanPath = data.logo.replace(/\\/g, "/");
+          const fullUrl = `${API_URL.replace("/api", "")}/${cleanPath}`;
+          setLogo(fullUrl);
+        }
+      } catch (err) {
+        console.error("Failed to load company logo:", err);
+      }
+    };
+
+    fetchLogo();
+  }, []);
+
   // ✅ Auto-open Deals menu if user is on deals pages
   useEffect(() => {
     if (
@@ -174,22 +198,34 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       {/* Header */}
       <div className="mb-6 flex items-center justify-between px-12">
         <img
-          src="https://tzi.zaarapp.com//storage/uploads/logo//logo-dark.png"
-          alt="Logo"
-          className="h-12"
+          src={
+            logo ||
+            "https://via.placeholder.com/150x50?text=Company+Logo"
+          }
+          alt="Company Logo"
+          className="h-20 object-contain"
         />
         <div className="relative group">
-          <button onClick={toggleSidebar} className="lg:hidden p-1">
-            <X size={22} className="text-gray-600" />
-          </button>
-          {/* ✅ TOOLTIP */}
-          <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 
+        <div className="mb-6 flex items-center justify-between px-12">
+        <NavLink to="/adminDashboard" className="cursor-pointer">
+          <img
+            src="https://tzi.zaarapp.com//storage/uploads/logo//logo-dark.png"
+            alt="Logo"
+            className="h-12 hover:opacity-80 transition-opacity"
+          />
+        </NavLink>
+        <button onClick={toggleSidebar} className="lg:hidden p-1">
+          <X size={22} className="text-gray-600" />
+        </button>
+        {/* ✅ TOOLTIP */}
+        <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 
           opacity-0 group-hover:opacity-100 transition-opacity
           bg-gray-900 text-white text-xs px-3 py-1 rounded-md whitespace-nowrap
           pointer-events-none z-50">
-            Close
-          </div>
+          Close
         </div>
+      </div>
+      </div>
       </div>
 
       <nav className="flex flex-col gap-3 px-2">
@@ -242,6 +278,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           />
         </Collapsible>
 
+                
         {/* Invoice */}
         <SidebarItem
           to="/invoice"
@@ -321,6 +358,14 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         />
 
 
+
+        {/* Mass Email Campaigns */}
+        <SidebarItem
+          to="/mass-email"
+          icon={<Mail />}
+          label="Email Campaign"
+          hasPermission={isAdmin || userPermissions.email_campaigns}
+        />
       </nav>
     </aside>
   );

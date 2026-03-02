@@ -36,17 +36,26 @@ import DealIntelligenceDashboard from "./pages/Dealmetrics/pipeline";
 import LostDealAnalytics from "../src/pages/LostDealModal/Lostdealreason";
 import CLVDashboard from "./pages/Clv/CLVDashboard";
 import ClientCLVDetails from "./pages/Clv/ClientCLVDetails";
+import MassEmail from "./pages/email/MassEmail";
+import WebsiteContactForm from "./pages/website/WebsiteContactForm";
+import CreateEmail from "./pages/Email/CreateEmail";
+import EmailHistory from "./pages/email/EmailHistory";
+import ScheduledEmails from "./pages/email/ScheduledEmails";
+import Settings from "./pages/settings/Settings";
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const user = JSON.parse(localStorage.getItem("user"));
 
   return (
-    <SocketProvider>
+    <SocketProvider userId={user?._id}>
+      {/* <TourProvider> */}
       <NotificationProvider>
         <BrowserRouter>
           <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white transition-all">
             <Routes>
               <Route path="/" element={<Login />} />
+              <Route path="/contact" element={<WebsiteContactForm />} />
               <Route element={<PrivateRoute />}>
                 <Route
                   path="/reset-password/:token"
@@ -67,6 +76,7 @@ function App() {
                   <Route path="/stage" element={<ProposalBoard />} />
                   <Route path="/calendar" element={<CalendarView />} />
                   <Route path="/list" element={<Activity />} />
+                  <Route path="/settings" element={<Settings />} />
                   <Route path="/leads" element={<Leads />} />
                   <Route path="/createleads" element={<CreateLeads />} />
                   <Route path="/deals" element={<AllDeals />} />
@@ -95,6 +105,12 @@ function App() {
                   <Route path="/streak-leaderboard" element={<AllStreakLeaderboard />} />
 
                   <Route path="reports" element={<ReportsPage />} />
+                      <Route path="reports" element={<ReportsPage />} />
+                      <Route path="/mass-email" element={<MassEmail />} />
+                      <Route path="/create-email" element={<CreateEmail />} />
+                      <Route path="/create-email/:id" element={<CreateEmail />} />
+                      <Route path="/scheduled-emails" element={<ScheduledEmails />} />
+                      <Route path="/email-history" element={<EmailHistory />} />
                 </Route>
               </Route>
             </Routes>

@@ -174,6 +174,25 @@ const InvoiceHead = () => {
       setEmailMessage("📨 Sending invoice email...");
 
       await axios.post(`${API_URL}/invoice/sendEmail/${invoiceId}`);
+      // 🔹 Find related deal from invoice
+      const invoice = invoices.find(inv => inv._id === invoiceId);
+      const dealId = invoice?.items?.[0]?.deal?._id;
+
+      // 🔹 Move deal to "Invoices Sent"
+      if (dealId) {
+        const token = localStorage.getItem("token");
+
+        await axios.patch(
+          `${API_URL}/deals/update-deal/${dealId}`,
+          {
+            stage: "Invoices Sent",
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+      }
+
 
       setEmailStatus("success");
       setEmailMessage("✅ Invoice sent to customer email!");
@@ -936,4 +955,4 @@ const applyFilters = () => {
   );
 };
 
-export default InvoiceHead;
+export default InvoiceHead;//original code..
