@@ -279,17 +279,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           />
         </Collapsible>
 
-                <SidebarItem
-  to="/emailchat"
-  icon={<Mail />}  // You can import Mail from "lucide-react"
-  label="Email Chat"
-/>
-
-<SidebarItem
-  to="/whatsapp"
-  icon={<MessageCircle />}  // Using MessageCircle icon
-  label="WhatsApp Chat"
-/>
+                
         {/* Invoice */}
         <SidebarItem
           to="/invoice"
