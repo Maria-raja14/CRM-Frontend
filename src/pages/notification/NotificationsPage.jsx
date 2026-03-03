@@ -815,8 +815,3 @@ const NotificationsPage = () => {
 export default NotificationsPage;
 
 
-//lgyj jayx gpoq ludm
-
-
-//Auth token- 1d19ba52dde39a73367a0e96bc76826d
-//account sid - AC4e7209a26cbd52714d74c9097fd816b1
