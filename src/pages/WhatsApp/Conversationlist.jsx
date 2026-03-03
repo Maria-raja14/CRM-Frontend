@@ -22,7 +22,7 @@ const avatarColor = (name = "") => {
   return colors[idx] || "bg-gray-500";
 };
 
-export default function ConversationList() {
+export default function Conversationlist() {
   const {
     conversations,
     loadingConversations,

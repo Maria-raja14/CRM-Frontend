@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { WhatsappProvider } from "../../context/WhatsappContext";
-import ConversationList from "./ConversationList.jsx";
+import Conversationlist from "./Conversationlist";
 import ChatWindow from "./ChatWindow.jsx";
 import NewChatModal from "./NewChatModal.jsx";
 import { MessageCirclePlus } from "lucide-react";
@@ -27,7 +27,7 @@ export default function WhatsAppPage() {
       <div className="flex h-screen bg-gray-100 overflow-hidden">
         {/* Sidebar */}
         <div className="w-80 flex-shrink-0 flex flex-col h-full relative">
-          <ConversationList />
+          <Conversationlist />
 
           {/* New Chat FAB */}
           <button
