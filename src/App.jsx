@@ -34,8 +34,8 @@ import ReportsPage from "./pages/reports/ReportsPage";
 
 import EmailChat from "./pages/Email_chat/EmailChat";
 
-import WhatsAppChat from './pages/WhatsApp/WhatsAppChat';
-
+//import WhatsAppChat from './pages/WhatsApp/WhatsAppChat';
+import WhatsAppPage from "./pages/WhatsApp/Whatsapppage";
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -88,7 +88,8 @@ function App() {
                   <Route path="/invoice/:id" element={<InvoiceView />} />
                   <Route path="reports" element={<ReportsPage />} />
                   <Route path="/emailchat" element={<EmailChat />} />
-               <Route path="/whatsapp" element={<WhatsAppChat />} />
+                  {/* <Route path="/whatsapp" element={<WhatsAppChat />} /> */}
+                  <Route path="/whatsapp" element={<WhatsAppPage />} />
                 </Route>
               </Route>
             </Routes>
