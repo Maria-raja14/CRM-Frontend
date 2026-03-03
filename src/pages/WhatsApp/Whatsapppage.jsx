@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { WhatsappProvider } from "../../context/WhatsappContext";
 import Conversationlist from "./Conversationlist";
-import ChatWindow from "./ChatWindow.jsx";
+import ChatWindow from "./Chatwindow";
 import NewChatModal from "./NewChatModal.jsx";
 import { MessageCirclePlus } from "lucide-react";
 //
