@@ -2,7 +2,7 @@ import { useState } from "react";
 import { WhatsappProvider } from "../../context/WhatsappContext";
 import Conversationlist from "./Conversationlist";
 import ChatWindow from "./Chatwindow";
-import NewChatModal from "./NewChatModal.jsx";
+import NewChatModal from "./Newchatmodal";
 import { MessageCirclePlus } from "lucide-react";
 //
 // Get env vars
