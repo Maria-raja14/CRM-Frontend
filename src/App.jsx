@@ -35,7 +35,7 @@ import ReportsPage from "./pages/reports/ReportsPage";
 import EmailChat from "./pages/Email_chat/EmailChat";
 
 //import WhatsAppChat from './pages/WhatsApp/WhatsAppChat';
-import WhatsAppPage from "./pages/WhatsApp/Whatsapppage";
+import WhatsAppPage from "./pages/WhatsApp/WhatsAppPage";
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
