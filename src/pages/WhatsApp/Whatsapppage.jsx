@@ -4,7 +4,7 @@ import ConversationList from "./ConversationList.jsx";
 import ChatWindow from "./ChatWindow.jsx";
 import NewChatModal from "./NewChatModal.jsx";
 import { MessageCirclePlus } from "lucide-react";
-
+//
 // Get env vars
 const SOCKET_URI = import.meta.env.VITE_SI_URI || "http://localhost:5000";
 
