@@ -80,6 +80,45 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 // ----------------------------------------------------------------------
+// Counter Animation Component
+// ----------------------------------------------------------------------
+const Counter = ({ value, duration = 1000, formatter = (val) => val }) => {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let startTime;
+    let animationFrame;
+    const startValue = 0;
+    const endValue = value;
+
+    const animate = (timestamp) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      
+      // Easing function for smooth animation
+      const easeOutQuart = 1 - Math.pow(1 - progress, 3);
+      const currentCount = startValue + (endValue - startValue) * easeOutQuart;
+      
+      setCount(currentCount);
+
+      if (progress < 1) {
+        animationFrame = requestAnimationFrame(animate);
+      }
+    };
+
+    animationFrame = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+      }
+    };
+  }, [value, duration]);
+
+  return <>{formatter(count)}</>;
+};
+
+// ----------------------------------------------------------------------
 // Constants
 // ----------------------------------------------------------------------
 const LOSS_REASONS = [
@@ -143,6 +182,11 @@ const formatCurrency = (value) => {
     currency: "INR",
     maximumFractionDigits: 0,
   }).format(value);
+};
+
+const formatNumber = (value) => {
+  if (!value || isNaN(value)) return "0";
+  return new Intl.NumberFormat("en-IN").format(Math.round(value));
 };
 
 const formatDate = (dateString) => {
@@ -700,6 +744,23 @@ export default function LostDealAnalytics() {
     }
   };
 
+  // Calculate derived values for cards
+  const wonStageLostDeals = useMemo(() => {
+    return parsedRecentDeals.filter(
+      deal => deal.stageLostAt === "Won" || deal.stageLostAt === "Closed Won"
+    );
+  }, [parsedRecentDeals]);
+
+  const wonStageLostValue = useMemo(() => {
+    return wonStageLostDeals.reduce((sum, deal) => sum + deal.parsedValue, 0);
+  }, [wonStageLostDeals]);
+
+  const wonStagePercentage = useMemo(() => {
+    return parsedRecentDeals.length > 0 
+      ? Math.round((wonStageLostDeals.length / parsedRecentDeals.length) * 100) 
+      : 0;
+  }, [parsedRecentDeals, wonStageLostDeals]);
+
   // --------------------------------------------------------------------
   // Render
   // --------------------------------------------------------------------
@@ -757,93 +818,86 @@ export default function LostDealAnalytics() {
         </div>
       </div>
 
-     {/* Recovery Metrics Cards - Updated */}
-{/* Recovery Metrics Cards - Fixed Logic */}
-<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-  <div className="bg-gradient-to-br from-rose-500 to-rose-600 rounded-xl p-5 text-white shadow-md">
-    <div className="flex items-center justify-between mb-3">
-      <div className="p-2 bg-white/20 rounded-lg">
-        <IndianRupee size={20} />
-      </div>
-    </div>
-    <div className="text-2xl font-bold mb-1">
-      {formatCurrency(totalLostValueCorrect)}
-    </div>
-    <div className="text-sm text-rose-100">Total Lost Value</div>
-  </div>
+      {/* Recovery Metrics Cards with Counter Animation */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {/* Total Lost Value Card */}
+        <div className="bg-gradient-to-br from-rose-500 to-rose-600 rounded-xl p-5 text-white shadow-md">
+          <div className="flex items-center justify-between mb-3">
+            <div className="p-2 bg-white/20 rounded-lg">
+              <IndianRupee size={20} />
+            </div>
+          </div>
+          <div className="text-2xl font-bold mb-1">
+            <Counter 
+              value={totalLostValueCorrect} 
+              duration={1500}
+              formatter={(val) => formatCurrency(val)}
+            />
+          </div>
+          <div className="text-sm text-rose-100">Total Lost Value</div>
+        </div>
 
-  <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-5 text-white shadow-md">
-    <div className="flex items-center justify-between mb-3">
-      <div className="p-2 bg-white/20 rounded-lg">
-        <XCircle size={20} />
-      </div>
-    </div>
-    <div className="text-2xl font-bold mb-1">
-      {parsedRecentDeals.length}
-    </div>
-    <div className="text-sm text-amber-100">Total Lost Deals</div>
-  </div>
+        {/* Total Lost Deals Card */}
+        <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-5 text-white shadow-md">
+          <div className="flex items-center justify-between mb-3">
+            <div className="p-2 bg-white/20 rounded-lg">
+              <XCircle size={20} />
+            </div>
+          </div>
+          <div className="text-2xl font-bold mb-1">
+            <Counter 
+              value={parsedRecentDeals.length} 
+              duration={1500}
+              formatter={(val) => formatNumber(val)}
+            />
+          </div>
+          <div className="text-sm text-amber-100">Total Lost Deals</div>
+        </div>
 
-  {/* Recovery Potential Card - Only deals lost at "Won" stage */}
-  <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-5 text-white shadow-md">
-    <div className="flex items-center justify-between mb-3">
-      <div className="p-2 bg-white/20 rounded-lg">
-        <RotateCcw size={20} />
-      </div>
-      <span className="text-xs px-2 py-1 rounded-full bg-white/20">
-        {(() => {
-          const wonStageLostDeals = parsedRecentDeals.filter(
-            deal => deal.stageLostAt === "Won" || deal.stageLostAt === "Closed Won"
-          );
-          const totalDeals = parsedRecentDeals.length;
-          const percentage = totalDeals > 0 
-            ? Math.round((wonStageLostDeals.length / totalDeals) * 100) 
-            : 0;
-          return `${percentage}% of total`;
-        })()}
-      </span>
-    </div>
-    <div className="text-2xl font-bold mb-1">
-      {formatCurrency(
-        parsedRecentDeals
-          .filter(deal => deal.stageLostAt === "Won" || deal.stageLostAt === "Closed Won")
-          .reduce((sum, deal) => sum + deal.parsedValue, 0)
-      )}
-    </div>
-    <div className="text-sm text-emerald-100">
-      Lost at "Won" Stage (Recoverable)
-    </div>
-  </div>
+        {/* Recovery Potential Card - Only deals lost at "Won" stage */}
+        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-5 text-white shadow-md">
+          <div className="flex items-center justify-between mb-3">
+            <div className="p-2 bg-white/20 rounded-lg">
+              <RotateCcw size={20} />
+            </div>
+            <span className="text-xs px-2 py-1 rounded-full bg-white/20">
+              {wonStagePercentage}% of total
+            </span>
+          </div>
+          <div className="text-2xl font-bold mb-1">
+            <Counter 
+              value={wonStageLostValue} 
+              duration={1500}
+              formatter={(val) => formatCurrency(val)}
+            />
+          </div>
+          <div className="text-sm text-emerald-100">
+            Lost at "Won" Stage (Recoverable)
+          </div>
+        </div>
 
-  {/* Best Recovery Rate Card - Based on Won stage lost deals */}
-  <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-5 text-white shadow-md">
-    <div className="flex items-center justify-between mb-3">
-      <div className="p-2 bg-white/20 rounded-lg">
-        <Target size={20} />
+        {/* Best Recovery Rate Card */}
+        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-5 text-white shadow-md">
+          <div className="flex items-center justify-between mb-3">
+            <div className="p-2 bg-white/20 rounded-lg">
+              <Target size={20} />
+            </div>
+            <span className="text-xs px-2 py-1 rounded-full bg-white/20">
+              {wonStagePercentage}% recovery rate
+            </span>
+          </div>
+          <div className="text-2xl font-bold mb-1">
+            <Counter 
+              value={wonStageLostDeals.length} 
+              duration={1500}
+              formatter={(val) => formatNumber(val)}
+            />
+          </div>
+          <div className="text-sm text-purple-100">
+            Deals Lost at "Won" Stage
+          </div>
+        </div>
       </div>
-      <span className="text-xs px-2 py-1 rounded-full bg-white/20">
-        {(() => {
-          const wonStageLostDeals = parsedRecentDeals.filter(
-            deal => deal.stageLostAt === "Won" || deal.stageLostAt === "Closed Won"
-          );
-          const totalDeals = parsedRecentDeals.length;
-          const recoveryRate = totalDeals > 0 
-            ? Math.round((wonStageLostDeals.length / totalDeals) * 100) 
-            : 0;
-          return `${recoveryRate}% recovery rate`;
-        })()}
-      </span>
-    </div>
-    <div className="text-2xl font-bold mb-1">
-      {parsedRecentDeals.filter(
-        deal => deal.stageLostAt === "Won" || deal.stageLostAt === "Closed Won"
-      ).length}
-    </div>
-    <div className="text-sm text-purple-100">
-      Deals Lost at "Won" Stage
-    </div>
-  </div>
-</div>
 
       {/* Alert Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -1014,7 +1068,6 @@ export default function LostDealAnalytics() {
         <div className="mt-3 text-xs text-gray-500">
           Showing {filteredRecentDeals.length} of {parsedRecentDeals.length} deals
         </div>
-
 
         {/* Deal-Wise View Table - Separate Card */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mt-5">
@@ -1490,8 +1543,6 @@ export default function LostDealAnalytics() {
 
       {/* Full Width Sections (Stage Intelligence & High Value) */}
       <div className="mt-6 space-y-6">
-        
-
         {/* High Value Lost Deals */}
         <div id="high-value-deals" className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
           <div className="flex items-center justify-between mb-4">
@@ -1625,8 +1676,6 @@ export default function LostDealAnalytics() {
             </div>
           </div>
         </div>
-
-        
       </div>
 
       {/* Reason Detail Modal */}
