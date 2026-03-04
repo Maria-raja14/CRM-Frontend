@@ -1,26 +1,40 @@
+
 import { createContext, useContext, useState, useEffect } from "react";
-import axios from "axios";
-import { initSocket } from "../utils/socket";
-import { toast } from "react-toastify";
 
-// Create the context
-const NotificationContext = createContext(null);
+import { useSocket } from "./SocketContext";
 
-// Custom hook to use the notification context
-export const useNotifications = () => {
-  const context = useContext(NotificationContext);
-  if (!context) {
-    throw new Error("useNotifications must be used within a NotificationProvider");
-  }
-  return context;
-};
+
+
+const NotificationContext = createContext();
+const API_URL = import.meta.env.VITE_API_URL; 
+
 
 export const NotificationProvider = ({ children }) => {
-  const API_URL = import.meta.env.VITE_API_URL;
   const [notifications, setNotifications] = useState([]);
-  const user = JSON.parse(localStorage.getItem("user") || "null");
+  const user = JSON.parse(localStorage.getItem("user"));
 
-  const socket = initSocket();
+  const socket = useSocket();
+
+  // ✅ ADD THIS NEW useEffect RIGHT HERE (ABOVE SOCKET ONE)
+
+  useEffect(() => {
+    if (!user?._id) return;
+
+    const fetchNotifications = async () => {
+      try {
+        const res = await fetch(`${API_URL}/notification/${user._id}`);
+        const data = await res.json();
+
+        console.log("📦 Loaded notifications from DB:", data);
+
+        setNotifications(data); // load saved notifications
+      } catch (err) {
+        console.error("❌ Failed to fetch notifications", err);
+      }
+    };
+
+    fetchNotifications();
+  }, [user?._id]);
 
   useEffect(() => {
     
@@ -44,7 +58,6 @@ export const NotificationProvider = ({ children }) => {
 
 
 
-    // Handle new notifications from socket
     const handleNewNotification = (data) => {
      
       
@@ -63,135 +76,32 @@ export const NotificationProvider = ({ children }) => {
         read: false,
         profileImage: data.profileImage || "/default-avatar.png",
         createdAt: data.createdAt || new Date().toISOString(),
-        meta: {
-          ...(data.meta || {}),
-        },
+        meta: data.meta || {},
         type: data.type || "notification",
       };
 
       setNotifications((prev) => {
-        // Check if notification already exists
-        const exists = prev.some((n) => n._id === notif._id);
-        if (exists) return prev;
-        
-        // Add new notification at the beginning
+        if (notif._id && prev.some((n) => n._id === notif._id)) return prev;
         return [notif, ...prev];
-      });
-
-      // Show toast with appropriate icon
-      let icon = '🔔';
-      if (data.meta?.leadId) icon = '📅';
-      else if (data.meta?.dealId) icon = '📊';
-      else if (data.meta?.proposalId) icon = '📄';
-      
-      toast.info(displayText, {
-        position: "top-right",
-        autoClose: 5000,
-        icon: icon
       });
     };
 
-    // Listen for all notification events
     socket.on("new_notification", handleNewNotification);
-    socket.on("followup_reminder", handleNewNotification);
+    socket.on("activity_reminder", handleNewNotification);
+    socket.on("admin_reminder", handleNewNotification);
 
     return () => {
       socket.off("new_notification", handleNewNotification);
-      socket.off("followup_reminder", handleNewNotification);
+      socket.off("activity_reminder", handleNewNotification);
+      socket.off("admin_reminder", handleNewNotification);
     };
-  }, [user?._id, API_URL]);
-
-  // Mark notification as read
-  const markAsRead = async (notificationId) => {
-    try {
-      const token = localStorage.getItem("token");
-      await axios.patch(
-        `${API_URL}/notification/read/${notificationId}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      setNotifications((prev) =>
-        prev.map((n) =>
-          n._id === notificationId ? { ...n, read: true } : n
-        )
-      );
-    } catch (err) {
-      console.error("Error marking notification as read:", err);
-    }
-  };
-
-  // Mark all as read
-  const markAllAsRead = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      await Promise.all(
-        notifications
-          .filter((n) => !n.read)
-          .map((n) =>
-            axios.patch(
-              `${API_URL}/notification/read/${n._id}`,
-              {},
-              { headers: { Authorization: `Bearer ${token}` } }
-            )
-          )
-      );
-      
-      setNotifications((prev) =>
-        prev.map((n) => ({ ...n, read: true }))
-      );
-    } catch (err) {
-      console.error("Error marking all notifications as read:", err);
-    }
-  };
-
-  // Delete notification
-  const deleteNotification = async (notificationId) => {
-    try {
-      const token = localStorage.getItem("token");
-      await axios.delete(`${API_URL}/notification/${notificationId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      setNotifications((prev) =>
-        prev.filter((n) => n._id !== notificationId)
-      );
-    } catch (err) {
-      console.error("Error deleting notification:", err);
-    }
-  };
-
-  // Clear all notifications
-  const clearAllNotifications = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      await Promise.all(
-        notifications.map((n) =>
-          axios.delete(`${API_URL}/notification/${n._id}`, {
-            headers: { Authorization: `Bearer ${token}` }
-          })
-        )
-      );
-      
-      setNotifications([]);
-    } catch (err) {
-      console.error("Error clearing notifications:", err);
-    }
-  };
-
-  const value = {
-    notifications,
-    setNotifications,
-    markAsRead,
-    markAllAsRead,
-    deleteNotification,
-    clearAllNotifications,
-    unreadCount: notifications.filter((n) => !n.read).length,
-  };
+  }, [socket, user?._id]);
 
   return (
-    <NotificationContext.Provider value={value}>
+    <NotificationContext.Provider value={{ notifications, setNotifications }}>
       {children}
     </NotificationContext.Provider>
   );
 };
+
+export const useNotifications = () => useContext(NotificationContext);
