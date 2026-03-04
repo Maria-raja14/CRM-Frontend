@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect } from "react";
 
 import { useSocket } from "./SocketContext";
@@ -5,6 +6,8 @@ import { useSocket } from "./SocketContext";
 
 
 const NotificationContext = createContext();
+const API_URL = import.meta.env.VITE_API_URL; 
+
 
 export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
@@ -19,7 +22,7 @@ export const NotificationProvider = ({ children }) => {
 
     const fetchNotifications = async () => {
       try {
-        const res = await fetch(`/api/notification/${user._id}`);
+        const res = await fetch(`${API_URL}/notification/${user._id}`);
         const data = await res.json();
 
         console.log("📦 Loaded notifications from DB:", data);
