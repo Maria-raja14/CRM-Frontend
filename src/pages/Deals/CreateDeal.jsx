@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import axios from "axios";
 import { getNames } from "country-list";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import {
   ArrowLeft,
   DollarSign,
@@ -16,8 +18,14 @@ import {
   MapPin,
   FileText,
   BriefcaseBusiness,
+  Calendar,
+  Clock,
 } from "lucide-react";
 import "react-toastify/dist/ReactToastify.css";
+
+// Import Lost Deal components
+import useLostDealModal from "../LostDealModal/LossDeal";
+import LostDealModal from "../LostDealModal/ModalLoss";
 
 // Currency options with symbol and label
 const currencyOptions = [
@@ -43,6 +51,22 @@ export default function CreateDeal() {
   const isEditMode = location.state?.deal;
   const existingDeal = location.state?.deal || null;
 
+  // Use Lost Deal Modal hook
+  const {
+    modalOpen: lostModalOpen,
+    lossReason,
+    lossNotes,
+    validationError,
+    LOSS_REASONS,
+    isLoading: modalLoading,
+    setLossReason,
+    setLossNotes,
+    openModal: openLostDealModal,
+    closeModal: closeLostDealModal,
+    validateAndExecute: validateLostDeal,
+    resetModal,
+  } = useLostDealModal();
+
   const [formData, setFormData] = useState({
     dealName: "",
     dealValue: "",
@@ -59,6 +83,13 @@ export default function CreateDeal() {
     address: "",
     country: "",
     attachments: [],
+    // Add loss fields
+    lossReason: "",
+    lossNotes: "",
+    // Follow-up fields
+    followUpDate: null,
+    followUpComment: "",
+    followUpStatus: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -68,6 +99,9 @@ export default function CreateDeal() {
   const [userId, setUserId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [countries] = useState(getNames());
+  
+  // Store pending form data for lost deal
+  const [pendingFormData, setPendingFormData] = useState(null);
 
   useEffect(() => {
     const userData = localStorage.getItem("user");
@@ -92,6 +126,12 @@ export default function CreateDeal() {
         }
       }
       
+      // Parse follow-up date if exists
+      let parsedFollowUpDate = null;
+      if (existingDeal.followUpDate) {
+        parsedFollowUpDate = new Date(existingDeal.followUpDate);
+      }
+      
       setFormData({
         dealName: existingDeal.dealName || "",
         dealValue: dealValue,
@@ -108,6 +148,13 @@ export default function CreateDeal() {
         address: existingDeal.address || "",
         country: existingDeal.country || "",
         attachments: [],
+        // Pre-fill loss data if it exists
+        lossReason: existingDeal.lossReason || "",
+        lossNotes: existingDeal.lossNotes || "",
+        // Follow-up fields
+        followUpDate: parsedFollowUpDate,
+        followUpComment: existingDeal.followUpComment || "",
+        followUpStatus: existingDeal.followUpStatus || "",
       });
       
       if (existingDeal.attachments && existingDeal.attachments.length > 0) {
@@ -196,39 +243,73 @@ export default function CreateDeal() {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // Handle lost deal confirmation - FIXED
+  const handleLostDealConfirm = useCallback(async (lossData) => {
+    console.log("handleLostDealConfirm called with:", lossData);
+    
+    if (lossData && lossData.reason && pendingFormData) {
+      const updatedFormData = {
+        ...pendingFormData,
+        lossReason: lossData.reason,
+        lossNotes: lossData.notes || "",
+      };
+      
+      console.log("Updated form data:", updatedFormData);
+      
+      // Update form state
+      setFormData(updatedFormData);
+      
+      // Submit the form
+      await submitDealData(updatedFormData);
+      
+      // Clear pending data
+      setPendingFormData(null);
+    } else {
+      console.log("Missing data:", { lossData, pendingFormData });
+    }
+  }, [pendingFormData]);
+
+  // Extract submission logic
+  const submitDealData = async (formDataToSubmit) => {
     setIsSubmitting(true);
+    
     const newErrors = {
-      dealName: formData.dealName.trim() === "",
-      dealValue: formData.dealValue.trim() === "",
-      phoneNumber: formData.phoneNumber.trim() === "",
-      companyName: formData.companyName.trim() === "",
+      dealName: formDataToSubmit.dealName.trim() === "",
+      dealValue: formDataToSubmit.dealValue.trim() === "",
+      phoneNumber: formDataToSubmit.phoneNumber.trim() === "",
+      companyName: formDataToSubmit.companyName.trim() === "",
     };
+    
     setErrors(newErrors);
     if (Object.values(newErrors).some(Boolean)) {
       toast.error("Please fill in all required fields");
       setIsSubmitting(false);
       return;
     }
+    
     try {
       const token = localStorage.getItem("token");
       const data = new FormData();
       
       // Append all form fields except attachments
-      Object.keys(formData).forEach((key) => {
+      Object.keys(formDataToSubmit).forEach((key) => {
         if (key !== "attachments") {
-          data.append(key, formData[key]);
+          // Handle Date objects for follow-up
+          if (key === "followUpDate" && formDataToSubmit[key] instanceof Date) {
+            data.append(key, formDataToSubmit[key].toISOString());
+          } else {
+            data.append(key, formDataToSubmit[key] || "");
+          }
         }
       });
       
       // For new deals created by sales users, auto-assign to themselves
-      if (!isEditMode && userRole === "Sales" && !formData.assignTo) {
+      if (!isEditMode && userRole === "Sales" && !formDataToSubmit.assignTo) {
         data.set("assignTo", userId);
       }
       
       // Append new files
-      formData.attachments.forEach((file) => {
+      formDataToSubmit.attachments.forEach((file) => {
         data.append("attachments", file);
       });
       
@@ -272,79 +353,123 @@ export default function CreateDeal() {
     }
   };
 
+  // FIXED: Handle form submission with Lost Deal modal
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    console.log("Form submitted with stage:", formData.stage);
+    
+    // Check basic validation first
+    const newErrors = {
+      dealName: formData.dealName.trim() === "",
+      dealValue: formData.dealValue.trim() === "",
+      phoneNumber: formData.phoneNumber.trim() === "",
+      companyName: formData.companyName.trim() === "",
+    };
+    
+    setErrors(newErrors);
+    if (Object.values(newErrors).some(Boolean)) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+    
+    // Check if stage is Closed Lost without loss reason
+    if (formData.stage === "Closed Lost" && !formData.lossReason) {
+      console.log("Opening lost deal modal for stage:", formData.stage);
+      
+      // Store current form data
+      setPendingFormData(formData);
+      
+      // For CREATE mode (no existing deal), we don't have a dealId yet
+      // So we pass null or a placeholder
+      const tempDealId = isEditMode && existingDeal ? existingDeal._id : "new-deal";
+      
+      // Open modal with callback
+      openLostDealModal(tempDealId, handleLostDealConfirm);
+      return;
+    }
+    
+    // Regular submission for other stages
+    await submitDealData(formData);
+  };
+
   const handleBackClick = () => navigate(-1);
 
   // Check if assign to field should be shown
   const showAssignToField = userRole === "Admin" || (isEditMode && userRole === "Sales");
 
-  // --- FIELD METADATA ---
-  const formFields = [
-    {
-      name: "stage",
-      label: "Stage",
-      icon: <Briefcase size={16} />,
-      type: "select",
-      options: [
-        "Qualification",
-        "Proposal Sent-Negotiation",
-        "Invoice Sent",
-        "Closed Won",
-        "Closed Lost",
-      ],
-    },
-    {
-      name: "phoneNumber",
-      label: "Phone Number",
-      icon: <Phone size={16} />,
-    },
-    { name: "email", label: "Email", icon: <Mail size={16} /> },
-    {
-      name: "companyName",
-      label: "Company Name",
-      icon: <Building2 size={16} />,
-    },
-    {
-      name: "industry",
-      label: "Industry",
-      icon: <BriefcaseBusiness size={16} />,
-      type: "select",
-      options: [
-        "IT",
-        "Finance",
-        "Healthcare",
-        "Education",
-        "Manufacturing",
-        "Retail",
-        "Other",
-      ],
-    },
-    {
-      name: "source",
-      label: "Source",
-      icon: <Globe size={16} />,
-      type: "select",
-      options: [
-        "Website",
-        "Referral",
-        "Social Media",
-        "Email",
-        "Phone",
-        "Other",
-      ],
-    },
-    {
-      name: "address",
-      label: "Address",
-      icon: <MapPin size={16} />,
-    },
-    {
-      name: "country",
-      label: "Country",
-      icon: <Globe size={16} />,
-      type: "select",
-      options: countries,
-    },
-  ];
+// --- FIELD METADATA ---
+const formFields = [
+  {
+    name: "stage",
+    label: "Stage",
+    icon: <Briefcase size={16} />,
+    type: "select",
+    options: [
+      "Qualification",
+      "Proposal Sent-Negotiation",
+      "Invoice Sent",
+      "Closed Won",
+      "Closed Lost",
+    ], // <-- Make sure this closing bracket is here
+  },
+  {
+    name: "phoneNumber",
+    label: "Phone Number",
+    icon: <Phone size={16} />,
+  },
+  { 
+    name: "email", 
+    label: "Email", 
+    icon: <Mail size={16} /> 
+  },
+  {
+    name: "companyName",
+    label: "Company Name",
+    icon: <Building2 size={16} />,
+  },
+  {
+    name: "industry",
+    label: "Industry",
+    icon: <BriefcaseBusiness size={16} />,
+    type: "select",
+    options: [
+      "IT",
+      "Finance",
+      "Healthcare",
+      "Education",
+      "Manufacturing",
+      "Retail",
+      "Other",
+    ],
+  },
+  {
+    name: "source",
+    label: "Source",
+    icon: <Globe size={16} />,
+    type: "select",
+    options: [
+      "Website",
+      "Referral",
+      "Social Media",
+      "Email",
+      "Phone",
+      "Other",
+    ],
+  },
+  {
+    name: "address",
+    label: "Address",
+    icon: <MapPin size={16} />,
+  },
+  {
+    name: "country",
+    label: "Country",
+    icon: <Globe size={16} />,
+    type: "select",
+    options: countries, // This should be an array of country names
+  },
+];
 
   return (
     <div className="min-h-screen flex items-start justify-center py-10 px-4">
@@ -359,6 +484,27 @@ export default function CreateDeal() {
         draggable
         pauseOnHover
       />
+      
+      {/* Lost Deal Modal - FIXED props */}
+      <LostDealModal
+        isOpen={lostModalOpen}
+        onClose={() => {
+          closeLostDealModal();
+          setPendingFormData(null);
+        }}
+        lossReason={lossReason}
+        lossNotes={lossNotes}
+        validationError={validationError}
+        LOSS_REASONS={LOSS_REASONS}
+        onReasonChange={setLossReason}
+        onNotesChange={setLossNotes}
+        onConfirm={validateLostDeal}
+        title={isEditMode ? "Update Loss Reason" : "Add Loss Reason"}
+        confirmText={isEditMode ? "Update Deal" : "Create Deal"}
+        dealName={formData.dealName}
+        isLoading={modalLoading}
+      />
+      
       <div className="w-full max-w-6xl bg-white rounded-2xl shadow-xl border border-gray-100">
         {/* Header */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between px-6 py-5 border-b rounded-t-2xl">
@@ -381,6 +527,22 @@ export default function CreateDeal() {
             <h2 className="text-lg font-semibold border-b pb-2 text-blue-600">
               Deal Information
             </h2>
+            
+            {/* Display Loss Information if deal is Closed Lost */}
+            {formData.stage === "Closed Lost" && formData.lossReason && (
+              <div className="md:col-span-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <h3 className="text-sm font-semibold text-red-700 mb-1">Loss Information</h3>
+                <p className="text-sm text-gray-700">
+                  <span className="font-medium">Reason:</span> {formData.lossReason}
+                </p>
+                {formData.lossNotes && (
+                  <p className="text-sm text-gray-700 mt-1">
+                    <span className="font-medium">Notes:</span> {formData.lossNotes}
+                  </p>
+                )}
+              </div>
+            )}
+            
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Deal Name */}
               <div>
@@ -402,7 +564,7 @@ export default function CreateDeal() {
                   </p>
                 )}
               </div>
-              {/* Deal Value & Currency Dropdown -- INTEGRATED DESIGN */}
+              {/* Deal Value & Currency Dropdown */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                   <DollarSign size={16} /> Deal Value{" "}
@@ -509,6 +671,60 @@ export default function CreateDeal() {
               ))}
             </div>
           </div>
+
+          {/* Follow-up Section */}
+          <div className="p-6 border border-gray-200 rounded-xl shadow-sm">
+            <h2 className="text-lg font-semibold border-b pb-2 text-purple-600 flex items-center gap-2">
+              <Clock size={18} /> Follow-up
+            </h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+              {/* Follow-up Date with Time */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  <Calendar size={16} /> Follow-up Date & Time
+                </label>
+                <div className="relative">
+                  <DatePicker
+                    selected={formData.followUpDate}
+                    onChange={(date) => {
+                      setFormData(prev => ({ ...prev, followUpDate: date }));
+                    }}
+                    showTimeSelect
+                    timeFormat="HH:mm"
+                    timeIntervals={15}
+                    timeCaption="Time"
+                    dateFormat="MMMM d, yyyy h:mm aa"
+                    placeholderText="Select date and time"
+                    className="w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-purple-500 focus:border-purple-400 outline-none transition h-11 pl-10"
+                    minDate={new Date()}
+                    isClearable
+                    calendarClassName="font-sans"
+                  />
+                  <Calendar className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Optional: Set a reminder for follow-up
+                </p>
+              </div>
+              
+              {/* Follow-up Comment */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  <StickyNote size={16} /> Follow-up Comment
+                </label>
+                <textarea
+                  name="followUpComment"
+                  rows={3}
+                  value={formData.followUpComment}
+                  onChange={handleChange}
+                  placeholder="Enter follow-up notes..."
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white shadow-sm text-sm text-gray-700 placeholder-gray-400 transition resize-none"
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Management & Notes */}
           {showAssignToField && (
             <div className="p-6 border border-gray-200 rounded-xl shadow-sm">
@@ -542,6 +758,8 @@ export default function CreateDeal() {
               </div>
             </div>
           )}
+
+          {/* Notes Section */}
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
               <StickyNote size={16} /> Notes
@@ -555,6 +773,7 @@ export default function CreateDeal() {
               className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white shadow-sm text-sm text-gray-700 placeholder-gray-400 transition resize-none"
             />
           </div>
+
           {/* Attachments Section */}
           <div className="p-6 border rounded-xl shadow-sm">
             <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">
@@ -649,6 +868,7 @@ export default function CreateDeal() {
               </label>
             </div>
           </div>
+
           {/* Buttons */}
           <div className="flex justify-end gap-4 pt-6 border-t">
             <button

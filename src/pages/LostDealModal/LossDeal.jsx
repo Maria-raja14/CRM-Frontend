@@ -1,4 +1,3 @@
-// LossDeal.jsx - UPDATED
 import { useState, useCallback } from "react";
 
 const LOSS_REASONS = [
@@ -14,74 +13,95 @@ const LOSS_REASONS = [
   "Communication breakdown",
 ];
 
-const useLostDealModal = () => {
+export default function useLostDealModal() {
   const [modalOpen, setModalOpen] = useState(false);
   const [lossReason, setLossReason] = useState("");
   const [lossNotes, setLossNotes] = useState("");
   const [dealId, setDealId] = useState(null);
+  const [pendingAction, setPendingAction] = useState(null);
   const [validationError, setValidationError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [dealName, setDealName] = useState("");
-  const [dealStage, setDealStage] = useState("");
 
   const resetModal = useCallback(() => {
     setLossReason("");
     setLossNotes("");
     setValidationError("");
     setDealId(null);
+    setPendingAction(null);
     setIsLoading(false);
-    setDealName("");
-    setDealStage("");
   }, []);
 
-  const openModal = useCallback((deal) => {
-    console.log("🔄 Opening modal for deal:", deal);
-    setDealId(deal._id || null);
-    setDealName(deal.dealName || "");
-    setDealStage(deal.stage || "");
+  const openModal = useCallback((id, action) => {
+    console.log("Opening modal for deal:", id);
+    setDealId(id);
+    setPendingAction(() => action);
     setModalOpen(true);
   }, []);
 
   const closeModal = useCallback(() => {
-    if (!isLoading) {
-      setModalOpen(false);
-      setTimeout(resetModal, 300);
-    }
-  }, [isLoading, resetModal]);
+    setModalOpen(false);
+    setTimeout(resetModal, 300);
+  }, [resetModal]);
 
-  const validateForm = useCallback(() => {
+  const validateAndExecute = useCallback(async () => {
+    console.log("Validating modal data:", { lossReason, lossNotes, dealId });
+    
     // Clear previous validation error
     setValidationError("");
     
     // Validate loss reason
     if (!lossReason || lossReason.trim() === "") {
-      setValidationError("Please select a loss reason to proceed");
+      setValidationError("Please select a loss reason");
       return false;
     }
 
-    // Don't validate deal ID for new deals
-    return true;
-  }, [lossReason]);
+    if (!dealId) {
+      console.error("No deal ID found");
+      setValidationError("Deal reference missing");
+      return false;
+    }
+
+    // If validation passes, execute the pending action
+    if (pendingAction && typeof pendingAction === "function") {
+      const lossData = {
+        dealId,
+        reason: lossReason.trim(),
+        notes: lossNotes.trim()
+      };
+      console.log("Executing pending action with data:", lossData);
+      
+      try {
+        setIsLoading(true);
+        // Call the pending action (which might be async)
+        await pendingAction(lossData);
+        closeModal();
+        return true;
+      } catch (error) {
+        console.error("Error executing pending action:", error);
+        setValidationError(error.message || "Failed to process request");
+        return false;
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      console.error("No pending action set");
+      setValidationError("Internal error: No callback function");
+      return false;
+    }
+  }, [lossReason, lossNotes, dealId, pendingAction, closeModal]);
 
   return {
     modalOpen,
-    setModalOpen,
     lossReason,
     lossNotes,
     validationError,
-    isLoading,
-    dealName,
-    dealId,
-    dealStage,
     LOSS_REASONS,
+    isLoading,
     setLossReason,
     setLossNotes,
     openModal,
     closeModal,
-    validateForm,
+    validateAndExecute,
     resetModal,
-    setIsLoading,
   };
-};
-
-export default useLostDealModal;
+}
