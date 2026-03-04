@@ -26,7 +26,7 @@ const NotificationsPage = () => {
   const handleDelete = async (id) => {
     setDeletingId(id);
     try {
-      await axios.delete(`${API_URL}/notification/${id}`);
+      await axios.patch(`${API_URL}/notification/read/${id}`, { read: true });;
       setNotifications((prev) => prev.filter((n) => n._id !== id));
       toast.success("Notification deleted successfully");
     } catch (err) {

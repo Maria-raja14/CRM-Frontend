@@ -171,7 +171,7 @@ const handleScheduleFollowUp = async () => {
       // Create notification in database
       try {
         await axios.post(
-          `${API_URL}/notifications`,
+          `${API_URL}/notification`,
           {
             userId: userId,
             title: "Follow-up Scheduled",

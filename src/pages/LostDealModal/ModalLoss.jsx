@@ -1,4 +1,4 @@
-// ModalLoss.jsx - UPDATED
+// ModalLoss.jsx - FIXED
 import React from "react";
 
 const LostDealModal = ({
@@ -19,8 +19,11 @@ const LostDealModal = ({
 }) => {
   if (!isOpen) return null;
 
-  const handleConfirm = async () => {
-    await onConfirm(); // This should now be a direct function call
+  const handleConfirm = () => {
+    console.log("Modal confirm clicked");
+    // Don't use await here, just call the function
+    // The validation happens inside the hook
+    onConfirm();
   };
 
   return (

@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect } from "react";
 
 import { useSocket } from "./SocketContext";
@@ -5,7 +6,8 @@ import { useSocket } from "./SocketContext";
 
 
 const NotificationContext = createContext();
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL; 
+
 
 export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);

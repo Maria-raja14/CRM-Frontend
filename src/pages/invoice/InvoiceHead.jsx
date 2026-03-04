@@ -185,7 +185,7 @@ const InvoiceHead = () => {
         await axios.patch(
           `${API_URL}/deals/update-deal/${dealId}`,
           {
-            stage: "Invoices Sent",
+            stage: "Invoice Sent",
           },
           {
             headers: { Authorization: `Bearer ${token}` },

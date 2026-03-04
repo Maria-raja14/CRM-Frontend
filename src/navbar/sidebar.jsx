@@ -13,7 +13,6 @@ import {
   Users,
   GitBranch,
   BarChart3,Trophy,
-
   Mail,
     MessageCircle
 } from "lucide-react";
