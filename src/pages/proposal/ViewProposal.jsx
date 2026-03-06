@@ -777,4 +777,6 @@ const ViewProposal = () => {
   );
 };
 
-export default ViewProposal;
+export default ViewProposal;//original
+
+
