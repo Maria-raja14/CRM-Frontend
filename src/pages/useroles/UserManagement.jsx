@@ -1,4 +1,3 @@
-
 // import React from "react";
 // import { useState, useEffect, useRef } from "react";
 // import AddUserModal from "./UserTop";
@@ -41,6 +40,28 @@
 //   MessageSquare,
 // } from "react-feather";
 // import { TourProvider, useTour } from "@reactour/tour";
+
+// // ✅ FIXED: Centralized image URL builder — no double-path, no trailing slash issues
+// export const buildProfileImageUrl = (profileImage, baseUrl) => {
+//   if (!profileImage) return null;
+
+//   // Already a full URL
+//   if (profileImage.startsWith("http://") || profileImage.startsWith("https://")) {
+//     return profileImage;
+//   }
+
+//   // Normalize base URL (remove trailing slash)
+//   const base = (baseUrl || "").replace(/\/+$/, "");
+
+//   // Normalize the image path:
+//   // Remove any leading slashes or "uploads/users/" prefix to avoid double-pathing
+//   let imageName = profileImage
+//     .replace(/^\/+/, "")                  // remove leading slashes
+//     .replace(/^uploads\/users\//, "")      // remove "uploads/users/" prefix if present
+//     .replace(/^uploads\//, "");            // remove "uploads/" prefix if present
+
+//   return `${base}/uploads/users/${imageName}`;
+// };
 
 // // Utility: Scroll an element into view with its scrollable parents
 // function scrollIntoViewWithParents(el, options = {}) {
@@ -128,6 +149,9 @@
 //   return <Lock size={16} className="text-gray-600" />;
 // };
 
+// const DEFAULT_AVATAR =
+//   "https://static.vecteezy.com/system/resources/previews/020/429/953/non_2x/admin-icon-vector.jpg";
+
 // // Custom toast configuration
 // const toastConfig = {
 //   position: "top-right",
@@ -175,7 +199,6 @@
 //   const { setIsOpen, setCurrentStep, currentStep } = useTour();
 //   const containerRef = useRef(null);
 
-//   // Function to show success toast
 //   const showSuccessToast = (message) => {
 //     toast.success(message, {
 //       ...toastConfig,
@@ -186,7 +209,6 @@
 //     });
 //   };
 
-//   // Function to show error toast
 //   const showErrorToast = (message) => {
 //     toast.error(message, {
 //       ...toastConfig,
@@ -241,23 +263,19 @@
 //         headers: { Authorization: `Bearer ${token}` },
 //       });
 
-//       // Ensure base URL ends with a slash
-//       const baseUrl = API_SI.endsWith('/') ? API_SI : API_SI + '/';
+//       // ✅ FIXED: Build correct image URL — no double path, with cache-busting timestamp
+//       const usersWithImageUrl = (data.users || []).map((user) => {
+//         const profileImageUrl = user.profileImage
+//           ? `${buildProfileImageUrl(user.profileImage, API_SI)}?t=${Date.now()}`
+//           : null;
 
-//       const usersWithImageUrl = data.users.map((user) => {
-//         let profileImageUrl = null;
-//         if (user.profileImage) {
-//           // Build full image URL and add timestamp to bypass cache
-//           const imagePath = `uploads/users/${user.profileImage.replace(/^\/+/, '')}`;
-//           profileImageUrl = `${baseUrl}${imagePath}?t=${Date.now()}`;
-//         }
 //         return {
 //           ...user,
 //           profileImageUrl,
 //         };
 //       });
 
-//       setUsers(usersWithImageUrl || []);
+//       setUsers(usersWithImageUrl);
 //     } catch (err) {
 //       console.error(err);
 //       showErrorToast("Failed to load users");
@@ -337,11 +355,8 @@
 //     setCurrentPageRoles(newPage);
 //   };
 
-//   // Function to count active permissions correctly
 //   const countPermissions = (permissions) => {
 //     if (!permissions || typeof permissions !== "object") return 0;
-
-//     // Count only boolean true values
 //     let count = 0;
 //     for (const key in permissions) {
 //       if (permissions[key] === true) {
@@ -351,7 +366,6 @@
 //     return count;
 //   };
 
-//   // Format permission names for display
 //   const formatPermissionName = (key) => {
 //     return key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
 //   };
@@ -383,12 +397,12 @@
 //         />
 //       )}
 
-//       {/* Main Container - Properly Centered */}
+//       {/* Main Container */}
 //       <div
 //         className="w-full max-w-6xl mx-auto flex flex-col items-center"
 //         ref={containerRef}
 //       >
-//         {/* Header Section - Centered */}
+//         {/* Header Section */}
 //         <div className="w-full mb-6 flex flex-col items-center">
 //           <div className="w-full flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
 //             <div className="text-center md:text-left">
@@ -416,7 +430,7 @@
 //             </div>
 //           </div>
 
-//           {/* Slide Navigation - Centered */}
+//           {/* Slide Navigation */}
 //           <div className="w-full border-b border-gray-200 mb-6">
 //             <nav className="flex justify-center space-x-1">
 //               <button
@@ -450,7 +464,7 @@
 //           </div>
 //         </div>
 
-//         {/* Content Slide - Perfectly Centered */}
+//         {/* Content Slides */}
 //         <div className="w-full flex justify-center">
 //           {/* Users Slide */}
 //           <div
@@ -484,7 +498,7 @@
 //                       />
 //                       <input
 //                         type="text"
-//                         placeholder="Search user Email's..."
+//                         placeholder="Search users..."
 //                         value={searchUserQuery}
 //                         onChange={(e) => setSearchUserQuery(e.target.value)}
 //                         className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full md:w-64 search-input"
@@ -546,16 +560,12 @@
 //                           <td className="px-6 py-4">
 //                             <div className="flex items-center">
 //                               <img
-//                                 src={
-//                                   user.profileImageUrl ||
-//                                   "https://static.vecteezy.com/system/resources/previews/020/429/953/non_2x/admin-icon-vector.jpg"
-//                                 }
+//                                 src={user.profileImageUrl || DEFAULT_AVATAR}
 //                                 alt={user.firstName}
 //                                 className="h-10 w-10 rounded-full object-cover border border-gray-300"
 //                                 onError={(e) => {
-//                                   e.target.onerror = null; // Prevent infinite loop
-//                                   e.target.src =
-//                                     "https://static.vecteezy.com/system/resources/previews/020/429/953/non_2x/admin-icon-vector.jpg";
+//                                   e.target.onerror = null;
+//                                   e.target.src = DEFAULT_AVATAR;
 //                                 }}
 //                               />
 //                             </div>
@@ -823,7 +833,6 @@
 //                                 >
 //                                   <Edit size={16} />
 //                                 </button>
-//                                 {/* Hide delete button for Admin role */}
 //                                 {role.name !== "Admin" && (
 //                                   <button
 //                                     onClick={() =>
@@ -975,6 +984,8 @@
 // }//original
 
 
+
+
 import React from "react";
 import { useState, useEffect, useRef } from "react";
 import AddUserModal from "./UserTop";
@@ -1018,24 +1029,20 @@ import {
 } from "react-feather";
 import { TourProvider, useTour } from "@reactour/tour";
 
-// ✅ FIXED: Centralized image URL builder — no double-path, no trailing slash issues
+// ✅ Centralized image URL builder
 export const buildProfileImageUrl = (profileImage, baseUrl) => {
   if (!profileImage) return null;
 
-  // Already a full URL
   if (profileImage.startsWith("http://") || profileImage.startsWith("https://")) {
     return profileImage;
   }
 
-  // Normalize base URL (remove trailing slash)
   const base = (baseUrl || "").replace(/\/+$/, "");
 
-  // Normalize the image path:
-  // Remove any leading slashes or "uploads/users/" prefix to avoid double-pathing
   let imageName = profileImage
-    .replace(/^\/+/, "")                  // remove leading slashes
-    .replace(/^uploads\/users\//, "")      // remove "uploads/users/" prefix if present
-    .replace(/^uploads\//, "");            // remove "uploads/" prefix if present
+    .replace(/^\/+/, "")
+    .replace(/^uploads\/users\//, "")
+    .replace(/^uploads\//, "");
 
   return `${base}/uploads/users/${imageName}`;
 };
@@ -1129,7 +1136,6 @@ const getRoleIcon = (roleName) => {
 const DEFAULT_AVATAR =
   "https://static.vecteezy.com/system/resources/previews/020/429/953/non_2x/admin-icon-vector.jpg";
 
-// Custom toast configuration
 const toastConfig = {
   position: "top-right",
   autoClose: 5000,
@@ -1155,6 +1161,12 @@ const toastConfig = {
     cursor: "pointer",
   },
 };
+
+// ── Sort newest first by createdAt ────────────────────────────────────────────
+const sortNewestFirst = (arr) =>
+  [...arr].sort(
+    (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+  );
 
 function UserManagementInner() {
   const API_URL = import.meta.env.VITE_API_URL;
@@ -1220,19 +1232,22 @@ function UserManagementInner() {
     setIsOpen(true);
   };
 
+  // ── Fetch roles — sorted newest first ────────────────────────────────────
   const fetchRoles = async () => {
     try {
       const token = localStorage.getItem("token");
       const { data } = await axios.get(`${API_URL}/roles`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setRoles(Array.isArray(data) ? data : data.roles || []);
+      const raw = Array.isArray(data) ? data : data.roles || [];
+      setRoles(sortNewestFirst(raw));
     } catch (err) {
       console.error(err);
       showErrorToast("Failed to load roles");
     }
   };
 
+  // ── Fetch users — sorted newest first ────────────────────────────────────
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -1240,19 +1255,14 @@ function UserManagementInner() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // ✅ FIXED: Build correct image URL — no double path, with cache-busting timestamp
       const usersWithImageUrl = (data.users || []).map((user) => {
         const profileImageUrl = user.profileImage
           ? `${buildProfileImageUrl(user.profileImage, API_SI)}?t=${Date.now()}`
           : null;
-
-        return {
-          ...user,
-          profileImageUrl,
-        };
+        return { ...user, profileImageUrl };
       });
 
-      setUsers(usersWithImageUrl);
+      setUsers(sortNewestFirst(usersWithImageUrl));
     } catch (err) {
       console.error(err);
       showErrorToast("Failed to load users");
@@ -1310,42 +1320,34 @@ function UserManagementInner() {
     role.name?.toLowerCase().includes(searchRoleQuery.toLowerCase())
   );
 
+  // ── Pagination — users ──────────────────────────────────────────────────
   const totalPagesUsers = Math.ceil(filteredUsers.length / itemsPerPage) || 1;
   const validatedCurrentPageUsers = Math.min(currentPageUsers, totalPagesUsers);
-
   const indexOfLastUser = validatedCurrentPageUsers * itemsPerPage;
   const indexOfFirstUser = indexOfLastUser - itemsPerPage;
   const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
 
+  // ── Pagination — roles ──────────────────────────────────────────────────
   const totalPagesRoles = Math.ceil(filteredRoles.length / itemsPerPage) || 1;
   const validatedCurrentPageRoles = Math.min(currentPageRoles, totalPagesRoles);
-
   const indexOfLastRole = validatedCurrentPageRoles * itemsPerPage;
   const indexOfFirstRole = indexOfLastRole - itemsPerPage;
   const currentRoles = filteredRoles.slice(indexOfFirstRole, indexOfLastRole);
 
-  const handlePageChangeUsers = (newPage) => {
-    setCurrentPageUsers(newPage);
-  };
-
-  const handlePageChangeRoles = (newPage) => {
-    setCurrentPageRoles(newPage);
-  };
+  const handlePageChangeUsers = (newPage) => setCurrentPageUsers(newPage);
+  const handlePageChangeRoles = (newPage) => setCurrentPageRoles(newPage);
 
   const countPermissions = (permissions) => {
     if (!permissions || typeof permissions !== "object") return 0;
     let count = 0;
     for (const key in permissions) {
-      if (permissions[key] === true) {
-        count++;
-      }
+      if (permissions[key] === true) count++;
     }
     return count;
   };
 
-  const formatPermissionName = (key) => {
-    return key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
-  };
+  const formatPermissionName = (key) =>
+    key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6 flex flex-col items-center">
@@ -1374,12 +1376,11 @@ function UserManagementInner() {
         />
       )}
 
-      {/* Main Container */}
       <div
         className="w-full max-w-6xl mx-auto flex flex-col items-center"
         ref={containerRef}
       >
-        {/* Header Section */}
+        {/* Header */}
         <div className="w-full mb-6 flex flex-col items-center">
           <div className="w-full flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
             <div className="text-center md:text-left">
@@ -1407,7 +1408,7 @@ function UserManagementInner() {
             </div>
           </div>
 
-          {/* Slide Navigation */}
+          {/* Tab Navigation */}
           <div className="w-full border-b border-gray-200 mb-6">
             <nav className="flex justify-center space-x-1">
               <button
@@ -1441,16 +1442,17 @@ function UserManagementInner() {
           </div>
         </div>
 
-        {/* Content Slides */}
+        {/* Content */}
         <div className="w-full flex justify-center">
-          {/* Users Slide */}
+
+          {/* ══ Users Table ══ */}
           <div
             className={`transition-all duration-300 w-full max-w-6xl ${
               activeSlide === "users" ? "block" : "hidden"
             }`}
           >
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden users-table">
-              {/* Header */}
+              {/* Table controls */}
               <div className="px-6 py-4 border-b border-gray-200">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                   <div className="flex items-center gap-3">
@@ -1458,12 +1460,9 @@ function UserManagementInner() {
                       <Users size={20} className="text-blue-600" />
                     </div>
                     <div>
-                      <h2 className="text-lg font-semibold text-gray-900">
-                        Users
-                      </h2>
+                      <h2 className="text-lg font-semibold text-gray-900">Users</h2>
                       <p className="text-sm text-gray-500">
-                        {filteredUsers.length} user
-                        {filteredUsers.length !== 1 ? "s" : ""} total
+                        {filteredUsers.length} user{filteredUsers.length !== 1 ? "s" : ""} total
                       </p>
                     </div>
                   </div>
@@ -1500,29 +1499,17 @@ function UserManagementInner() {
                 </div>
               </div>
 
-              {/* Users Table */}
+              {/* Users table body */}
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Profile
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Name
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Email
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Role
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Profile</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -1559,9 +1546,7 @@ function UserManagementInner() {
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-2">
                               <Mail size={14} className="text-gray-400" />
-                              <span className="text-sm text-gray-700">
-                                {user.email}
-                              </span>
+                              <span className="text-sm text-gray-700">{user.email}</span>
                             </div>
                           </td>
                           <td className="px-6 py-4">
@@ -1590,18 +1575,14 @@ function UserManagementInner() {
                           <td className="px-6 py-4 text-right">
                             <div className="flex justify-end gap-2">
                               <button
-                                onClick={() =>
-                                  handleAction(user, "user", "edit")
-                                }
+                                onClick={() => handleAction(user, "user", "edit")}
                                 className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
                                 title="Edit user"
                               >
                                 <Edit size={16} />
                               </button>
                               <button
-                                onClick={() =>
-                                  handleAction(user, "user", "delete")
-                                }
+                                onClick={() => handleAction(user, "user", "delete")}
                                 className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
                                 title="Delete user"
                               >
@@ -1616,9 +1597,7 @@ function UserManagementInner() {
                         <td colSpan="6" className="px-6 py-12 text-center">
                           <div className="flex flex-col items-center justify-center">
                             <Users size={40} className="text-gray-300 mb-3" />
-                            <h3 className="text-gray-500 font-medium mb-1">
-                              No users found
-                            </h3>
+                            <h3 className="text-gray-500 font-medium mb-1">No users found</h3>
                             <p className="text-gray-400 text-sm">
                               {searchUserQuery || statusFilter !== "all"
                                 ? "Try adjusting your search or filter"
@@ -1632,32 +1611,19 @@ function UserManagementInner() {
                 </table>
               </div>
 
-              {/* Pagination */}
+              {/* Users Pagination */}
               {filteredUsers.length > 0 && (
                 <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 pagination">
                   <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                     <div className="text-sm text-gray-600">
                       Showing{" "}
-                      <span className="font-medium">
-                        {indexOfFirstUser + 1}
-                      </span>{" "}
-                      to{" "}
-                      <span className="font-medium">
-                        {Math.min(indexOfLastUser, filteredUsers.length)}
-                      </span>{" "}
-                      of{" "}
-                      <span className="font-medium">
-                        {filteredUsers.length}
-                      </span>{" "}
-                      users
+                      <span className="font-medium">{indexOfFirstUser + 1}</span> to{" "}
+                      <span className="font-medium">{Math.min(indexOfLastUser, filteredUsers.length)}</span> of{" "}
+                      <span className="font-medium">{filteredUsers.length}</span> users
                     </div>
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() =>
-                          handlePageChangeUsers(
-                            Math.max(validatedCurrentPageUsers - 1, 1)
-                          )
-                        }
+                        onClick={() => handlePageChangeUsers(Math.max(validatedCurrentPageUsers - 1, 1))}
                         disabled={validatedCurrentPageUsers === 1}
                         className="p-2 rounded border border-gray-300 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
@@ -1679,14 +1645,7 @@ function UserManagementInner() {
                         ))}
                       </div>
                       <button
-                        onClick={() =>
-                          handlePageChangeUsers(
-                            Math.min(
-                              validatedCurrentPageUsers + 1,
-                              totalPagesUsers
-                            )
-                          )
-                        }
+                        onClick={() => handlePageChangeUsers(Math.min(validatedCurrentPageUsers + 1, totalPagesUsers))}
                         disabled={validatedCurrentPageUsers === totalPagesUsers}
                         className="p-2 rounded border border-gray-300 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
@@ -1699,14 +1658,14 @@ function UserManagementInner() {
             </div>
           </div>
 
-          {/* Roles Slide */}
+          {/* ══ Roles Table ══ */}
           <div
             className={`transition-all duration-300 w-full max-w-6xl ${
               activeSlide === "roles" ? "block" : "hidden"
             }`}
           >
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden roles-table">
-              {/* Header */}
+              {/* Table controls */}
               <div className="px-6 py-4 border-b border-gray-200">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                   <div className="flex items-center gap-3">
@@ -1714,12 +1673,9 @@ function UserManagementInner() {
                       <Shield size={20} className="text-green-600" />
                     </div>
                     <div>
-                      <h2 className="text-lg font-semibold text-gray-900">
-                        Roles
-                      </h2>
+                      <h2 className="text-lg font-semibold text-gray-900">Roles</h2>
                       <p className="text-sm text-gray-500">
-                        {filteredRoles.length} role
-                        {filteredRoles.length !== 1 ? "s" : ""} total
+                        {filteredRoles.length} role{filteredRoles.length !== 1 ? "s" : ""} total
                       </p>
                     </div>
                   </div>
@@ -1739,28 +1695,20 @@ function UserManagementInner() {
                 </div>
               </div>
 
-              {/* Roles Table */}
+              {/* Roles table body */}
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Role Name
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Permissions
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role Name</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Permissions</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {currentRoles.length > 0 ? (
                       currentRoles.map((role, index) => {
-                        const permissionCount = countPermissions(
-                          role.permissions
-                        );
+                        const permissionCount = countPermissions(role.permissions);
                         const activePermissions = role.permissions
                           ? Object.entries(role.permissions)
                               .filter(([key, value]) => value === true)
@@ -1781,16 +1729,13 @@ function UserManagementInner() {
                                   {getRoleIcon(role.name)}
                                 </div>
                                 <div>
-                                  <div className="font-medium text-gray-900">
-                                    {role.name}
-                                  </div>
+                                  <div className="font-medium text-gray-900">{role.name}</div>
                                 </div>
                               </div>
                             </td>
                             <td className="px-6 py-4">
                               <div className="text-sm text-gray-700">
-                                {permissionCount} permission
-                                {permissionCount !== 1 ? "s" : ""}
+                                {permissionCount} permission{permissionCount !== 1 ? "s" : ""}
                               </div>
                               {permissionCount > 0 && (
                                 <div className="text-xs text-gray-500 mt-1">
@@ -1802,9 +1747,7 @@ function UserManagementInner() {
                             <td className="px-6 py-4 text-right">
                               <div className="flex justify-end gap-2">
                                 <button
-                                  onClick={() =>
-                                    handleAction(role, "role", "edit")
-                                  }
+                                  onClick={() => handleAction(role, "role", "edit")}
                                   className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
                                   title="Edit role"
                                 >
@@ -1812,9 +1755,7 @@ function UserManagementInner() {
                                 </button>
                                 {role.name !== "Admin" && (
                                   <button
-                                    onClick={() =>
-                                      handleAction(role, "role", "delete")
-                                    }
+                                    onClick={() => handleAction(role, "role", "delete")}
                                     className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
                                     title="Delete role"
                                   >
@@ -1831,9 +1772,7 @@ function UserManagementInner() {
                         <td colSpan="3" className="px-6 py-12 text-center">
                           <div className="flex flex-col items-center justify-center">
                             <Shield size={40} className="text-gray-300 mb-3" />
-                            <h3 className="text-gray-500 font-medium mb-1">
-                              No roles found
-                            </h3>
+                            <h3 className="text-gray-500 font-medium mb-1">No roles found</h3>
                             <p className="text-gray-400 text-sm">
                               {searchRoleQuery
                                 ? "Try adjusting your search"
@@ -1847,32 +1786,19 @@ function UserManagementInner() {
                 </table>
               </div>
 
-              {/* Pagination */}
+              {/* Roles Pagination */}
               {filteredRoles.length > 0 && (
                 <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 pagination">
                   <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                     <div className="text-sm text-gray-600">
                       Showing{" "}
-                      <span className="font-medium">
-                        {indexOfFirstRole + 1}
-                      </span>{" "}
-                      to{" "}
-                      <span className="font-medium">
-                        {Math.min(indexOfLastRole, filteredRoles.length)}
-                      </span>{" "}
-                      of{" "}
-                      <span className="font-medium">
-                        {filteredRoles.length}
-                      </span>{" "}
-                      roles
+                      <span className="font-medium">{indexOfFirstRole + 1}</span> to{" "}
+                      <span className="font-medium">{Math.min(indexOfLastRole, filteredRoles.length)}</span> of{" "}
+                      <span className="font-medium">{filteredRoles.length}</span> roles
                     </div>
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() =>
-                          handlePageChangeRoles(
-                            Math.max(validatedCurrentPageRoles - 1, 1)
-                          )
-                        }
+                        onClick={() => handlePageChangeRoles(Math.max(validatedCurrentPageRoles - 1, 1))}
                         disabled={validatedCurrentPageRoles === 1}
                         className="p-2 rounded border border-gray-300 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
@@ -1894,14 +1820,7 @@ function UserManagementInner() {
                         ))}
                       </div>
                       <button
-                        onClick={() =>
-                          handlePageChangeRoles(
-                            Math.min(
-                              validatedCurrentPageRoles + 1,
-                              totalPagesRoles
-                            )
-                          )
-                        }
+                        onClick={() => handlePageChangeRoles(Math.min(validatedCurrentPageRoles + 1, totalPagesRoles))}
                         disabled={validatedCurrentPageRoles === totalPagesRoles}
                         className="p-2 rounded border border-gray-300 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
@@ -1913,6 +1832,7 @@ function UserManagementInner() {
               )}
             </div>
           </div>
+
         </div>
       </div>
     </div>
@@ -1943,16 +1863,8 @@ export default function UserManagement() {
           border: "1px solid #e5e7eb",
         }),
         maskArea: (base) => ({ ...base, rx: 8 }),
-        badge: (base) => ({
-          ...base,
-          display: "none",
-        }),
-        close: (base) => ({
-          ...base,
-          right: "auto",
-          left: 8,
-          top: 8,
-        }),
+        badge: (base) => ({ ...base, display: "none" }),
+        close: (base) => ({ ...base, right: "auto", left: 8, top: 8 }),
       }}
     >
       <UserManagementInner />
