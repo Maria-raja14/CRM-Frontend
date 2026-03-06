@@ -1025,7 +1025,7 @@ const ReportsPage = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  {["Team Member","Performance","Leads","Activities","Time Logged","Completion","Actions"].map((h) => (
+                  {["Team Member","Leads","Activities","Time Logged","Completion","Actions"].map((h) => (
                     <th key={h} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       {h}
                     </th>
@@ -1052,9 +1052,9 @@ const ReportsPage = () => {
                           </div>
                         </div>
                       </td>
-
-                      {/* Performance */}
-                      <td className="px-6 py-4 whitespace-nowrap">
+{/* 
+                      Performance */}
+                      {/* <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex flex-col gap-1">
                           <div className="text-sm font-semibold text-gray-900">
                             {rep.productivityScore.toFixed(0)}%
@@ -1063,7 +1063,7 @@ const ReportsPage = () => {
                             {getPerformanceLabel(rep.productivityScore)}
                           </span>
                         </div>
-                      </td>
+                      </td> */}
 
                       {/* Leads */}
                       <td className="px-6 py-4 whitespace-nowrap">
