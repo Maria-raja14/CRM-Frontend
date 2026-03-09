@@ -661,88 +661,97 @@ export default function LostDealAnalytics() {
     }
   };
 
-  // --------------------------------------------------------------------
-  // Export Functions
-  // --------------------------------------------------------------------
-  const exportCSV = () => {
-    try {
-      const headers = [
-        "Date Lost",
-        "Deal Name",
-        "Stage Lost At",
-        "Value",
-        "Loss Reason",
-        "Owner",
-      ];
-      const rows = sortedDealsForTableView.map((deal) => [
-        formatDate(deal.lostDate),
-        deal.dealName || "",
-        deal.stageLostAt || "Unknown",
-        formatCurrency(deal.parsedValue),
-        deal.lossReason || "",
-        getOwnerName(deal.assignedTo),
-      ]);
+ const exportCSV = () => {
+  try {
+    const headers = [
+      "Date Lost",
+      "Deal Name",
+      "Stage Lost At",
+      "Value",
+      "Loss Reason",
+      "Owner",
+    ];
 
-      const csvContent =
-        "data:text/csv;charset=utf-8," +
-        [headers.join(","), ...rows.map((row) => row.join(","))].join("\n");
+    const rows = sortedDealsForTableView.map((deal) => [
+      formatDate(deal.lostDate),
+      deal.dealName || "",
+      deal.stageLostAt || "Unknown",
+      formatCurrency(deal.parsedValue),
+      deal.lossReason || "",
+      getOwnerName(deal.assignedTo),
+    ]);
 
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute(
-        "download",
-        `lost-deals-${new Date().toISOString().split("T")[0]}.csv`
-      );
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast.success("CSV exported successfully!");
-    } catch (error) {
-      console.error("CSV export failed:", error);
-      toast.error("Failed to export CSV");
-    }
-  };
+    const csvContent =
+      "data:text/csv;charset=utf-8,\uFEFF" +
+      [
+        headers.join(","),
+        ...rows.map((row) => row.map((item) => `"${item}"`).join(",")),
+      ].join("\n");
 
-  const exportPDF = () => {
-    try {
-      const doc = new jsPDF();
-      doc.text("Lost Deals Report", 14, 15);
-      doc.setFontSize(10);
-      doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 22);
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
 
-      const tableColumn = [
-        "Date Lost",
-        "Deal Name",
-        "Stage Lost At",
-        "Value",
-        "Loss Reason",
-        "Owner",
-      ];
-      const tableRows = sortedDealsForTableView.map((deal) => [
-        formatDate(deal.lostDate),
-        deal.dealName || "",
-        deal.stageLostAt || "Unknown",
-        formatCurrency(deal.parsedValue),
-        deal.lossReason || "",
-        getOwnerName(deal.assignedTo),
-      ]);
+    link.setAttribute("href", encodedUri);
+    link.setAttribute(
+      "download",
+      `lost-deals-${new Date().toISOString().split("T")[0]}.csv`
+    );
 
-      autoTable(doc, {
-        head: [tableColumn],
-        body: tableRows,
-        startY: 30,
-        styles: { fontSize: 8 },
-        headStyles: { fillColor: [41, 128, 185] },
-      });
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 
-      doc.save(`lost-deals-${new Date().toISOString().split("T")[0]}.pdf`);
-      toast.success("PDF exported successfully!");
-    } catch (error) {
-      console.error("PDF export failed:", error);
-      toast.error("Failed to export PDF");
-    }
-  };
+    toast.success("CSV exported successfully!");
+  } catch (error) {
+    console.error("CSV export failed:", error);
+    toast.error("Failed to export CSV");
+  }
+};
+
+ const exportPDF = () => {
+  try {
+    const doc = new jsPDF();
+
+    doc.setFontSize(16);
+    doc.text("Lost Deals Report", 14, 15);
+
+    doc.setFontSize(10);
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 22);
+
+    const tableColumn = [
+      "Date Lost",
+      "Deal Name",
+      "Stage Lost At",
+      "Value",
+      "Loss Reason",
+      "Owner",
+    ];
+
+    const tableRows = sortedDealsForTableView.map((deal) => [
+      formatDate(deal.lostDate),
+      deal.dealName || "",
+      deal.stageLostAt || "Unknown",
+      `Rs. ${Number(deal.parsedValue || 0).toLocaleString("en-IN")}`,
+      deal.lossReason || "",
+      getOwnerName(deal.assignedTo),
+    ]);
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 30,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [41, 128, 185] },
+    });
+
+    doc.save(`lost-deals-${new Date().toISOString().split("T")[0]}.pdf`);
+
+    toast.success("PDF exported successfully!");
+  } catch (error) {
+    console.error("PDF export failed:", error);
+    toast.error("Failed to export PDF");
+  }
+};
 
   // Calculate derived values for cards
   const wonStageLostDeals = useMemo(() => {
@@ -807,13 +816,12 @@ export default function LostDealAnalytics() {
               CSV
             </button>
             <button
-              onClick={fetchAnalytics}
-              disabled={isLoading}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all shadow-sm disabled:opacity-50"
-            >
-              <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
-              {isLoading ? "Loading..." : "Refresh"}
-            </button>
+  onClick={() => window.location.reload()}
+  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+>
+  <RefreshCw size={16} />
+  Refresh
+</button>
           </div>
         </div>
       </div>

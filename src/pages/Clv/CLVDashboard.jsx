@@ -381,7 +381,7 @@ const CLVDashboard = () => {
 
       {/* Criteria Modals */}
       {showUpsellCriteriaModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-lg flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl w-full max-w-md">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
@@ -424,7 +424,7 @@ const CLVDashboard = () => {
       )}
 
       {showTopValueCriteriaModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-lg flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl w-full max-w-md">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
@@ -451,7 +451,7 @@ const CLVDashboard = () => {
       )}
 
       {showAtRiskCriteriaModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-lg flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl w-full max-w-md">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
@@ -490,7 +490,7 @@ const CLVDashboard = () => {
       )}
 
       {showDormantCriteriaModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-lg flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl w-full max-w-md">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">

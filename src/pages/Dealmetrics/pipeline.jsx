@@ -165,10 +165,20 @@ const STAGE_ACTIONS = {
 
 const calculateFollowUpScore = (deal) => {
   if (!deal.followUpDate) return 0;
-  const daysUntilFollowUp = Math.ceil((new Date(deal.followUpDate) - new Date()) / (1000 * 60 * 60 * 24));
+
+  const daysUntilFollowUp =
+    Math.ceil((new Date(deal.followUpDate) - new Date()) / (1000 * 60 * 60 * 24));
+
+  // Overdue follow-ups
+  if (daysUntilFollowUp < -14) return -30;
+  if (daysUntilFollowUp < -7) return -20;
+  if (daysUntilFollowUp < 0) return -10;
+
+  // Upcoming follow-ups
   if (daysUntilFollowUp <= 3) return 20;
   if (daysUntilFollowUp <= 7) return 15;
   if (daysUntilFollowUp <= 14) return 10;
+
   return 0;
 };
 
@@ -841,8 +851,10 @@ const FollowUpModal = ({ isOpen, onClose, deal, onSave }) => {
   if (!isOpen || !deal) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity duration-300" onClick={handleBackdropClick}>
-      <div className="bg-white rounded-2xl max-w-md w-full p-6 transform transition-all duration-300 scale-100">
+<div
+  className="fixed inset-0 bg-black/30 backdrop-blur-lg flex items-center justify-center z-50 p-4 transition-opacity duration-300"
+  onClick={handleBackdropClick}
+>      <div className="bg-white rounded-2xl max-w-md w-full p-6 transform transition-all duration-300 scale-100">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-purple-100 rounded-lg"><Calendar size={20} className="text-purple-600" /></div>
@@ -1283,33 +1295,91 @@ function DealIntelligenceDashboard() {
   };
 
   const handleStageAction = async (action) => {
-    if (!selectedDeal) return;
-    try {
-      if (action === "Send Proposal") {
-        navigate("/proposal", { state: { proposal: { dealTitle: selectedDeal.dealName, email: selectedDeal.email || "", dealId: selectedDeal._id }, isEditing: false, autoFill: true } });
-        setTimeout(() => setSelectedDeal(null), 100);
-      } else if (action === "Send Invoice") {
-        navigate("/invoice");
-        setTimeout(() => setSelectedDeal(null), 100);
-      } else if (action === "Do Follow-up" || action === "Make Payment Follow-up" || action === "Do Negotiation") {
-        setModalState(prev => ({ ...prev, followUp: true }));
-      } else if (action === "Convert to Won") {
+  if (!selectedDeal) return;
+  
+  try {
+    // Handle different actions
+    if (action === "Send Proposal") {
+      navigate("/proposal", { 
+        state: { 
+          proposal: { 
+            dealTitle: selectedDeal.dealName, 
+            email: selectedDeal.email || "", 
+            dealId: selectedDeal._id 
+          }, 
+          isEditing: false, 
+          autoFill: true 
+        } 
+      });
+      setTimeout(() => setSelectedDeal(null), 100);
+    } 
+    else if (action === "Send Invoice") {
+      navigate("/invoice");
+      setTimeout(() => setSelectedDeal(null), 100);
+    } 
+    else if (action === "Do Follow-up" || action === "Make Payment Follow-up" || action === "Do Negotiation") {
+      setModalState(prev => ({ ...prev, followUp: true }));
+    } 
+    else if (action === "Convert to Won") {
+      setLoading(true);
+      try {
         const token = localStorage.getItem("token");
-        await axios.patch(`${API_URL}/deals/update-deal/${selectedDeal._id}`, { stage: "Closed Won" }, { headers: { Authorization: `Bearer ${token}` } });
-        toast.success("Deal marked as Won!");
-        fetchData();
-      } else if (action === "View in CLV Dashboard") {
-        if (selectedDeal.companyName) {
-          navigate(`/cltv/client/${encodeURIComponent(selectedDeal.companyName)}`);
-        } else {
-          navigate("/cltv/dashboard");
+        
+        // Update the deal stage - ONLY send the stage field
+        const response = await axios.patch(
+          `${API_URL}/deals/update-deal/${selectedDeal._id}`, 
+          { stage: "Closed Won" }, 
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        
+        // Check if the response was successful
+        if (response.status === 200 || response.status === 201) {
+          toast.success("Deal marked as Won successfully!");
+          
+          // REMOVED: The CLV call that was causing 404 error
+          // Just log that we're skipping it
+          console.log("CLV update skipped - endpoint not available");
+          
+          // Refresh the deals data
+          await fetchData();
+          
+          // Close the modal
+          setModalState(prev => ({ ...prev, stage: false }));
         }
+      } catch (error) {
+        console.error("Error converting deal to Won:", error);
+        
+        // Even if there's an error, the deal might still be updated
+        toast.warning("Deal may have been updated. Refreshing data...");
+        await fetchData();
+        
+        // Check if the deal is now in Closed Won stage
+        const updatedDeal = deals.find(d => d._id === selectedDeal._id);
+        if (updatedDeal?.stage === "Closed Won") {
+          toast.success("Deal was successfully marked as Won!");
+          setModalState(prev => ({ ...prev, stage: false }));
+        } else {
+          toast.error(`Failed to mark deal as Won`);
+        }
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error handling stage action:", error);
-      toast.error("Failed to process action");
+    } 
+    else if (action === "View in CLV Dashboard") {
+      if (selectedDeal.companyName) {
+        navigate(`/cltv/client/${encodeURIComponent(selectedDeal.companyName)}`);
+      } else {
+        navigate("/cltv/dashboard");
+      }
+      setModalState(prev => ({ ...prev, stage: false }));
     }
-  };
+  } catch (error) {
+    console.error("Error handling stage action:", error);
+    toast.error("Failed to process action");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleFollowUpSave = async (followUpData) => {
     if (!selectedDeal) { toast.error("No deal selected"); return; }

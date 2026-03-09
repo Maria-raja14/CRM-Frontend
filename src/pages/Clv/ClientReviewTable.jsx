@@ -68,6 +68,21 @@ const ClientReviewTable = () => {
     }
   }, []);
 
+  // Listen for CLV updates from pipeline
+  useEffect(() => {
+    const handleCLVUpdate = (event) => {
+      console.log("🔄 CLV updated, refreshing table...", event.detail);
+      fetchWonDeals();
+      toast.info("Client data updated");
+    };
+    
+    window.addEventListener('clv-updated', handleCLVUpdate);
+    
+    return () => {
+      window.removeEventListener('clv-updated', handleCLVUpdate);
+    };
+  }, []); // Empty dependency array
+
   useEffect(() => {
     fetchWonDeals();
   }, [pagination.page, selectedClassification, userRole, userId]);
@@ -82,6 +97,12 @@ const ClientReviewTable = () => {
         navigate("/login");
         return;
       }
+
+      console.log("🔍 Fetching deals with params:", {
+        page: pagination.page,
+        limit: pagination.limit,
+        classification: selectedClassification
+      });
 
       const response = await axios.get(
         `${API_URL}/cltv/won-deals?page=${pagination.page}&limit=${pagination.limit}&classification=${selectedClassification}`,
@@ -101,12 +122,19 @@ const ClientReviewTable = () => {
           );
         }
         
+        console.log("📊 Fetched deals:", fetchedDeals.map(d => ({
+          company: d.companyName,
+          daysInactive: d.daysSinceFollowUp
+        })));
+        
         setDeals(fetchedDeals);
+        
         if (response.data.pagination) {
           setPagination({
-            ...pagination,
+            page: pagination.page,
             total: response.data.pagination.total,
-            pages: response.data.pagination.pages
+            pages: response.data.pagination.pages,
+            limit: pagination.limit
           });
         }
       }
@@ -121,9 +149,15 @@ const ClientReviewTable = () => {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    setPagination({ ...pagination, page: 1 });
-    await fetchWonDeals();
-    setRefreshing(false);
+    // Reset to page 1
+    setPagination(prev => ({ ...prev, page: 1 }));
+    
+    // Small delay to ensure state updates
+    setTimeout(async () => {
+      await fetchWonDeals();
+      setRefreshing(false);
+      toast.success("Data refreshed!");
+    }, 100);
   };
 
   const handleRowClick = (deal, e) => {
@@ -243,6 +277,12 @@ const ClientReviewTable = () => {
         setShowReviewModal(false);
         setPricingDeal(selectedDeal);
         setShowPricingCard(true);
+        
+        // Dispatch event to notify other components
+        window.dispatchEvent(new CustomEvent('clv-updated', { 
+          detail: { companyName: selectedDeal.companyName } 
+        }));
+        
         await fetchWonDeals(); // Refresh the table to show updated data
       } else {
         toast.error(response.data.message || "Failed to save review");
@@ -357,7 +397,7 @@ const ClientReviewTable = () => {
                       key={cls.value}
                       onClick={() => {
                         setSelectedClassification(cls.value);
-                        setPagination({ ...pagination, page: 1 });
+                        setPagination(prev => ({ ...prev, page: 1 }));
                         setShowFilterDropdown(false);
                       }}
                       className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg ${
@@ -376,8 +416,12 @@ const ClientReviewTable = () => {
             <button
               onClick={handleRefresh}
               disabled={refreshing}
-              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
-              title="Refresh"
+              className={`p-2 rounded-lg transition ${
+                refreshing 
+                  ? 'bg-blue-100 text-blue-600 cursor-not-allowed' 
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+              title="Refresh data"
             >
               <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
             </button>
@@ -576,7 +620,7 @@ const ClientReviewTable = () => {
 
       {/* Review Modal */}
       {showReviewModal && selectedDeal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-lg flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <h3 className="text-xl font-semibold text-gray-800 mb-4">

@@ -11,6 +11,9 @@ const LOSS_REASONS = [
   "Lost to internal solution",
   "Poor product fit",
   "Communication breakdown",
+  "Ghosted/No Reply",
+  "Feature Missing",
+  "Competitor (Zoho)",
 ];
 
 export default function useLostDealModal() {
@@ -18,6 +21,7 @@ export default function useLostDealModal() {
   const [lossReason, setLossReason] = useState("");
   const [lossNotes, setLossNotes] = useState("");
   const [dealId, setDealId] = useState(null);
+  const [dealName, setDealName] = useState("");
   const [pendingAction, setPendingAction] = useState(null);
   const [validationError, setValidationError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -27,13 +31,21 @@ export default function useLostDealModal() {
     setLossNotes("");
     setValidationError("");
     setDealId(null);
+    setDealName("");
     setPendingAction(null);
     setIsLoading(false);
   }, []);
 
-  const openModal = useCallback((id, action) => {
-    console.log("Opening modal for deal:", id);
-    setDealId(id);
+  const openModal = useCallback((deal, action) => {
+    console.log("Opening modal for deal:", deal);
+    // Handle both cases: if deal is an object with _id, or just an id string
+    if (typeof deal === 'object' && deal !== null) {
+      setDealId(deal._id);
+      setDealName(deal.dealName || "");
+    } else {
+      setDealId(deal);
+      setDealName("");
+    }
     setPendingAction(() => action);
     setModalOpen(true);
   }, []);
@@ -90,6 +102,11 @@ export default function useLostDealModal() {
     }
   }, [lossReason, lossNotes, dealId, pendingAction, closeModal]);
 
+  // Manual validation setter for external use
+  const setExternalValidationError = useCallback((error) => {
+    setValidationError(error);
+  }, []);
+
   return {
     modalOpen,
     lossReason,
@@ -97,11 +114,15 @@ export default function useLostDealModal() {
     validationError,
     LOSS_REASONS,
     isLoading,
+    dealId,
+    dealName,
     setLossReason,
     setLossNotes,
     openModal,
     closeModal,
     validateAndExecute,
     resetModal,
+    setIsLoading,
+    setValidationError: setExternalValidationError,
   };
 }

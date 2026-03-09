@@ -103,6 +103,7 @@ function Pipeline_modal_view() {
   };
 
   // Handle Schedule/Reschedule Follow-up
+// Handle Schedule/Reschedule Follow-up
 const handleScheduleFollowUp = async () => {
   try {
     setIsSubmitting(true);
@@ -144,7 +145,7 @@ const handleScheduleFollowUp = async () => {
       }
     };
 
-    // Prepare FormData for the request (matching your existing pattern)
+    // Prepare FormData for the request
     const formData = new FormData();
     
     // Add all fields to FormData
@@ -203,6 +204,26 @@ const handleScheduleFollowUp = async () => {
       } catch (notifError) {
         console.error("Failed to create notification:", notifError);
         toast.success(deal.followUpDate ? "Follow-up rescheduled!" : "Follow-up scheduled!");
+      }
+
+      // CRITICAL: Sync with CLV to update days inactive (only for Closed Won deals)
+      if (deal.stage === "Closed Won") {
+        try {
+          console.log("🔄 Syncing follow-up data with CLV for:", deal.companyName);
+          const syncResponse = await axios.post(
+            `${API_URL}/cltv/sync-followup/${encodeURIComponent(deal.companyName)}`,
+            {},
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          
+          if (syncResponse.data.success) {
+            console.log("✅ CLV sync successful:", syncResponse.data.data);
+            toast.info("Days inactive updated in CLV");
+          }
+        } catch (syncError) {
+          console.error("Error syncing with CLV:", syncError);
+          // Don't show error to user, just log it
+        }
       }
 
       setIsFollowUpModalOpen(false);

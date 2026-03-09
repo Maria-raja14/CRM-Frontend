@@ -303,7 +303,7 @@ const ClassificationModal = ({ isOpen, onClose, title, data, type }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-lg flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl w-full max-w-3xl max-h-[85vh] overflow-hidden shadow-2xl">
         {/* Header */}
         <div className={`p-6 ${getBgColor()} border-b flex justify-between items-center sticky top-0 z-10`}>

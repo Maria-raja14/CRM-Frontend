@@ -1011,6 +1011,7 @@ const CreateEmail = () => {
       const formData = new FormData();
       formData.append("subject", emailData.subject);
       formData.append("content", emailData.content);
+      formData.append("templateTitle",selected ? selected.title : null);
       formData.append("scheduledFor", selectedDateTime.toISOString());
       
       recipients.forEach((email) => {
@@ -1285,7 +1286,12 @@ const CreateEmail = () => {
 
                 <button
                   onClick={handleScheduleEmail}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  disabled={isEditMode}
+                  className={`px-4 py-2 rounded-lg text-white ${
+                    isEditMode
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-blue-600 hover:bg-blue-700"
+                  }`}
                 >
                   Confirm Schedule
                 </button>
