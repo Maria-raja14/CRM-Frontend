@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { UploadCloud, Save } from "react-feather";
+import { UploadCloud, Save, Image, Globe, Bookmark } from "react-feather";
 
 export default function Settings() {
   const API_URL = import.meta.env.VITE_API_URL;
@@ -31,9 +31,7 @@ export default function Settings() {
       if (data?.logo) {
         const baseUrl = API_URL.replace("/api", "");
         const imageUrl = `${baseUrl}/${data.logo.replace(/\\/g, "/")}`;
-
-        console.log("Final Logo URL:", imageUrl); // debug
-
+        console.log("Final Logo URL:", imageUrl);
         setLogo(imageUrl);
       } else {
         setLogo(null);
@@ -77,7 +75,7 @@ export default function Settings() {
 
       toast.success("Logo updated successfully!");
       setSelectedFile(null);
-      fetchSettings(); // reload logo
+      fetchSettings();
     } catch (err) {
       console.error(err);
       toast.error(err.response?.data?.message || "Upload failed");
@@ -106,10 +104,7 @@ export default function Settings() {
       );
 
       toast.success("Company name updated successfully!");
-
-      // 🔥 Update browser title instantly
       document.title = companyName;
-
     } catch (err) {
       console.error(err);
       toast.error(err.response?.data?.message || "Update failed");
@@ -144,12 +139,10 @@ export default function Settings() {
       setSelectedFavicon(null);
       fetchSettings();
 
-      // 🔥 Update favicon instantly without refresh
       const faviconElement = document.getElementById("dynamic-favicon");
       if (faviconElement && favicon) {
         faviconElement.href = favicon;
       }
-
     } catch (err) {
       console.error(err);
       toast.error(err.response?.data?.message || "Upload failed");
@@ -159,140 +152,227 @@ export default function Settings() {
   };
 
   return (
-    <div className="p-4 lg:p-6 space-y-8">
-
-      {/* PAGE HEADER */}
-      <div className="pl-1">
-        <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">
-          Company Settings
-        </h1>
-        <p className="text-gray-500 text-sm mt-1">
-          Customize your branding and browser display configuration.
-        </p>
-      </div>
-
-      {/* THREE COLUMN GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-        {/* ================= LOGO ================= */}
-        <div className="group bg-white rounded-2xl border border-gray-200 p-6 flex flex-col justify-between h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-
-          <div className="space-y-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+        
+        {/* PAGE HEADER */}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-blue-100 rounded-xl">
+              <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+            </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-800">
-                Company Logo
-              </h2>
-              <p className="text-xs text-gray-500 mt-1">
-                Used across dashboards and reports.
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 tracking-tight">
+                Company Settings
+              </h1>
+              <p className="text-sm sm:text-base text-gray-500 mt-1">
+                Customize your branding and browser display configuration.
               </p>
             </div>
+          </div>
+          <div className="h-1 w-20 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mt-2"></div>
+        </div>
 
-            {logo ? (
-              <img
-                src={logo}
-                alt="Company Logo"
-                className="h-24 object-contain border rounded-xl p-3 bg-gray-50"
-              />
-            ) : (
-              <div className="h-24 flex items-center justify-center border rounded-xl bg-gray-50 text-gray-400 text-sm">
-                No logo uploaded
+        {/* RESPONSIVE GRID - Changes based on screen size */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+          
+          {/* ================= LOGO CARD ================= */}
+          <div className="group bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-4 sm:p-6 flex flex-col h-full transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-blue-200">
+            
+            <div className="space-y-4 sm:space-y-5 flex-1">
+              {/* Header with icon */}
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="p-1.5 bg-blue-50 rounded-lg">
+                      <Image className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+                    </div>
+                    <h2 className="text-base sm:text-lg font-semibold text-gray-800">
+                      Company Logo
+                    </h2>
+                  </div>
+                  <p className="text-xs sm:text-sm text-gray-500">
+                    Used across dashboards and reports
+                  </p>
+                </div>
+                {logo && (
+                  <span className="px-2 py-1 bg-green-50 text-green-600 text-xs rounded-full border border-green-200">
+                    Active
+                  </span>
+                )}
               </div>
-            )}
 
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="border border-gray-300 p-2 rounded-lg text-sm"
-            />
-          </div>
-
-          <button
-            onClick={handleUpload}
-            disabled={loading}
-            className="mt-6 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition disabled:opacity-60"
-          >
-            <UploadCloud size={16} />
-            {loading ? "Uploading..." : "Update Logo"}
-          </button>
-        </div>
-
-
-        {/* ================= FAVICON ================= */}
-        <div className="group bg-white rounded-2xl border border-gray-200 p-6 flex flex-col justify-between h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-800">
-                Browser Favicon
-              </h2>
-              <p className="text-xs text-gray-500 mt-1">
-                Displayed in browser tabs and bookmarks.
-              </p>
-            </div>
-
-            {favicon ? (
-              <img
-                src={favicon}
-                alt="Favicon"
-                className="h-14 w-14 object-contain border rounded-xl p-2 bg-gray-50"
-              />
-            ) : (
-              <div className="h-14 w-14 flex items-center justify-center border rounded-xl bg-gray-50 text-gray-400 text-xs">
-                None
+              {/* Logo Preview */}
+              <div className="flex justify-center">
+                {logo ? (
+                  <div className="relative group">
+                    <img
+                      src={logo}
+                      alt="Company Logo"
+                      className="h-20 sm:h-24 w-auto max-w-[200px] object-contain border-2 border-gray-100 rounded-xl p-3 bg-gray-50 group-hover:border-blue-200 transition-all"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 rounded-xl transition-all"></div>
+                  </div>
+                ) : (
+                  <div className="h-20 sm:h-24 w-full max-w-[200px] flex items-center justify-center border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 text-gray-400 text-sm">
+                    <span className="text-xs sm:text-sm">No logo uploaded</span>
+                  </div>
+                )}
               </div>
-            )}
 
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFaviconChange}
-              className="border border-gray-300 p-2 rounded-lg text-sm"
-            />
-          </div>
-
-          <button
-            onClick={handleFaviconUpload}
-            disabled={loading}
-            className="mt-6 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition disabled:opacity-60"
-          >
-            <UploadCloud size={16} />
-            {loading ? "Uploading..." : "Update Favicon"}
-          </button>
-        </div>
-
-
-        {/* ================= COMPANY NAME ================= */}
-        <div className="group bg-white rounded-2xl border border-gray-200 p-6 flex flex-col justify-between h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-800">
-                Company Name
-              </h2>
-              <p className="text-xs text-gray-500 mt-1">
-                Appears in browser tab title.
-              </p>
+              {/* File Input */}
+              <div className="space-y-2">
+                <label className="text-xs sm:text-sm font-medium text-gray-700">
+                  Upload new logo
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="w-full text-xs sm:text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-gray-200 rounded-lg p-1"
+                />
+              </div>
             </div>
 
-            <input
-              type="text"
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
-              className="w-full border border-gray-300 p-2 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:outline-none"
-              placeholder="Enter company name"
-            />
+            {/* Action Button */}
+            <button
+              onClick={handleUpload}
+              disabled={loading}
+              className="mt-4 sm:mt-6 w-full flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg text-xs sm:text-sm font-medium hover:from-blue-700 hover:to-blue-800 transition disabled:opacity-60 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+            >
+              <UploadCloud size={16} className="sm:w-4 sm:h-4" />
+              {loading ? "Uploading..." : "Update Logo"}
+            </button>
           </div>
 
-          <button
-            onClick={handleCompanyNameUpdate}
-            className="mt-6 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition"
-          >
-            <Save size={16} />
-            Update Name
-          </button>
+          {/* ================= FAVICON CARD ================= */}
+          <div className="group bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-4 sm:p-6 flex flex-col h-full transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-blue-200">
+            
+            <div className="space-y-4 sm:space-y-5 flex-1">
+              {/* Header with icon */}
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="p-1.5 bg-purple-50 rounded-lg">
+                      <Bookmark className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
+                    </div>
+                    <h2 className="text-base sm:text-lg font-semibold text-gray-800">
+                      Browser Favicon
+                    </h2>
+                  </div>
+                  <p className="text-xs sm:text-sm text-gray-500">
+                    Displayed in browser tabs
+                  </p>
+                </div>
+                {favicon && (
+                  <span className="px-2 py-1 bg-green-50 text-green-600 text-xs rounded-full border border-green-200">
+                    Active
+                  </span>
+                )}
+              </div>
+
+              {/* Favicon Preview */}
+              <div className="flex justify-center">
+                {favicon ? (
+                  <div className="relative group">
+                    <img
+                      src={favicon}
+                      alt="Favicon"
+                      className="h-14 w-14 sm:h-16 sm:w-16 object-contain border-2 border-gray-100 rounded-xl p-2 bg-gray-50 group-hover:border-purple-200 transition-all"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 rounded-xl transition-all"></div>
+                  </div>
+                ) : (
+                  <div className="h-14 w-14 sm:h-16 sm:w-16 flex items-center justify-center border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 text-gray-400">
+                    <span className="text-xs">None</span>
+                  </div>
+                )}
+              </div>
+
+              {/* File Input */}
+              <div className="space-y-2">
+                <label className="text-xs sm:text-sm font-medium text-gray-700">
+                  Upload new favicon
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFaviconChange}
+                  className="w-full text-xs sm:text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 border border-gray-200 rounded-lg p-1"
+                />
+              </div>
+            </div>
+
+            {/* Action Button */}
+            <button
+              onClick={handleFaviconUpload}
+              disabled={loading}
+              className="mt-4 sm:mt-6 w-full flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg text-xs sm:text-sm font-medium hover:from-purple-700 hover:to-purple-800 transition disabled:opacity-60 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+            >
+              <UploadCloud size={16} className="sm:w-4 sm:h-4" />
+              {loading ? "Uploading..." : "Update Favicon"}
+            </button>
+          </div>
+
+          {/* ================= COMPANY NAME CARD ================= */}
+          <div className="group bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-4 sm:p-6 flex flex-col h-full transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-blue-200 md:col-span-2 lg:col-span-1">
+            
+            <div className="space-y-4 sm:space-y-5 flex-1">
+              {/* Header with icon */}
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="p-1.5 bg-green-50 rounded-lg">
+                      <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+                    </div>
+                    <h2 className="text-base sm:text-lg font-semibold text-gray-800">
+                      Company Name
+                    </h2>
+                  </div>
+                  <p className="text-xs sm:text-sm text-gray-500">
+                    Appears in browser tab title
+                  </p>
+                </div>
+                {companyName && (
+                  <span className="px-2 py-1 bg-blue-50 text-blue-600 text-xs rounded-full border border-blue-200">
+                    Active
+                  </span>
+                )}
+              </div>
+
+              {/* Input Field */}
+              <div className="space-y-2">
+                <label className="text-xs sm:text-sm font-medium text-gray-700">
+                  Enter company name
+                </label>
+                <input
+                  type="text"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  className="w-full border border-gray-300 p-2.5 sm:p-3 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                  placeholder="e.g., Acme Corporation"
+                />
+                {companyName && (
+                  <p className="text-xs text-gray-500">
+                    Browser title will be: <span className="font-medium text-gray-700">{companyName}</span>
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Action Button */}
+            <button
+              onClick={handleCompanyNameUpdate}
+              className="mt-4 sm:mt-6 w-full flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2.5 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg text-xs sm:text-sm font-medium hover:from-green-700 hover:to-green-800 transition shadow-md hover:shadow-lg"
+            >
+              <Save size={16} className="sm:w-4 sm:h-4" />
+              Update Company Name
+            </button>
+          </div>
         </div>
 
+        {/* Bottom spacing */}
+        <div className="h-8 sm:h-12"></div>
       </div>
     </div>
   );
