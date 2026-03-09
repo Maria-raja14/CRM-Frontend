@@ -121,14 +121,14 @@ const StreakLeaderboard = () => {
   };
   const formatWorkHours = (dailySessions) => {
     if (!dailySessions || dailySessions.length === 0) return '—';
-  const earliestLogin = dailySessions.reduce((earliest, session) => {
+    const earliestLogin = dailySessions.reduce((earliest, session) => {
       return new Date(session.login) < new Date(earliest) ? session.login : earliest;
     }, dailySessions[0].login);
-  const validLogouts = dailySessions.filter(s => s.logout);
+    const validLogouts = dailySessions.filter(s => s.logout);
     if (validLogouts.length === 0) {
       return `${formatTime(earliestLogin)} - Ongoing`;
     }
-   const latestLogout = validLogouts.reduce((latest, session) => {
+    const latestLogout = validLogouts.reduce((latest, session) => {
       return new Date(session.logout) > new Date(latest) ? session.logout : latest;
     }, validLogouts[0].logout);
     return `${formatTime(earliestLogin)} - ${formatTime(latestLogout)}`;
@@ -140,7 +140,7 @@ const StreakLeaderboard = () => {
       .filter(log => log?.login)
       .map(log => new Date(log.login))
       .sort((a, b) => b - a);
-  if (logins.length === 0) return 0;
+    if (logins.length === 0) return 0;
     const now = new Date();
     const latestLogin = logins[0];
     const hoursSinceLastLogin = (now - latestLogin) / (1000 * 60 * 60);
@@ -443,7 +443,6 @@ const StreakLeaderboard = () => {
           count={6}
           colorPalette={["#F59E0B", "#FBBF24", "#FCD34D"]}
         />
-        
         {/* Header - Match the padding from other cards */}
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">

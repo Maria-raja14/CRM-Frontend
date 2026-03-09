@@ -1007,7 +1007,7 @@ const CreateEmail = () => {
         .filter((email) => email && email.includes("@"));
 
       const selectedDateTime = new Date(`${scheduledDate}T${scheduledTime}`);
-
+      const selected = templates.find(t => t._id === selectedTemplate);
       const formData = new FormData();
       formData.append("subject", emailData.subject);
       formData.append("content", emailData.content);

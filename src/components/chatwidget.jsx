@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import VoiceButton from './VoiceMicButton';
-import {
-  Phone,
-  MessageCircle,
-  PhoneCall,
-  X,
-  Send,
+import { 
+  Phone, 
+  MessageCircle, 
+  PhoneCall, 
+  X, 
+  Send, 
   Clock,
   CheckCircle,
   AlertCircle,
@@ -15,7 +15,6 @@ import {
   Briefcase,
   Calendar
 } from 'lucide-react';
-
 import { toast } from 'react-hot-toast';
 
 // Logo Component - Updated with Motion Robot
@@ -207,7 +206,7 @@ const ChatWidget = () => {
   const [messages, setMessages] = useState([
     {
       id: 1,
-      text: "Hello! I'm Zia, your Sales AI Assistant 🤖. I can help you with deals, leads, users, and analytics. Try asking me anything about your CRM data!!",
+      text: "Hello! I'm Zia, your Sales AI Assistant 🤖. I can help you with deals, leads, users, and analytics. Try asking me anything about your CRM data! You can also type 'call company name' to automatically track calls!",
       sender: 'bot',
       timestamp: new Date()
     }
@@ -215,15 +214,14 @@ const ChatWidget = () => {
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(false);
   const [expandedMessageId, setExpandedMessageId] = useState(null);
-  const [suggestions, setSuggestions] = useState([]);
-
-  //CALL TRACKING STATES
+  
+  // 🟢 CALL TRACKING STATES
   const [callInProgress, setCallInProgress] = useState(null);
   const [showCallOptions, setShowCallOptions] = useState(false);
   const [liveDuration, setLiveDuration] = useState(0);
   const [sessionId, setSessionId] = useState(null);
   const [callStartTime, setCallStartTime] = useState(null);
-
+  
   const location = useLocation();
   const navigate = useNavigate();
   const messagesEndRef = useRef(null);
@@ -242,7 +240,7 @@ const ChatWidget = () => {
     }
   }, [isOpen, isMinimized]);
 
-  // AUTO-TRACKING: Visibility change detection
+  // 🟢 AUTO-TRACKING: Visibility change detection
   useEffect(() => {
     const handleVisibilityChange = async () => {
       if (!callInProgress || !sessionId) return;
@@ -253,29 +251,29 @@ const ChatWidget = () => {
         try {
           await fetch(`http://localhost:5000/api/calllogs/track/${sessionId}/start`);
           setCallStartTime(Date.now());
-
+          
           // Start local timer
           timerRef.current = setInterval(() => {
             setLiveDuration(prev => prev + 1);
           }, 1000);
-
+          
         } catch (error) {
           console.error('Failed to track call start:', error);
         }
-
+        
       } else if (document.visibilityState === 'visible' && callStartTime) {
         // User returned to tab - call ended
         console.log('📞 Call ended - user returned to tab');
         try {
           const response = await fetch(`http://localhost:5000/api/calllogs/track/${sessionId}/end`);
           const data = await response.json();
-
+          
           if (data.success) {
             // Stop timer
             if (timerRef.current) {
               clearInterval(timerRef.current);
             }
-
+            
             // Add completion message
             const durationMsg = {
               id: Date.now(),
@@ -286,9 +284,9 @@ const ChatWidget = () => {
               duration: data.duration
             };
             setMessages(prev => [...prev, durationMsg]);
-
+            
             toast.success(`Call completed - ${formatDuration(data.duration)}`);
-
+            
             // Clear call state
             setCallInProgress(null);
             setShowCallOptions(false);
@@ -303,7 +301,7 @@ const ChatWidget = () => {
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-
+    
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (timerRef.current) {
@@ -325,199 +323,128 @@ const ChatWidget = () => {
   };
 
   // Handle call command
-  const handleCallCommand = async (command) => {
-    if (!command.toLowerCase().startsWith('call ')) return false;
+ // Updated handleCallCommand function in ChatWidget.jsx
 
-    const searchTerm = command.substring(5).trim();
-    if (!searchTerm) {
-      toast.error('Please specify a lead or company name (e.g., "call John Doe")');
+const handleCallCommand = async (command) => {
+  if (!command.toLowerCase().startsWith('call ')) return false;
+
+  const searchTerm = command.substring(5).trim();
+  if (!searchTerm) {
+    toast.error('Please specify a lead or company name (e.g., "call John Doe")');
+    return true;
+  }
+
+  setLoading(true);
+
+  try {
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      toast.error('Please login first');
       return true;
     }
 
-    setLoading(true);
+    const response = await fetch('http://localhost:5000/api/bot/command', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ 
+        command,
+        type: 'call'
+      })
+    });
 
-    try {
-      const token = localStorage.getItem('token');
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const result = await response.json();
+    console.log('🔍 Bot response:', result);
 
-      if (!token) {
-        toast.error('Please login first');
-        return true;
-      }
+    if (result.success) {
+      // Store session ID for tracking
+      setSessionId(result.callLog?.sessionId);
+      
+      // Add bot message
+      const botMsg = {
+        id: Date.now(),
+        text: result.message,
+        sender: 'bot',
+        timestamp: new Date(),
+        callData: result
+      };
+      setMessages(prev => [...prev, botMsg]);
 
-      const response = await fetch('http://localhost:5000/api/bot/command', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ command })
-      });
+      // Show call options
+      setCallInProgress(result);
+      setShowCallOptions(true);
 
-      const result = await response.json();
-
-      if (result.success) {
-        // Store session ID for tracking
-        setSessionId(result.callLog?.sessionId);
-
-        // Add bot message
-        const botMsg = {
-          id: Date.now(),
-          text: result.message,
-          sender: 'bot',
-          timestamp: new Date(),
-          callData: result
+      // ✅ OPEN WHATSAPP DESKTOP APP (WORKS ON WINDOWS & MAC)
+      const phoneNumber = result.lead?.phone || result.callLog?.phoneNumber;
+      const message = encodeURIComponent('Hello, I am following up from CRM');
+      
+      if (phoneNumber) {
+        // URL that opens WhatsApp Desktop App
+        const desktopAppUrl = `whatsapp://send?phone=${phoneNumber}&text=${message}`;
+        
+        // WhatsApp Web URL as fallback
+        const webUrl = `https://web.whatsapp.com/send?phone=${phoneNumber}&text=${message}`;
+        
+        // Universal URL
+        const universalUrl = `https://wa.me/${phoneNumber}?text=${message}`;
+        
+        // Detect if on Windows or Mac
+        const isWindows = navigator.userAgent.indexOf('Windows') !== -1;
+        const isMac = navigator.userAgent.indexOf('Mac') !== -1;
+        
+        console.log(`💻 Desktop detected: ${isWindows ? 'Windows' : isMac ? 'Mac' : 'Other'}`);
+        
+        // Try to open Desktop App first
+        const openDesktopApp = () => {
+          // Create a hidden iframe to trigger the protocol
+          const iframe = document.createElement('iframe');
+          iframe.style.display = 'none';
+          iframe.src = desktopAppUrl;
+          document.body.appendChild(iframe);
+          
+          // Remove iframe after a delay
+          setTimeout(() => {
+            document.body.removeChild(iframe);
+          }, 1000);
         };
-        setMessages(prev => [...prev, botMsg]);
-
-        // Show call options
-        setCallInProgress(result);
-        setShowCallOptions(true);
-
-        // Auto-open WhatsApp after 1 second
+        
+        // Try to open the desktop app
+        openDesktopApp();
+        
+        // Check if app opened after a short delay
         setTimeout(() => {
-          window.open(result.whatsappUrl, '_blank');
-          toast.success('Opening WhatsApp...');
-        }, 1000);
-
-      } else {
-        // Handle different error scenarios
-        let errorMessage = result.message;
-
-        if (result.message.includes("No assigned lead")) {
-          errorMessage = "⚠️ You can only call leads assigned to you. Try searching for your assigned leads.";
-        } else if (result.message.includes("don't have permission")) {
-          errorMessage = "⚠️ You don't have permission to call this lead. It may be assigned to another salesperson.";
-        }
-
-        toast.error(errorMessage);
-
-        // Add error message to chat
-        const errorMsg = {
-          id: Date.now(),
-          text: errorMessage,
-          sender: 'bot',
-          timestamp: new Date(),
-          isError: true
-        };
-        setMessages(prev => [...prev, errorMsg]);
-      }
-    } catch (error) {
-      console.error('Call command error:', error);
-      toast.error('Failed to process call command');
-    } finally {
-      setLoading(false);
-    }
-
-    return true;
-  };
-
-  // Add function to fetch user's suggestions
-  const fetchSuggestions = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/bot/suggestions', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setSuggestions(data.suggestions);
-        // You can show a message about their role
-        if (data.role !== 'Admin') {
-          console.log('Showing only your assigned leads');
-        }
-      }
-    } catch (error) {
-      console.error('Failed to fetch suggestions:', error);
-    }
-  };
-
-  // Call this when component mounts and after successful login
-  useEffect(() => {
-    if (localStorage.getItem('token')) {
-      fetchSuggestions();
-    }
-  }, []);
-
-  // ===== ADDED: Navigation function - ONLY triggers for explicit navigation commands =====
-  const handleNavigation = (text) => {
-    const lowerText = text.toLowerCase().trim();
-
-    // Define navigation commands and their corresponding routes
-    const navigationRoutes = {
-      'dashboard': '/admindashboard',
-      'admin dashboard': '/admindashboard',
-      'home': '/admindashboard',
-      // Users & Roles - ADD THESE
-      'users and roles': '/users/roles',
-      'user': '/users',
-      'roles': '/roles',
-      'role': '/roles',
-
-      'leads': '/leads',
-      'deals': '/deals',
-      'invoices': '/invoices',
-      'invoice': '/invoices',
-
-      'proposals': '/proposals',
-      'proposal': '/proposals',
-      'streak': '/streak-leaderboard',
-      'streak leaderboard': '/streak-leaderboard',
-      'leaderboard': '/streak-leaderboard',
-      'reports': '/reports',
-      'analytics': '/reports'
-    };
-
-    // Navigation action words - only these trigger navigation
-    const navigationActions = ['go to', 'take me to', 'open', 'navigate to', 'show me', 'goto'];
-
-    // Check if this is a navigation command
-    const isNavigationCommand = navigationActions.some(action =>
-      lowerText.startsWith(action) || lowerText.includes(` ${action} `)
-    );
-
-    // If not a navigation command, exit
-    if (!isNavigationCommand) {
-      return false;
-    }
-
-    // Check which page they want to go to
-    for (const [page, route] of Object.entries(navigationRoutes)) {
-      if (lowerText.includes(page)) {
-        // Add navigation message
-        const navMessage = {
-          id: Date.now(),
-          text: `🔍 Opening ${page} page...`,
-          sender: 'bot',
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, navMessage]);
-
-        // Navigate
-        setTimeout(() => {
-          navigate(route);
-          toast.success(`Opened ${page} page`);
+          // If app didn't open (browser would still be focused), offer fallback
+          if (document.hasFocus()) {
+            const shouldOpenWeb = window.confirm(
+              'WhatsApp Desktop app not detected. Would you like to open WhatsApp Web instead?'
+            );
+            
+            if (shouldOpenWeb) {
+              window.open(webUrl, '_blank');
+            }
+          }
         }, 500);
-
-        return true;
+        
+        toast.success('Opening WhatsApp Desktop app...');
       }
+
+    } else {
+      toast.error(result.message);
     }
+  } catch (error) {
+    console.error('Call command error:', error);
+    toast.error('Failed to process call command');
+  } finally {
+    setLoading(false);
+  }
 
-    return false;
-  };
-
-
+  return true;
+};
   const sendMessage = async (text, forceGet = false) => {
     if (!text.trim()) return;
-
-    // Check for navigation commands first - only triggers for explicit navigation like "open deals"
-    if (handleNavigation(text)) {
-      setInputText('');
-      return;
-    }
 
     // Check for call command first
     if (text.toLowerCase().startsWith('call ')) {
@@ -560,7 +487,7 @@ const ChatWidget = () => {
         return;
       }
 
-      // yyyINTELLIGENT QUERY DETECTION
+      // 🔥 INTELLIGENT QUERY DETECTION
       let enhancedMessage = text;
       const lowerText = text.toLowerCase().trim();
       const words = text.split(' ').filter(w => w.length > 0);
@@ -757,7 +684,6 @@ const ChatWidget = () => {
       </button>
     );
   }
-
   // Minimized Window with Logo
   if (isMinimized) {
     return (
@@ -788,7 +714,6 @@ const ChatWidget = () => {
             </button>
           </div>
         </div>
-
         <div
           className="p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
           onClick={() => setIsMinimized(false)}
@@ -798,7 +723,7 @@ const ChatWidget = () => {
               <span className="text-blue-600 text-xs">AI</span>
             </div>
             <p className="text-sm text-gray-600 truncate">
-              {callInProgress
+              {callInProgress 
                 ? `📞 Call in progress... ${formatDuration(liveDuration)}`
                 : messages[messages.length - 1]?.text || "How can I help you today?"}
             </p>
@@ -807,7 +732,6 @@ const ChatWidget = () => {
       </div>
     );
   }
-
   // Expanded Window
   return (
     <div className="fixed bottom-6 right-6 w-96 h-[600px] bg-white rounded-xl shadow-2xl border border-gray-200 flex flex-col z-50 animate-slide-up">
@@ -869,12 +793,11 @@ const ChatWidget = () => {
           </button>
         </div>
       </div>
-
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
-        {messages.map((message, index) => (
+        {messages.map((message) => (
           <div
-            key={`msg-${message.id}-${index}`}
+            key={message.id}
             className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
@@ -889,11 +812,9 @@ const ChatWidget = () => {
                     <AILogo size="micro" />
                   </div>
                 )}
-
                 <span className="text-xs opacity-75 whitespace-nowrap">
                   {message.sender === "user" ? "You" : "CRM Assistant"}
                 </span>
-
                 <span className="text-xs opacity-50 ml-2">
                   {new Date(message.timestamp).toLocaleTimeString([], {
                     hour: "2-digit",
@@ -901,12 +822,10 @@ const ChatWidget = () => {
                   })}
                 </span>
               </div>
-
               {/* Message text */}
               <p className="whitespace-pre-wrap mb-2">
                 {message.text}
               </p>
-
               {/* 🔥 CONTEXT BADGES */}
               {message.intent === 'deals-by-salesperson' && (
                 <div className="text-xs mb-2 p-1 rounded bg-purple-100 text-purple-800 inline-block">
@@ -978,7 +897,6 @@ const ChatWidget = () => {
                   👑 My leads
                 </div>
               )}
-
               {/* Call data display */}
               {message.callData && (
                 <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-200">
@@ -986,8 +904,7 @@ const ChatWidget = () => {
                     <PhoneCall className="w-3 h-3" />
                     📞 Call to {message.callData.lead?.name}
                   </p>
-
-                  <div className="flex gap-2 mt-2">
+                    <div className="flex gap-2 mt-2">
                     <a
                       href={message.callData.whatsappUrl}
                       target="_blank"
@@ -1007,7 +924,6 @@ const ChatWidget = () => {
                   </div>
                 </div>
               )}
-
               {/* Auto-tracked completion message */}
               {message.autoTracked && (
                 <div className="mt-2 text-xs text-green-600 flex items-center gap-1">
@@ -1015,21 +931,17 @@ const ChatWidget = () => {
                   Auto-tracked • Duration: {formatDuration(message.duration)}
                 </div>
               )}
-
               {message.data && Array.isArray(message.data) && message.data.length > 0 && (
                 <div className="mt-3 pt-3 border-t border-gray-200">
                   <div className="text-xs font-medium mb-2 text-gray-600">
                     📋 Found {message.data.length} {message.intent?.includes('lead') ? 'leads' : 'deals'}:
                   </div>
-
                   <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
                     {(expandedMessageId === message.id ? message.data : message.data.slice(0, 5)).map((item, idx) => {
                       // Determine if it's a deal or lead
                       const isDeal = item.stage || item.value;
                       const isLead = item.status && !item.stage;
-
                       const statusText = isDeal ? item.stage : item.status;
-
                       const badgeColor = statusText?.toLowerCase().includes("won")
                         ? "bg-green-100 text-green-800"
                         : statusText?.toLowerCase().includes("lost") || statusText?.toLowerCase().includes("junk")
@@ -1041,7 +953,6 @@ const ChatWidget = () => {
                               : statusText?.toLowerCase().includes("cold")
                                 ? "bg-blue-100 text-blue-800"
                                 : "bg-gray-100 text-gray-800";
-
                       return (
                         <div
                           key={item._id || idx}
@@ -1056,28 +967,24 @@ const ChatWidget = () => {
                               {statusText}
                             </span>
                           </div>
-
                           {/* Company/Details */}
                           {(item.company || item.companyName) && (
                             <div className="text-gray-600 mb-1 flex items-center gap-1">
                               🏢 {item.company || item.companyName}
                             </div>
                           )}
-
                           {/* Phone Number */}
                           {(item.phone || item.phoneNumber) && (
                             <div className="text-gray-600 mb-1 flex items-center gap-1">
                               📞 {item.phone || item.phoneNumber}
                             </div>
                           )}
-
                           {/* Deal Value (if applicable) */}
                           {item.value && (
                             <div className="text-green-600 font-medium mb-1 flex items-center gap-1">
                               💰 ${Number(item.value).toLocaleString()}
                             </div>
                           )}
-
                           {/* Handled By */}
                           <div className="text-gray-600 mt-2 pt-2 border-t border-gray-200">
                             <span className="font-medium">👤 Handled by: </span>
@@ -1089,7 +996,6 @@ const ChatWidget = () => {
                         </div>
                       );
                     })}
-
                     {message.data.length > 5 && (
                       <div className="text-center">
                         <button
@@ -1108,7 +1014,6 @@ const ChatWidget = () => {
             </div>
           </div>
         ))}
-
         {/* Loading indicator */}
         {loading && (
           <div className="flex justify-start">
@@ -1124,10 +1029,8 @@ const ChatWidget = () => {
             </div>
           </div>
         )}
-
         <div ref={messagesEndRef} />
       </div>
-
       {/* Call Options with auto-tracking info */}
       {showCallOptions && callInProgress && (
         <div className="px-4 py-3 border-t border-gray-200 bg-green-50">
@@ -1167,7 +1070,6 @@ const ChatWidget = () => {
           </p>
         </div>
       )}
-
       {/* Quick Actions */}
       <div className="px-3 py-2 border-t border-gray-200 bg-white">
         <div className="text-xs text-gray-500 mb-2 font-medium">Quick actions:</div>
@@ -1191,14 +1093,8 @@ const ChatWidget = () => {
           ))}
         </div>
       </div>
-
       {/* Input Area */}
-      <form onSubmit={handleSubmit}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            e.stopPropagation(); 
-          }
-        }} className="p-4 border-t border-gray-200 bg-white">
+      <form onSubmit={handleSubmit} className="p-4 border-t border-gray-200 bg-white">
         <div className="flex items-center space-x-2">
           <input
             ref={inputRef}
@@ -1209,7 +1105,6 @@ const ChatWidget = () => {
             className="flex-1 px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
             disabled={loading}
           />
-
           {/* Voice Button */}
           <VoiceButton
             onCommand={(text) => {
@@ -1233,12 +1128,8 @@ const ChatWidget = () => {
             }}
             navigate={navigate}
           />
-
           <button
             type="submit"
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
             disabled={loading || !inputText.trim()}
             className="px-3 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-md flex items-center justify-center"
             aria-label="Send message"

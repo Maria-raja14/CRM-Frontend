@@ -742,6 +742,7 @@ const RevenueTrendChart = ({
                 <span>
                   {activePreset === "today"
                     ? "Today"
+                    
                     : activePreset === "7days"
                       ? "Last 7 Days"
                       : activePreset === "month"
@@ -1975,7 +1976,7 @@ useEffect(() => {
       //  fetchStreakData();
     }, REFRESH_MS);
 
-    return () => clearInterval(interval);
+   return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePreset, selectedMonth, selectedYear]); /* ---------- Chart data builders ---------- */
   const buildRevenueTrend = (invoices, preset) => {
