@@ -3,6 +3,58 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Zap, Activity, Calendar, RefreshCw, Crown, Flame } from "lucide-react";
 import axios from "axios";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+import { Skeleton } from "../components/ui/skeleton";
+
+
+
+const CardBubbles = ({ seed = 0, count = 12, colorPalette = ["#F59E0B", "#FBBF24", "#FCD34D"] }) => {
+  const arr = Array.from({ length: count });
+  return (
+    <div className="absolute inset-0 pointer-events-none -z-0 overflow-hidden">
+      {arr.map((_, i) => {
+        const size = 6 + ((i + seed) % 8) * 8;
+        const top = `${(i * 19 + seed * 13) % 100}%`;
+        const left = `${(i * 23 + seed * 7) % 100}%`;
+        const delay = (i % 4) * 0.4;
+        const duration = 6 + (i % 5);
+        const opacity = 0.05 + (i % 3) * 0.08;
+        const color = colorPalette[(i + seed) % colorPalette.length] + "44";
+
+        return (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{
+              y: [-10, 10, -10],
+              opacity: [0, opacity, 0],
+              x: [0, i % 2 === 0 ? 8 : -8, 0],
+              scale: [0.8, 1.2, 0.8],
+              rotate: [0, 180, 360],
+            }}
+            transition={{
+              repeat: Infinity,
+              duration: duration,
+              delay,
+              ease: "easeInOut",
+            }}
+            style={{
+              position: "absolute",
+              width: size,
+              height: size,
+              top,
+              left,
+              borderRadius: "50%",
+              background: `radial-gradient(circle, ${color}, transparent)`,
+              filter: "blur(3px)",
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+};
 
 const StreakLeaderboard = () => {
   const [topPerformer, setTopPerformer] = useState(null);
@@ -69,14 +121,14 @@ const StreakLeaderboard = () => {
   };
   const formatWorkHours = (dailySessions) => {
     if (!dailySessions || dailySessions.length === 0) return '—';
-  const earliestLogin = dailySessions.reduce((earliest, session) => {
+    const earliestLogin = dailySessions.reduce((earliest, session) => {
       return new Date(session.login) < new Date(earliest) ? session.login : earliest;
     }, dailySessions[0].login);
-  const validLogouts = dailySessions.filter(s => s.logout);
+    const validLogouts = dailySessions.filter(s => s.logout);
     if (validLogouts.length === 0) {
       return `${formatTime(earliestLogin)} - Ongoing`;
     }
-   const latestLogout = validLogouts.reduce((latest, session) => {
+    const latestLogout = validLogouts.reduce((latest, session) => {
       return new Date(session.logout) > new Date(latest) ? session.logout : latest;
     }, validLogouts[0].logout);
     return `${formatTime(earliestLogin)} - ${formatTime(latestLogout)}`;
@@ -88,7 +140,7 @@ const StreakLeaderboard = () => {
       .filter(log => log?.login)
       .map(log => new Date(log.login))
       .sort((a, b) => b - a);
-  if (logins.length === 0) return 0;
+    if (logins.length === 0) return 0;
     const now = new Date();
     const latestLogin = logins[0];
     const hoursSinceLastLogin = (now - latestLogin) / (1000 * 60 * 60);
@@ -381,162 +433,187 @@ const StreakLeaderboard = () => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -4 }}
+      whileHover={{ y: -2 }}
       onClick={handleCardClick}
       className="h-full cursor-pointer transition-all duration-300"
     >
-      <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm h-full relative overflow-hidden hover:shadow-lg transition-shadow">
-        {/* Background gradient for champion */}
-        <div className="absolute inset-0 bg-gradient-to-br from-yellow-50/50 via-amber-50/30 to-transparent pointer-events-none"></div>
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4 relative z-10">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center shadow-md">
-              <Crown className="w-4 h-4 text-white" />
-            </div>
-            <span className="text-sm font-semibold text-gray-800">
-              {isAdmin ? '🏆 Top Performer' : '📊 My Performance'}
-            </span>
+      <Card className="shadow-lg border-0 overflow-hidden relative bg-gradient-to-br from-yellow-50/60 to-amber-50/50 backdrop-blur-sm hover:shadow-xl transition-all duration-300 h-full">
+        <CardBubbles
+          seed={7}
+          count={6}
+          colorPalette={["#F59E0B", "#FBBF24", "#FCD34D"]}
+        />
+
+        {/* Header - Match the padding from other cards */}
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg text-gray-800 flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center shadow-md">
+                <Crown className="w-4 h-4 text-white" />
+              </div>
+              <span className="text-sm font-semibold text-gray-800">
+                {isAdmin ? '🏆 Top Performer' : '📊 My Performance'}
+              </span>
+            </CardTitle>
+            <Badge
+              variant="secondary"
+              className="bg-white/80 backdrop-blur-sm text-xs cursor-pointer"
+              onClick={(e) => { e.stopPropagation(); setShowFilters(!showFilters); }}
+            >
+              <Calendar className="w-3 h-3 mr-1" />
+              {months[selectedMonth].slice(0, 3)} {selectedYear}
+            </Badge>
           </div>
-          {/* Month filter button - Stop propagation to prevent card click */}
-          <button
-            onClick={(e) => { e.stopPropagation(); setShowFilters(!showFilters); }}
-            className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 bg-white/80 px-2 py-1 rounded-lg border border-gray-200"
-          >
-            <Calendar className="w-3.5 h-3.5" />
-            <span>{months[selectedMonth].slice(0, 3)} {selectedYear}</span>
-          </button>
-        </div>
-        {/* Filters dropdown - Stop propagation */}
-        {showFilters && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200 relative z-20"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center gap-2">
-              <select
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                className="text-xs bg-white border border-gray-200 rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-orange-500 focus:border-orange-500"
-              >
-                {months.map((month, index) => (
-                  <option key={month} value={index}>{month.slice(0, 3)}</option>
-                ))}
-              </select>
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                className="text-xs bg-white border border-gray-200 rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-orange-500 focus:border-orange-500"
-              >
-                {years.map(year => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
+
+          {/* Filters dropdown */}
+          {showFilters && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-3 p-2 bg-white/90 rounded-lg border border-yellow-200/50 relative z-20"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-2">
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                  className="text-xs bg-white border border-gray-200 rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-orange-500 focus:border-orange-500 flex-1"
+                >
+                  {months.map((month, index) => (
+                    <option key={month} value={index}>{month.slice(0, 3)}</option>
+                  ))}
+                </select>
+                <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                  className="text-xs bg-white border border-gray-200 rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-orange-500 focus:border-orange-500 flex-1"
+                >
+                  {years.map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={(e) => { e.stopPropagation(); fetchTopPerformer(); }}
+                  className="p-1.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+                  title="Refresh"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-gray-600" />
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </CardHeader>
+
+        <CardContent className="pt-0">
+          {loading ? (
+            <div className="space-y-3">
+              <Skeleton className="h-10 w-full rounded-lg" />
+              <Skeleton className="h-16 w-full rounded-lg" />
+            </div>
+          ) : error && !topPerformer ? (
+            <div className="text-center py-3">
+              <Activity className="h-8 w-8 text-red-500 mx-auto mb-2" />
+              <p className="text-sm text-red-600 mb-2">{error}</p>
               <button
                 onClick={(e) => { e.stopPropagation(); fetchTopPerformer(); }}
-                className="p-1.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
-                title="Refresh"
+                className="px-3 py-1.5 text-xs bg-red-600 text-white rounded-lg hover:bg-red-700"
               >
-                <RefreshCw className="w-3.5 h-3.5 text-gray-600" />
+                Try Again
               </button>
             </div>
-          </motion.div>
-        )}
-        {/* Top Performer Content */}
-        {topPerformer ? (
-          <div className="relative z-10">
-            {/* Champion Crown Animation */}
-            <div className="absolute -top-2 -right-2">
-              <div className="relative">
-                <div className="absolute inset-0 animate-ping">
-                  <div className="w-12 h-12 bg-yellow-400 rounded-full opacity-30"></div>
-                </div>
-                <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full flex items-center justify-center shadow-lg border-2 border-white">
-                  <span className="text-xl">👑</span>
+          ) : topPerformer ? (
+            <div className="relative">
+              {/* Champion Crown Animation - Repositioned to not affect height */}
+              <div className="absolute -top-2 -right-2 z-10">
+                <div className="relative">
+                  <div className="absolute inset-0 animate-ping">
+                    <div className="w-10 h-10 bg-yellow-400 rounded-full opacity-30"></div>
+                  </div>
+                  <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full flex items-center justify-center shadow-lg border-2 border-white">
+                    <span className="text-lg">👑</span>
+                  </div>
                 </div>
               </div>
-            </div>
-            {/* Performer Info */}
-            <div className="flex items-center gap-4 mb-4">
-              <div className="flex-shrink-0">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-500 flex items-center justify-center shadow-lg transform rotate-3 hover:rotate-0 transition-transform">
-                  <span className="text-2xl font-bold text-white">#1</span>
+
+              {/* Performer Info - Compact */}
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-500 flex items-center justify-center shadow-lg">
+                    <span className="text-xl font-bold text-white">#1</span>
+                  </div>
                 </div>
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="text-lg font-bold text-gray-900 truncate">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base font-bold text-gray-900 truncate">
                     {topPerformer.Name}
                   </h3>
+                  <p className="text-xs text-gray-500 truncate">{topPerformer.email}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-1 text-yellow-600 text-xs">
+                      <Zap className="w-3 h-3" />
+                      {topPerformer.conversionRate.toFixed(1)}%
+                    </div>
+                    <div className="flex items-center gap-1 text-gray-500 text-xs">
+                      <Flame className="w-3 h-3" />
+                      {topPerformer.streak}d
+                    </div>
+                  </div>
                 </div>
-                <p className="text-xs text-gray-500 truncate">{topPerformer.email}</p>
-                <div className="flex items-center gap-3 mt-1 text-xs">
-                  <div className="flex items-center gap-1 text-yellow-600 font-semibold">
-                    <Zap className="w-3.5 h-3.5" />
+              </div>
+
+              {/* Stats Grid - Compact */}
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-lg p-2 border border-orange-100">
+                  <p className="text-xs text-gray-600 mb-1">Conversion</p>
+                  <p className="text-lg font-bold text-orange-600">
+                    {topPerformer['Performance %']}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {topPerformer.convertedLeads}/{topPerformer['Total Leads']}
+                  </p>
+                </div>
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-2 border border-blue-100">
+                  <p className="text-xs text-gray-600 mb-1">Active Days</p>
+                  <p className="text-lg font-bold text-blue-600">
+                    {topPerformer.activeDays}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {topPerformer['Work Hours'] !== '—' ? topPerformer['Work Hours'].split(' - ')[0] : '—'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Performance Bar - Compact */}
+              <div>
+                <div className="flex justify-between text-xs text-gray-600 mb-1">
+                  <span>Performance</span>
+                  <span className="font-bold text-orange-600">
                     {topPerformer.conversionRate.toFixed(1)}%
-                  </div>
-                  <div className="flex items-center gap-1 text-gray-500">
-                    <Flame className="w-3.5 h-3.5" />
-                    {topPerformer.streak} days
-                  </div>
+                  </span>
+                </div>
+                <div className="h-1.5 bg-orange-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-yellow-400 via-orange-500 to-amber-500 rounded-full transition-all duration-1000"
+                    style={{ width: `${Math.min(topPerformer.conversionRate, 100)}%` }}
+                  />
                 </div>
               </div>
-            </div>
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-lg p-3 border border-orange-100">
-                <p className="text-xs text-gray-600 mb-1">Conversion Rate</p>
-                <p className="text-2xl font-bold text-orange-600">
-                  {topPerformer['Performance %']}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  {topPerformer.convertedLeads}/{topPerformer['Total Leads']} leads
-                </p>
-              </div>
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-3 border border-blue-100">
-                <p className="text-xs text-gray-600 mb-1">Active Days</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  {topPerformer.activeDays}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  ⏰ {topPerformer['Work Hours'] !== '—' ? topPerformer['Work Hours'].split(' - ')[0] : '—'}
-                </p>
-              </div>
-            </div>
-            {/* Performance Bar */}
-            <div className="mb-4">
-              <div className="flex justify-between text-xs text-gray-600 mb-1">
-                <span className="font-medium">Performance</span>
-                <span className="font-bold text-orange-600">
-                  {topPerformer.conversionRate.toFixed(1)}%
-                </span>
-              </div>
-              <div className="h-2.5 bg-orange-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-yellow-400 via-orange-500 to-amber-500 rounded-full transition-all duration-1000 ease-out"
-                  style={{ width: `${Math.min(topPerformer.conversionRate, 100)}%` }}
-                />
-              </div>
-            </div>
             </div>
           ) : (
-          <div className="text-center py-8">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Crown className="w-8 h-8 text-gray-400" />
+            <div className="text-center py-4">
+              <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                <Crown className="w-7 h-7 text-gray-400" />
+              </div>
+              <p className="text-sm font-medium text-gray-600 mb-2">No Top Performer</p>
+              <button
+                onClick={(e) => { e.stopPropagation(); fetchTopPerformer(); }}
+                className="px-3 py-1.5 text-xs bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors"
+              >
+                Refresh
+              </button>
             </div>
-            <p className="text-sm font-medium text-gray-600 mb-1">No Top Performer</p>
-
-            <button
-              onClick={(e) => { e.stopPropagation(); fetchTopPerformer(); }}
-              className="mt-3 px-4 py-1.5 text-xs bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors"
-            >
-              Refresh
-            </button>
-          </div>
-        )}
-      </div>
+          )}
+        </CardContent>
+      </Card>
     </motion.div>
   );
 };

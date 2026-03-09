@@ -194,37 +194,29 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         ${isOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
       id="main-sidebar"
     >
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between px-12">
-        <img
-          src={
-            logo ||
-            "https://via.placeholder.com/150x50?text=Company+Logo"
-          }
-          alt="Company Logo"
-          className="h-20 object-contain"
-        />
-        <div className="relative group">
-        <div className="mb-6 flex items-center justify-between px-12">
-        <NavLink to="/adminDashboard" className="cursor-pointer">
+      {/* Header - CENTERED AND BIGGER LOGO */}
+      <div className="mb-8 flex flex-col items-center justify-center">
+        <NavLink to="/adminDashboard" className="cursor-pointer block">
           <img
-            src="https://tzi.zaarapp.com//storage/uploads/logo//logo-dark.png"
-            alt="Logo"
-            className="h-12 hover:opacity-80 transition-opacity"
+            src={logo || "https://tzi.zaarapp.com//storage/uploads/logo//logo-dark.png"}
+            alt="Company Logo"
+            className="h-20 w-auto object-contain mx-auto hover:opacity-80 transition-opacity"
+            onError={(e) => {
+              e.target.src = "https://tzi.zaarapp.com//storage/uploads/logo//logo-dark.png";
+            }}
           />
         </NavLink>
-        <button onClick={toggleSidebar} className="lg:hidden p-1">
-          <X size={22} className="text-gray-600" />
-        </button>
-        {/* ✅ TOOLTIP */}
-        <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 
-          opacity-0 group-hover:opacity-100 transition-opacity
-          bg-gray-900 text-white text-xs px-3 py-1 rounded-md whitespace-nowrap
-          pointer-events-none z-50">
-          Close
+        
+        {/* Mobile close button - positioned absolutely */}
+        <div className="relative group lg:hidden absolute top-4 right-4">
+          <button onClick={toggleSidebar} className="p-2 hover:bg-gray-100 rounded-full">
+            <X size={22} className="text-gray-600" />
+          </button>
+          {/* Tooltip */}
+          <div className="absolute top-full mt-2 right-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs px-3 py-1 rounded-md whitespace-nowrap pointer-events-none z-50">
+            Close
+          </div>
         </div>
-      </div>
-      </div>
       </div>
 
       <nav className="flex flex-col gap-3 px-2">
@@ -251,7 +243,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           hasPermission={isAdmin || userPermissions.leads}
         />
 
-        {/* ✅ Deals (Collapsible) */}
+        {/* Deals (Collapsible) */}
         <Collapsible
           label="Deals"
           icon={<TrendingUp />}
@@ -277,7 +269,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           />
         </Collapsible>
 
-                
         {/* Invoice */}
         <SidebarItem
           to="/invoice"
@@ -295,32 +286,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           hasPermission={isAdmin || userPermissions.proposal}
         />
 
-        {/* Activities */}
-        {/*  <Collapsible
-          label="Activities"
-          icon={<Calendar />}
-          open={showActivities}
-          onToggle={() => setShowActivities((s) => !s)}
-          hasPermission={
-            isAdmin ||
-            userPermissions.activities_calendar ||
-            userPermissions.activities_list
-          }
-        >
-          <SmallLink
-            to="/calendar"
-            icon={<Calendar />}
-            label="Calendar View"
-            hasPermission={isAdmin || userPermissions.activities_calendar}
-          />
-          <SmallLink
-            to="/list"
-            icon={<List />}
-            label="Activity list"
-            hasPermission={isAdmin || userPermissions.activities_list}
-          />
-        </Collapsible> */}
-
         {/* Reports */}
         <SidebarItem
           to="/reports"
@@ -328,6 +293,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           label="Reports"
           hasPermission={isAdmin || userPermissions.reports}
         />
+        
         {/* Streak Leaderboard */}
         <SidebarItem
           to="/streak-leaderboard"
@@ -342,6 +308,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           label="Deal Metrics"
           hasPermission={isAdmin || userPermissions.proposal}
         />
+        
         <SidebarItem
           to="/test1"
           icon={<ClipboardList />}
@@ -355,8 +322,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           label="Won Analysis"
           hasPermission={isAdmin || userPermissions.proposal}
         />
-
-
 
         {/* Mass Email Campaigns */}
         <SidebarItem
