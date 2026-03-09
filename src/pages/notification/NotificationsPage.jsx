@@ -560,31 +560,60 @@ const NotificationsPage = () => {
   }, [location.state]);
 
   // ─── Delete notification ───────────────────────────────────────
-  const handleDelete = async (id) => {
-    setDeletingId(id);
-    try {
-      await axios.delete(`${API_URL}/notification/${id}`);
-      setNotifications((prev) => prev.filter((n) => n._id !== id));
-      toast.success("Notification deleted successfully");
-    } catch (err) {
-      toast.error("Failed to delete notification");
-    } finally {
-      setTimeout(() => setDeletingId(null), 300);
-    }
-  };
+  // const handleDelete = async (id) => {
+  //   setDeletingId(id);
+  //   try {
+  //     await axios.delete(`${API_URL}/notification/${id}`);
+  //     setNotifications((prev) => prev.filter((n) => n._id !== id));
+  //     toast.success("Notification deleted successfully");
+  //   } catch (err) {
+  //     toast.error("Failed to delete notification");
+  //   } finally {
+  //     setTimeout(() => setDeletingId(null), 300);
+  //   }
+  // };//old one
+
+// ─── Delete notification ───────────────────────────────────────
+const handleDelete = async (id) => {
+  setDeletingId(id);
+  try {
+    await axios.delete(`${API_URL}/notification/${id}`);
+    setNotifications((prev) => prev.filter((n) => n._id !== id));
+    // ✅ localStorage is updated automatically via the context wrapper
+    toast.success("Notification deleted successfully");
+  } catch (err) {
+    toast.error("Failed to delete notification");
+  } finally {
+    setTimeout(() => setDeletingId(null), 300);
+  }
+};
 
   // ─── Mark as read ──────────────────────────────────────────────
-  const markAsRead = async (id) => {
-    try {
-      await axios.patch(`${API_URL}/notification/read/${id}`, { read: true });
-      setNotifications((prev) =>
-        prev.map((n) => (n._id === id ? { ...n, read: true } : n))
-      );
-      toast.success("Marked as read");
-    } catch (err) {
-      toast.error("Failed to mark as read");
-    }
-  };
+  // const markAsRead = async (id) => {
+  //   try {
+  //     await axios.patch(`${API_URL}/notification/read/${id}`, { read: true });
+  //     setNotifications((prev) =>
+  //       prev.map((n) => (n._id === id ? { ...n, read: true } : n))
+  //     );
+  //     toast.success("Marked as read");
+  //   } catch (err) {
+  //     toast.error("Failed to mark as read");
+  //   }
+  // };//old one..
+
+  // ─── Mark as read ──────────────────────────────────────────────
+const markAsRead = async (id) => {
+  try {
+    await axios.patch(`${API_URL}/notification/read/${id}`, { read: true });
+    setNotifications((prev) =>
+      prev.map((n) => (n._id === id ? { ...n, read: true } : n))
+    );
+    // ✅ localStorage is updated automatically via the context wrapper
+    toast.success("Marked as read");
+  } catch (err) {
+    toast.error("Failed to mark as read");
+  }
+};
 
   // ─── Filter + sort (unread first) ─────────────────────────────
   let filtered = notifications.filter((n) => {
@@ -815,4 +844,4 @@ const NotificationsPage = () => {
 export default NotificationsPage;
 
 
-//
+//original all work correctly..
