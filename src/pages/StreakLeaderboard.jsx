@@ -443,7 +443,6 @@ const StreakLeaderboard = () => {
           count={6}
           colorPalette={["#F59E0B", "#FBBF24", "#FCD34D"]}
         />
-
         {/* Header - Match the padding from other cards */}
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">

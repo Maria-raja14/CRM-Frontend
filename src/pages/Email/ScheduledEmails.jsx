@@ -1,185 +1,3 @@
-// import React, { useEffect, useState } from "react";
-// import axios from "axios";
-// import { useNavigate } from "react-router-dom";
-// import {
-//   Dialog,
-//   DialogTrigger,
-//   DialogPortal,
-//   DialogOverlay,
-//   DialogContent,
-// } from "@radix-ui/react-dialog";
-// import { Trash2, ArrowLeft } from "lucide-react";
-// import { toast } from "react-toastify";
-
-// export default function ScheduledEmails() {
-//   const API_URL = import.meta.env.VITE_API_URL;
-
-//   const [scheduledEmails, setScheduledEmails] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [showDeleteModal, setShowDeleteModal] = useState(false);
-//   const [emailToDelete, setEmailToDelete] = useState(null);
-//   const [isDeleting, setIsDeleting] = useState(false);
-
-//   const navigate = useNavigate();
-
-//   useEffect(() => {
-//     fetchScheduledEmails();
-//   }, []);
-
-//   const fetchScheduledEmails = async () => {
-//     try {
-//       const token = localStorage.getItem("token");
-//       const response = await axios.get(`${API_URL}/email/scheduled`, {
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-//       if (response.data.success) {
-//         setScheduledEmails(response.data.data);
-//       }
-//     } catch (error) {
-//       console.error("Error fetching scheduled emails:", error);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const handleDeleteScheduledEmail = async () => {
-//     if (!emailToDelete) return;
-
-//     try {
-//       setIsDeleting(true);
-//       const token = localStorage.getItem("token");
-//       const response = await axios.delete(
-//         `${API_URL}/email/delete/${emailToDelete._id}`,
-//         { headers: { Authorization: `Bearer ${token}` } }
-//       );
-
-//       if (response.data.success) {
-//         toast.success("Scheduled email deleted successfully");
-
-//         setScheduledEmails((prev) =>
-//           prev.filter((email) => email._id !== emailToDelete._id)
-//         );
-
-//         setShowDeleteModal(false);
-//         setEmailToDelete(null);
-//       }
-//     } catch (error) {
-//       console.error("Error deleting scheduled email:", error);
-//       toast.error(
-//         error.response?.data?.message || "Failed to delete scheduled email"
-//       );
-//     } finally {
-//       setIsDeleting(false);
-//     }
-//   };
-
-//   return (
-//     <div className="p-6">
-//       <div className="flex items-center gap-4 mb-6">
-//         <button
-//           onClick={() => navigate('/mass-email')}
-//           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-//           title="Go back to Mass Email"
-//         >
-//           <ArrowLeft className="w-6 h-6 text-gray-600" />
-//         </button>
-//         <h2 className="text-2xl font-semibold">Scheduled Emails</h2>
-//       </div>
-
-//       {loading ? (
-//         <p>Loading...</p>
-//       ) : scheduledEmails.length === 0 ? (
-//         <p>No scheduled emails found.</p>
-//       ) : (
-//         <div className="space-y-4">
-//           {scheduledEmails.map((email) => (
-//             <div
-//               key={email._id}
-//               className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition"
-//             >
-//               <div className="flex justify-between items-start">
-//                 <div>
-//                   <h3 className="text-lg font-semibold">{email.subject}</h3>
-//                   <p className="text-sm text-gray-500">
-//                     Template: {email.templateTitle}
-//                   </p>
-//                 </div>
-
-//                 <div className="flex items-center gap-2">
-//                   <span className="px-3 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-700">
-//                     {email.status}
-//                   </span>
-
-//                   <button
-//                     onClick={() => navigate(`/create-email/${email._id}`)}
-//                     className="px-3 py-1 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-//                   >
-//                     Edit
-//                   </button>
-
-//                   {/* Cancel Modal Trigger */}
-//                   <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
-//                     <DialogTrigger asChild>
-//                       <button
-//                         onClick={() => setEmailToDelete(email)}
-//                         className="px-3 py-1 text-xs bg-red-600 text-white rounded-lg hover:bg-red-700"
-//                       >
-//                         Cancel
-//                       </button>
-//                     </DialogTrigger>
-
-//                     <DialogPortal>
-//                       <DialogOverlay className="fixed inset-0 bg-black/30" />
-//                       <DialogContent className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg w-[400px]">
-//                         <div className="flex items-center gap-2 text-red-600 mb-4">
-//                           <Trash2 className="w-5 h-5" />
-//                           <span className="font-semibold text-lg">Confirm Cancel</span>
-//                         </div>
-
-//                         <p className="mb-6 text-gray-700">
-//                           Are you sure you want to cancel the scheduled email{" "}
-//                           <strong>{emailToDelete?.subject}</strong>? This action cannot
-//                           be undone.
-//                         </p>
-
-//                         <div className="flex justify-end gap-3">
-//                           <button
-//                             onClick={() => setShowDeleteModal(false)}
-//                             className="px-4 py-2 rounded-lg border hover:bg-gray-100 text-gray-700"
-//                           >
-//                             No
-//                           </button>
-
-//                           <button
-//                             onClick={handleDeleteScheduledEmail}
-//                             disabled={isDeleting}
-//                             className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 flex items-center gap-2"
-//                           >
-//                             <Trash2 className="w-4 h-4" />
-//                             Yes, Cancel
-//                           </button>
-//                         </div>
-//                       </DialogContent>
-//                     </DialogPortal>
-//                   </Dialog>
-//                 </div>
-//               </div>
-
-//               <div className="mt-4 text-sm text-gray-600 space-y-1">
-//                 <p>
-//                   📅 Scheduled For:{" "}
-//                   {new Date(email.scheduledFor).toLocaleString()}
-//                 </p>
-//                 <p>👥 Recipients: {email.recipients.length}</p>
-//                 <p>🕒 Created: {new Date(email.createdAt).toLocaleString()}</p>
-//               </div>
-//             </div>
-//           ))}
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -189,6 +7,8 @@ import {
   DialogPortal,
   DialogOverlay,
   DialogContent,
+  DialogTitle,
+  DialogDescription
 } from "@radix-ui/react-dialog";
 import { 
   Trash2, 
@@ -402,6 +222,10 @@ export default function ScheduledEmails() {
                     <DialogPortal>
                       <DialogOverlay className="fixed inset-0 bg-black/30" />
                       <DialogContent className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg w-[400px]">
+                        <DialogTitle className="sr-only">Confirm Cancel Scheduled Email</DialogTitle>
+                        <DialogDescription className="sr-only">
+                          Are you sure you want to cancel the scheduled email? This action cannot be undone.
+                        </DialogDescription>
                         <div className="flex items-center gap-2 text-red-600 mb-4">
                           <Trash2 className="w-5 h-5" />
                           <span className="font-semibold text-lg">Confirm Cancel</span>
