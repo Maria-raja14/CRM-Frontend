@@ -78,7 +78,7 @@ console.log("VITE_API_URL =", import.meta.env.VITE_API_URL);
               // src="/images/TZI_Logo-04_-_Copy-removebg-preview.png"
                   src="/images/uenjoytours_logo (1).png"
               alt="TZI Logo"
-              className="w-full max-w-xs mx-auto mb-6"
+              className="w-full max-w-xl mx-auto mb-6"
             />
             <h2 className="text-2xl font-bold text-black-100 mt-6">Welcome Back</h2>
             <p className="text-black-100 mt-2">Sign in to access your account</p>

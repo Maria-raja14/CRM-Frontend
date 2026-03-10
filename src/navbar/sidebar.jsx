@@ -182,7 +182,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             // src="https://tzi.zaarapp.com//storage/uploads/logo//logo-dark.png"
               src="/images/uenjoytours_logo (1).png"
             alt="Logo"
-            className="h-12 hover:opacity-80 transition-opacity"
+            className="h-20 hover:opacity-80 transition-opacity"
           />
         </NavLink>
         <button onClick={toggleSidebar} className="lg:hidden p-1">
