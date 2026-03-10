@@ -1091,6 +1091,1022 @@
 
 
 
+// import React from "react";
+// import { useEffect, useState, useRef } from "react";
+// import axios from "axios";
+// import {
+//   Dialog,
+//   DialogContent,
+//   DialogHeader,
+//   DialogTitle,
+//   DialogTrigger,
+// } from "../../components/ui/dialog";
+// import { toast } from "react-toastify";
+// import "react-toastify/dist/ReactToastify.css";
+// import { isValidPhoneNumber } from "react-phone-number-input";
+// import "react-phone-number-input/style.css";
+// import { Eye, EyeOff, X } from "lucide-react";
+// import PhoneInput from "react-phone-input-2";
+// import "react-phone-input-2/lib/style.css";
+
+// import { parsePhoneNumberFromString } from "libphonenumber-js/max";
+
+// export default function AddUserModal({ onUserCreated }) {
+//   const API_URL = import.meta.env.VITE_API_URL;
+//   const API_SI = import.meta.env.VITE_SI_URI;
+
+//   const [isDialogOpen, setIsDialogOpen] = useState(false);
+//   const [formData, setFormData] = useState({
+//     firstName: "",
+//     lastName: "",
+//     gender: "",
+//     dateOfBirth: "",
+//     mobileNumber: "",
+//     email: "",
+//     password: "",
+//     confirmPassword: "",
+//     address: "",
+//     role: "",
+//     status: "Active",
+//     profileImage: null,
+//   });
+//   const [previewUrl, setPreviewUrl] = useState(null);
+//   const [roles, setRoles] = useState([]);
+//   const [errors, setErrors] = useState({});
+//   const [showPassword, setShowPassword] = useState(false);
+//   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+//   const [isSubmitting, setIsSubmitting] = useState(false);
+
+//   // Refs
+//   const formRef = useRef(null);
+//   const dialogContentRef = useRef(null);
+//   const fileInputRef = useRef(null);
+
+//   // Get profile image URL function
+//   const getProfileImageUrl = (image) => {
+//     if (!image)
+//       return "https://static.vecteezy.com/system/resources/previews/020/429/953/non_2x/admin-icon-vector.jpg";
+
+//     if (image.startsWith("blob:")) return image;
+//     if (image.startsWith("http")) return image;
+
+//     return `${API_SI}/uploads/users/${image}`;
+//   };
+
+//   // Reset form completely
+//   const resetForm = () => {
+//     setFormData({
+//       firstName: "",
+//       lastName: "",
+//       gender: "",
+//       dateOfBirth: "",
+//       mobileNumber: "",
+//       email: "",
+//       password: "",
+//       confirmPassword: "",
+//       address: "",
+//       role: "",
+//       status: "Active",
+//       profileImage: null,
+//     });
+//     setPreviewUrl(getProfileImageUrl(null));
+//     setErrors({});
+//     setShowPassword(false);
+//     setShowConfirmPassword(false);
+
+//     if (fileInputRef.current) {
+//       fileInputRef.current.value = "";
+//     }
+//   };
+
+//   // Handle dialog open/close
+//   const handleOpenChange = (open) => {
+//     setIsDialogOpen(open);
+//     if (!open) {
+//       resetForm();
+//     }
+//   };
+
+//   // Handle cancel button
+//   const handleCancel = () => {
+//     resetForm();
+//     setIsDialogOpen(false);
+//   };
+
+//   useEffect(() => {
+//     if (isDialogOpen) {
+//       const style = document.createElement("style");
+//       style.id = "phone-input-fix";
+//       style.textContent = `
+//         .PhoneInput {
+//           width: 100%;
+//         }
+//         .PhoneInputInput {
+//           width: 100%;
+//           padding: 10px;
+//           border-radius: 8px;
+//           border: 1px solid #d1d5db;
+//           font-size: 14px;
+//           outline: none;
+//           transition: all 0.2s;
+//         }
+//         .PhoneInputInput:focus {
+//           border-color: #3b82f6;
+//           box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+//         }
+//         .PhoneInputCountry {
+//           padding: 0 12px 0 8px;
+//         }
+//         .PhoneInputCountrySelect {
+//           position: absolute;
+//           top: 0;
+//           left: 0;
+//           height: 100%;
+//           width: 100%;
+//           z-index: 1;
+//           border: 0;
+//           opacity: 0;
+//           cursor: pointer;
+//         }
+//         .PhoneInputCountryIcon {
+//           width: 24px;
+//           height: 18px;
+//           box-shadow: 0 0 1px rgba(0,0,0,0.5);
+//         }
+//         .Toastify__close-button {
+//           pointer-events: auto !important;
+//         }
+//       `;
+//       document.head.appendChild(style);
+
+//       return () => {
+//         const existingStyle = document.getElementById("phone-input-fix");
+//         if (existingStyle) {
+//           existingStyle.remove();
+//         }
+//       };
+//     }
+//   }, [isDialogOpen]);
+
+//   useEffect(() => {
+//     if (!previewUrl) {
+//       setPreviewUrl(getProfileImageUrl(null));
+//     }
+//   }, []);
+
+//   const handleChange = (e) => {
+//     const { name, value } = e.target;
+//     setFormData((prev) => ({ ...prev, [name]: value }));
+
+//     if (errors[name]) {
+//       setErrors((prev) => ({ ...prev, [name]: "" }));
+//     }
+
+//     if (name === "password" || name === "confirmPassword") {
+//       const updatedData = {
+//         ...formData,
+//         [name]: value,
+//       };
+
+//       if (
+//         updatedData.password &&
+//         updatedData.confirmPassword &&
+//         updatedData.password !== updatedData.confirmPassword
+//       ) {
+//         setErrors((prev) => ({
+//           ...prev,
+//           confirmPassword: "Passwords do not match",
+//         }));
+//       } else {
+//         setErrors((prev) => ({
+//           ...prev,
+//           confirmPassword: "",
+//         }));
+//       }
+//     }
+//   };
+
+//   const handlePhoneChange = (value) => {
+//     if (!value) {
+//       setFormData((prev) => ({ ...prev, mobileNumber: "" }));
+//       return;
+//     }
+
+//     try {
+//       const phone = parsePhoneNumberFromString(value);
+
+//       if (phone) {
+//         const nationalNumberLength = phone.nationalNumber.length;
+//         const possibleLengths =
+//           phone.getMetadata().numberingPlan.possibleLengths.national;
+//         const maxLength = Math.max(...possibleLengths);
+
+//         if (nationalNumberLength > maxLength) {
+//           return;
+//         }
+//       }
+
+//       setFormData((prev) => ({ ...prev, mobileNumber: value }));
+//     } catch {
+//       setFormData((prev) => ({ ...prev, mobileNumber: value }));
+//     }
+//   };
+
+//   const handleFileChange = (e) => {
+//     const file = e.target.files[0];
+//     if (file) {
+//       const validImageTypes = [
+//         "image/jpeg",
+//         "image/jpg",
+//         "image/png",
+//         "image/gif",
+//         "image/webp",
+//       ];
+//       if (!validImageTypes.includes(file.type)) {
+//         toast.error("Only JPEG, JPG, PNG, GIF and WebP files are allowed");
+//         setErrors((prev) => ({
+//           ...prev,
+//           profileImage: "Only JPEG, JPG, PNG, GIF and WebP files are allowed",
+//         }));
+//         return;
+//       }
+
+//       if (file.size > 20 * 1024 * 1024) {
+//         toast.error("File size must be less than 20MB");
+//         setErrors((prev) => ({
+//           ...prev,
+//           profileImage: "File size must be less than 20MB",
+//         }));
+//         return;
+//       }
+
+//       setFormData((prev) => ({ ...prev, profileImage: file }));
+
+//       const url = URL.createObjectURL(file);
+//       setPreviewUrl(url);
+
+//       setErrors((prev) => ({ ...prev, profileImage: "" }));
+//     }
+//   };
+
+//   const removeProfileImage = () => {
+//     setFormData((prev) => ({ ...prev, profileImage: null }));
+//     setPreviewUrl(getProfileImageUrl(null));
+//     if (fileInputRef.current) {
+//       fileInputRef.current.value = "";
+//     }
+//   };
+
+//   const validatePhoneNumber = (phoneNumber) => {
+//     if (!phoneNumber) {
+//       return { isValid: false, error: "Phone number is required" };
+//     }
+
+//     if (!isValidPhoneNumber(phoneNumber)) {
+//       return { isValid: false, error: "Enter a valid phone number" };
+//     }
+
+//     return { isValid: true, error: "" };
+//   };
+
+//   const validateForm = () => {
+//     const newErrors = {};
+
+//     if (!formData.firstName.trim())
+//       newErrors.firstName = "First name is required";
+//     if (!formData.lastName.trim()) newErrors.lastName = "Last name is required";
+
+//     // Email is optional – only validate format if provided
+//     if (formData.email.trim() && !/\S+@\S+\.\S+/.test(formData.email)) {
+//       newErrors.email = "Email is invalid";
+//     }
+
+//     const phoneValidation = validatePhoneNumber(formData.mobileNumber);
+//     if (!phoneValidation.isValid) {
+//       newErrors.mobileNumber = phoneValidation.error;
+//     }
+
+//     if (!formData.password) {
+//       newErrors.password = "Password is required";
+//     } else if (formData.password.length < 8) {
+//       newErrors.password = "Password must be at least 8 characters";
+//     } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
+//       newErrors.password =
+//         "Password must contain uppercase, lowercase and numbers";
+//     }
+
+//     if (!formData.confirmPassword) {
+//       newErrors.confirmPassword = "Confirm password is required";
+//     } else if (formData.password !== formData.confirmPassword) {
+//       newErrors.confirmPassword = "Passwords do not match";
+//     }
+
+//     if (!formData.role) newErrors.role = "Role is required";
+//     if (!formData.gender) newErrors.gender = "Gender is required";
+
+//     setErrors(newErrors);
+
+//     if (Object.keys(newErrors).length > 0 && formRef.current) {
+//       setTimeout(() => {
+//         const firstErrorElement =
+//           formRef.current.querySelector(".border-red-500");
+//         if (firstErrorElement) {
+//           firstErrorElement.scrollIntoView({
+//             behavior: "smooth",
+//             block: "center",
+//           });
+//         } else {
+//           formRef.current.scrollTo({ top: 0, behavior: "smooth" });
+//         }
+//       }, 100);
+//     }
+
+//     return Object.keys(newErrors).length === 0;
+//   };
+
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+
+//     if (isSubmitting) return;
+
+//     setIsSubmitting(true);
+
+//     if (!validateForm()) {
+//       setTimeout(() => {
+//         toast.error("Please fill all required fields correctly", {
+//           autoClose: 5000,
+//           hideProgressBar: false,
+//           closeOnClick: true,
+//           pauseOnHover: true,
+//           draggable: true,
+//           // Removed custom onClick to allow close button to work
+//         });
+//       }, 100);
+//       setIsSubmitting(false);
+//       return;
+//     }
+
+//     try {
+//       const payload = new FormData();
+
+//       payload.append("firstName", formData.firstName);
+//       payload.append("lastName", formData.lastName);
+//       payload.append("gender", formData.gender);
+//       payload.append("dateOfBirth", formData.dateOfBirth);
+//       payload.append("mobileNumber", formData.mobileNumber);
+//       payload.append("email", formData.email);
+//       payload.append("password", formData.password);
+//       payload.append("confirmPassword", formData.confirmPassword);
+//       payload.append("address", formData.address);
+//       payload.append("role", formData.role);
+//       payload.append("status", formData.status);
+
+//       if (formData.profileImage) {
+//         payload.append("profileImage", formData.profileImage);
+//       }
+
+//       const token = localStorage.getItem("token");
+
+//       await axios.post(`${API_URL}/users/create`, payload, {
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//         },
+//         transformRequest: (data, headers) => {
+//           delete headers["Content-Type"];
+//           return data;
+//         },
+//       });
+
+//       toast.success("User created successfully!", {
+//         autoClose: 3000,
+//         hideProgressBar: false,
+//         closeOnClick: true,
+//         pauseOnHover: true,
+//         draggable: true,
+//         // Removed custom onClick
+//       });
+
+//       if (onUserCreated) {
+//         await onUserCreated();
+//       }
+
+//       resetForm();
+//       setIsDialogOpen(false);
+//     } catch (err) {
+//       console.error(err);
+//       const errorMsg = err.response?.data?.message || "Failed to create user";
+//       toast.error(errorMsg, {
+//         autoClose: 5000,
+//         hideProgressBar: false,
+//         closeOnClick: true,
+//         pauseOnHover: true,
+//         draggable: true,
+//         // Removed custom onClick
+//       });
+
+//       if (err.response?.data?.errors) {
+//         setErrors(err.response.data.errors);
+//       }
+//     } finally {
+//       setIsSubmitting(false);
+//     }
+//   };
+
+//   const fetchRoles = async () => {
+//     try {
+//       const token = localStorage.getItem("token");
+//       const response = await axios.get(`${API_URL}/roles`, {
+//         headers: { Authorization: `Bearer ${token}` },
+//       });
+
+//       const rolesData = Array.isArray(response.data)
+//         ? response.data
+//         : response.data.roles || [];
+
+//       setRoles(rolesData);
+//     } catch (err) {
+//       console.error("Failed to fetch roles", err);
+//       toast.error("Failed to load roles. Please try again.", {
+//         // Removed custom onClick
+//       });
+//     }
+//   };
+
+//   useEffect(() => {
+//     if (isDialogOpen) {
+//       fetchRoles();
+//     }
+//   }, [isDialogOpen]);
+
+//   useEffect(() => {
+//     return () => {
+//       if (previewUrl && previewUrl.startsWith("blob:")) {
+//         URL.revokeObjectURL(previewUrl);
+//       }
+//     };
+//   }, [previewUrl]);
+
+//   return (
+//     <div>
+//       <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
+//         <DialogTrigger asChild>
+//           <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
+//             Add User
+//           </button>
+//         </DialogTrigger>
+
+//         <DialogContent
+//           ref={dialogContentRef}
+//           className="sm:max-w-3xl max-h-[90vh] overflow-y-auto p-0"
+//           style={{ zIndex: 50 }}
+//           onInteractOutside={(e) => {
+//             const isToast = e.target.closest(".Toastify__toast");
+//             if (isToast) {
+//               e.preventDefault(); // Prevents dialog from closing when clicking on toast
+//             }
+//           }}
+//           onEscapeKeyDown={(e) => {
+//             // Allow escape key to close the dialog even if toast is open
+//           }}
+//         >
+//           <DialogHeader className="px-6 pt-6 pb-0">
+//             <div className="flex justify-between items-center">
+//               <DialogTitle className="text-xl font-bold text-gray-800">
+//                 Add New User
+//               </DialogTitle>
+//               <button
+//                 onClick={() => handleOpenChange(false)}
+//                 className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 p-2 rounded-full transition-colors flex items-center justify-center w-8 h-8"
+//                 aria-label="Close"
+//               >
+//                 {/* <X size={20} /> */}
+//               </button>
+//             </div>
+//           </DialogHeader>
+
+//           {/* Profile Photo Upload */}
+//           <div className="flex justify-center py-6 px-6">
+//             <div className="relative w-32 h-32">
+//               <div className="w-full h-full overflow-hidden rounded-full border-4 border-white shadow-lg">
+//                 <img
+//                   src={previewUrl}
+//                   alt="Profile Preview"
+//                   className="w-full h-full object-cover"
+//                   onError={(e) => {
+//                     e.target.src =
+//                       "https://static.vecteezy.com/system/resources/previews/020/429/953/non_2x/admin-icon-vector.jpg";
+//                   }}
+//                 />
+//               </div>
+
+//               <label className="absolute bottom-0 right-0 bg-blue-600 hover:bg-blue-700 p-2.5 rounded-full cursor-pointer shadow-lg transition-all duration-200 transform hover:scale-105">
+//                 <input
+//                   ref={fileInputRef}
+//                   type="file"
+//                   name="profileImage"
+//                   accept="image/*"
+//                   onChange={handleFileChange}
+//                   className="hidden"
+//                 />
+//                 <svg
+//                   xmlns="http://www.w3.org/2000/svg"
+//                   height="20px"
+//                   viewBox="0 -960 960 960"
+//                   width="20px"
+//                   fill="white"
+//                 >
+//                   <path d="M480-264q72 0 120-49t48-119q0-69-48-118.5T480-600q-72 0-120 49.5T312-432q0 69.5 48 118.5t120 49Zm0-72q-42 0-69-28.13T384-433q0-39.9 27-67.45Q438-528 480-528t69 27.55q27 27.55 27 67.45 0 40.74-27 68.87Q522-336 480-336ZM168-144q-29 0-50.5-21.5T96-216v-432q0-29 21.5-50.5T168-720h120l72-96h240l72 96h120q29.7 0 50.85 21.5Q864-677 864-648v432q0 29-21.15 50.5T792-144H168Zm0-72h624v-432H636l-72.1-96H396l-72 96H168v432Zm312-217Z" />
+//                 </svg>
+//               </label>
+
+//               {formData.profileImage && (
+//                 <button
+//                   type="button"
+//                   onClick={removeProfileImage}
+//                   className="absolute top-0 right-0 bg-red-500 hover:bg-red-600 p-1.5 rounded-full cursor-pointer shadow-lg transition-all duration-200"
+//                   aria-label="Remove profile image"
+//                 >
+//                   <X size={14} className="text-white" />
+//                 </button>
+//               )}
+//             </div>
+//           </div>
+
+//           {errors.profileImage && (
+//             <div className="px-6 -mt-4">
+//               <p className="text-red-500 text-sm text-center bg-red-50 py-1.5 px-3 rounded-md inline-block">
+//                 {errors.profileImage}
+//               </p>
+//             </div>
+//           )}
+
+//           {/* Form */}
+//           <form
+//             ref={formRef}
+//             onSubmit={handleSubmit}
+//             className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-6"
+//             onClick={(e) => {
+//               e.stopPropagation();
+//             }}
+//           >
+//             {/* First Name */}
+//             <div>
+//               <label className="text-sm font-medium text-gray-700 mb-1 block">
+//                 First Name <span className="text-red-500">*</span>
+//               </label>
+//               <input
+//                 type="text"
+//                 name="firstName"
+//                 placeholder="Enter first name"
+//                 value={formData.firstName}
+//                 onChange={handleChange}
+//                 className={`p-2.5 border rounded-lg w-full transition-all duration-200 ${
+//                   errors.firstName
+//                     ? "border-red-500 bg-red-50"
+//                     : "border-gray-300 hover:border-gray-400"
+//                 } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+//               />
+//               {errors.firstName && (
+//                 <p className="text-red-500 text-sm mt-1.5 flex items-center gap-1">
+//                   <svg
+//                     className="w-4 h-4"
+//                     fill="currentColor"
+//                     viewBox="0 0 20 20"
+//                   >
+//                     <path
+//                       fillRule="evenodd"
+//                       d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+//                       clipRule="evenodd"
+//                     />
+//                   </svg>
+//                   {errors.firstName}
+//                 </p>
+//               )}
+//             </div>
+
+//             {/* Last Name */}
+//             <div>
+//               <label className="text-sm font-medium text-gray-700 mb-1 block">
+//                 Last Name <span className="text-red-500">*</span>
+//               </label>
+//               <input
+//                 type="text"
+//                 name="lastName"
+//                 placeholder="Enter last name"
+//                 value={formData.lastName}
+//                 onChange={handleChange}
+//                 className={`p-2.5 border rounded-lg w-full transition-all duration-200 ${
+//                   errors.lastName
+//                     ? "border-red-500 bg-red-50"
+//                     : "border-gray-300 hover:border-gray-400"
+//                 } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+//               />
+//               {errors.lastName && (
+//                 <p className="text-red-500 text-sm mt-1.5 flex items-center gap-1">
+//                   <svg
+//                     className="w-4 h-4"
+//                     fill="currentColor"
+//                     viewBox="0 0 20 20"
+//                   >
+//                     <path
+//                       fillRule="evenodd"
+//                       d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+//                       clipRule="evenodd"
+//                     />
+//                   </svg>
+//                   {errors.lastName}
+//                 </p>
+//               )}
+//             </div>
+
+//             {/* Gender */}
+//             <div>
+//               <label className="text-sm font-medium text-gray-700 mb-1 block">
+//                 Gender <span className="text-red-500">*</span>
+//               </label>
+//               <select
+//                 name="gender"
+//                 value={formData.gender}
+//                 onChange={handleChange}
+//                 className={`p-2.5 border rounded-lg w-full transition-all duration-200 ${
+//                   errors.gender
+//                     ? "border-red-500 bg-red-50"
+//                     : "border-gray-300 hover:border-gray-400"
+//                 } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+//               >
+//                 <option value="">Select Gender</option>
+//                 <option value="Male">Male</option>
+//                 <option value="Female">Female</option>
+//                 <option value="Other">Other</option>
+//               </select>
+//               {errors.gender && (
+//                 <p className="text-red-500 text-sm mt-1.5 flex items-center gap-1">
+//                   <svg
+//                     className="w-4 h-4"
+//                     fill="currentColor"
+//                     viewBox="0 0 20 20"
+//                   >
+//                     <path
+//                       fillRule="evenodd"
+//                       d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+//                       clipRule="evenodd"
+//                     />
+//                   </svg>
+//                   {errors.gender}
+//                 </p>
+//               )}
+//             </div>
+
+//             {/* DOB */}
+//             <div>
+//               <label className="text-sm font-medium text-gray-700 mb-1 block">
+//                 Date of Birth
+//               </label>
+//               <input
+//                 type="date"
+//                 name="dateOfBirth"
+//                 value={formData.dateOfBirth}
+//                 onChange={handleChange}
+//                 className="p-2.5 border border-gray-300 rounded-lg w-full transition-all duration-200 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+//               />
+//             </div>
+
+//             {/* Mobile Number */}
+//             <div>
+//               <label className="text-sm font-medium text-gray-700 mb-1 block">
+//                 Phone Number <span className="text-red-500">*</span>
+//               </label>
+//               <div
+//                 className={`border rounded-lg transition-all duration-200 ${
+//                   errors.mobileNumber
+//                     ? "border-red-500 bg-red-50"
+//                     : "border-gray-300 hover:border-gray-400"
+//                 } focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent`}
+//               >
+//                 <div className="phone-wrapper">
+//                   <PhoneInput
+//                     country="in"
+//                     value={formData.mobileNumber}
+//                     onChange={(value) =>
+//                       setFormData((prev) => ({
+//                         ...prev,
+//                         mobileNumber: "+" + value,
+//                       }))
+//                     }
+//                   />
+//                 </div>
+//               </div>
+//               {errors.mobileNumber && (
+//                 <p className="text-red-500 text-sm mt-1.5 flex items-center gap-1">
+//                   <svg
+//                     className="w-4 h-4"
+//                     fill="currentColor"
+//                     viewBox="0 0 20 20"
+//                   >
+//                     <path
+//                       fillRule="evenodd"
+//                       d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+//                       clipRule="evenodd"
+//                     />
+//                   </svg>
+//                   {errors.mobileNumber}
+//                 </p>
+//               )}
+//               <p className="text-xs text-gray-500 mt-1.5">
+//                 Enter phone number with country code (must have 10 digits after
+//                 country code)
+//               </p>
+//             </div>
+
+//             {/* Email - Optional */}
+//             <div>
+//               <label className="text-sm font-medium text-gray-700 mb-1 block">
+//                 Email
+//               </label>
+//               <input
+//                 type="email"
+//                 name="email"
+//                 placeholder="Enter email address"
+//                 value={formData.email}
+//                 onChange={handleChange}
+//                 className={`p-2.5 border rounded-lg w-full transition-all duration-200 ${
+//                   errors.email
+//                     ? "border-red-500 bg-red-50"
+//                     : "border-gray-300 hover:border-gray-400"
+//                 } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+//               />
+//               {errors.email && (
+//                 <p className="text-red-500 text-sm mt-1.5 flex items-center gap-1">
+//                   <svg
+//                     className="w-4 h-4"
+//                     fill="currentColor"
+//                     viewBox="0 0 20 20"
+//                   >
+//                     <path
+//                       fillRule="evenodd"
+//                       d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+//                       clipRule="evenodd"
+//                     />
+//                   </svg>
+//                   {errors.email}
+//                 </p>
+//               )}
+//             </div>
+
+//             {/* Password */}
+//             <div>
+//               <label className="text-sm font-medium text-gray-700 mb-1 block">
+//                 Password <span className="text-red-500">*</span>
+//               </label>
+//               <div className="relative">
+//                 <input
+//                   type={showPassword ? "text" : "password"}
+//                   name="password"
+//                   placeholder="Enter password"
+//                   value={formData.password}
+//                   onChange={handleChange}
+//                   className={`p-2.5 border rounded-lg w-full pr-10 transition-all duration-200 ${
+//                     errors.password
+//                       ? "border-red-500 bg-red-50"
+//                       : "border-gray-300 hover:border-gray-400"
+//                   } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+//                 />
+//                 <button
+//                   type="button"
+//                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+//                   onClick={() => setShowPassword(!showPassword)}
+//                   aria-label={showPassword ? "Hide password" : "Show password"}
+//                 >
+//                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+//                 </button>
+//               </div>
+//               {errors.password && (
+//                 <p className="text-red-500 text-sm mt-1.5 flex items-center gap-1">
+//                   <svg
+//                     className="w-4 h-4"
+//                     fill="currentColor"
+//                     viewBox="0 0 20 20"
+//                   >
+//                     <path
+//                       fillRule="evenodd"
+//                       d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+//                       clipRule="evenodd"
+//                     />
+//                   </svg>
+//                   {errors.password}
+//                 </p>
+//               )}
+//               <p className="text-xs text-gray-500 mt-1.5">
+//                 Minimum 8 characters with uppercase, lowercase and numbers
+//               </p>
+//             </div>
+
+//             {/* Confirm Password */}
+//             <div>
+//               <label className="text-sm font-medium text-gray-700 mb-1 block">
+//                 Confirm Password <span className="text-red-500">*</span>
+//               </label>
+//               <div className="relative">
+//                 <input
+//                   type={showConfirmPassword ? "text" : "password"}
+//                   name="confirmPassword"
+//                   placeholder="Confirm password"
+//                   value={formData.confirmPassword}
+//                   onChange={handleChange}
+//                   className={`p-2.5 border rounded-lg w-full pr-10 transition-all duration-200 ${
+//                     errors.confirmPassword
+//                       ? "border-red-500 bg-red-50"
+//                       : "border-gray-300 hover:border-gray-400"
+//                   } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+//                 />
+//                 <button
+//                   type="button"
+//                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+//                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+//                   aria-label={
+//                     showConfirmPassword ? "Hide password" : "Show password"
+//                   }
+//                 >
+//                   {showConfirmPassword ? (
+//                     <EyeOff size={20} />
+//                   ) : (
+//                     <Eye size={20} />
+//                   )}
+//                 </button>
+//               </div>
+//               {errors.confirmPassword && (
+//                 <p className="text-red-500 text-sm mt-1.5 flex items-center gap-1">
+//                   <svg
+//                     className="w-4 h-4"
+//                     fill="currentColor"
+//                     viewBox="0 0 20 20"
+//                   >
+//                     <path
+//                       fillRule="evenodd"
+//                       d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+//                       clipRule="evenodd"
+//                     />
+//                   </svg>
+//                   {errors.confirmPassword}
+//                 </p>
+//               )}
+
+//               {formData.password &&
+//                 formData.confirmPassword &&
+//                 formData.password !== formData.confirmPassword &&
+//                 !errors.confirmPassword && (
+//                   <p className="text-red-500 text-sm mt-1.5 flex items-center gap-1">
+//                     <svg
+//                       className="w-4 h-4"
+//                       fill="currentColor"
+//                       viewBox="0 0 20 20"
+//                     >
+//                       <path
+//                         fillRule="evenodd"
+//                         d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+//                         clipRule="evenodd"
+//                       />
+//                     </svg>
+//                     Passwords do not match
+//                   </p>
+//                 )}
+//             </div>
+
+//             {/* Address */}
+//             <div className="sm:col-span-2">
+//               <label className="text-sm font-medium text-gray-700 mb-1 block">
+//                 Address
+//               </label>
+//               <textarea
+//                 name="address"
+//                 placeholder="Enter address"
+//                 value={formData.address}
+//                 onChange={handleChange}
+//                 className="p-2.5 border border-gray-300 rounded-lg w-full transition-all duration-200 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+//                 rows="3"
+//               />
+//             </div>
+
+//             {/* Role */}
+//             <div>
+//               <label className="text-sm font-medium text-gray-700 mb-1 block">
+//                 Role <span className="text-red-500">*</span>
+//               </label>
+//               <select
+//                 name="role"
+//                 value={formData.role}
+//                 onChange={handleChange}
+//                 className={`p-2.5 border rounded-lg w-full transition-all duration-200 ${
+//                   errors.role
+//                     ? "border-red-500 bg-red-50"
+//                     : "border-gray-300 hover:border-gray-400"
+//                 } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+//               >
+//                 <option value="">Select Role</option>
+//                 {roles.length === 0 ? (
+//                   <option disabled>Loading roles...</option>
+//                 ) : (
+//                   roles.map((role) => (
+//                     <option key={role._id} value={role._id}>
+//                       {role.name}
+//                     </option>
+//                   ))
+//                 )}
+//               </select>
+//               {errors.role && (
+//                 <p className="text-red-500 text-sm mt-1.5 flex items-center gap-1">
+//                   <svg
+//                     className="w-4 h-4"
+//                     fill="currentColor"
+//                     viewBox="0 0 20 20"
+//                   >
+//                     <path
+//                       fillRule="evenodd"
+//                       d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+//                       clipRule="evenodd"
+//                     />
+//                   </svg>
+//                   {errors.role}
+//                 </p>
+//               )}
+//             </div>
+
+//             {/* Status */}
+//             <div>
+//               <label className="text-sm font-medium text-gray-700 mb-1 block">
+//                 Status
+//               </label>
+//               <select
+//                 name="status"
+//                 value={formData.status}
+//                 onChange={handleChange}
+//                 className="p-2.5 border border-gray-300 rounded-lg w-full transition-all duration-200 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+//               >
+//                 <option value="Active">Active</option>
+//                 <option value="Inactive">Inactive</option>
+//               </select>
+//             </div>
+
+//             {/* Buttons */}
+//             <div className="flex justify-end gap-3 border-t pt-4 sm:col-span-2">
+//               <button
+//                 type="button"
+//                 onClick={handleCancel}
+//                 disabled={isSubmitting}
+//                 className="px-5 py-2.5 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+//               >
+//                 Cancel
+//               </button>
+//               <button
+//                 type="submit"
+//                 disabled={isSubmitting}
+//                 className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+//               >
+//                 {isSubmitting ? (
+//                   <>
+//                     <svg
+//                       className="animate-spin h-5 w-5 text-white"
+//                       xmlns="http://www.w3.org/2000/svg"
+//                       fill="none"
+//                       viewBox="0 0 24 24"
+//                     >
+//                       <circle
+//                         className="opacity-25"
+//                         cx="12"
+//                         cy="12"
+//                         r="10"
+//                         stroke="currentColor"
+//                         strokeWidth="4"
+//                       ></circle>
+//                       <path
+//                         className="opacity-75"
+//                         fill="currentColor"
+//                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+//                       ></path>
+//                     </svg>
+//                     Creating...
+//                   </>
+//                 ) : (
+//                   "Submit"
+//                 )}
+//               </button>
+//             </div>
+
+//             {/* Required field note */}
+//             <div className="sm:col-span-2 text-xs text-gray-500 pt-2">
+//               <p className="flex items-center gap-1">
+//                 <span className="text-red-500">*</span>
+//                 <span>Required fields</span>
+//               </p>
+//             </div>
+//           </form>
+//         </DialogContent>
+//       </Dialog>
+//     </div>
+//   );
+// }//email required remove correctly work..
+
+
 import React from "react";
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
@@ -1101,211 +2117,114 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../../components/ui/dialog";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import toast, { Toaster } from "react-hot-toast";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import { Eye, EyeOff, X } from "lucide-react";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
-
 import { parsePhoneNumberFromString } from "libphonenumber-js/max";
 
 export default function AddUserModal({ onUserCreated }) {
   const API_URL = import.meta.env.VITE_API_URL;
-  const API_SI = import.meta.env.VITE_SI_URI;
+  const API_SI  = import.meta.env.VITE_SI_URI;
 
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    gender: "",
-    dateOfBirth: "",
-    mobileNumber: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    address: "",
-    role: "",
-    status: "Active",
-    profileImage: null,
+  const [isDialogOpen,       setIsDialogOpen]       = useState(false);
+  const [formData,           setFormData]           = useState({
+    firstName: "", lastName: "", gender: "", dateOfBirth: "",
+    mobileNumber: "", email: "", password: "", confirmPassword: "",
+    address: "", role: "", status: "Active", profileImage: null,
   });
-  const [previewUrl, setPreviewUrl] = useState(null);
-  const [roles, setRoles] = useState([]);
-  const [errors, setErrors] = useState({});
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [previewUrl,         setPreviewUrl]         = useState(null);
+  const [roles,              setRoles]              = useState([]);
+  const [errors,             setErrors]             = useState({});
+  const [showPassword,       setShowPassword]       = useState(false);
+  const [showConfirmPassword,setShowConfirmPassword]= useState(false);
+  const [isSubmitting,       setIsSubmitting]       = useState(false);
 
-  // Refs
-  const formRef = useRef(null);
-  const dialogContentRef = useRef(null);
+  const formRef      = useRef(null);
   const fileInputRef = useRef(null);
 
-  // Get profile image URL function
+  // ── Profile image URL helper ──────────────────────────────────────────────
   const getProfileImageUrl = (image) => {
-    if (!image)
-      return "https://static.vecteezy.com/system/resources/previews/020/429/953/non_2x/admin-icon-vector.jpg";
-
-    if (image.startsWith("blob:")) return image;
-    if (image.startsWith("http")) return image;
-
+    if (!image) return "https://static.vecteezy.com/system/resources/previews/020/429/953/non_2x/admin-icon-vector.jpg";
+    if (image.startsWith("blob:") || image.startsWith("http")) return image;
     return `${API_SI}/uploads/users/${image}`;
   };
 
-  // Reset form completely
+  // ── Reset form ────────────────────────────────────────────────────────────
   const resetForm = () => {
     setFormData({
-      firstName: "",
-      lastName: "",
-      gender: "",
-      dateOfBirth: "",
-      mobileNumber: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-      address: "",
-      role: "",
-      status: "Active",
-      profileImage: null,
+      firstName: "", lastName: "", gender: "", dateOfBirth: "",
+      mobileNumber: "", email: "", password: "", confirmPassword: "",
+      address: "", role: "", status: "Active", profileImage: null,
     });
     setPreviewUrl(getProfileImageUrl(null));
     setErrors({});
     setShowPassword(false);
     setShowConfirmPassword(false);
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // Handle dialog open/close
   const handleOpenChange = (open) => {
     setIsDialogOpen(open);
-    if (!open) {
-      resetForm();
-    }
+    if (!open) resetForm();
   };
 
-  // Handle cancel button
-  const handleCancel = () => {
-    resetForm();
-    setIsDialogOpen(false);
-  };
+  const handleCancel = () => { resetForm(); setIsDialogOpen(false); };
 
+  // ── Phone input CSS fix ───────────────────────────────────────────────────
   useEffect(() => {
-    if (isDialogOpen) {
-      const style = document.createElement("style");
-      style.id = "phone-input-fix";
-      style.textContent = `
-        .PhoneInput {
-          width: 100%;
-        }
-        .PhoneInputInput {
-          width: 100%;
-          padding: 10px;
-          border-radius: 8px;
-          border: 1px solid #d1d5db;
-          font-size: 14px;
-          outline: none;
-          transition: all 0.2s;
-        }
-        .PhoneInputInput:focus {
-          border-color: #3b82f6;
-          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-        .PhoneInputCountry {
-          padding: 0 12px 0 8px;
-        }
-        .PhoneInputCountrySelect {
-          position: absolute;
-          top: 0;
-          left: 0;
-          height: 100%;
-          width: 100%;
-          z-index: 1;
-          border: 0;
-          opacity: 0;
-          cursor: pointer;
-        }
-        .PhoneInputCountryIcon {
-          width: 24px;
-          height: 18px;
-          box-shadow: 0 0 1px rgba(0,0,0,0.5);
-        }
-        .Toastify__close-button {
-          pointer-events: auto !important;
-        }
-      `;
-      document.head.appendChild(style);
-
-      return () => {
-        const existingStyle = document.getElementById("phone-input-fix");
-        if (existingStyle) {
-          existingStyle.remove();
-        }
-      };
-    }
+    if (!isDialogOpen) return;
+    const style = document.createElement("style");
+    style.id = "phone-input-fix";
+    style.textContent = `
+      .PhoneInput { width: 100%; }
+      .PhoneInputInput {
+        width: 100%; padding: 10px; border-radius: 8px;
+        border: 1px solid #d1d5db; font-size: 14px; outline: none; transition: all 0.2s;
+      }
+      .PhoneInputInput:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+      .PhoneInputCountry { padding: 0 12px 0 8px; }
+      .PhoneInputCountrySelect {
+        position: absolute; top: 0; left: 0; height: 100%; width: 100%;
+        z-index: 1; border: 0; opacity: 0; cursor: pointer;
+      }
+      .PhoneInputCountryIcon { width: 24px; height: 18px; box-shadow: 0 0 1px rgba(0,0,0,0.5); }
+    `;
+    document.head.appendChild(style);
+    return () => document.getElementById("phone-input-fix")?.remove();
   }, [isDialogOpen]);
 
   useEffect(() => {
-    if (!previewUrl) {
-      setPreviewUrl(getProfileImageUrl(null));
-    }
+    if (!previewUrl) setPreviewUrl(getProfileImageUrl(null));
   }, []);
 
+  // ── Field handlers ────────────────────────────────────────────────────────
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
 
     if (name === "password" || name === "confirmPassword") {
-      const updatedData = {
-        ...formData,
-        [name]: value,
-      };
-
-      if (
-        updatedData.password &&
-        updatedData.confirmPassword &&
-        updatedData.password !== updatedData.confirmPassword
-      ) {
-        setErrors((prev) => ({
-          ...prev,
-          confirmPassword: "Passwords do not match",
-        }));
+      const updated = { ...formData, [name]: value };
+      if (updated.password && updated.confirmPassword && updated.password !== updated.confirmPassword) {
+        setErrors((prev) => ({ ...prev, confirmPassword: "Passwords do not match" }));
       } else {
-        setErrors((prev) => ({
-          ...prev,
-          confirmPassword: "",
-        }));
+        setErrors((prev) => ({ ...prev, confirmPassword: "" }));
       }
     }
   };
 
   const handlePhoneChange = (value) => {
-    if (!value) {
-      setFormData((prev) => ({ ...prev, mobileNumber: "" }));
-      return;
-    }
-
+    if (!value) { setFormData((prev) => ({ ...prev, mobileNumber: "" })); return; }
     try {
       const phone = parsePhoneNumberFromString(value);
-
       if (phone) {
-        const nationalNumberLength = phone.nationalNumber.length;
-        const possibleLengths =
-          phone.getMetadata().numberingPlan.possibleLengths.national;
-        const maxLength = Math.max(...possibleLengths);
-
-        if (nationalNumberLength > maxLength) {
-          return;
-        }
+        const natLen   = phone.nationalNumber.length;
+        const possible = phone.getMetadata().numberingPlan.possibleLengths.national;
+        if (natLen > Math.max(...possible)) return;
       }
-
       setFormData((prev) => ({ ...prev, mobileNumber: value }));
     } catch {
       setFormData((prev) => ({ ...prev, mobileNumber: value }));
@@ -1314,240 +2233,171 @@ export default function AddUserModal({ onUserCreated }) {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const validImageTypes = [
-        "image/jpeg",
-        "image/jpg",
-        "image/png",
-        "image/gif",
-        "image/webp",
-      ];
-      if (!validImageTypes.includes(file.type)) {
-        toast.error("Only JPEG, JPG, PNG, GIF and WebP files are allowed");
-        setErrors((prev) => ({
-          ...prev,
-          profileImage: "Only JPEG, JPG, PNG, GIF and WebP files are allowed",
-        }));
-        return;
-      }
-
-      if (file.size > 20 * 1024 * 1024) {
-        toast.error("File size must be less than 20MB");
-        setErrors((prev) => ({
-          ...prev,
-          profileImage: "File size must be less than 20MB",
-        }));
-        return;
-      }
-
-      setFormData((prev) => ({ ...prev, profileImage: file }));
-
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-
-      setErrors((prev) => ({ ...prev, profileImage: "" }));
+    if (!file) return;
+    const validTypes = ["image/jpeg","image/jpg","image/png","image/gif","image/webp"];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Only JPEG, JPG, PNG, GIF and WebP files are allowed");
+      setErrors((prev) => ({ ...prev, profileImage: "Only JPEG, JPG, PNG, GIF and WebP files are allowed" }));
+      return;
     }
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error("File size must be less than 20MB");
+      setErrors((prev) => ({ ...prev, profileImage: "File size must be less than 20MB" }));
+      return;
+    }
+    setFormData((prev) => ({ ...prev, profileImage: file }));
+    setPreviewUrl(URL.createObjectURL(file));
+    setErrors((prev) => ({ ...prev, profileImage: "" }));
   };
 
   const removeProfileImage = () => {
     setFormData((prev) => ({ ...prev, profileImage: null }));
     setPreviewUrl(getProfileImageUrl(null));
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const validatePhoneNumber = (phoneNumber) => {
-    if (!phoneNumber) {
-      return { isValid: false, error: "Phone number is required" };
-    }
-
-    if (!isValidPhoneNumber(phoneNumber)) {
-      return { isValid: false, error: "Enter a valid phone number" };
-    }
-
-    return { isValid: true, error: "" };
-  };
-
+  // ── Validation ────────────────────────────────────────────────────────────
   const validateForm = () => {
     const newErrors = {};
-
-    if (!formData.firstName.trim())
-      newErrors.firstName = "First name is required";
-    if (!formData.lastName.trim()) newErrors.lastName = "Last name is required";
-
-    // Email is optional – only validate format if provided
-    if (formData.email.trim() && !/\S+@\S+\.\S+/.test(formData.email)) {
+    if (!formData.firstName.trim())  newErrors.firstName = "First name is required";
+    if (!formData.lastName.trim())   newErrors.lastName  = "Last name is required";
+    if (formData.email.trim() && !/\S+@\S+\.\S+/.test(formData.email))
       newErrors.email = "Email is invalid";
-    }
-
-    const phoneValidation = validatePhoneNumber(formData.mobileNumber);
-    if (!phoneValidation.isValid) {
-      newErrors.mobileNumber = phoneValidation.error;
-    }
-
-    if (!formData.password) {
+    if (!formData.mobileNumber || !isValidPhoneNumber(formData.mobileNumber))
+      newErrors.mobileNumber = "Enter a valid phone number";
+    if (!formData.password)
       newErrors.password = "Password is required";
-    } else if (formData.password.length < 8) {
+    else if (formData.password.length < 8)
       newErrors.password = "Password must be at least 8 characters";
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      newErrors.password =
-        "Password must contain uppercase, lowercase and numbers";
-    }
-
-    if (!formData.confirmPassword) {
+    else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password))
+      newErrors.password = "Password must contain uppercase, lowercase and numbers";
+    if (!formData.confirmPassword)
       newErrors.confirmPassword = "Confirm password is required";
-    } else if (formData.password !== formData.confirmPassword) {
+    else if (formData.password !== formData.confirmPassword)
       newErrors.confirmPassword = "Passwords do not match";
-    }
-
-    if (!formData.role) newErrors.role = "Role is required";
+    if (!formData.role)   newErrors.role   = "Role is required";
     if (!formData.gender) newErrors.gender = "Gender is required";
 
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length > 0 && formRef.current) {
       setTimeout(() => {
-        const firstErrorElement =
-          formRef.current.querySelector(".border-red-500");
-        if (firstErrorElement) {
-          firstErrorElement.scrollIntoView({
-            behavior: "smooth",
-            block: "center",
-          });
-        } else {
-          formRef.current.scrollTo({ top: 0, behavior: "smooth" });
-        }
+        const firstErr = formRef.current.querySelector(".border-red-500");
+        if (firstErr) firstErr.scrollIntoView({ behavior: "smooth", block: "center" });
+        else formRef.current.scrollTo({ top: 0, behavior: "smooth" });
       }, 100);
     }
-
     return Object.keys(newErrors).length === 0;
   };
 
+  // ── Submit ────────────────────────────────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (isSubmitting) return;
-
     setIsSubmitting(true);
 
     if (!validateForm()) {
-      setTimeout(() => {
-        toast.error("Please fill all required fields correctly", {
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          // Removed custom onClick to allow close button to work
-        });
-      }, 100);
+      toast.error("Please fill all required fields correctly");
       setIsSubmitting(false);
       return;
     }
 
-    try {
+    const submitPromise = async () => {
       const payload = new FormData();
-
-      payload.append("firstName", formData.firstName);
-      payload.append("lastName", formData.lastName);
-      payload.append("gender", formData.gender);
-      payload.append("dateOfBirth", formData.dateOfBirth);
-      payload.append("mobileNumber", formData.mobileNumber);
-      payload.append("email", formData.email);
-      payload.append("password", formData.password);
+      payload.append("firstName",       formData.firstName);
+      payload.append("lastName",        formData.lastName);
+      payload.append("gender",          formData.gender);
+      payload.append("dateOfBirth",     formData.dateOfBirth);
+      payload.append("mobileNumber",    formData.mobileNumber);
+      payload.append("email",           formData.email);
+      payload.append("password",        formData.password);
       payload.append("confirmPassword", formData.confirmPassword);
-      payload.append("address", formData.address);
-      payload.append("role", formData.role);
-      payload.append("status", formData.status);
-
-      if (formData.profileImage) {
-        payload.append("profileImage", formData.profileImage);
-      }
+      payload.append("address",         formData.address);
+      payload.append("role",            formData.role);
+      payload.append("status",          formData.status);
+      if (formData.profileImage) payload.append("profileImage", formData.profileImage);
 
       const token = localStorage.getItem("token");
-
       await axios.post(`${API_URL}/users/create`, payload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        transformRequest: (data, headers) => {
-          delete headers["Content-Type"];
-          return data;
-        },
+        headers: { Authorization: `Bearer ${token}` },
+        transformRequest: (data, headers) => { delete headers["Content-Type"]; return data; },
       });
 
-      toast.success("User created successfully!", {
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        // Removed custom onClick
-      });
-
-      if (onUserCreated) {
-        await onUserCreated();
-      }
-
+      if (onUserCreated) await onUserCreated();
       resetForm();
       setIsDialogOpen(false);
-    } catch (err) {
-      console.error(err);
-      const errorMsg = err.response?.data?.message || "Failed to create user";
-      toast.error(errorMsg, {
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        // Removed custom onClick
-      });
+    };
 
-      if (err.response?.data?.errors) {
-        setErrors(err.response.data.errors);
-      }
+    try {
+      await toast.promise(submitPromise(), {
+        loading: "Creating user...",
+        success: "User created successfully!",
+        error:   (err) => err.response?.data?.message || "Failed to create user",
+      });
+    } catch (err) {
+      if (err.response?.data?.errors) setErrors(err.response.data.errors);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // ── Fetch roles ───────────────────────────────────────────────────────────
   const fetchRoles = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${API_URL}/roles`, {
+      const { data } = await axios.get(`${API_URL}/roles`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      const rolesData = Array.isArray(response.data)
-        ? response.data
-        : response.data.roles || [];
-
-      setRoles(rolesData);
+      setRoles(Array.isArray(data) ? data : data.roles || []);
     } catch (err) {
       console.error("Failed to fetch roles", err);
-      toast.error("Failed to load roles. Please try again.", {
-        // Removed custom onClick
-      });
+      toast.error("Failed to load roles. Please try again.");
     }
   };
 
-  useEffect(() => {
-    if (isDialogOpen) {
-      fetchRoles();
-    }
-  }, [isDialogOpen]);
+  useEffect(() => { if (isDialogOpen) fetchRoles(); }, [isDialogOpen]);
 
   useEffect(() => {
-    return () => {
-      if (previewUrl && previewUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(previewUrl);
-      }
-    };
+    return () => { if (previewUrl?.startsWith("blob:")) URL.revokeObjectURL(previewUrl); };
   }, [previewUrl]);
+
+  // ── Error icon helper ─────────────────────────────────────────────────────
+  const ErrorIcon = () => (
+    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+      <path fillRule="evenodd"
+        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+        clipRule="evenodd" />
+    </svg>
+  );
 
   return (
     <div>
+      {/* ── react-hot-toast Toaster ───────────────────────────────────────── */}
+      <Toaster
+        position="top-right"
+        gutter={8}
+        toastOptions={{
+          duration: 4000,
+          style: {
+            borderRadius: "8px",
+            fontSize: "14px",
+            fontWeight: "500",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.10)",
+          },
+          success: {
+            style: { background: "#f0fdf4", color: "#166534", border: "1px solid #bbf7d0" },
+            iconTheme: { primary: "#22c55e", secondary: "#f0fdf4" },
+          },
+          error: {
+            style: { background: "#fef2f2", color: "#991b1b", border: "1px solid #fecaca" },
+            iconTheme: { primary: "#ef4444", secondary: "#fef2f2" },
+          },
+          loading: {
+            style: { background: "#eff6ff", color: "#1e40af", border: "1px solid #bfdbfe" },
+          },
+        }}
+      />
+
       <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>
           <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
@@ -1555,32 +2405,10 @@ export default function AddUserModal({ onUserCreated }) {
           </button>
         </DialogTrigger>
 
-        <DialogContent
-          ref={dialogContentRef}
-          className="sm:max-w-3xl max-h-[90vh] overflow-y-auto p-0"
-          style={{ zIndex: 50 }}
-          onInteractOutside={(e) => {
-            const isToast = e.target.closest(".Toastify__toast");
-            if (isToast) {
-              e.preventDefault(); // Prevents dialog from closing when clicking on toast
-            }
-          }}
-          onEscapeKeyDown={(e) => {
-            // Allow escape key to close the dialog even if toast is open
-          }}
-        >
+        <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto p-0" style={{ zIndex: 50 }}>
           <DialogHeader className="px-6 pt-6 pb-0">
             <div className="flex justify-between items-center">
-              <DialogTitle className="text-xl font-bold text-gray-800">
-                Add New User
-              </DialogTitle>
-              <button
-                onClick={() => handleOpenChange(false)}
-                className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 p-2 rounded-full transition-colors flex items-center justify-center w-8 h-8"
-                aria-label="Close"
-              >
-                {/* <X size={20} /> */}
-              </button>
+              <DialogTitle className="text-xl font-bold text-gray-800">Add New User</DialogTitle>
             </div>
           </DialogHeader>
 
@@ -1593,12 +2421,10 @@ export default function AddUserModal({ onUserCreated }) {
                   alt="Profile Preview"
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    e.target.src =
-                      "https://static.vecteezy.com/system/resources/previews/020/429/953/non_2x/admin-icon-vector.jpg";
+                    e.target.src = "https://static.vecteezy.com/system/resources/previews/020/429/953/non_2x/admin-icon-vector.jpg";
                   }}
                 />
               </div>
-
               <label className="absolute bottom-0 right-0 bg-blue-600 hover:bg-blue-700 p-2.5 rounded-full cursor-pointer shadow-lg transition-all duration-200 transform hover:scale-105">
                 <input
                   ref={fileInputRef}
@@ -1608,17 +2434,10 @@ export default function AddUserModal({ onUserCreated }) {
                   onChange={handleFileChange}
                   className="hidden"
                 />
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  height="20px"
-                  viewBox="0 -960 960 960"
-                  width="20px"
-                  fill="white"
-                >
+                <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="white">
                   <path d="M480-264q72 0 120-49t48-119q0-69-48-118.5T480-600q-72 0-120 49.5T312-432q0 69.5 48 118.5t120 49Zm0-72q-42 0-69-28.13T384-433q0-39.9 27-67.45Q438-528 480-528t69 27.55q27 27.55 27 67.45 0 40.74-27 68.87Q522-336 480-336ZM168-144q-29 0-50.5-21.5T96-216v-432q0-29 21.5-50.5T168-720h120l72-96h240l72 96h120q29.7 0 50.85 21.5Q864-677 864-648v432q0 29-21.15 50.5T792-144H168Zm0-72h624v-432H636l-72.1-96H396l-72 96H168v432Zm312-217Z" />
                 </svg>
               </label>
-
               {formData.profileImage && (
                 <button
                   type="button"
@@ -1645,41 +2464,23 @@ export default function AddUserModal({ onUserCreated }) {
             ref={formRef}
             onSubmit={handleSubmit}
             className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-6"
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
           >
+
             {/* First Name */}
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1 block">
                 First Name <span className="text-red-500">*</span>
               </label>
               <input
-                type="text"
-                name="firstName"
-                placeholder="Enter first name"
-                value={formData.firstName}
-                onChange={handleChange}
-                className={`p-2.5 border rounded-lg w-full transition-all duration-200 ${
-                  errors.firstName
-                    ? "border-red-500 bg-red-50"
-                    : "border-gray-300 hover:border-gray-400"
-                } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                type="text" name="firstName" placeholder="Enter first name"
+                value={formData.firstName} onChange={handleChange}
+                className={`p-2.5 border rounded-lg w-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.firstName ? "border-red-500 bg-red-50" : "border-gray-300 hover:border-gray-400"
+                }`}
               />
               {errors.firstName && (
                 <p className="text-red-500 text-sm mt-1.5 flex items-center gap-1">
-                  <svg
-                    className="w-4 h-4"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  {errors.firstName}
+                  <ErrorIcon />{errors.firstName}
                 </p>
               )}
             </div>
@@ -1690,31 +2491,15 @@ export default function AddUserModal({ onUserCreated }) {
                 Last Name <span className="text-red-500">*</span>
               </label>
               <input
-                type="text"
-                name="lastName"
-                placeholder="Enter last name"
-                value={formData.lastName}
-                onChange={handleChange}
-                className={`p-2.5 border rounded-lg w-full transition-all duration-200 ${
-                  errors.lastName
-                    ? "border-red-500 bg-red-50"
-                    : "border-gray-300 hover:border-gray-400"
-                } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                type="text" name="lastName" placeholder="Enter last name"
+                value={formData.lastName} onChange={handleChange}
+                className={`p-2.5 border rounded-lg w-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.lastName ? "border-red-500 bg-red-50" : "border-gray-300 hover:border-gray-400"
+                }`}
               />
               {errors.lastName && (
                 <p className="text-red-500 text-sm mt-1.5 flex items-center gap-1">
-                  <svg
-                    className="w-4 h-4"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  {errors.lastName}
+                  <ErrorIcon />{errors.lastName}
                 </p>
               )}
             </div>
@@ -1725,14 +2510,10 @@ export default function AddUserModal({ onUserCreated }) {
                 Gender <span className="text-red-500">*</span>
               </label>
               <select
-                name="gender"
-                value={formData.gender}
-                onChange={handleChange}
-                className={`p-2.5 border rounded-lg w-full transition-all duration-200 ${
-                  errors.gender
-                    ? "border-red-500 bg-red-50"
-                    : "border-gray-300 hover:border-gray-400"
-                } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                name="gender" value={formData.gender} onChange={handleChange}
+                className={`p-2.5 border rounded-lg w-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.gender ? "border-red-500 bg-red-50" : "border-gray-300 hover:border-gray-400"
+                }`}
               >
                 <option value="">Select Gender</option>
                 <option value="Male">Male</option>
@@ -1741,32 +2522,16 @@ export default function AddUserModal({ onUserCreated }) {
               </select>
               {errors.gender && (
                 <p className="text-red-500 text-sm mt-1.5 flex items-center gap-1">
-                  <svg
-                    className="w-4 h-4"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  {errors.gender}
+                  <ErrorIcon />{errors.gender}
                 </p>
               )}
             </div>
 
-            {/* DOB */}
+            {/* Date of Birth */}
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">
-                Date of Birth
-              </label>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Date of Birth</label>
               <input
-                type="date"
-                name="dateOfBirth"
-                value={formData.dateOfBirth}
-                onChange={handleChange}
+                type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange}
                 className="p-2.5 border border-gray-300 rounded-lg w-full transition-all duration-200 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -1776,79 +2541,42 @@ export default function AddUserModal({ onUserCreated }) {
               <label className="text-sm font-medium text-gray-700 mb-1 block">
                 Phone Number <span className="text-red-500">*</span>
               </label>
-              <div
-                className={`border rounded-lg transition-all duration-200 ${
-                  errors.mobileNumber
-                    ? "border-red-500 bg-red-50"
-                    : "border-gray-300 hover:border-gray-400"
-                } focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent`}
-              >
+              <div className={`border rounded-lg transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent ${
+                errors.mobileNumber ? "border-red-500 bg-red-50" : "border-gray-300 hover:border-gray-400"
+              }`}>
                 <div className="phone-wrapper">
                   <PhoneInput
                     country="in"
                     value={formData.mobileNumber}
                     onChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        mobileNumber: "+" + value,
-                      }))
+                      setFormData((prev) => ({ ...prev, mobileNumber: "+" + value }))
                     }
                   />
                 </div>
               </div>
               {errors.mobileNumber && (
                 <p className="text-red-500 text-sm mt-1.5 flex items-center gap-1">
-                  <svg
-                    className="w-4 h-4"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  {errors.mobileNumber}
+                  <ErrorIcon />{errors.mobileNumber}
                 </p>
               )}
               <p className="text-xs text-gray-500 mt-1.5">
-                Enter phone number with country code (must have 10 digits after
-                country code)
+                Enter phone number with country code (must have 10 digits after country code)
               </p>
             </div>
 
-            {/* Email - Optional */}
+            {/* Email */}
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">
-                Email
-              </label>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Email</label>
               <input
-                type="email"
-                name="email"
-                placeholder="Enter email address"
-                value={formData.email}
-                onChange={handleChange}
-                className={`p-2.5 border rounded-lg w-full transition-all duration-200 ${
-                  errors.email
-                    ? "border-red-500 bg-red-50"
-                    : "border-gray-300 hover:border-gray-400"
-                } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                type="email" name="email" placeholder="Enter email address"
+                value={formData.email} onChange={handleChange}
+                className={`p-2.5 border rounded-lg w-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.email ? "border-red-500 bg-red-50" : "border-gray-300 hover:border-gray-400"
+                }`}
               />
               {errors.email && (
                 <p className="text-red-500 text-sm mt-1.5 flex items-center gap-1">
-                  <svg
-                    className="w-4 h-4"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  {errors.email}
+                  <ErrorIcon />{errors.email}
                 </p>
               )}
             </div>
@@ -1861,15 +2589,11 @@ export default function AddUserModal({ onUserCreated }) {
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
-                  name="password"
-                  placeholder="Enter password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className={`p-2.5 border rounded-lg w-full pr-10 transition-all duration-200 ${
-                    errors.password
-                      ? "border-red-500 bg-red-50"
-                      : "border-gray-300 hover:border-gray-400"
-                  } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                  name="password" placeholder="Enter password"
+                  value={formData.password} onChange={handleChange}
+                  className={`p-2.5 border rounded-lg w-full pr-10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors.password ? "border-red-500 bg-red-50" : "border-gray-300 hover:border-gray-400"
+                  }`}
                 />
                 <button
                   type="button"
@@ -1882,18 +2606,7 @@ export default function AddUserModal({ onUserCreated }) {
               </div>
               {errors.password && (
                 <p className="text-red-500 text-sm mt-1.5 flex items-center gap-1">
-                  <svg
-                    className="w-4 h-4"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  {errors.password}
+                  <ErrorIcon />{errors.password}
                 </p>
               )}
               <p className="text-xs text-gray-500 mt-1.5">
@@ -1909,79 +2622,41 @@ export default function AddUserModal({ onUserCreated }) {
               <div className="relative">
                 <input
                   type={showConfirmPassword ? "text" : "password"}
-                  name="confirmPassword"
-                  placeholder="Confirm password"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  className={`p-2.5 border rounded-lg w-full pr-10 transition-all duration-200 ${
-                    errors.confirmPassword
-                      ? "border-red-500 bg-red-50"
-                      : "border-gray-300 hover:border-gray-400"
-                  } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                  name="confirmPassword" placeholder="Confirm password"
+                  value={formData.confirmPassword} onChange={handleChange}
+                  className={`p-2.5 border rounded-lg w-full pr-10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors.confirmPassword ? "border-red-500 bg-red-50" : "border-gray-300 hover:border-gray-400"
+                  }`}
                 />
                 <button
                   type="button"
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  aria-label={
-                    showConfirmPassword ? "Hide password" : "Show password"
-                  }
+                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                 >
-                  {showConfirmPassword ? (
-                    <EyeOff size={20} />
-                  ) : (
-                    <Eye size={20} />
-                  )}
+                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
               {errors.confirmPassword && (
                 <p className="text-red-500 text-sm mt-1.5 flex items-center gap-1">
-                  <svg
-                    className="w-4 h-4"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  {errors.confirmPassword}
+                  <ErrorIcon />{errors.confirmPassword}
                 </p>
               )}
-
-              {formData.password &&
-                formData.confirmPassword &&
+              {formData.password && formData.confirmPassword &&
                 formData.password !== formData.confirmPassword &&
                 !errors.confirmPassword && (
                   <p className="text-red-500 text-sm mt-1.5 flex items-center gap-1">
-                    <svg
-                      className="w-4 h-4"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    Passwords do not match
+                    <ErrorIcon />Passwords do not match
                   </p>
                 )}
             </div>
 
             {/* Address */}
             <div className="sm:col-span-2">
-              <label className="text-sm font-medium text-gray-700 mb-1 block">
-                Address
-              </label>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Address</label>
               <textarea
-                name="address"
-                placeholder="Enter address"
-                value={formData.address}
-                onChange={handleChange}
+                name="address" placeholder="Enter address"
+                value={formData.address} onChange={handleChange}
                 className="p-2.5 border border-gray-300 rounded-lg w-full transition-all duration-200 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                 rows="3"
               />
@@ -1993,53 +2668,31 @@ export default function AddUserModal({ onUserCreated }) {
                 Role <span className="text-red-500">*</span>
               </label>
               <select
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                className={`p-2.5 border rounded-lg w-full transition-all duration-200 ${
-                  errors.role
-                    ? "border-red-500 bg-red-50"
-                    : "border-gray-300 hover:border-gray-400"
-                } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                name="role" value={formData.role} onChange={handleChange}
+                className={`p-2.5 border rounded-lg w-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.role ? "border-red-500 bg-red-50" : "border-gray-300 hover:border-gray-400"
+                }`}
               >
                 <option value="">Select Role</option>
-                {roles.length === 0 ? (
-                  <option disabled>Loading roles...</option>
-                ) : (
-                  roles.map((role) => (
-                    <option key={role._id} value={role._id}>
-                      {role.name}
-                    </option>
-                  ))
-                )}
+                {roles.length === 0
+                  ? <option disabled>Loading roles...</option>
+                  : roles.map((role) => (
+                      <option key={role._id} value={role._id}>{role.name}</option>
+                    ))
+                }
               </select>
               {errors.role && (
                 <p className="text-red-500 text-sm mt-1.5 flex items-center gap-1">
-                  <svg
-                    className="w-4 h-4"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  {errors.role}
+                  <ErrorIcon />{errors.role}
                 </p>
               )}
             </div>
 
             {/* Status */}
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">
-                Status
-              </label>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Status</label>
               <select
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
+                name="status" value={formData.status} onChange={handleChange}
                 className="p-2.5 border border-gray-300 rounded-lg w-full transition-all duration-200 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="Active">Active</option>
@@ -2050,55 +2703,35 @@ export default function AddUserModal({ onUserCreated }) {
             {/* Buttons */}
             <div className="flex justify-end gap-3 border-t pt-4 sm:col-span-2">
               <button
-                type="button"
-                onClick={handleCancel}
-                disabled={isSubmitting}
+                type="button" onClick={handleCancel} disabled={isSubmitting}
                 className="px-5 py-2.5 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>
               <button
-                type="submit"
-                disabled={isSubmitting}
+                type="submit" disabled={isSubmitting}
                 className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {isSubmitting ? (
                   <>
-                    <svg
-                      className="animate-spin h-5 w-5 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
                     Creating...
                   </>
-                ) : (
-                  "Submit"
-                )}
+                ) : "Submit"}
               </button>
             </div>
 
-            {/* Required field note */}
+            {/* Required note */}
             <div className="sm:col-span-2 text-xs text-gray-500 pt-2">
               <p className="flex items-center gap-1">
                 <span className="text-red-500">*</span>
                 <span>Required fields</span>
               </p>
             </div>
+
           </form>
         </DialogContent>
       </Dialog>
