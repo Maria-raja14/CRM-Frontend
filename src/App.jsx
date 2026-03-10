@@ -33,6 +33,8 @@ import ReportsPage from "./pages/reports/ReportsPage";
 
 
 import EmailChat from "./pages/Email_chat/EmailChat";
+import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
+import Terms from "./pages/legal/Terms";
 
 //import WhatsAppChat from './pages/WhatsApp/WhatsAppChat';
 import WhatsAppPage from "./pages/WhatsApp/Whatsapppage";
@@ -49,6 +51,9 @@ function App() {
 
             <Routes>
               <Route path="/" element={<Login />} />
+
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                 <Route path="/terms" element={<Terms />} />
               
                 <Route
                   path="/reset-password/:token"
@@ -102,6 +107,6 @@ function App() {
   );
 }
 
-export default App;
+export default App;//original
 
 
