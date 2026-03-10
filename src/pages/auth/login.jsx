@@ -75,7 +75,8 @@ console.log("VITE_API_URL =", import.meta.env.VITE_API_URL);
         <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 items-center justify-center p-8">
           <div className="text-center">
             <img
-              src="/images/TZI_Logo-04_-_Copy-removebg-preview.png"
+              // src="/images/TZI_Logo-04_-_Copy-removebg-preview.png"
+                  src="/images/uenjoytours_logo (1).png"
               alt="TZI Logo"
               className="w-full max-w-xs mx-auto mb-6"
             />

@@ -179,7 +179,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       <div className="mb-6 flex items-center justify-between px-12">
         <NavLink to="/adminDashboard" className="cursor-pointer">
           <img
-            src="https://tzi.zaarapp.com//storage/uploads/logo//logo-dark.png"
+            // src="https://tzi.zaarapp.com//storage/uploads/logo//logo-dark.png"
+              src="/images/uenjoytours_logo (1).png"
             alt="Logo"
             className="h-12 hover:opacity-80 transition-opacity"
           />
