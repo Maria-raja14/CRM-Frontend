@@ -657,7 +657,7 @@ function LeadTableComponent() {
                 Contact
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
-                Company
+               Destination
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
                 Country
@@ -1084,4 +1084,4 @@ export default function LeadTable() {
       <LeadTableComponent />
     </TourProvider>
   );
-}
+}//original
