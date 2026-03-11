@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import VoiceButton from './VoiceMicButton';
-import { 
-  Phone, 
-  MessageCircle, 
-  PhoneCall, 
-  X, 
-  Send, 
+import {
+  Phone,
+  MessageCircle,
+  PhoneCall,
+  X,
+  Send,
   Clock,
   CheckCircle,
   AlertCircle,
@@ -16,6 +16,7 @@ import {
   Calendar
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+
 
 // Logo Component - Updated with Motion Robot
 const AILogo = ({ size = "medium" }) => {
@@ -214,20 +215,20 @@ const ChatWidget = () => {
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(false);
   const [expandedMessageId, setExpandedMessageId] = useState(null);
-  
+ 
   // 🟢 CALL TRACKING STATES
   const [callInProgress, setCallInProgress] = useState(null);
   const [showCallOptions, setShowCallOptions] = useState(false);
   const [liveDuration, setLiveDuration] = useState(0);
   const [sessionId, setSessionId] = useState(null);
   const [callStartTime, setCallStartTime] = useState(null);
-  
+
   const location = useLocation();
   const navigate = useNavigate();
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const timerRef = useRef(null);
-
+  const heartbeatRef = useRef(null);
   // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -246,34 +247,42 @@ const ChatWidget = () => {
       if (!callInProgress || !sessionId) return;
 
       if (document.visibilityState === 'hidden') {
-        // User left the tab - call started
         console.log('📞 Call started - user left tab');
+
         try {
           await fetch(`http://localhost:5000/api/calllogs/track/${sessionId}/start`);
+
           setCallStartTime(Date.now());
-          
-          // Start local timer
+
+          // Start live timer
           timerRef.current = setInterval(() => {
             setLiveDuration(prev => prev + 1);
           }, 1000);
-          
+
+          heartbeatRef.current = setInterval(() => {
+            fetch(`http://localhost:5000/api/calllogs/track/${sessionId}/heartbeat`, {
+              method: "GET"
+            });
+          }, 5000);
+
         } catch (error) {
           console.error('Failed to track call start:', error);
         }
-        
       } else if (document.visibilityState === 'visible' && callStartTime) {
         // User returned to tab - call ended
         console.log('📞 Call ended - user returned to tab');
         try {
-          const response = await fetch(`http://localhost:5000/api/calllogs/track/${sessionId}/end`);
+          const response = await fetch(`http://localhost:5000/api/calllogs/track/${sessionId}/end`, {
+            method: "GET"
+          }); 
           const data = await response.json();
-          
+
           if (data.success) {
             // Stop timer
             if (timerRef.current) {
               clearInterval(timerRef.current);
             }
-            
+
             // Add completion message
             const durationMsg = {
               id: Date.now(),
@@ -284,9 +293,9 @@ const ChatWidget = () => {
               duration: data.duration
             };
             setMessages(prev => [...prev, durationMsg]);
-            
+
             toast.success(`Call completed - ${formatDuration(data.duration)}`);
-            
+
             // Clear call state
             setCallInProgress(null);
             setShowCallOptions(false);
@@ -301,11 +310,16 @@ const ChatWidget = () => {
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    
+
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+
       if (timerRef.current) {
         clearInterval(timerRef.current);
+      }
+
+      if (heartbeatRef.current) {
+        clearInterval(heartbeatRef.current);
       }
     };
   }, [callInProgress, sessionId, callStartTime]);
@@ -323,126 +337,126 @@ const ChatWidget = () => {
   };
 
   // Handle call command
- // Updated handleCallCommand function in ChatWidget.jsx
+  // Updated handleCallCommand function in ChatWidget.jsx
 
-const handleCallCommand = async (command) => {
-  if (!command.toLowerCase().startsWith('call ')) return false;
+  const handleCallCommand = async (command) => {
+    if (!command.toLowerCase().startsWith('call ')) return false;
 
-  const searchTerm = command.substring(5).trim();
-  if (!searchTerm) {
-    toast.error('Please specify a lead or company name (e.g., "call John Doe")');
-    return true;
-  }
-
-  setLoading(true);
-
-  try {
-    const token = localStorage.getItem('token');
-    
-    if (!token) {
-      toast.error('Please login first');
+    const searchTerm = command.substring(5).trim();
+    if (!searchTerm) {
+      toast.error('Please specify a lead or company name (e.g., "call John Doe")');
       return true;
     }
 
-    const response = await fetch('http://localhost:5000/api/bot/command', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ 
-        command,
-        type: 'call'
-      })
-    });
+    setLoading(true);
 
-    const result = await response.json();
-    console.log('🔍 Bot response:', result);
+    try {
+      const token = localStorage.getItem('token');
 
-    if (result.success) {
-      // Store session ID for tracking
-      setSessionId(result.callLog?.sessionId);
-      
-      // Add bot message
-      const botMsg = {
-        id: Date.now(),
-        text: result.message,
-        sender: 'bot',
-        timestamp: new Date(),
-        callData: result
-      };
-      setMessages(prev => [...prev, botMsg]);
-
-      // Show call options
-      setCallInProgress(result);
-      setShowCallOptions(true);
-
-      // ✅ OPEN WHATSAPP DESKTOP APP (WORKS ON WINDOWS & MAC)
-      const phoneNumber = result.lead?.phone || result.callLog?.phoneNumber;
-      const message = encodeURIComponent('Hello, I am following up from CRM');
-      
-      if (phoneNumber) {
-        // URL that opens WhatsApp Desktop App
-        const desktopAppUrl = `whatsapp://send?phone=${phoneNumber}&text=${message}`;
-        
-        // WhatsApp Web URL as fallback
-        const webUrl = `https://web.whatsapp.com/send?phone=${phoneNumber}&text=${message}`;
-        
-        // Universal URL
-        const universalUrl = `https://wa.me/${phoneNumber}?text=${message}`;
-        
-        // Detect if on Windows or Mac
-        const isWindows = navigator.userAgent.indexOf('Windows') !== -1;
-        const isMac = navigator.userAgent.indexOf('Mac') !== -1;
-        
-        console.log(`💻 Desktop detected: ${isWindows ? 'Windows' : isMac ? 'Mac' : 'Other'}`);
-        
-        // Try to open Desktop App first
-        const openDesktopApp = () => {
-          // Create a hidden iframe to trigger the protocol
-          const iframe = document.createElement('iframe');
-          iframe.style.display = 'none';
-          iframe.src = desktopAppUrl;
-          document.body.appendChild(iframe);
-          
-          // Remove iframe after a delay
-          setTimeout(() => {
-            document.body.removeChild(iframe);
-          }, 1000);
-        };
-        
-        // Try to open the desktop app
-        openDesktopApp();
-        
-        // Check if app opened after a short delay
-        setTimeout(() => {
-          // If app didn't open (browser would still be focused), offer fallback
-          if (document.hasFocus()) {
-            const shouldOpenWeb = window.confirm(
-              'WhatsApp Desktop app not detected. Would you like to open WhatsApp Web instead?'
-            );
-            
-            if (shouldOpenWeb) {
-              window.open(webUrl, '_blank');
-            }
-          }
-        }, 500);
-        
-        toast.success('Opening WhatsApp Desktop app...');
+      if (!token) {
+        toast.error('Please login first');
+        return true;
       }
 
-    } else {
-      toast.error(result.message);
-    }
-  } catch (error) {
-    console.error('Call command error:', error);
-    toast.error('Failed to process call command');
-  } finally {
-    setLoading(false);
-  }
+      const response = await fetch('http://localhost:5000/api/bot/command', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          command,
+          type: 'call'
+        })
+      });
 
-  return true;
-};
+      const result = await response.json();
+      console.log('🔍 Bot response:', result);
+
+      if (result.success) {
+        // Store session ID for tracking
+        setSessionId(result.callLog?.sessionId);
+
+        // Add bot message
+        const botMsg = {
+          id: Date.now(),
+          text: result.message,
+          sender: 'bot',
+          timestamp: new Date(),
+          callData: result
+        };
+        setMessages(prev => [...prev, botMsg]);
+
+        // Show call options
+        setCallInProgress(result);
+        setShowCallOptions(true);
+
+        // ✅ OPEN WHATSAPP DESKTOP APP (WORKS ON WINDOWS & MAC)
+        const phoneNumber = result.lead?.phone || result.callLog?.phoneNumber;
+        const message = encodeURIComponent('Hello, I am following up from CRM');
+
+        if (phoneNumber) {
+          // URL that opens WhatsApp Desktop App
+          const desktopAppUrl = `whatsapp://send?phone=${phoneNumber}&text=${message}`;
+
+          // WhatsApp Web URL as fallback
+          const webUrl = `https://web.whatsapp.com/send?phone=${phoneNumber}&text=${message}`;
+
+          // Universal URL
+          const universalUrl = `https://wa.me/${phoneNumber}?text=${message}`;
+
+          // Detect if on Windows or Mac
+          const isWindows = navigator.userAgent.indexOf('Windows') !== -1;
+          const isMac = navigator.userAgent.indexOf('Mac') !== -1;
+
+          console.log(`💻 Desktop detected: ${isWindows ? 'Windows' : isMac ? 'Mac' : 'Other'}`);
+
+          // Try to open Desktop App first
+          const openDesktopApp = () => {
+            // Create a hidden iframe to trigger the protocol
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = desktopAppUrl;
+            document.body.appendChild(iframe);
+
+            // Remove iframe after a delay
+            setTimeout(() => {
+              document.body.removeChild(iframe);
+            }, 1000);
+          };
+
+          // Try to open the desktop app
+          openDesktopApp();
+
+          // Check if app opened after a short delay
+          setTimeout(() => {
+            // If app didn't open (browser would still be focused), offer fallback
+            if (document.hasFocus()) {
+              const shouldOpenWeb = window.confirm(
+                'WhatsApp Desktop app not detected. Would you like to open WhatsApp Web instead?'
+              );
+
+              if (shouldOpenWeb) {
+                window.open(webUrl, '_blank');
+              }
+            }
+          }, 500);
+
+          toast.success('Opening WhatsApp Desktop app...');
+        }
+
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      console.error('Call command error:', error);
+      toast.error('Failed to process call command');
+    } finally {
+      setLoading(false);
+    }
+
+    return true;
+  };
   const sendMessage = async (text, forceGet = false) => {
     if (!text.trim()) return;
 
@@ -723,7 +737,7 @@ const handleCallCommand = async (command) => {
               <span className="text-blue-600 text-xs">AI</span>
             </div>
             <p className="text-sm text-gray-600 truncate">
-              {callInProgress 
+              {callInProgress
                 ? `📞 Call in progress... ${formatDuration(liveDuration)}`
                 : messages[messages.length - 1]?.text || "How can I help you today?"}
             </p>
@@ -904,7 +918,7 @@ const handleCallCommand = async (command) => {
                     <PhoneCall className="w-3 h-3" />
                     📞 Call to {message.callData.lead?.name}
                   </p>
-                    <div className="flex gap-2 mt-2">
+                  <div className="flex gap-2 mt-2">
                     <a
                       href={message.callData.whatsappUrl}
                       target="_blank"

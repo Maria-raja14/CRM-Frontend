@@ -348,6 +348,7 @@ const VoiceButton = ({ onCommand, onTranscript, navigate, onNavigationSuccess })
   return (
     <div className="relative">
       <button
+        type="button"
         onClick={(e) => {
           e.stopPropagation();
           e.preventDefault();
@@ -360,14 +361,14 @@ const VoiceButton = ({ onCommand, onTranscript, navigate, onNavigationSuccess })
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
         className={`
-          w-10 h-10 rounded-full flex items-center justify-center
-          transition-all duration-300
-          ${isListening
+    w-10 h-10 rounded-full flex items-center justify-center
+    transition-all duration-300
+    ${isListening
             ? 'bg-red-500 text-white scale-110'
             : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:scale-105'
           }
-          focus:outline-none focus:ring-2 focus:ring-blue-300
-        `}
+    focus:outline-none focus:ring-2 focus:ring-blue-300
+  `}
       >
         {isListening ? <WaveAnimation /> : (
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
