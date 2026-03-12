@@ -942,7 +942,7 @@ const AdminDashboard = () => {
     } catch (err) {
       console.error("Dashboard fetch error:", err);
       setError(
-        "Failed to load dashboard data. Check your API or network connection."
+        "Failed to load dashboard data. Check your network connection."
       );
     } finally {
       setLoading(false);
