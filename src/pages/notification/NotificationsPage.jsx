@@ -895,7 +895,7 @@ const NotificationsPage = () => {
   );
 };
 
-export default NotificationsPage;
+export default NotificationsPage;//bulk delete and other work correctly..
 
 
 
