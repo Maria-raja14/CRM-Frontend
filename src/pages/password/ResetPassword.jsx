@@ -87,7 +87,8 @@ const handleReset = async (e) => {
         {/* Logo Section */}
         <div className="flex justify-center mb-6">
           <img 
-            src="/images/TZI_Logo-04_-_Copy-removebg-preview.png" 
+            // src="/images/TZI_Logo-04_-_Copy-removebg-preview.png" 
+              src="/images/uenjoytours_logo (1).png"
             alt="TZI Logo" 
             className="h-16 object-contain"
           />
