@@ -688,12 +688,11 @@ const ChatWidget = () => {
           <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
             <span className="text-white text-xs font-bold">AI</span>
           </div>
-
-          {/* Tooltip */}
-          <div className="absolute right-14 bottom-1/2 translate-y-1/2 bg-gray-900 text-white text-sm px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+           {/* Tooltip */}
+          {/* <div className="absolute right-14 bottom-1/2 translate-y-1/2 bg-gray-900 text-white text-sm px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
             Ask ZIA CRM Assistant
             <div className="absolute right-0 top-1/2 transform translate-x-1/2 -translate-y-1/2 rotate-45 w-2 h-2 bg-gray-900"></div>
-          </div>
+          </div> */}
         </div>
       </button>
     );

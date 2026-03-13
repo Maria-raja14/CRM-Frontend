@@ -361,9 +361,9 @@ const VoiceButton = ({ onCommand, onTranscript, navigate, onNavigationSuccess })
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
         className={`
-    w-10 h-10 rounded-full flex items-center justify-center
-    transition-all duration-300
-    ${isListening
+          w-10 h-10 rounded-full flex items-center justify-center
+          transition-all duration-300
+          ${isListening
             ? 'bg-red-500 text-white scale-110'
             : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:scale-105'
           }
