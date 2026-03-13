@@ -386,7 +386,7 @@ const handleScheduleFollowUp = async () => {
       {isFollowUpModalOpen && (
         <div className="fixed inset-0 z-[9999] overflow-y-auto">
           <div 
-            className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" 
+             className="fixed inset-0 bg-black/30 backdrop-blur-sm transition-opacity" 
             onClick={() => {
               setIsFollowUpModalOpen(false);
               setFollowUpData({ followUpDate: null, followUpComment: "" });
