@@ -40,36 +40,96 @@ const WebsiteContactForm = () => {
 
   const [errors, setErrors] = useState({});
 
+  // ========== NEW: Blocked file types ==========
+  const BLOCKED_EXTENSIONS = ['.js', '.exe', '.bat', '.sh', '.cmd', '.vbs', '.ps1', '.jar', '.wsf', '.scr', '.dll', '.msi'];
+
+  const isFileAllowed = (file) => {
+    const fileName = file.name.toLowerCase();
+    return !BLOCKED_EXTENSIONS.some(ext => fileName.endsWith(ext));
+  };
+
+  const getBlockedFilesList = (files) => {
+    return files.filter(file => !isFileAllowed(file));
+  };
+  // =============================================
+
+  // ========== NEW: Email validation function ==========
+  const validateEmail = (email) => {
+    // Basic email format check
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) return false;
+
+    // Check if domain has valid structure
+    const domain = email.split("@")[1];
+    if (!domain) return false;
+
+    // Domain should have at least one dot and valid characters
+    const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?\.[a-zA-Z]{2,}$/;
+    return domainRegex.test(domain);
+  };
+  // ===================================================
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((p) => ({ ...p, [name]: value }));
     if (value.trim() !== "") setErrors((p) => ({ ...p, [name]: false }));
   };
 
+  // ========== UPDATED: File change handler with validation ==========
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
 
+    // Check file size (existing validation)
     const oversized = files.filter((file) => file.size > 20 * 1024 * 1024);
     if (oversized.length > 0) {
       toast.error("Max file size is 20MB");
       return;
     }
 
+    // Check file count (existing validation)
     if (files.length > 5) {
       toast.error("Maximum 5 files allowed");
       return;
     }
 
+    // ========== NEW: Check for blocked file types ==========
+    const blockedFiles = getBlockedFilesList(files);
+    
+    if (blockedFiles.length > 0) {
+      const blockedNames = blockedFiles.map(f => f.name).join(', ');
+      toast.error(
+        `Security Error: The following files cannot be uploaded for security reasons: ${blockedNames}. Please upload PDF, DOCX, JPG, PNG, or TXT files only.`,
+        { autoClose: 8000 }
+      );
+      
+      // Only add allowed files (if any)
+      const allowedFiles = files.filter(file => isFileAllowed(file));
+      
+      if (allowedFiles.length > 0) {
+        setFormData((p) => ({
+          ...p,
+          attachments: [...p.attachments, ...allowedFiles],
+        }));
+        toast.info(`Added ${allowedFiles.length} allowed file(s). Blocked files were ignored.`);
+      }
+      
+      // Reset the file input to allow reselection
+      e.target.value = null;
+      return;
+    }
+    // =======================================================
+
+    // If all files are allowed, proceed normally
     setFormData((p) => ({
       ...p,
       attachments: files,
     }));
   };
+  // =========================================================
 
   const handleCaptchaChange = (token) => {
     setCaptchaToken(token);
   };
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -77,26 +137,51 @@ const WebsiteContactForm = () => {
       toast.error("Please complete the captcha verification");
       return;
     }
+    
+    // ========== NEW: Validate attachments before submission ==========
+    if (formData.attachments.length > 0) {
+      const blockedFiles = getBlockedFilesList(formData.attachments);
+      if (blockedFiles.length > 0) {
+        const blockedNames = blockedFiles.map(f => f.name).join(', ');
+        toast.error(
+          `Cannot submit: The following files are blocked for security reasons: ${blockedNames}. Please remove them and try again.`,
+          { autoClose: 8000 }
+        );
+        setIsSubmitting(false);
+        return;
+      }
+    }
+    // ================================================================
+
     setIsSubmitting(true);
 
+    // ========== UPDATED: Validate email format ==========
     const newErrors = {
       leadName: !formData.leadName.trim(),
       companyName: !formData.companyName.trim(),
       phoneNumber: !formData.phoneNumber.trim(),
-      email: !formData.email.trim(),
+      email: !formData.email.trim() || !validateEmail(formData.email),
     };
+    // ====================================================
 
     setErrors(newErrors);
 
     if (Object.values(newErrors).some(Boolean)) {
-      toast.error("Please fill all required fields");
+      // ========== NEW: Show specific email error message ==========
+      if (!formData.email.trim()) {
+        toast.error("Email is required");
+      } else if (formData.email.trim() && !validateEmail(formData.email)) {
+        toast.error("Please enter a valid email address (e.g., name@company.com)");
+      } else {
+        toast.error("Please fill all required fields");
+      }
+      // ============================================================
       setIsSubmitting(false);
       return;
     }
     console.log("Submitting to:", `${API_URL}/public/contact-form`);
     console.log("FORM DATA BEING SENT 👉", formData);
 
-    
     try {
       const dataToSend = new FormData();
 
@@ -114,14 +199,10 @@ const WebsiteContactForm = () => {
       formData.attachments.forEach((file) => {
         dataToSend.append("attachments", file);
       });
-      
-      
-
 
       await axios.post(
         "http://localhost:5000/api/public/contact-form",
         dataToSend,
-        
       );
       toast.dismiss();
 
@@ -144,7 +225,6 @@ const WebsiteContactForm = () => {
     } catch (err) {
       toast.dismiss();
       toast.error("Something went wrong. Please try again.");
-      
     } finally {
       setIsSubmitting(false);
     }
@@ -226,14 +306,41 @@ const WebsiteContactForm = () => {
                       </label>
 
                       {field.name === "phoneNumber" ? (
-                        <PhoneInput
-                          country="in"
-                          value={formData.phoneNumber}
-                          onChange={(phone) =>
-                            setFormData((p) => ({ ...p, phoneNumber: phone }))
-                          }
-                          inputStyle={{ width: "100%", height: "42px" }}
-                        />
+                      <div>
+                        <div className={`border rounded-lg ${errors.phoneNumber ? "border-red-500" : "border-gray-300"}`}>
+                          <PhoneInput
+                            country="in"
+                            value={formData.phoneNumber}
+                            onChange={(phone) =>
+                              setFormData((p) => ({ ...p, phoneNumber: phone }))
+                            }
+                            specialLabel=""
+                            inputStyle={{
+                              width: "100%",
+                              height: "42px",
+                              fontSize: "14px",
+                              paddingLeft: "55px",
+                              borderRadius: "0.5rem",
+                              boxSizing: "border-box",
+                              border: "none",
+                            }}
+                            buttonStyle={{
+                              borderRadius: "0.5rem 0 0 0.5rem",
+                              height: "42px",
+                              background: "white",
+                              border: "none",
+                              borderRight: "1px solid #e5e7eb",
+                            }}
+                            containerStyle={{ width: "100%" }}
+                            dropdownStyle={{ borderRadius: "0.5rem" }}
+                          />
+                        </div>
+                        {errors.phoneNumber && (
+                          <p className="text-sm text-red-500 mt-1">
+                            Phone number is required
+                          </p>
+                        )}
+                      </div>
                       ) : field.type === "select" ? (
                         <select
                           name={field.name}
@@ -262,15 +369,23 @@ const WebsiteContactForm = () => {
                           name={field.name}
                           value={formData[field.name]}
                           onChange={handleChange}
-                          className="w-full border rounded-lg px-3 py-2 h-11"
+                          className={`w-full border rounded-lg px-3 py-2 h-11 ${errors.email && field.name === "email" ? "border-red-500" : "border-gray-300"}`}
                         />
                       )}
 
-                      {errors[field.name] && (
+                      {errors[field.name] && field.name !== "email" && (
                         <p className="text-sm text-red-500 mt-1">
                           {field.label} is required
                         </p>
                       )}
+                      
+                      {/* ========== NEW: Email error message ========== */}
+                      {field.name === "email" && errors.email && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {!formData.email.trim() ? "Email is required" : "Please enter a valid email address (e.g., name@company.com)"}
+                        </p>
+                      )}
+                      {/* ============================================= */}
                     </div>
                   ))}
                 </div>
@@ -289,9 +404,15 @@ const WebsiteContactForm = () => {
                   className="flex flex-col items-center justify-center w-full min-h-32 border-2 border-dashed border-orange-300 rounded-xl cursor-pointer hover:border-orange-500 hover:bg-orange-50 transition p-6"
                 >
                   {formData.attachments.length === 0 ? (
-                    <span className="text-sm text-gray-600">
-                      Click or drag files here (Max file length 20MB )
-                    </span>
+                    <div className="text-center">
+                      <span className="text-sm text-gray-600">
+                        Click or drag files here (Max file length 20MB)
+                      </span>
+                      {/* ========== NEW: Warning message ========== */}
+                      <span className="text-xs text-red-500 block mt-2">
+                        ⚠️ JavaScript (.js), .exe, .bat files are not allowed for security
+                      </span>
+                    </div>
                   ) : (
                     <div className="w-full flex flex-wrap gap-4">
                       {formData.attachments.map((file, idx) => (
@@ -343,7 +464,6 @@ const WebsiteContactForm = () => {
               />
             </div>
 
-
             <div className="flex justify-end pt-6 border-t">
               <button
                 type="submit"
@@ -356,8 +476,6 @@ const WebsiteContactForm = () => {
           </form>
         </div>
       </div>
-
-      
     </>
   );
 }

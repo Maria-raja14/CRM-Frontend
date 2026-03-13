@@ -6,15 +6,15 @@ const VoiceButton = ({ onCommand, onTranscript, navigate, onNavigationSuccess })
   const [transcript, setTranscript] = useState('');
   const [showTooltip, setShowTooltip] = useState(false);
   const [feedback, setFeedback] = useState('');
-  
+
   const recognitionRef = useRef(null);
   const synthRef = useRef(window.speechSynthesis);
-  const isVoiceActive = useRef(false); 
+  const isVoiceActive = useRef(false);
 
   // Initialize speech recognition only once
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    
+
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
       recognition.continuous = false;
@@ -24,18 +24,18 @@ const VoiceButton = ({ onCommand, onTranscript, navigate, onNavigationSuccess })
       recognition.onresult = (event) => {
         // Only process if voice is active
         if (!isVoiceActive.current) return;
-        
+
         const currentTranscript = Array.from(event.results)
           .map(result => result[0])
           .map(result => result.transcript)
           .join('');
-        
+
         setTranscript(currentTranscript);
-        
+
         if (event.results[0].isFinal) {
           setFeedback(`"${currentTranscript}"`);
           setTimeout(() => setFeedback(''), 2000);
-          
+
           if (onTranscript) onTranscript(currentTranscript);
           handleVoiceCommand(currentTranscript);
           setIsListening(false);
@@ -45,7 +45,7 @@ const VoiceButton = ({ onCommand, onTranscript, navigate, onNavigationSuccess })
 
       recognition.onerror = (event) => {
         if (!isVoiceActive.current) return;
-        
+
         console.error('Speech recognition error:', event.error);
         setFeedback(`Error: ${event.error}`);
         setTimeout(() => setFeedback(''), 3000);
@@ -76,7 +76,7 @@ const VoiceButton = ({ onCommand, onTranscript, navigate, onNavigationSuccess })
   // Handle all voice commands
   const handleVoiceCommand = (text) => {
     const lowerText = text.toLowerCase().trim();
-    
+
     // Fix common misrecognitions
     const command = lowerText
       .replace(/street|streets|streat|striat/gi, 'streak')
@@ -84,9 +84,9 @@ const VoiceButton = ({ onCommand, onTranscript, navigate, onNavigationSuccess })
       .replace(/dell|dells/gi, 'deal')
       .replace(/\s+/g, ' ')
       .trim();
-    
+
     console.log('🎤 Processing voice command:', command);
-        // ===== CREATE LEAD COMMAND =====
+    // ===== CREATE LEAD COMMAND =====
     if (
       command.includes('create lead') ||
       command.includes('create a lead') ||
@@ -106,7 +106,7 @@ const VoiceButton = ({ onCommand, onTranscript, navigate, onNavigationSuccess })
       }
       return;
     }
-        // ===== CREATE DEAL COMMAND =====
+    // ===== CREATE DEAL COMMAND =====
     if (
       command.includes('create deal') ||
       command.includes('create a deal') ||
@@ -117,14 +117,77 @@ const VoiceButton = ({ onCommand, onTranscript, navigate, onNavigationSuccess })
     ) {
       if (navigate) {
         console.log('✅ Navigating to: /createdeal');
-        navigate('/createdeal'); 
+        navigate('/createdeal');
         speak('Opening create deal page');
 
         if (onNavigationSuccess) {
           onNavigationSuccess('Opening Create Deal page');
         }
       }
-      return;
+      if (
+        command.includes('deal metrics') ||
+        command.includes('deals metrics') ||
+        (command.includes('deal') && command.includes('metrics'))
+      ) {
+        if (navigate) {
+          console.log('✅ Navigating to: /test (Deal Metrics)');
+          navigate('/test');
+          speak('Opening Deal Metrics');
+          if (onNavigationSuccess) {
+            onNavigationSuccess('Opening Deal Metrics page');
+          }
+        }
+        return;
+      }
+
+      if (
+        command.includes('loss analysis') ||
+        command.includes('analyze losses') ||
+        (command.includes('loss') && command.includes('analysis'))
+      ) {
+        if (navigate) {
+          console.log('✅ Navigating to: /test1 (Loss Analysis)');
+          navigate('/test1');
+          speak('Opening Loss Analysis');
+          if (onNavigationSuccess) {
+            onNavigationSuccess('Opening Loss Analysis page');
+          }
+        }
+        return;
+      }
+
+      if (
+        command.includes('won analysis') ||
+        command.includes('wins analysis') ||
+        (command.includes('won') && command.includes('analysis'))
+      ) {
+        if (navigate) {
+          console.log('✅ Navigating to: /cltv/dashboard (Won Analysis)');
+          navigate('/cltv/dashboard');
+          speak('Opening Won Analysis');
+          if (onNavigationSuccess) {
+            onNavigationSuccess('Opening Won Analysis page');
+          }
+        }
+        return;
+      }
+
+      if (
+        command.includes('email campaign') ||
+        command.includes('mass email') ||
+        command.includes('campaign') ||
+        (command.includes('email') && !command.includes('proposal') && !command.includes('invoice'))
+      ) {
+        if (navigate) {
+          console.log('✅ Navigating to: /mass-email (Email Campaign)');
+          navigate('/mass-email');
+          speak('Opening Email Campaign');
+          if (onNavigationSuccess) {
+            onNavigationSuccess('Opening Email Campaign page');
+          }
+        }
+        return;
+      }
     }
 
     // ===== NAVIGATION COMMANDS =====
@@ -136,9 +199,9 @@ const VoiceButton = ({ onCommand, onTranscript, navigate, onNavigationSuccess })
         .replace('show', '')
         .replace('me', '')
         .trim();
-      
+
       page = page.replace(/[^\w\s]/gi, '').trim();
-      
+
       // Route mapping (same as before)
       const routes = {
         'admin': { path: '/adminDashboard', name: 'Admin Dashboard' },
@@ -160,13 +223,26 @@ const VoiceButton = ({ onCommand, onTranscript, navigate, onNavigationSuccess })
         'users': { path: '/user/roles', name: 'User Management' },
         'user roles': { path: '/user/roles', name: 'User Roles' },
         'reports': { path: '/reports', name: 'Reports' },
-        'pipeline': { path: '/Pipelineview', name: 'Pipeline View' }
+        'pipeline': { path: '/Pipelineview', name: 'Pipeline View' },
+        'deal metrics': { path: '/test', name: 'Deal Metrics' },
+        'deals metrics': { path: '/test', name: 'Deal Metrics' },
+        'metrics': { path: '/test', name: 'Deal Metrics' },
+        'loss analysis': { path: '/test1', name: 'Loss Analysis' },
+        'loss': { path: '/test1', name: 'Loss Analysis' },
+        'analyze losses': { path: '/test1', name: 'Loss Analysis' },
+        'won analysis': { path: '/cltv/dashboard', name: 'Won Analysis' },
+        'wins analysis': { path: '/cltv/dashboard', name: 'Won Analysis' },
+        'won': { path: '/cltv/dashboard', name: 'Won Analysis' },
+        'email campaign': { path: '/mass-email', name: 'Email Campaign' },
+        'mass email': { path: '/mass-email', name: 'Email Campaign' },
+        'campaign': { path: '/mass-email', name: 'Email Campaign' },
+        'email': { path: '/mass-email', name: 'Email Campaign' }
       };
-      
+
       const pageNoSpaces = page.replace(/\s+/g, '');
       let matchedRoute = null;
       let matchedName = '';
-      
+
       if (routes[page]) {
         matchedRoute = routes[page].path;
         matchedName = routes[page].name;
@@ -182,12 +258,12 @@ const VoiceButton = ({ onCommand, onTranscript, navigate, onNavigationSuccess })
           }
         }
       }
-      
+
       if (matchedRoute && navigate) {
         console.log('✅ Navigating to:', matchedRoute);
         navigate(matchedRoute);
         speak(`Opening ${matchedName}`);
-        
+
         if (onNavigationSuccess) {
           onNavigationSuccess(`Opening ${matchedName} page`);
         }
@@ -273,8 +349,8 @@ const VoiceButton = ({ onCommand, onTranscript, navigate, onNavigationSuccess })
     <div className="relative">
       <button
         onClick={(e) => {
-          e.stopPropagation(); 
-          e.preventDefault();  
+          e.stopPropagation();
+          e.preventDefault();
           if (isListening) {
             stopListening();
           } else {
@@ -286,8 +362,8 @@ const VoiceButton = ({ onCommand, onTranscript, navigate, onNavigationSuccess })
         className={`
           w-10 h-10 rounded-full flex items-center justify-center
           transition-all duration-300
-          ${isListening 
-            ? 'bg-red-500 text-white scale-110' 
+          ${isListening
+            ? 'bg-red-500 text-white scale-110'
             : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:scale-105'
           }
           focus:outline-none focus:ring-2 focus:ring-blue-300
