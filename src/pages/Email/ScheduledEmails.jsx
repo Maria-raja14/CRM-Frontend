@@ -198,13 +198,14 @@ export default function ScheduledEmails() {
                   )}
                 </div>
 
-                <div className="flex items-center gap-2 ml-4">
+                <div className="flex items-center gap-2 sm:ml-4 flex-shrink-0">
                   <button
                     onClick={() => navigate(`/create-email/${email._id}`)}
-                    className="px-3 py-1 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-1"
+                    className="px-2 sm:px-3 py-1 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-1 whitespace-nowrap"
                   >
                     <FileText className="w-3 h-3" />
-                    Edit
+                    <span className="hidden sm:inline">Edit</span>
+                    <span className="sm:hidden">Edit</span>
                   </button>
 
                   {/* Cancel Modal Trigger */}
@@ -212,10 +213,11 @@ export default function ScheduledEmails() {
                     <DialogTrigger asChild>
                       <button
                         onClick={() => setEmailToDelete(email)}
-                        className="px-3 py-1 text-xs bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-1"
+                        className="px-2 sm:px-3 py-1 text-xs bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-1 whitespace-nowrap"
                       >
                         <Trash2 className="w-3 h-3" />
-                        Cancel
+                        <span className="hidden sm:inline">Cancel</span>
+                        <span className="sm:hidden">Cancel</span>
                       </button>
                     </DialogTrigger>
 
