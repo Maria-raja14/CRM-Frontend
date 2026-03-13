@@ -1079,43 +1079,64 @@ export default function LostDealAnalytics() {
 
         {/* Deal-Wise View Table - Separate Card */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mt-5">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-              <Eye size={18} className="text-blue-500" />
-              Deal-Wise View - Lost Opportunities
-            </h3>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-                <button
-                  onClick={() => toggleSort("date")}
-                  className={`flex items-center gap-1 px-3 py-1.5 text-xs rounded-md transition-colors ${
-                    dealSortBy === "date"
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  <Calendar size={14} />
-                  Date
-                  {dealSortBy === "date" &&
-                    (dealSortOrder === "desc" ? <SortDesc size={14} /> : <SortAsc size={14} />)}
-                </button>
-                <button
-                  onClick={() => toggleSort("value")}
-                  className={`flex items-center gap-1 px-3 py-1.5 text-xs rounded-md transition-colors ${
-                    dealSortBy === "value"
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  <IndianRupee size={14} />
-                  Value
-                  {dealSortBy === "value" &&
-                    (dealSortOrder === "desc" ? <SortDesc size={14} /> : <SortAsc size={14} />)}
-                </button>
-              </div>
-              <span className="text-xs text-gray-500">{filteredRecentDeals.length} deals</span>
-            </div>
-          </div>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+
+  {/* Title */}
+  <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center gap-2">
+    <Eye size={18} className="text-blue-500" />
+    Deal-Wise View - Lost Opportunities
+  </h3>
+
+  {/* Right Section */}
+  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+
+    {/* Sort Buttons */}
+    <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 w-fit">
+      <button
+        onClick={() => toggleSort("date")}
+        className={`flex items-center gap-1 px-2 sm:px-3 py-1 text-[11px] sm:text-xs rounded-md transition-colors whitespace-nowrap ${
+          dealSortBy === "date"
+            ? "bg-blue-600 text-white"
+            : "text-gray-600 hover:bg-gray-200"
+        }`}
+      >
+        <Calendar size={14} />
+        Date
+        {dealSortBy === "date" &&
+          (dealSortOrder === "desc" ? (
+            <SortDesc size={14} />
+          ) : (
+            <SortAsc size={14} />
+          ))}
+      </button>
+
+      <button
+        onClick={() => toggleSort("value")}
+        className={`flex items-center gap-1 px-2 sm:px-3 py-1 text-[11px] sm:text-xs rounded-md transition-colors whitespace-nowrap ${
+          dealSortBy === "value"
+            ? "bg-blue-600 text-white"
+            : "text-gray-600 hover:bg-gray-200"
+        }`}
+      >
+        <IndianRupee size={14} />
+        Value
+        {dealSortBy === "value" &&
+          (dealSortOrder === "desc" ? (
+            <SortDesc size={14} />
+          ) : (
+            <SortAsc size={14} />
+          ))}
+      </button>
+    </div>
+
+    {/* Deals Count */}
+    <span className="text-xs text-gray-500 whitespace-nowrap">
+      {filteredRecentDeals.length} deals
+    </span>
+
+  </div>
+
+</div>
 
           {isLoading ? (
             <div className="h-40 flex justify-center items-center">
@@ -1400,55 +1421,77 @@ export default function LostDealAnalytics() {
           </div>
 
           {/* Monthly Trend */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <BarChart3 size={18} className="text-blue-500" />
-              Monthly Trend
-            </h3>
+<div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+    <BarChart3 size={18} className="text-blue-500" />
+    Monthly Trend
+  </h3>
 
-            {isLoading ? (
-              <div className="h-48 flex justify-center items-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              </div>
-            ) : (
-              <div className="h-48">
-                {analytics.monthlyTrend?.length > 0 ? (
-                  <div className="flex items-end h-40 gap-2">
-                    {analytics.monthlyTrend.map((month, index) => {
-                      const maxCount = Math.max(
-                        ...analytics.monthlyTrend.map((m) => m.count)
-                      );
-                      const height =
-                        maxCount > 0 ? (month.count / maxCount) * 100 : 0;
+  {isLoading ? (
+    <div className="h-56 flex justify-center items-center">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    </div>
+  ) : analytics.monthlyTrend?.length > 0 ? (
 
-                      return (
-                        <div key={month._id} className="flex-1 flex flex-col items-center group">
-                          <div className="w-full relative">
-                            <div
-                              className="bg-blue-500 rounded-t transition-all group-hover:bg-blue-600"
-                              style={{ height: `${height}%`, minHeight: "4px" }}
-                            />
-                            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap">
-                              {month.count} deals | {formatCurrency(month.value)}
-                            </div>
-                          </div>
-                          <span className="text-xs mt-2 text-gray-500">
-                            {new Date(month._id + "-01").toLocaleDateString("en-US", {
-                              month: "short",
-                            })}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="h-full flex items-center justify-center text-gray-500">
-                    No trend data available
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+    <div className="h-64">
+      <ResponsiveContainer width="100%" height="100%">
+        <RechartsBarChart
+          data={analytics.monthlyTrend.map((m) => ({
+            month: new Date(m._id + "-01").toLocaleDateString("en-US", {
+              month: "short",
+            }),
+            deals: m.count,
+            value: m.value,
+          }))}
+          margin={{ top: 10, right: 20, left: 0, bottom: 5 }}
+        >
+
+          <CartesianGrid strokeDasharray="3 3" />
+
+          <XAxis dataKey="month" />
+
+          <YAxis />
+
+          <Tooltip
+            contentStyle={{
+              borderRadius: "8px",
+              border: "1px solid #e5e7eb",
+            }}
+            formatter={(value, name) =>
+              name === "Value"
+                ? [`₹${value.toLocaleString()}`, "Value"]
+                : [value, "Deals"]
+            }
+          />
+
+          <Legend />
+
+          {/* Deal Count */}
+          <Bar
+            dataKey="deals"
+            name="Deals"
+            fill="#3B82F6"
+            radius={[6, 6, 0, 0]}
+          />
+
+          {/* Deal Value */}
+          <Bar
+            dataKey="value"
+            name="Value"
+            fill="#10B981"
+            radius={[6, 6, 0, 0]}
+          />
+
+        </RechartsBarChart>
+      </ResponsiveContainer>
+    </div>
+
+  ) : (
+    <div className="h-56 flex items-center justify-center text-gray-500">
+      No trend data available
+    </div>
+  )}
+</div>
         </div>
 
         {/* Right Column - Analysis */}

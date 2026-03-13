@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -15,7 +15,12 @@ import {
   Info,
   Filter,
   CheckSquare,
-  XSquare
+  XSquare,
+  Search,
+  X,
+  AlertCircle,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import PricingSuggestionCard from "./PricingSuggestioncard";
 
@@ -33,13 +38,18 @@ const ClientReviewTable = () => {
   const [pricingDeal, setPricingDeal] = useState(null);
   const [selectedClassification, setSelectedClassification] = useState("all");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [showUnreviewedOnly, setShowUnreviewedOnly] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [userRole, setUserRole] = useState("");
   const [userId, setUserId] = useState("");
+  const [isPageChanging, setIsPageChanging] = useState(false);
   const [pagination, setPagination] = useState({
     page: 1,
     total: 0,
     pages: 1,
-    limit: 5
+    limit: 10,
+    unreviewedCount: 0
   });
 
   const [reviewForm, setReviewForm] = useState({
@@ -50,7 +60,6 @@ const ClientReviewTable = () => {
     delivered: false
   });
 
-  // Updated classifications to match backend exactly
   const classifications = [
     { value: "all", label: "All Clients", color: "bg-gray-100 text-gray-700" },
     { value: "Upsell", label: "Upsell", color: "bg-purple-100 text-purple-700" },
@@ -59,7 +68,61 @@ const ClientReviewTable = () => {
     { value: "Dormant", label: "Dormant", color: "bg-gray-100 text-gray-700" }
   ];
 
-  // Get user info from localStorage
+  // Debounce function
+  const debounce = (func, wait) => {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  };
+
+  // Calculate days since follow-up properly
+  const calculateDaysSince = (lastFollowUpDate) => {
+    if (!lastFollowUpDate) return 0;
+    
+    try {
+      const lastDate = new Date(lastFollowUpDate);
+      const now = new Date();
+      
+      lastDate.setHours(0, 0, 0, 0);
+      now.setHours(0, 0, 0, 0);
+      
+      const diffTime = now - lastDate;
+      const days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      
+      return Math.max(0, days);
+    } catch (error) {
+      console.error("Error calculating days:", error);
+      return 0;
+    }
+  };
+
+  const debouncedSetSearch = useCallback(
+    debounce((value) => {
+      setDebouncedSearch(value);
+      setPagination(prev => ({ ...prev, page: 1 }));
+    }, 500),
+    []
+  );
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    debouncedSetSearch(value);
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    setDebouncedSearch("");
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  // Get user info
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem("user"));
     if (userData) {
@@ -68,7 +131,7 @@ const ClientReviewTable = () => {
     }
   }, []);
 
-  // Listen for CLV updates from pipeline
+  // Listen for CLV updates
   useEffect(() => {
     const handleCLVUpdate = (event) => {
       console.log("🔄 CLV updated, refreshing table...", event.detail);
@@ -81,15 +144,17 @@ const ClientReviewTable = () => {
     return () => {
       window.removeEventListener('clv-updated', handleCLVUpdate);
     };
-  }, []); // Empty dependency array
+  }, []);
 
+  // Fetch data when dependencies change
   useEffect(() => {
     fetchWonDeals();
-  }, [pagination.page, selectedClassification, userRole, userId]);
+  }, [pagination.page, selectedClassification, showUnreviewedOnly, debouncedSearch, userRole, userId]);
 
   const fetchWonDeals = async () => {
     try {
       setLoading(true);
+      setIsPageChanging(true); // Set page changing state
       const token = localStorage.getItem("token");
 
       if (!token) {
@@ -101,63 +166,92 @@ const ClientReviewTable = () => {
       console.log("🔍 Fetching deals with params:", {
         page: pagination.page,
         limit: pagination.limit,
-        classification: selectedClassification
+        classification: selectedClassification,
+        showUnreviewedFirst: showUnreviewedOnly,
+        search: debouncedSearch
       });
 
       const response = await axios.get(
-        `${API_URL}/cltv/won-deals?page=${pagination.page}&limit=${pagination.limit}&classification=${selectedClassification}`,
-        {
+        `${API_URL}/cltv/won-deals`, {
+          params: {
+            page: pagination.page,
+            limit: pagination.limit,
+            classification: selectedClassification,
+            showUnreviewedFirst: showUnreviewedOnly ? "true" : "false",
+            search: debouncedSearch
+          },
           headers: { Authorization: `Bearer ${token}` },
-          timeout: 10000
+          timeout: 30000
         }
       );
 
       if (response.data.success) {
         let fetchedDeals = response.data.data || [];
         
-        // Filter for salesperson - only show their assigned deals
+        // Filter for salesperson
         if (userRole !== "Admin" && userId) {
           fetchedDeals = fetchedDeals.filter(deal => 
             deal.salespersonId === userId
           );
         }
         
-        console.log("📊 Fetched deals:", fetchedDeals.map(d => ({
+        // Process deals to calculate daysSinceFollowUp from followUpDate
+        const processedDeals = fetchedDeals.map(deal => {
+          const lastFollowUp = deal.followUpDate || deal.lastFollowUpDate;
+          const daysSince = calculateDaysSince(lastFollowUp);
+          
+          return {
+            ...deal,
+            daysSinceFollowUp: daysSince,
+            supportTicketCount: deal.supportTicketCount || 0,
+            hasReview: deal.hasReview === true || deal.reviewStatus === "Submitted"
+          };
+        });
+        
+        console.log("📊 Fetched deals:", processedDeals.map(d => ({
           company: d.companyName,
-          daysInactive: d.daysSinceFollowUp
+          daysInactive: d.daysSinceFollowUp,
+          followUpDate: d.followUpDate
         })));
         
-        setDeals(fetchedDeals);
+        setDeals(processedDeals);
         
         if (response.data.pagination) {
           setPagination({
             page: pagination.page,
             total: response.data.pagination.total,
             pages: response.data.pagination.pages,
-            limit: pagination.limit
+            limit: pagination.limit,
+            unreviewedCount: response.data.pagination.unreviewedCount || 0
           });
         }
       }
     } catch (error) {
       console.error("Error fetching won deals:", error);
-      toast.error(error.response?.data?.message || "Failed to load client reviews");
+      
+      if (error.code === "ECONNABORTED") {
+        toast.error("Request timeout - try a more specific search");
+      } else if (error.response?.status === 401) {
+        toast.error("Session expired. Please login again.");
+        navigate("/login");
+      } else {
+        toast.error(error.response?.data?.message || "Failed to load client reviews");
+      }
+      
       setDeals([]);
     } finally {
       setLoading(false);
+      // Add a small delay to prevent flickering
+      setTimeout(() => setIsPageChanging(false), 300);
     }
   };
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    // Reset to page 1
     setPagination(prev => ({ ...prev, page: 1 }));
-    
-    // Small delay to ensure state updates
-    setTimeout(async () => {
-      await fetchWonDeals();
-      setRefreshing(false);
-      toast.success("Data refreshed!");
-    }, 100);
+    await fetchWonDeals();
+    setRefreshing(false);
+    toast.success("Data refreshed!");
   };
 
   const handleRowClick = (deal, e) => {
@@ -167,15 +261,13 @@ const ClientReviewTable = () => {
 
   const handleViewClientDetails = (deal, e) => {
     e.stopPropagation();
-    const encodedCompanyName = encodeURIComponent(deal.companyName);
-    navigate(`/cltv/client/${encodedCompanyName}`);
+    navigate(`/cltv/client/${encodeURIComponent(deal.companyName)}`);
   };
 
   const handleOpenReview = async (deal, e) => {
     e.stopPropagation();
     setSelectedDeal(deal);
     
-    // If deal has a review, fetch the existing review data
     if (deal.hasReview) {
       try {
         const token = localStorage.getItem("token");
@@ -194,7 +286,6 @@ const ClientReviewTable = () => {
             delivered: latestReview.delivered || false
           });
         } else {
-          // Fallback to deal data if review fetch fails
           setReviewForm({
             supportTickets: deal.supportTicketCount || 0,
             progress: deal.reviewProgress || "Average",
@@ -205,7 +296,6 @@ const ClientReviewTable = () => {
         }
       } catch (error) {
         console.error("Error fetching review data:", error);
-        // Fallback to deal data
         setReviewForm({
           supportTickets: deal.supportTicketCount || 0,
           progress: deal.reviewProgress || "Average",
@@ -215,7 +305,6 @@ const ClientReviewTable = () => {
         });
       }
     } else {
-      // New review - populate with deal data
       setReviewForm({
         supportTickets: deal.supportTicketCount || 0,
         progress: deal.reviewProgress || "Average",
@@ -232,17 +321,10 @@ const ClientReviewTable = () => {
     e.preventDefault();
     if (!selectedDeal) return;
 
-    // Validate required fields
-    if (!selectedDeal._id || !selectedDeal.companyName || !selectedDeal.clientName) {
-      toast.error("Missing deal information. Please refresh and try again.");
-      return;
-    }
-
     try {
       setSubmitting(true);
       const token = localStorage.getItem("token");
 
-      // Prepare review data with proper validation
       const reviewData = {
         companyId: selectedDeal._id,
         companyName: selectedDeal.companyName || "",
@@ -257,8 +339,6 @@ const ClientReviewTable = () => {
         reviewNotes: reviewForm.reviewNotes || "",
         clientHealthScore: parseInt(reviewForm.clientHealthScore) || 50
       };
-
-      console.log("Submitting review:", reviewData);
 
       const response = await axios.post(
         `${API_URL}/cltv/client-review`,
@@ -278,28 +358,18 @@ const ClientReviewTable = () => {
         setPricingDeal(selectedDeal);
         setShowPricingCard(true);
         
-        // Dispatch event to notify other components
         window.dispatchEvent(new CustomEvent('clv-updated', { 
           detail: { companyName: selectedDeal.companyName } 
         }));
         
-        await fetchWonDeals(); // Refresh the table to show updated data
+        await fetchWonDeals();
       } else {
         toast.error(response.data.message || "Failed to save review");
       }
     } catch (error) {
       console.error("Error submitting review:", error);
-      
-      // Show more detailed error message
       if (error.response) {
-        console.error("Response data:", error.response.data);
-        console.error("Response status:", error.response.status);
-        
-        if (error.response.data?.message) {
-          toast.error(error.response.data.message);
-        } else {
-          toast.error(`Error ${error.response.status}: Failed to save review`);
-        }
+        toast.error(error.response.data?.message || "Failed to save review");
       } else if (error.request) {
         toast.error("No response from server. Please check your connection.");
       } else {
@@ -311,7 +381,16 @@ const ClientReviewTable = () => {
   };
 
   const handlePageChange = (newPage) => {
-    setPagination({ ...pagination, page: newPage });
+    if (newPage >= 1 && newPage <= pagination.pages && newPage !== pagination.page) {
+      setIsPageChanging(true);
+      setPagination({ ...pagination, page: newPage });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const toggleUnreviewedOnly = () => {
+    setShowUnreviewedOnly(!showUnreviewedOnly);
+    setPagination(prev => ({ ...prev, page: 1 }));
   };
 
   const getClassificationBadge = (classification) => {
@@ -339,19 +418,9 @@ const ClientReviewTable = () => {
     );
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    try {
-      return new Date(dateString).toLocaleDateString();
-    } catch {
-      return "Invalid Date";
-    }
-  };
-
   const formatCurrency = (value) => {
     if (!value) return "₹0";
     try {
-      // Handle string values like "₹7,50,000"
       const numericValue = parseFloat(value.toString().replace(/[₹,\s]/g, ''));
       return `₹${numericValue.toLocaleString()}`;
     } catch {
@@ -359,7 +428,35 @@ const ClientReviewTable = () => {
     }
   };
 
-  if (loading && deals.length === 0) {
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const delta = 2;
+    const range = [];
+    const rangeWithDots = [];
+    let l;
+
+    for (let i = 1; i <= pagination.pages; i++) {
+      if (i === 1 || i === pagination.pages || (i >= pagination.page - delta && i <= pagination.page + delta)) {
+        range.push(i);
+      }
+    }
+
+    range.forEach((i) => {
+      if (l) {
+        if (i - l === 2) {
+          rangeWithDots.push(l + 1);
+        } else if (i - l !== 1) {
+          rangeWithDots.push('...');
+        }
+      }
+      rangeWithDots.push(i);
+      l = i;
+    });
+
+    return rangeWithDots;
+  };
+
+  if (loading && deals.length === 0 && pagination.page === 1) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -370,62 +467,113 @@ const ClientReviewTable = () => {
   return (
     <>
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-800">Client Review Table</h2>
-            <p className="text-sm text-gray-500 mt-1">
-              {userRole === "Admin" 
-                ? "All clients with Closed Won deals requiring health review"
-                : "Your assigned clients with Closed Won deals"}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            {/* Filter Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm flex items-center gap-2 hover:bg-gray-50"
-              >
-                <Filter size={16} />
-                {classifications.find(c => c.value === selectedClassification)?.label || "Filter"}
-              </button>
-              
-              {showFilterDropdown && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-                  {classifications.map((cls) => (
-                    <button
-                      key={cls.value}
-                      onClick={() => {
-                        setSelectedClassification(cls.value);
-                        setPagination(prev => ({ ...prev, page: 1 }));
-                        setShowFilterDropdown(false);
-                      }}
-                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg ${
-                        selectedClassification === cls.value ? 'bg-blue-50 text-blue-600' : ''
-                      }`}
-                    >
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs ${cls.color}`}>
-                        {cls.label}
-                      </span>
-                    </button>
-                  ))}
-                </div>
+        <div className="px-6 py-4 border-b border-gray-200">
+          {/* Header with title */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-800">Client Review Table</h2>
+              <p className="text-sm text-gray-500 mt-1">
+                {userRole === "Admin" 
+                  ? "All clients with Closed Won deals requiring health review"
+                  : "Your assigned clients with Closed Won deals"}
+              </p>
+              {pagination.unreviewedCount > 0 && (
+                <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                  <AlertCircle size={12} />
+                  {pagination.unreviewedCount} unreviewed {pagination.unreviewedCount === 1 ? 'client' : 'clients'}
+                </p>
               )}
             </div>
             
-            <button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className={`p-2 rounded-lg transition ${
-                refreshing 
-                  ? 'bg-blue-100 text-blue-600 cursor-not-allowed' 
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-              title="Refresh data"
-            >
-              <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
-            </button>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              {/* Search Bar */}
+              <div className="relative flex-1 sm:w-64">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  placeholder="Search by company or deal..."
+                  className="w-full pl-8 pr-8 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                />
+                <Search size={14} className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                {searchQuery && (
+                  <button onClick={clearSearch} className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                    <X size={14} className="text-gray-400 hover:text-gray-600" />
+                  </button>
+                )}
+              </div>
+
+              {/* Classification Filter */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                  className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm flex items-center gap-2 hover:bg-gray-50"
+                >
+                  <Filter size={16} />
+                  <span className="hidden sm:inline">
+                    {classifications.find(c => c.value === selectedClassification)?.label || "Filter"}
+                  </span>
+                </button>
+                
+                {showFilterDropdown && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                    {classifications.map((cls) => (
+                      <button
+                        key={cls.value}
+                        onClick={() => {
+                          setSelectedClassification(cls.value);
+                          setPagination(prev => ({ ...prev, page: 1 }));
+                          setShowFilterDropdown(false);
+                        }}
+                        className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg ${
+                          selectedClassification === cls.value ? 'bg-blue-50 text-blue-600' : ''
+                        }`}
+                      >
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs ${cls.color}`}>
+                          {cls.label}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Unreviewed Only Toggle Button */}
+              <button
+                onClick={toggleUnreviewedOnly}
+                className={`px-3 py-2 rounded-lg text-sm flex items-center gap-2 transition-all ${
+                  showUnreviewedOnly 
+                    ? 'bg-amber-600 text-white' 
+                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+                title={showUnreviewedOnly ? "Show all clients" : "Show unreviewed only"}
+              >
+                <AlertCircle size={16} />
+                <span className="hidden sm:inline">Unreviewed</span>
+                {showUnreviewedOnly ? <CheckCircle size={14} /> : <XSquare size={14} />}
+              </button>
+              
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing || loading}
+                className={`p-2 rounded-lg transition ${
+                  refreshing || loading
+                    ? 'bg-blue-100 text-blue-600 cursor-not-allowed' 
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+                title="Refresh data"
+              >
+                <RefreshCw size={18} className={refreshing || loading ? "animate-spin" : ""} />
+              </button>
+            </div>
           </div>
+          
+          {/* Search results info */}
+          {debouncedSearch && (
+            <p className="text-xs text-gray-500 mt-2">
+              Search results for "{debouncedSearch}" • {pagination.total} matches
+            </p>
+          )}
         </div>
 
         {showPricingCard && pricingDeal && (
@@ -438,178 +586,245 @@ const ClientReviewTable = () => {
           </div>
         )}
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Client Name (Deal)
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Company Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Deal Value
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Delivered
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Assigned To
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Support Tickets
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Days Inactive
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Progress
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Classification
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {deals.length > 0 ? (
-                deals.map((deal, idx) => (
-                  <tr
-                    key={idx}
-                    className="hover:bg-gray-50 cursor-pointer transition-colors"
-                    onClick={(e) => handleRowClick(deal, e)}
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-2">
-                          <User size={14} />
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {deal.clientName}
+        {/* Fixed height container to prevent jumping */}
+        <div className="overflow-x-auto" style={{ minHeight: '400px' }}>
+          {isPageChanging ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+          ) : (
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Client Name
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Company
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Deal Value
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Delivered
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Assigned To
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Tickets
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Days Inactive
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Progress
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Classification
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {deals.length > 0 ? (
+                  deals.map((deal, idx) => (
+                    <tr
+                      key={deal._id || idx}
+                      className={`hover:bg-gray-50 cursor-pointer transition-colors ${
+                        !deal.hasReview ? 'bg-amber-50/30 hover:bg-amber-50' : ''
+                      }`}
+                      onClick={(e) => handleRowClick(deal, e)}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-2 ${
+                            !deal.hasReview 
+                              ? 'bg-amber-100 text-amber-600' 
+                              : 'bg-blue-100 text-blue-600'
+                          }`}>
+                            <User size={14} />
                           </div>
-                          {deal.hasReview && (
-                            <span className="text-xs text-green-600 flex items-center gap-1">
-                              <CheckCircle size={10} />
-                              Reviewed
-                            </span>
-                          )}
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {deal.clientName}
+                            </div>
+                            {!deal.hasReview && (
+                              <span className="text-xs text-amber-600 flex items-center gap-1">
+                                <AlertCircle size={10} />
+                                Needs Review
+                              </span>
+                            )}
+                            {deal.hasReview && (
+                              <span className="text-xs text-green-600 flex items-center gap-1">
+                                <CheckCircle size={10} />
+                                Reviewed
+                              </span>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <Building size={14} className="text-gray-400 mr-1" />
-                        <span className="text-sm text-gray-700">{deal.companyName}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {formatCurrency(deal.dealValue)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {deal.delivered ? (
-                        <span className="flex items-center gap-1 text-green-600">
-                          <CheckSquare size={16} />
-                          Yes
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <Building size={14} className="text-gray-400 mr-1" />
+                          <span className="text-sm text-gray-700">{deal.companyName}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {formatCurrency(deal.dealValue)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {deal.delivered ? (
+                          <span className="flex items-center gap-1 text-green-600">
+                            <CheckSquare size={16} />
+                            Yes
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 text-gray-400">
+                            <XSquare size={16} />
+                            No
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {deal.assignedTo}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <div className="flex items-center gap-1">
+                          <MessageSquare size={14} className="text-gray-400" />
+                          <span className={deal.supportTicketCount > 5 ? 'text-red-600 font-medium' : 'text-gray-700'}>
+                            {deal.supportTicketCount || 0}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <span className={deal.daysSinceFollowUp > 90 ? 'text-red-600 font-medium' : 'text-gray-700'}>
+                          {deal.daysSinceFollowUp || 0} days
                         </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {getProgressBadge(deal.reviewProgress || deal.progress)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {getClassificationBadge(deal.classification)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {deal.hasReview ? (
+                          <span className="flex items-center gap-1 text-green-600">
+                            <CheckCircle size={16} />
+                            Submitted
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 text-amber-600">
+                            <AlertTriangle size={16} />
+                            Pending
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={(e) => handleOpenReview(deal, e)}
+                            className={`flex items-center gap-1 transition-colors text-xs px-2 py-1 rounded ${
+                              deal.hasReview 
+                                ? 'text-blue-600 bg-blue-50 hover:bg-blue-100' 
+                                : 'text-amber-600 bg-amber-50 hover:bg-amber-100 font-medium'
+                            }`}
+                            title={deal.hasReview ? "Edit Review" : "Add Review"}
+                          >
+                            <Eye size={14} />
+                            {deal.hasReview ? "Edit" : "Review"}
+                          </button>
+                          
+                          <button
+                            onClick={(e) => handleViewClientDetails(deal, e)}
+                            className="text-purple-600 hover:text-purple-800 flex items-center gap-1 transition-colors text-xs bg-purple-50 px-2 py-1 rounded"
+                            title="View Client Details"
+                          >
+                            <ExternalLink size={14} />
+                            Details
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="11" className="px-6 py-8 text-center text-gray-500">
+                      {debouncedSearch ? (
+                        <div className="flex flex-col items-center gap-2">
+                          <Search size={24} className="text-gray-300" />
+                          <p>No results found for "{debouncedSearch}"</p>
+                          <button 
+                            onClick={clearSearch}
+                            className="text-sm text-blue-600 hover:underline"
+                          >
+                            Clear search
+                          </button>
+                        </div>
+                      ) : userRole === "Admin" ? (
+                        "No closed won deals found"
                       ) : (
-                        <span className="flex items-center gap-1 text-gray-400">
-                          <XSquare size={16} />
-                          No
-                        </span>
+                        "No deals assigned to you"
                       )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {deal.assignedTo}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <MessageSquare size={14} className="text-gray-400" />
-                        {deal.supportTicketCount}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {deal.daysSinceFollowUp || 0} days
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {getProgressBadge(deal.reviewProgress || deal.progress)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {getClassificationBadge(deal.classification)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {deal.reviewStatus === "Submitted" ? (
-                        <span className="flex items-center gap-1 text-green-600">
-                          <CheckCircle size={16} />
-                          Submitted
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1 text-yellow-600">
-                          <AlertTriangle size={16} />
-                          Pending
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={(e) => handleOpenReview(deal, e)}
-                          className="text-blue-600 hover:text-blue-800 flex items-center gap-1 transition-colors text-xs bg-blue-50 px-2 py-1 rounded"
-                          title={deal.hasReview ? "Edit Review" : "Add Review"}
-                        >
-                          <Eye size={14} />
-                          {deal.hasReview ? "Edit" : "Review"}
-                        </button>
-                        
-                        <button
-                          onClick={(e) => handleViewClientDetails(deal, e)}
-                          className="text-purple-600 hover:text-purple-800 flex items-center gap-1 transition-colors text-xs bg-purple-50 px-2 py-1 rounded"
-                          title="View Client Details"
-                        >
-                          <ExternalLink size={14} />
-                          Details
-                        </button>
-                      </div>
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="11" className="px-6 py-8 text-center text-gray-500">
-                    {userRole === "Admin" 
-                      ? "No closed won deals found"
-                      : "No deals assigned to you"}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                )}
+              </tbody>
+            </table>
+          )}
         </div>
 
         {/* Pagination */}
         {pagination.pages > 1 && (
-          <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+          <div className="px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-sm text-gray-500">
-              Showing page {pagination.page} of {pagination.pages}
+              Showing page {pagination.page} of {pagination.pages} • Total: {pagination.total} clients
+              {pagination.unreviewedCount > 0 && (
+                <span className="ml-2 text-amber-600">
+                  ({pagination.unreviewedCount} unreviewed)
+                </span>
+              )}
             </div>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => handlePageChange(pagination.page - 1)}
-                disabled={pagination.page === 1}
-                className="px-3 py-1 border rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                disabled={pagination.page === 1 || isPageChanging}
+                className="px-3 py-1 border rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
               >
                 Previous
               </button>
+              
+              <div className="flex items-center gap-1">
+                {getPageNumbers().map((pageNum, index) => (
+                  pageNum === '...' ? (
+                    <span key={`dots-${index}`} className="px-2 text-gray-400">...</span>
+                  ) : (
+                    <button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      disabled={isPageChanging}
+                      className={`w-8 h-8 rounded-lg text-sm transition-all ${
+                        pagination.page === pageNum
+                          ? 'bg-blue-600 text-white font-medium'
+                          : 'hover:bg-gray-100 text-gray-700'
+                      } ${isPageChanging ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      {pageNum}
+                    </button>
+                  )
+                ))}
+              </div>
+              
               <button
                 onClick={() => handlePageChange(pagination.page + 1)}
-                disabled={pagination.page === pagination.pages}
-                className="px-3 py-1 border rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                disabled={pagination.page === pagination.pages || isPageChanging}
+                className="px-3 py-1 border rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
               >
                 Next
               </button>
@@ -627,19 +842,32 @@ const ClientReviewTable = () => {
                 {selectedDeal.hasReview ? "Edit Client Review" : "New Client Review"}
               </h3>
 
-              {/* Auto-filled Info */}
+              {!selectedDeal.hasReview && (
+                <div className="bg-amber-50 p-4 rounded-lg mb-6 border border-amber-200">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle size={20} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-amber-800">This client needs a review</h4>
+                      <p className="text-sm text-amber-700 mt-1">
+                        Complete this review to classify the client and update their CLV metrics.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="bg-blue-50 p-4 rounded-lg mb-6">
                 <h4 className="text-sm font-medium text-blue-800 mb-2 flex items-center gap-1">
                   <Info size={14} />
-                  Client Information (Read Only)
+                  Client Information
                 </h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <p className="text-blue-600">Client Name (Deal):</p>
+                    <p className="text-blue-600">Client Name:</p>
                     <p className="font-medium">{selectedDeal.clientName}</p>
                   </div>
                   <div>
-                    <p className="text-blue-600">Company Name:</p>
+                    <p className="text-blue-600">Company:</p>
                     <p className="font-medium">{selectedDeal.companyName}</p>
                   </div>
                   <div>
@@ -647,30 +875,14 @@ const ClientReviewTable = () => {
                     <p className="font-medium">{formatCurrency(selectedDeal.dealValue)}</p>
                   </div>
                   <div>
-                    <p className="text-blue-600">Assigned Sales Person:</p>
+                    <p className="text-blue-600">Assigned To:</p>
                     <p className="font-medium">{selectedDeal.assignedTo}</p>
                   </div>
-                  <div>
-                    <p className="text-blue-600">Support Ticket Count:</p>
-                    <p className="font-medium">{selectedDeal.supportTicketCount}</p>
-                  </div>
-                  <div>
-                    <p className="text-blue-600">Days Inactive:</p>
-                    <p className="font-medium">{selectedDeal.daysSinceFollowUp || 0} days</p>
-                  </div>
-                  {selectedDeal.hasReview && (
-                    <div className="col-span-2 mt-2 p-2 bg-green-50 rounded-lg">
-                      <p className="text-xs text-green-700">
-                        <span className="font-medium">Note:</span> Editing this review will recalculate the client's classification and CLV.
-                      </p>
-                    </div>
-                  )}
                 </div>
               </div>
 
               <form onSubmit={handleSubmitReview}>
                 <div className="space-y-4">
-                  {/* Progress Dropdown */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Progress
@@ -687,7 +899,6 @@ const ClientReviewTable = () => {
                     </select>
                   </div>
 
-                  {/* Review Notes */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Review Notes
@@ -701,10 +912,9 @@ const ClientReviewTable = () => {
                     />
                   </div>
 
-                  {/* Support Tickets (Manual Override) */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Support Tickets (Manual Override)
+                      Support Tickets
                     </label>
                     <input
                       type="number"
@@ -715,10 +925,9 @@ const ClientReviewTable = () => {
                     />
                   </div>
 
-                  {/* Client Health Score */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Client Health Score (0-100)
+                      Health Score (0-100)
                     </label>
                     <input
                       type="number"
@@ -728,14 +937,8 @@ const ClientReviewTable = () => {
                       onChange={(e) => setReviewForm({ ...reviewForm, clientHealthScore: parseInt(e.target.value) || 50 })}
                       className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
                     />
-                    <p className="text-xs text-gray-400 mt-1">
-                      {reviewForm.clientHealthScore >= 75 ? "Excellent" : 
-                       reviewForm.clientHealthScore >= 50 ? "Good" : 
-                       reviewForm.clientHealthScore >= 25 ? "Fair" : "Poor"}
-                    </p>
                   </div>
 
-                  {/* Delivered Toggle */}
                   <div className="flex items-center gap-4">
                     <label className="flex items-center gap-2">
                       <input
