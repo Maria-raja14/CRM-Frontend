@@ -281,4 +281,6 @@ export const useWhatsapp = () => {
   const ctx = useContext(WhatsappContext);
   if (!ctx) throw new Error("useWhatsapp must be used inside WhatsappProvider");
   return ctx;
-};
+};//all work correctly..
+
+
