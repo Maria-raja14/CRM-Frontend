@@ -130,8 +130,8 @@ const VoiceButton = ({ onCommand, onTranscript, navigate, onNavigationSuccess })
         (command.includes('deal') && command.includes('metrics'))
       ) {
         if (navigate) {
-          console.log('✅ Navigating to: /test (Deal Metrics)');
-          navigate('/test');
+          console.log('✅ Navigating to: /DealAnalysis (Deal Metrics)');
+          navigate('/DealAnalysis');
           speak('Opening Deal Metrics');
           if (onNavigationSuccess) {
             onNavigationSuccess('Opening Deal Metrics page');
@@ -146,8 +146,8 @@ const VoiceButton = ({ onCommand, onTranscript, navigate, onNavigationSuccess })
         (command.includes('loss') && command.includes('analysis'))
       ) {
         if (navigate) {
-          console.log('✅ Navigating to: /test1 (Loss Analysis)');
-          navigate('/test1');
+          console.log('✅ Navigating to: /LossAnalysis (Loss Analysis)');
+          navigate('/LossAnalysis');
           speak('Opening Loss Analysis');
           if (onNavigationSuccess) {
             onNavigationSuccess('Opening Loss Analysis page');
@@ -224,12 +224,12 @@ const VoiceButton = ({ onCommand, onTranscript, navigate, onNavigationSuccess })
         'user roles': { path: '/user/roles', name: 'User Roles' },
         'reports': { path: '/reports', name: 'Reports' },
         'pipeline': { path: '/Pipelineview', name: 'Pipeline View' },
-        'deal metrics': { path: '/test', name: 'Deal Metrics' },
-        'deals metrics': { path: '/test', name: 'Deal Metrics' },
-        'metrics': { path: '/test', name: 'Deal Metrics' },
-        'loss analysis': { path: '/test1', name: 'Loss Analysis' },
-        'loss': { path: '/test1', name: 'Loss Analysis' },
-        'analyze losses': { path: '/test1', name: 'Loss Analysis' },
+        'deal metrics': { path: '/DealAnalysis', name: 'Deal Metrics' },
+        'deals metrics': { path: '/DealAnalysis', name: 'Deal Metrics' },
+        'metrics': { path: '/DealAnalysis', name: 'Deal Metrics' },
+        'loss analysis': { path: '/LossAnalysis', name: 'Loss Analysis' },
+        'loss': { path: '/LossAnalysis', name: 'Loss Analysis' },
+        'analyze losses': { path: '/LossAnalysis', name: 'Loss Analysis' },
         'won analysis': { path: '/cltv/dashboard', name: 'Won Analysis' },
         'wins analysis': { path: '/cltv/dashboard', name: 'Won Analysis' },
         'won': { path: '/cltv/dashboard', name: 'Won Analysis' },

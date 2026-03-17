@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from "react-toastify";
 import {
-  Eye,
   Download,
   X,
   ArrowLeft,
@@ -11,9 +10,12 @@ import {
   Paperclip,
   Users,
   Calendar,
-  User as UserIcon,
   FileText,
-  Clock
+  Clock,
+  Trash2,
+  CheckSquare,
+  Square,
+  AlertCircle
 } from 'lucide-react';
 
 const EmailHistory = () => { 
@@ -24,9 +26,18 @@ const EmailHistory = () => {
   const [historyPage, setHistoryPage] = useState(1);
   const [historyLimit, setHistoryLimit] = useState(15);
   const [historyTotalPages, setHistoryTotalPages] = useState(1);
+  const [historyTotal, setHistoryTotal] = useState(0);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   
+  // Delete states
+  const [selectedEmails, setSelectedEmails] = useState([]);
+  const [selectAllMode, setSelectAllMode] = useState(false); // Track if "Select All" is active
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [emailToDelete, setEmailToDelete] = useState(null);
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
   // Modal states
   const [selectedRecipients, setSelectedRecipients] = useState(null);
   const [showRecipientsModal, setShowRecipientsModal] = useState(false);
@@ -66,6 +77,7 @@ const EmailHistory = () => {
 
       setHistoryData(response.data.data);
       setHistoryTotalPages(response.data.totalPages);
+      setHistoryTotal(response.data.total);
       setHistoryPage(page);
 
     } catch (error) {
@@ -158,7 +170,7 @@ const EmailHistory = () => {
 
   // Get contact name by email
   const getContactNameByEmail = (email) => {
-    const contact = allContacts.find(c => c.email.toLowerCase() === email.toLowerCase());
+    const contact = allContacts.find(c => c.email?.toLowerCase() === email?.toLowerCase());
     return contact ? contact.name : email;
   };
 
@@ -174,15 +186,151 @@ const EmailHistory = () => {
     fetchHistory(1, newLimit);
   };
 
+  // Selection handlers
+  const handleSelectEmail = (emailId) => {
+    // If in "Select All" mode, turning it off
+    if (selectAllMode) {
+      setSelectAllMode(false);
+    }
+    
+    setSelectedEmails(prev => {
+      if (prev.includes(emailId)) {
+        return prev.filter(id => id !== emailId);
+      } else {
+        return [...prev, emailId];
+      }
+    });
+  };
+
+  // Handle Select All - This now means ALL emails across all pages
+  const handleSelectAll = () => {
+    if (selectAllMode) {
+      // Deselect all
+      setSelectedEmails([]);
+      setSelectAllMode(false);
+      toast.info("Selection cleared");
+    } else {
+      // Select ALL emails
+      setSelectAllMode(true);
+      
+      // For UI feedback, select all current page emails
+      const currentPageIds = historyData.map(email => email._id);
+      setSelectedEmails(currentPageIds);
+      
+      toast.success(`All ${historyTotal} emails will be deleted when you confirm`, {
+        icon: <AlertCircle className="w-5 h-5" />
+      });
+    }
+  };
+
+  // Check if an email is selected
+  const isEmailSelected = (emailId) => {
+    return selectAllMode || selectedEmails.includes(emailId);
+  };
+
+  // Get selection count display
+  const getSelectionCount = () => {
+    if (selectAllMode) {
+      return historyTotal;
+    }
+    return selectedEmails.length;
+  };
+
+  // Get selection text
+  const getSelectionText = () => {
+    const count = getSelectionCount();
+    if (count === 0) return '';
+    
+    if (selectAllMode) {
+      return `All ${count} emails selected across all pages`;
+    }
+    return `${count} email${count > 1 ? 's' : ''} selected`;
+  };
+
+  // Delete handlers
+  const handleDeleteClick = (email) => {
+    setEmailToDelete(email);
+    setShowDeleteModal(true);
+  };
+
+  const handleBulkDeleteClick = () => {
+    if (getSelectionCount() > 0) {
+      setShowBulkDeleteModal(true);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!emailToDelete) return;
+    
+    try {
+      setDeleting(true);
+      const token = localStorage.getItem("token");
+      
+      await axios.delete(`${API_URL}/email/delete/${emailToDelete._id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success("Email deleted successfully");
+      setShowDeleteModal(false);
+      setEmailToDelete(null);
+      
+      // Refresh current page
+      fetchHistory(historyPage, historyLimit);
+      
+    } catch (error) {
+      console.error("Delete error:", error);
+      toast.error(error.response?.data?.message || "Failed to delete email");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const confirmBulkDelete = async () => {
+    const selectionCount = getSelectionCount();
+    if (selectionCount === 0) return;
+    
+    try {
+      setDeleting(true);
+      const token = localStorage.getItem("token");
+      
+      // Prepare request based on selection mode
+      const requestData = selectAllMode 
+        ? { selectAll: true } // This tells backend to delete ALL emails
+        : { emailIds: selectedEmails }; // Delete specific emails
+      
+      const response = await axios.post(
+        `${API_URL}/email/bulk-delete`,
+        requestData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      toast.success(response.data.message || "Emails deleted successfully");
+      setShowBulkDeleteModal(false);
+      setSelectedEmails([]);
+      setSelectAllMode(false);
+      
+      // Refresh current page
+      fetchHistory(historyPage, historyLimit);
+      
+    } catch (error) {
+      console.error("Bulk delete error:", error);
+      toast.error(error.response?.data?.message || "Failed to delete emails");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   // Download attachment
   const downloadAttachment = async (file) => {
     try {
       const token = localStorage.getItem("token");
-      const downloadUrl = `${API_URL}/files/download?filePath=${file.path}`;
+      const downloadUrl = `${API_URL}/files/download?filePath=${encodeURIComponent(file.path)}`;
 
       const response = await fetch(downloadUrl, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      
+      if (!response.ok) throw new Error('Download failed');
       
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
@@ -191,6 +339,7 @@ const EmailHistory = () => {
       a.download = file.filename;
       a.click();
       window.URL.revokeObjectURL(url);
+      toast.success("File downloaded successfully");
     } catch (error) {
       toast.error("Failed to download file");
     }
@@ -200,20 +349,38 @@ const EmailHistory = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="p-6 flex items-center gap-4">
-          <button
-            onClick={() => navigate('/mass-email')}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Go back"
-          >
-            <ArrowLeft className="w-6 h-6 text-gray-600" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">Email History</h1>
-            <p className="text-gray-600 text-sm mt-1">
-              View all sent emails and their details
-            </p>
+        <div className="p-6 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate('/mass-email')}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Go back"
+            >
+              <ArrowLeft className="w-6 h-6 text-gray-600" />
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800">Email History</h1>
+              <p className="text-gray-600 text-sm mt-1">
+                Total: {historyTotal} emails • Page {historyPage} of {historyTotalPages}
+              </p>
+            </div>
           </div>
+          
+          {/* Bulk delete button and selection info */}
+          {getSelectionCount() > 0 && (
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-600">
+                {getSelectionText()}
+              </span>
+              <button
+                onClick={handleBulkDeleteClick}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete Selected ({getSelectionCount()})
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -236,11 +403,41 @@ const EmailHistory = () => {
           </div>
         ) : (
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            {/* Select All Row */}
+            <div className="p-4 border-b bg-blue-50 flex items-center gap-4">
+              <button
+                onClick={handleSelectAll}
+                className="flex items-center gap-2 text-sm font-medium"
+              >
+                {selectAllMode ? (
+                  <>
+                    <CheckSquare className="w-5 h-5 text-blue-600" />
+                    <span className="text-blue-600">✓ All {historyTotal} emails selected</span>
+                  </>
+                ) : (
+                  <>
+                    <Square className="w-5 h-5 text-gray-600" />
+                    <span className="text-gray-700">Select all {historyTotal} emails</span>
+                  </>
+                )}
+              </button>
+              {selectAllMode && (
+                <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
+                  All pages selected
+                </span>
+              )}
+            </div>
+
             {/* Table View for larger screens */}
             <div className="hidden md:block overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
+                    <th className="px-6 py-3 text-left">
+                      <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Select
+                      </span>
+                    </th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                       Template
                     </th>
@@ -261,11 +458,27 @@ const EmailHistory = () => {
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                       Sent Time
                     </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {historyData.map((email) => (
                     <tr key={email._id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        <button
+                          onClick={() => handleSelectEmail(email._id)}
+                          className="flex items-center"
+                          disabled={selectAllMode}
+                        >
+                          {isEmailSelected(email._id) ? (
+                            <CheckSquare className={`w-4 h-4 ${selectAllMode ? 'text-blue-300' : 'text-blue-600'}`} />
+                          ) : (
+                            <Square className="w-4 h-4 text-gray-400" />
+                          )}
+                        </button>
+                      </td>
                       <td className="px-6 py-4">
                         <button
                           onClick={() => {
@@ -336,6 +549,16 @@ const EmailHistory = () => {
                           {new Date(email.createdAt).toLocaleString()}
                         </div>
                       </td>
+                      <td className="px-6 py-4">
+                        <button
+                          onClick={() => handleDeleteClick(email)}
+                          className="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50"
+                          title="Delete email"
+                          disabled={selectAllMode}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -347,20 +570,41 @@ const EmailHistory = () => {
               {historyData.map((email) => (
                 <div key={email._id} className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
                   <div className="flex justify-between items-start">
-                    <button
-                      onClick={() => {
-                        setSelectedEmailContent(email.content);
-                        setShowEmailViewModal(true);
-                      }}
-                      className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
-                    >
-                      <FileText className="w-4 h-4" />
-                      {email.templateTitle || "Custom Email"}
-                    </button>
-                    <span className="text-xs text-gray-500">
-                      <Clock className="w-3 h-3 inline mr-1" />
-                      {new Date(email.createdAt).toLocaleDateString()}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleSelectEmail(email._id)}
+                        disabled={selectAllMode}
+                      >
+                        {isEmailSelected(email._id) ? (
+                          <CheckSquare className={`w-4 h-4 ${selectAllMode ? 'text-blue-300' : 'text-blue-600'}`} />
+                        ) : (
+                          <Square className="w-4 h-4 text-gray-400" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedEmailContent(email.content);
+                          setShowEmailViewModal(true);
+                        }}
+                        className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+                      >
+                        <FileText className="w-4 h-4" />
+                        {email.templateTitle || "Custom Email"}
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleDeleteClick(email)}
+                        className="text-red-600 hover:text-red-800 p-1"
+                        disabled={selectAllMode}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                      <span className="text-xs text-gray-500">
+                        <Clock className="w-3 h-3 inline mr-1" />
+                        {new Date(email.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
                   </div>
                   
                   <p className="text-sm font-medium text-gray-900">{email.subject}</p>
@@ -416,8 +660,8 @@ const EmailHistory = () => {
                 >
                   <option value={15}>15</option>
                   <option value={25}>25</option>
-                  <option value={35}>35</option>
                   <option value={50}>50</option>
+                  <option value={100}>100</option>
                 </select>
               </div>
 
@@ -434,21 +678,9 @@ const EmailHistory = () => {
                   Previous
                 </button>
                 
-                <div className="flex gap-1">
-                  {Array.from({ length: historyTotalPages }, (_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => handlePageChange(i + 1)}
-                      className={`w-8 h-8 flex items-center justify-center rounded-md text-sm ${
-                        historyPage === i + 1
-                          ? "bg-blue-600 text-white"
-                          : "text-gray-700 hover:bg-gray-200 border border-gray-300"
-                      }`}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
-                </div>
+                <span className="text-sm text-gray-600">
+                  Page {historyPage} of {historyTotalPages}
+                </span>
 
                 <button
                   onClick={() => handlePageChange(historyPage + 1)}
@@ -467,12 +699,88 @@ const EmailHistory = () => {
         )}
       </div>
 
+      {/* Delete Single Email Modal */}
+      {showDeleteModal && emailToDelete && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50">
+          <div className="bg-white rounded-lg w-full max-w-md p-6">
+            <h3 className="text-xl font-bold mb-4">Delete Email</h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete the email "{emailToDelete.subject}"? 
+              This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setEmailToDelete(null);
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleting}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center gap-2"
+              >
+                {deleting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Delete Modal */}
+      {showBulkDeleteModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50">
+          <div className="bg-white rounded-lg w-full max-w-md p-6">
+            <h3 className="text-xl font-bold mb-4">Delete Multiple Emails</h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete {getSelectionCount()} selected emails? 
+              {selectAllMode && " This will delete ALL emails in your history."}
+              This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowBulkDeleteModal(false)}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmBulkDelete}
+                disabled={deleting}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center gap-2"
+              >
+                {deleting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                    Deleting...
+                  </>
+                ) : (
+                  `Delete ${getSelectionCount()} Emails`
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Recipients Modal */}
       {showRecipientsModal && selectedRecipients && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50">
           <div className="bg-white rounded-lg w-full max-w-2xl max-h-[80vh] overflow-hidden">
             <div className="flex justify-between items-center p-6 border-b">
-              <h3 className="text-xl font-bold">Recipients</h3>
+              <h3 className="text-xl font-bold">Recipients ({selectedRecipients.length})</h3>
               <button
                 onClick={() => {
                   setShowRecipientsModal(false);
@@ -487,7 +795,7 @@ const EmailHistory = () => {
               <div className="space-y-3">
                 {selectedRecipients.map((email, index) => {
                   const contact = allContacts.find(
-                    (c) => c.email?.toLowerCase() === email.toLowerCase()
+                    (c) => c.email?.toLowerCase() === email?.toLowerCase()
                   );
                   return (
                     <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -497,9 +805,6 @@ const EmailHistory = () => {
                         </div>
                         <div className="text-sm text-gray-500">{email}</div>
                       </div>
-                      <span className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full">
-                        Recipient
-                      </span>
                     </div>
                   );
                 })}
@@ -540,7 +845,7 @@ const EmailHistory = () => {
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50">
           <div className="bg-white rounded-lg w-full max-w-lg max-h-[80vh] overflow-hidden">
             <div className="flex justify-between items-center p-6 border-b">
-              <h3 className="text-xl font-bold">Attachments</h3>
+              <h3 className="text-xl font-bold">Attachments ({selectedAttachments.length})</h3>
               <button
                 onClick={() => {
                   setShowAttachmentsModal(false);
@@ -555,13 +860,13 @@ const EmailHistory = () => {
               <div className="space-y-3">
                 {selectedAttachments.map((file, index) => (
                   <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <Paperclip className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm text-gray-900">{file.filename}</span>
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <Paperclip className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      <span className="text-sm text-gray-900 truncate">{file.filename}</span>
                     </div>
                     <button
                       onClick={() => downloadAttachment(file)}
-                      className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 flex items-center gap-1"
+                      className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 flex items-center gap-1 flex-shrink-0"
                     >
                       <Download className="w-3 h-3" />
                       Download
@@ -575,5 +880,6 @@ const EmailHistory = () => {
       )}
     </div>
   );
-}
+};
+
 export default EmailHistory;

@@ -83,8 +83,8 @@ function App() {
                   <Route path="/createDeal" element={<CreateDeal />} />
                   <Route path="/createDeal/:id" element={<CreateDeal />} />
                   <Route path="/Pipelineview" element={<Pipeline_view />} />
-                  <Route path="/test" element={<DealIntelligenceDashboard />} />
-                  <Route path="/test1" element={<LostDealAnalytics />} />
+                  <Route path="/DealAnalysis" element={<DealIntelligenceDashboard />} />
+                  <Route path="/LossAnalysis" element={<LostDealAnalytics />} />
                   
                   {/* FIXED: CLV Routes - Add these directly, not under /test paths */}
                   <Route path="/cltv/dashboard" element={<CLVDashboard />} />

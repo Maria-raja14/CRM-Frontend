@@ -303,14 +303,14 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         />
 
         <SidebarItem
-          to="/test"
+          to="/DealAnalysis"
           icon={<ClipboardList />}
           label="Deal Metrics"
           hasPermission={isAdmin || userPermissions.proposal}
         />
         
         <SidebarItem
-          to="/test1"
+          to="/LossAnalysis"
           icon={<ClipboardList />}
           label="Loss Analysis"
           hasPermission={isAdmin || userPermissions.proposal}
