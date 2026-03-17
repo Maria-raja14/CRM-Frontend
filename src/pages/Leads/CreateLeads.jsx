@@ -1861,26 +1861,17 @@
 // }// that client ask chnaged code..
 
 
+
+
+
 // import React, { useState, useEffect } from "react";
 // import { useNavigate, useLocation } from "react-router-dom";
 // import { toast, ToastContainer } from "react-toastify";
 // import axios from "axios";
 // import { getNames } from "country-list";
 // import {
-//   User,
-//   Phone,
-//   Mail,
-//   MapPin,
-//   FileText,
-//   Globe,
-//   Building2,
-//   Briefcase,
-//   UserCheck,
-//   Calendar,
-//   StickyNote,
-//   ArrowLeft,
-//   Upload,
-//   X,
+//   User, Phone, Mail, MapPin, FileText, Globe, Building2,
+//   Briefcase, UserCheck, Calendar, StickyNote, ArrowLeft, Upload, X,
 // } from "lucide-react";
 // import "react-toastify/dist/ReactToastify.css";
 // import PhoneInput from "react-phone-input-2";
@@ -1889,57 +1880,46 @@
 // export default function CreateLeads() {
 //   const API_URL = import.meta.env.VITE_API_URL;
 
-//   const navigate = useNavigate();
-//   const location = useLocation();
+//   const navigate    = useNavigate();
+//   const location    = useLocation();
 //   const queryParams = new URLSearchParams(location.search);
-//   const leadId = queryParams.get("id"); // edit mode if exists
+//   const leadId      = queryParams.get("id"); // edit mode if exists
 
-//   const [userRole, setUserRole] = useState("");
-//   const [userId, setUserId] = useState("");
+//   const [userRole,     setUserRole]     = useState("");
+//   const [userId,       setUserId]       = useState("");
 //   const [isSubmitting, setIsSubmitting] = useState(false);
-//   const [fieldErrors, setFieldErrors] = useState({});
+//   const [fieldErrors,  setFieldErrors]  = useState({});
 
-//   // Predefined source options (including "Other")
 //   const sourceOptions = [
-//     "Website",
-//     "Referral",
-//     "Social Media",
-//     "Email",
-//     "Phone",
-//     "Just Dial",
-//     "Sulekha",
-//     "Trip Magic",
-//     "Hello Travel",
-//     "Other",
+//     "Website", "Referral", "Social Media", "Email", "Phone",
+//     "Just Dial", "Sulekha", "Trip Magic", "Hello Travel", "Other",
 //   ];
 
 //   const [formData, setFormData] = useState({
-//     leadName: "",
+//     leadName:    "",
 //     phoneNumber: "",
-//     email: "",
-//     source: "",
-//     designation: "",          // renamed from companyName
-//     duration: "",              // new field replaces industry
+//     email:       "",
+//     source:      "",
+//     destination: "",   // ✅ renamed from designation
+//     duration:    "",
 //     requirement: "",
-//     status: "Cold",
-//     assignTo: "",
-//     address: "",
-//     country: "",
+//     status:      "Cold",
+//     assignTo:    "",
+//     address:     "",
+//     country:     "",
 //     followUpDate: "",
-//     notes: "",
-//     attachments: [],
+//     notes:        "",
+//     attachments:  [],
 //   });
 
-//   // Custom source input (visible when source === "Other")
-//   const [customSource, setCustomSource] = useState("");
-
-//   const [errors, setErrors] = useState({});
-//   const [salesUsers, setSalesUsers] = useState([]);
-//   const [countries] = useState(getNames());
-//   const [existingAttachments, setExistingAttachments] = useState([]);
-//   const [isLoading, setIsLoading] = useState(false);
-//   const [isDragging, setIsDragging] = useState(false);
-//   const [phoneCountryCode, setPhoneCountryCode] = useState("in");
+//   const [customSource,         setCustomSource]         = useState("");
+//   const [errors,               setErrors]               = useState({});
+//   const [salesUsers,           setSalesUsers]           = useState([]);
+//   const [countries]                                     = useState(getNames());
+//   const [existingAttachments,  setExistingAttachments]  = useState([]);
+//   const [isLoading,            setIsLoading]            = useState(false);
+//   const [isDragging,           setIsDragging]           = useState(false);
+//   const [phoneCountryCode,     setPhoneCountryCode]     = useState("in");
 
 //   // Load user role and ID
 //   useEffect(() => {
@@ -1951,19 +1931,18 @@
 //     }
 //   }, []);
 
-//   // Fetch sales users if current user is Admin (for assignTo dropdown)
+//   // Fetch sales users (Admin only)
 //   useEffect(() => {
 //     const fetchSalesUsers = async () => {
 //       try {
-//         const token = localStorage.getItem("token");
+//         const token    = localStorage.getItem("token");
 //         const userData = localStorage.getItem("user");
-//         const user = userData ? JSON.parse(userData) : null;
+//         const user     = userData ? JSON.parse(userData) : null;
 
 //         if (user && user.role?.name === "Admin") {
 //           const response = await axios.get(`${API_URL}/users/sales`, {
 //             headers: { Authorization: `Bearer ${token}` },
 //           });
-
 //           const salesData =
 //             response.data.salesUsers || response.data.users || response.data;
 //           setSalesUsers(Array.isArray(salesData) ? salesData : []);
@@ -1972,7 +1951,6 @@
 //         console.error("Error fetching sales users:", error);
 //       }
 //     };
-
 //     fetchSalesUsers();
 //   }, [API_URL]);
 
@@ -1982,45 +1960,42 @@
 //       const fetchLead = async () => {
 //         try {
 //           setIsLoading(true);
-//           const token = localStorage.getItem("token");
-//           const response = await axios.get(
-//             `${API_URL}/leads/getLead/${leadId}`,
-//             {
-//               headers: { Authorization: `Bearer ${token}` },
-//             }
-//           );
+//           const token    = localStorage.getItem("token");
+//           const response = await axios.get(`${API_URL}/leads/getLead/${leadId}`, {
+//             headers: { Authorization: `Bearer ${token}` },
+//           });
 
 //           const leadData = response.data;
 
-//           // Determine if source is custom (not in predefined list except "Other")
-//           const predefined = sourceOptions.filter(opt => opt !== "Other");
-//           const isCustomSource = leadData.source && !predefined.includes(leadData.source);
-//           let sourceValue = leadData.source || "";
+//           // Determine if source is custom
+//           const predefined      = sourceOptions.filter((opt) => opt !== "Other");
+//           const isCustomSource  = leadData.source && !predefined.includes(leadData.source);
+//           let sourceValue       = leadData.source || "";
 //           let customSourceValue = "";
 
 //           if (isCustomSource) {
-//             sourceValue = "Other";
+//             sourceValue       = "Other";
 //             customSourceValue = leadData.source;
 //           }
 
 //           setCustomSource(customSourceValue);
 //           setExistingAttachments(leadData.attachments || []);
 //           setFormData({
-//             leadName: leadData.leadName || "",
-//             designation: leadData.designation || "",          // use designation
+//             leadName:    leadData.leadName    || "",
+//             destination: leadData.destination || "",  // ✅ renamed from designation
 //             phoneNumber: leadData.phoneNumber || "",
-//             email: leadData.email || "",
-//             source: sourceValue,
-//             duration: leadData.duration || "",                // new field
+//             email:       leadData.email       || "",
+//             source:      sourceValue,
+//             duration:    leadData.duration    || "",
 //             requirement: leadData.requirement || "",
-//             status: leadData.status || "Cold",
-//             assignTo: leadData.assignTo?._id || "",           // keep empty string for UI
-//             address: leadData.address || "",
-//             country: leadData.country || "",
+//             status:      leadData.status      || "Cold",
+//             assignTo:    leadData.assignTo?._id || "",
+//             address:     leadData.address     || "",
+//             country:     leadData.country     || "",
 //             followUpDate: leadData.followUpDate
 //               ? new Date(leadData.followUpDate).toISOString().split("T")[0]
 //               : "",
-//             notes: leadData.notes || "",
+//             notes:       leadData.notes || "",
 //             attachments: [],
 //           });
 //         } catch (error) {
@@ -2034,48 +2009,36 @@
 //     }
 //   }, [leadId, API_URL]);
 
-//   const getSalesUsersOptions = () => {
-//     return salesUsers.map((u) => ({
+//   const getSalesUsersOptions = () =>
+//     salesUsers.map((u) => ({
 //       label: `${u.firstName} ${u.lastName}`,
 //       value: u._id,
 //     }));
-//   };
 
-//   // Validate email domain
 //   const validateEmailDomain = (email) => {
 //     if (!email) return false;
 //     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 //     if (!emailRegex.test(email)) return false;
 //     const domain = email.split("@")[1];
 //     if (!domain) return false;
-//     const domainRegex =
-//       /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?\.[a-zA-Z]{2,}$/;
+//     const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?\.[a-zA-Z]{2,}$/;
 //     return domainRegex.test(domain);
 //   };
 
-//   // Validate phone number
 //   const validatePhoneNumber = (phone) => {
 //     if (!phone) return false;
 //     const digits = String(phone).replace(/\D/g, "");
 //     if (digits.length === 10 && /^[6-9]\d{9}$/.test(digits)) return true;
-//     if (digits.length === 11 && digits.startsWith("0")) return true;
-//     if (digits.length === 12 && digits.startsWith("91")) return true;
+//     if (digits.length === 11 && digits.startsWith("0"))       return true;
+//     if (digits.length === 12 && digits.startsWith("91"))      return true;
 //     return false;
 //   };
 
 //   const getPhoneNumberLengthMessage = (countryCode) => {
 //     const lengths = {
-//       in: "10 digits (starting with 6-9)",
-//       us: "10 digits",
-//       gb: "10 digits",
-//       ca: "10 digits",
-//       au: "9 digits",
-//       de: "11 digits",
-//       fr: "9 digits",
-//       jp: "9-10 digits",
-//       cn: "10-11 digits",
-//       br: "11 digits",
-//       ru: "10-11 digits",
+//       in: "10 digits (starting with 6-9)", us: "10 digits", gb: "10 digits",
+//       ca: "10 digits", au: "9 digits",     de: "11 digits", fr: "9 digits",
+//       jp: "9-10 digits", cn: "10-11 digits", br: "11 digits", ru: "10-11 digits",
 //     };
 //     return lengths[countryCode] || "8-15 digits";
 //   };
@@ -2083,119 +2046,74 @@
 //   const handleChange = (e) => {
 //     const { name, value } = e.target;
 //     setFormData((p) => ({ ...p, [name]: value }));
-
-//     if (errors[name]) {
-//       setErrors((p) => ({ ...p, [name]: false }));
-//     }
-//     if (fieldErrors[name]) {
-//       setFieldErrors((p) => ({ ...p, [name]: "" }));
-//     }
-
-//     // If source is not "Other", clear customSource
-//     if (name === "source" && value !== "Other") {
-//       setCustomSource("");
-//     }
+//     if (errors[name])      setErrors((p)      => ({ ...p, [name]: false }));
+//     if (fieldErrors[name]) setFieldErrors((p) => ({ ...p, [name]: "" }));
+//     if (name === "source" && value !== "Other") setCustomSource("");
 //   };
 
 //   const handlePhoneChange = (phone, countryData) => {
 //     setFormData((p) => ({ ...p, phoneNumber: phone }));
 //     setPhoneCountryCode(countryData.countryCode);
-//     if (errors.phoneNumber) {
-//       setErrors((p) => ({ ...p, phoneNumber: false }));
-//     }
-//     if (fieldErrors.phoneNumber) {
-//       setFieldErrors((p) => ({ ...p, phoneNumber: "" }));
-//     }
+//     if (errors.phoneNumber)      setErrors((p)      => ({ ...p, phoneNumber: false }));
+//     if (fieldErrors.phoneNumber) setFieldErrors((p) => ({ ...p, phoneNumber: "" }));
 //   };
 
-//   // Drag and drop handlers
-//   const handleDragOver = (e) => {
-//     e.preventDefault();
-//     setIsDragging(true);
-//   };
-
-//   const handleDragLeave = (e) => {
-//     e.preventDefault();
-//     setIsDragging(false);
-//   };
-
-//   const handleDrop = (e) => {
-//     e.preventDefault();
-//     setIsDragging(false);
-//     const files = Array.from(e.dataTransfer.files);
-//     processFiles(files);
-//   };
+//   const handleDragOver  = (e) => { e.preventDefault(); setIsDragging(true);  };
+//   const handleDragLeave = (e) => { e.preventDefault(); setIsDragging(false); };
+//   const handleDrop      = (e) => { e.preventDefault(); setIsDragging(false); processFiles(Array.from(e.dataTransfer.files)); };
 
 //   const processFiles = (files) => {
-//     const totalFiles =
-//       formData.attachments.length + files.length + existingAttachments.length;
-//     if (totalFiles > 5) {
-//       toast.error("Maximum 5 attachments allowed");
-//       return;
-//     }
-
-//     const oversizedFiles = files.filter((file) => file.size > 20 * 1024 * 1024);
-//     if (oversizedFiles.length > 0) {
-//       toast.error("Some files exceed the 20MB size limit");
-//       return;
-//     }
-
+//     const totalFiles = formData.attachments.length + files.length + existingAttachments.length;
+//     if (totalFiles > 5) { toast.error("Maximum 5 attachments allowed"); return; }
+//     const oversized = files.filter((f) => f.size > 20 * 1024 * 1024);
+//     if (oversized.length > 0) { toast.error("Some files exceed the 20MB size limit"); return; }
 //     setFormData((p) => ({ ...p, attachments: [...p.attachments, ...files] }));
 //   };
 
-//   const handleFileChange = (e) => {
-//     const files = Array.from(e.target.files);
-//     processFiles(files);
-//   };
+//   const handleFileChange  = (e) => processFiles(Array.from(e.target.files));
 
 //   const handleRemoveFile = (idx, type = "new") => {
-//     if (type === "new") {
-//       setFormData((prev) => ({
-//         ...prev,
-//         attachments: prev.attachments.filter((_, i) => i !== idx),
-//       }));
-//     } else {
+//     if (type === "new")
+//       setFormData((prev) => ({ ...prev, attachments: prev.attachments.filter((_, i) => i !== idx) }));
+//     else
 //       setExistingAttachments((prev) => prev.filter((_, i) => i !== idx));
-//     }
 //   };
 
 //   const validateForm = () => {
-//     const newErrors = {};
+//     const newErrors      = {};
 //     const newFieldErrors = {};
 
 //     if (!formData.leadName.trim()) {
-//       newErrors.leadName = true;
+//       newErrors.leadName      = true;
 //       newFieldErrors.leadName = "Lead name is required";
 //     }
 
-//     if (!formData.designation.trim()) {
-//       newErrors.designation = true;
-//       newFieldErrors.designation = "Designation is required";
+//     // ✅ validate destination (was designation)
+//     if (!formData.destination.trim()) {
+//       newErrors.destination      = true;
+//       newFieldErrors.destination = "Destination is required";
 //     }
 
 //     if (!formData.phoneNumber) {
-//       newErrors.phoneNumber = true;
+//       newErrors.phoneNumber      = true;
 //       newFieldErrors.phoneNumber = "Phone number is required";
 //     } else if (!validatePhoneNumber(formData.phoneNumber, phoneCountryCode)) {
-//       newErrors.phoneNumber = true;
+//       newErrors.phoneNumber      = true;
 //       newFieldErrors.phoneNumber = `Please enter a valid phone number (${getPhoneNumberLengthMessage(phoneCountryCode)})`;
 //     }
 
-//     // Email is now optional: only validate if provided
 //     if (formData.email.trim() && !validateEmailDomain(formData.email)) {
-//       newErrors.email = true;
+//       newErrors.email      = true;
 //       newFieldErrors.email = "Please enter a valid email address with a proper domain (e.g., name@company.com)";
 //     }
 
 //     setErrors(newErrors);
 //     setFieldErrors(newFieldErrors);
-
 //     return Object.keys(newErrors).length === 0;
 //   };
 
 //   const handleSubmit = async (e) => {
 //     e.preventDefault();
-
 //     setFieldErrors({});
 
 //     // Prepare final source value
@@ -2210,11 +2128,7 @@
 //       finalSource = customSource.trim();
 //     }
 
-//     // Create a copy of formData with final source
-//     const dataToSendForm = {
-//       ...formData,
-//       source: finalSource,
-//     };
+//     const dataToSendForm = { ...formData, source: finalSource };
 
 //     if (!validateForm()) {
 //       toast.error("Please fix the errors in the form");
@@ -2224,50 +2138,33 @@
 //     setIsSubmitting(true);
 
 //     try {
-//       const token = localStorage.getItem("token");
+//       const token      = localStorage.getItem("token");
 //       const formDataObj = new FormData();
 
-//       // Append fields conditionally
 //       for (let key in dataToSendForm) {
 //         if (key === "attachments") {
 //           dataToSendForm.attachments.forEach((file) =>
 //             formDataObj.append("attachments", file)
 //           );
 //         } else if (key === "assignTo") {
-//           // Only include assignTo if it has a value (to avoid empty string causing ObjectId cast error)
-//           if (dataToSendForm.assignTo) {
-//             formDataObj.append(key, dataToSendForm.assignTo);
-//           }
-//           // If it's empty, we omit it so backend keeps existing assignee (or for creation, auto-assign)
+//           if (dataToSendForm.assignTo) formDataObj.append(key, dataToSendForm.assignTo);
 //         } else {
 //           formDataObj.append(key, dataToSendForm[key]);
 //         }
 //       }
 
-//       formDataObj.append(
-//         "existingAttachments",
-//         JSON.stringify(existingAttachments)
-//       );
+//       formDataObj.append("existingAttachments", JSON.stringify(existingAttachments));
 
 //       const config = {
-//         headers: {
-//           "Content-Type": "multipart/form-data",
-//           Authorization: `Bearer ${token}`,
-//         },
+//         headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${token}` },
 //         onUploadProgress: (progressEvent) => {
-//           const progress = Math.round(
-//             (progressEvent.loaded * 100) / progressEvent.total
-//           );
+//           const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
 //           console.log(`Upload progress: ${progress}%`);
 //         },
 //       };
 
 //       if (leadId) {
-//         await axios.put(
-//           `${API_URL}/leads/updateLead/${leadId}`,
-//           formDataObj,
-//           config
-//         );
+//         await axios.put(`${API_URL}/leads/updateLead/${leadId}`, formDataObj, config);
 //         toast.success("Lead updated successfully");
 //       } else {
 //         await axios.post(`${API_URL}/leads/create`, formDataObj, config);
@@ -2277,10 +2174,8 @@
 //       setTimeout(() => navigate("/leads"), 1200);
 //     } catch (err) {
 //       console.error("Error submitting form:", err);
-//       // Error handling (unchanged)
 //       if (err.response?.data?.message) {
 //         const errorMsg = err.response.data.message.toLowerCase();
-
 //         if (errorMsg.includes("email") && errorMsg.includes("already")) {
 //           setFieldErrors({ email: "This email is already associated with another lead" });
 //           setErrors({ email: true });
@@ -2293,26 +2188,19 @@
 //           setFieldErrors({ leadName: "This lead name already exists" });
 //           setErrors({ leadName: true });
 //           toast.error("Lead name already exists");
-//         } else if (
-//           (errorMsg.includes("file") && errorMsg.includes("large")) ||
-//           errorMsg.includes("size")
-//         ) {
+//         } else if ((errorMsg.includes("file") && errorMsg.includes("large")) || errorMsg.includes("size")) {
 //           toast.error("File size exceeds the 20MB limit");
 //         } else if (err.response.data.errors) {
-//           const backendErrors = err.response.data.errors;
+//           const backendErrors  = err.response.data.errors;
 //           const newFieldErrors = {};
 //           Object.keys(backendErrors).forEach((key) => {
-//             newFieldErrors[key] =
-//               backendErrors[key].message || backendErrors[key];
+//             newFieldErrors[key] = backendErrors[key].message || backendErrors[key];
 //             setErrors((prev) => ({ ...prev, [key]: true }));
 //           });
 //           setFieldErrors(newFieldErrors);
 //           toast.error("Please check the form for errors");
 //         } else {
-//           toast.error(
-//             err.response.data.message ||
-//               (leadId ? "Failed to update lead" : "Failed to create lead")
-//           );
+//           toast.error(err.response.data.message || (leadId ? "Failed to update lead" : "Failed to create lead"));
 //         }
 //       } else if (err.message?.includes("Network Error")) {
 //         toast.error("Network error. Please check your connection.");
@@ -2326,94 +2214,49 @@
 
 //   const handleBackClick = () => navigate(-1);
 
-//   // Field groups - updated with new fields
+//   // ✅ Field groups — destination replaces designation everywhere
 //   const fieldGroups = [
 //     {
-//       title: "Basic Information",
-//       color: "text-blue-600",
+//       title:  "Basic Information",
+//       color:  "text-blue-600",
 //       fields: [
-//         { name: "leadName", label: "Lead Name", icon: <User size={16} /> },
-//         {
-//           name: "designation",
-//           label: "Destination",
-//           icon: <Building2 size={16} />,
-//         },
-//         {
-//           name: "phoneNumber",
-//           label: "Phone Number",
-//           icon: <Phone size={16} />,
-//         },
-//         { name: "email", label: "Email", icon: <Mail size={16} /> },
-//         { name: "address", label: "Address", icon: <MapPin size={16} /> },
-//         {
-//           name: "country",
-//           label: "Country",
-//           icon: <Globe size={16} />,
-//           type: "select",
-//           options: countries,
-//         },
+//         { name: "leadName",    label: "Lead Name",    icon: <User     size={16} /> },
+//         { name: "destination", label: "Destination",  icon: <Building2 size={16} /> }, // ✅ renamed
+//         { name: "phoneNumber", label: "Phone Number", icon: <Phone    size={16} /> },
+//         { name: "email",       label: "Email",        icon: <Mail     size={16} /> },
+//         { name: "address",     label: "Address",      icon: <MapPin   size={16} /> },
+//         { name: "country",     label: "Country",      icon: <Globe    size={16} />, type: "select", options: countries },
 //       ],
 //     },
 //     {
-//       title: "Business Details",
-//       color: "text-green-600",
+//       title:  "Business Details",
+//       color:  "text-green-600",
 //       fields: [
 //         {
-//           name: "duration",
-//           label: "Duration",
-//           icon: <Briefcase size={16} />,
-//           type: "text",
+//           name:        "duration",
+//           label:       "Duration",
+//           icon:        <Briefcase size={16} />,
+//           type:        "text",
 //           placeholder: "e.g., 3 months, 1 year, etc.",
 //         },
-//         {
-//           name: "source",
-//           label: "Source",
-//           icon: <Globe size={16} />,
-//           // custom rendering handled below
-//         },
-//         {
-//           name: "requirement",
-//           label: "Requirement",
-//           icon: <FileText size={16} />,
-//         },
+//         { name: "source",      label: "Source",      icon: <Globe    size={16} /> },
+//         { name: "requirement", label: "Requirement", icon: <FileText size={16} /> },
 //       ],
 //     },
 //     {
-//       title: "Lead Management",
-//       color: "text-yellow-600",
+//       title:  "Lead Management",
+//       color:  "text-yellow-600",
 //       fields: [
-//         {
-//           name: "status",
-//           label: "Status",
-//           icon: <UserCheck size={16} />,
-//           type: "select",
-//           options: ["Hot", "Warm", "Cold", "Junk"],
-//         },
-//         {
-//           name: "assignTo",
-//           label: "Assign To",
-//           icon: <User size={16} />,
-//           type: "select",
-//           options: getSalesUsersOptions(),
-//         },
-//         {
-//           name: "followUpDate",
-//           label: "Follow-up Date",
-//           icon: <Calendar size={16} />,
-//           type: "date",
-//         },
+//         { name: "status",      label: "Status",       icon: <UserCheck size={16} />, type: "select", options: ["Hot", "Warm", "Cold", "Junk"] },
+//         { name: "assignTo",    label: "Assign To",    icon: <User      size={16} />, type: "select", options: getSalesUsersOptions() },
+//         { name: "followUpDate",label: "Follow-up Date", icon: <Calendar size={16} />, type: "date" },
 //       ],
 //     },
 //     {
-//       title: "Additional Information",
-//       color: "text-purple-600",
+//       title:  "Additional Information",
+//       color:  "text-purple-600",
 //       fields: [
-//         {
-//           name: "notes",
-//           label: "Notes",
-//           icon: <StickyNote size={16} />,
-//           type: "textarea",
-//         },
+//         { name: "notes", label: "Notes", icon: <StickyNote size={16} />, type: "textarea" },
 //       ],
 //     },
 //   ];
@@ -2430,6 +2273,7 @@
 //     <>
 //       <div className="min-h-screen flex items-start justify-center py-10 px-4">
 //         <div className="w-full max-w-6xl bg-white rounded-2xl shadow-xl border border-gray-100">
+
 //           {/* Header */}
 //           <div className="flex flex-col md:flex-row items-start md:items-center justify-between px-6 py-5 border-b rounded-t-2xl">
 //             <div className="flex items-center gap-3">
@@ -2448,101 +2292,64 @@
 //           {/* Form */}
 //           <form onSubmit={handleSubmit} className="p-8 space-y-10">
 //             {fieldGroups.map((group) => (
-//               <div
-//                 key={group.title}
-//                 className="space-y-6 p-6 border border-gray-200 rounded-xl shadow-sm"
-//               >
-//                 <h2
-//                   className={`text-lg font-semibold border-b pb-2 ${group.color}`}
-//                 >
+//               <div key={group.title} className="space-y-6 p-6 border border-gray-200 rounded-xl shadow-sm">
+//                 <h2 className={`text-lg font-semibold border-b pb-2 ${group.color}`}>
 //                   {group.title}
 //                 </h2>
 
 //                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 //                   {group.fields.map((field) => (
-//                     <div
-//                       key={field.name}
-//                       className={`${field.type === "textarea" ? "md:col-span-3" : ""}`}
-//                     >
+//                     <div key={field.name} className={`${field.type === "textarea" ? "md:col-span-3" : ""}`}>
 //                       <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
 //                         {field.icon} {field.label}
-//                         {/* Removed email from required fields */}
+//                         {/* ✅ Required marker for destination (was designation) */}
 //                         {(field.name === "leadName" ||
-//                           field.name === "designation" ||
+//                           field.name === "destination" ||
 //                           field.name === "phoneNumber") && (
 //                           <span className="text-red-500">*</span>
 //                         )}
 //                       </label>
 
-//                       {/* Special rendering for phoneNumber */}
+//                       {/* Phone input */}
 //                       {field.name === "phoneNumber" ? (
 //                         <div>
-//                           <div
-//                             className={`border rounded-lg ${
-//                               errors.phoneNumber
-//                                 ? "border-red-500"
-//                                 : "border-gray-300"
-//                             }`}
-//                           >
+//                           <div className={`border rounded-lg ${errors.phoneNumber ? "border-red-500" : "border-gray-300"}`}>
 //                             <PhoneInput
 //                               country={"in"}
 //                               value={formData.phoneNumber}
 //                               onChange={handlePhoneChange}
 //                               specialLabel=""
-//                               inputStyle={{
-//                                 width: "100%",
-//                                 height: "42px",
-//                                 fontSize: "14px",
-//                                 paddingLeft: "55px",
-//                                 borderRadius: "0.5rem",
-//                                 boxSizing: "border-box",
-//                                 border: "none",
-//                               }}
-//                               buttonStyle={{
-//                                 borderRadius: "0.5rem 0 0 0.5rem",
-//                                 height: "42px",
-//                                 background: "white",
-//                                 border: "none",
-//                                 borderRight: "1px solid #e5e7eb",
-//                               }}
+//                               inputStyle={{ width: "100%", height: "42px", fontSize: "14px", paddingLeft: "55px", borderRadius: "0.5rem", boxSizing: "border-box", border: "none" }}
+//                               buttonStyle={{ borderRadius: "0.5rem 0 0 0.5rem", height: "42px", background: "white", border: "none", borderRight: "1px solid #e5e7eb" }}
 //                               containerStyle={{ width: "100%" }}
 //                               dropdownStyle={{ borderRadius: "0.5rem" }}
 //                             />
 //                           </div>
 //                           {fieldErrors.phoneNumber && (
-//                             <p className="text-sm text-red-500 mt-1">
-//                               {fieldErrors.phoneNumber}
+//                             <p className="text-sm text-red-500 mt-1">{fieldErrors.phoneNumber}</p>
+//                           )}
+//                           {formData.country && formData.phoneNumber && !fieldErrors.phoneNumber && (
+//                             <p className="text-xs text-gray-500 mt-1">
+//                               Expected: {getPhoneNumberLengthMessage(phoneCountryCode)}
 //                             </p>
 //                           )}
-//                           {formData.country &&
-//                             formData.phoneNumber &&
-//                             !fieldErrors.phoneNumber && (
-//                               <p className="text-xs text-gray-500 mt-1">
-//                                 Expected:{" "}
-//                                 {getPhoneNumberLengthMessage(phoneCountryCode)}
-//                               </p>
-//                             )}
 //                         </div>
+
 //                       ) : field.name === "source" ? (
-//                         // Special rendering for source with custom input
+//                         // Source with custom input
 //                         <div>
 //                           <select
 //                             name="source"
 //                             value={formData.source || ""}
 //                             onChange={handleChange}
-//                             className={`w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 outline-none transition h-11 ${
-//                               errors.source ? "border-red-500" : "border-gray-300"
-//                             }`}
+//                             className={`w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 outline-none transition h-11 ${errors.source ? "border-red-500" : "border-gray-300"}`}
 //                           >
 //                             <option value="">Select Source</option>
 //                             {sourceOptions.map((opt) => (
-//                               <option key={opt} value={opt}>
-//                                 {opt}
-//                               </option>
+//                               <option key={opt} value={opt}>{opt}</option>
 //                             ))}
 //                           </select>
 
-//                           {/* Custom source input appears when "Other" is selected */}
 //                           {formData.source === "Other" && (
 //                             <div className="mt-2">
 //                               <input
@@ -2550,50 +2357,38 @@
 //                                 placeholder="Enter custom source"
 //                                 value={customSource}
 //                                 onChange={(e) => setCustomSource(e.target.value)}
-//                                 className={`w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 outline-none transition h-11 ${
-//                                   errors.source ? "border-red-500" : "border-gray-300"
-//                                 }`}
+//                                 className={`w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 outline-none transition h-11 ${errors.source ? "border-red-500" : "border-gray-300"}`}
 //                               />
 //                             </div>
 //                           )}
 
 //                           {fieldErrors.source && (
-//                             <p className="text-sm text-red-500 mt-1">
-//                               {fieldErrors.source}
-//                             </p>
+//                             <p className="text-sm text-red-500 mt-1">{fieldErrors.source}</p>
 //                           )}
 //                         </div>
+
 //                       ) : field.type === "select" ? (
 //                         <div>
 //                           <select
 //                             name={field.name}
 //                             value={formData[field.name] || ""}
 //                             onChange={handleChange}
-//                             className={`w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 outline-none transition h-11 ${
-//                               errors[field.name]
-//                                 ? "border-red-500"
-//                                 : "border-gray-300"
-//                             }`}
+//                             className={`w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 outline-none transition h-11 ${errors[field.name] ? "border-red-500" : "border-gray-300"}`}
 //                           >
 //                             <option value="">Select {field.label}</option>
 //                             {field.options.map((opt) =>
 //                               typeof opt === "string" ? (
-//                                 <option key={opt} value={opt}>
-//                                   {opt}
-//                                 </option>
+//                                 <option key={opt} value={opt}>{opt}</option>
 //                               ) : (
-//                                 <option key={opt.value} value={opt.value}>
-//                                   {opt.label}
-//                                 </option>
+//                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
 //                               )
 //                             )}
 //                           </select>
 //                           {fieldErrors[field.name] && (
-//                             <p className="text-sm text-red-500 mt-1">
-//                               {fieldErrors[field.name]}
-//                             </p>
+//                             <p className="text-sm text-red-500 mt-1">{fieldErrors[field.name]}</p>
 //                           )}
 //                         </div>
+
 //                       ) : field.type === "textarea" ? (
 //                         <div>
 //                           <textarea
@@ -2606,11 +2401,10 @@
 //                             maxLength={500}
 //                           />
 //                           {fieldErrors[field.name] && (
-//                             <p className="text-sm text-red-500 mt-1">
-//                               {fieldErrors[field.name]}
-//                             </p>
+//                             <p className="text-sm text-red-500 mt-1">{fieldErrors[field.name]}</p>
 //                           )}
 //                         </div>
+
 //                       ) : (
 //                         <div>
 //                           <input
@@ -2619,16 +2413,10 @@
 //                             value={formData[field.name] || ""}
 //                             onChange={handleChange}
 //                             placeholder={field.placeholder || `Enter ${field.label}`}
-//                             className={`w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 outline-none transition h-11 ${
-//                               errors[field.name]
-//                                 ? "border-red-500"
-//                                 : "border-gray-300"
-//                             }`}
+//                             className={`w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 outline-none transition h-11 ${errors[field.name] ? "border-red-500" : "border-gray-300"}`}
 //                           />
 //                           {fieldErrors[field.name] && (
-//                             <p className="text-sm text-red-500 mt-1">
-//                               {fieldErrors[field.name]}
-//                             </p>
+//                             <p className="text-sm text-red-500 mt-1">{fieldErrors[field.name]}</p>
 //                           )}
 //                         </div>
 //                       )}
@@ -2647,9 +2435,7 @@
 //               <div className="space-y-4">
 //                 <div
 //                   className={`flex flex-col items-center justify-center w-full min-h-32 border-2 border-dashed rounded-xl cursor-pointer transition p-6 ${
-//                     isDragging
-//                       ? "border-indigo-500 bg-indigo-50"
-//                       : "border-indigo-300 hover:border-indigo-500 hover:bg-indigo-50"
+//                     isDragging ? "border-indigo-500 bg-indigo-50" : "border-indigo-300 hover:border-indigo-500 hover:bg-indigo-50"
 //                   }`}
 //                   onDragOver={handleDragOver}
 //                   onDragLeave={handleDragLeave}
@@ -2658,18 +2444,9 @@
 //                 >
 //                   <div className="w-full flex flex-wrap gap-4">
 //                     {existingAttachments.map((file, idx) => (
-//                       <div
-//                         key={`existing-${idx}`}
-//                         className="flex flex-col items-center justify-center w-28 h-28 bg-white border rounded-xl shadow-sm p-2 relative group"
-//                       >
-//                         <button
-//                           type="button"
-//                           onClick={(e) => {
-//                             e.stopPropagation();
-//                             handleRemoveFile(idx, "existing");
-//                           }}
-//                           className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-//                         >
+//                       <div key={`existing-${idx}`} className="flex flex-col items-center justify-center w-28 h-28 bg-white border rounded-xl shadow-sm p-2 relative group">
+//                         <button type="button" onClick={(e) => { e.stopPropagation(); handleRemoveFile(idx, "existing"); }}
+//                           className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
 //                           <X size={12} />
 //                         </button>
 //                         <div className="w-12 h-12 flex items-center justify-center bg-indigo-100 rounded-md mb-1">
@@ -2677,35 +2454,16 @@
 //                             {file.name.split(".").pop().toUpperCase()}
 //                           </span>
 //                         </div>
-//                         <p className="text-xs text-gray-500 truncate w-full text-center">
-//                           {file.name}
-//                         </p>
-//                         <button
-//                           type="button"
-//                           onClick={(e) => {
-//                             e.stopPropagation();
-//                             handleRemoveFile(idx, "existing");
-//                           }}
-//                           className="text-[12px] text-red-600 hover:underline mt-1"
-//                         >
-//                           Remove
-//                         </button>
+//                         <p className="text-xs text-gray-500 truncate w-full text-center">{file.name}</p>
+//                         <button type="button" onClick={(e) => { e.stopPropagation(); handleRemoveFile(idx, "existing"); }}
+//                           className="text-[12px] text-red-600 hover:underline mt-1">Remove</button>
 //                       </div>
 //                     ))}
 
 //                     {formData.attachments.map((file, idx) => (
-//                       <div
-//                         key={`new-${idx}`}
-//                         className="flex flex-col items-center justify-center w-28 h-28 bg-white border rounded-xl shadow-sm p-2 relative group"
-//                       >
-//                         <button
-//                           type="button"
-//                           onClick={(e) => {
-//                             e.stopPropagation();
-//                             handleRemoveFile(idx, "new");
-//                           }}
-//                           className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-//                         >
+//                       <div key={`new-${idx}`} className="flex flex-col items-center justify-center w-28 h-28 bg-white border rounded-xl shadow-sm p-2 relative group">
+//                         <button type="button" onClick={(e) => { e.stopPropagation(); handleRemoveFile(idx, "new"); }}
+//                           className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
 //                           <X size={12} />
 //                         </button>
 //                         <div className="w-12 h-12 flex items-center justify-center bg-indigo-100 rounded-md mb-1">
@@ -2713,100 +2471,50 @@
 //                             {file.name.split(".").pop().toUpperCase()}
 //                           </span>
 //                         </div>
-//                         <p className="text-xs text-gray-500">
-//                           {(file.size / 1024 / 1024).toFixed(2)} MB
-//                         </p>
-//                         <p className="text-[10px] text-gray-700 truncate w-full text-center">
-//                           {file.name}
-//                         </p>
-//                         <button
-//                           type="button"
-//                           onClick={(e) => {
-//                             e.stopPropagation();
-//                             handleRemoveFile(idx, "new");
-//                           }}
-//                           className="text-[12px] text-red-600 hover:underline mt-1"
-//                         >
-//                           Remove
-//                         </button>
+//                         <p className="text-xs text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+//                         <p className="text-[10px] text-gray-700 truncate w-full text-center">{file.name}</p>
+//                         <button type="button" onClick={(e) => { e.stopPropagation(); handleRemoveFile(idx, "new"); }}
+//                           className="text-[12px] text-red-600 hover:underline mt-1">Remove</button>
 //                       </div>
 //                     ))}
 
-//                     {existingAttachments.length === 0 &&
-//                       formData.attachments.length === 0 && (
-//                         <div className="flex flex-col items-center justify-center text-center">
-//                           <Upload size={48} className="text-indigo-300 mb-2" />
-//                           <p className="text-sm text-gray-600">
-//                             Drag & drop files here or click to browse
-//                           </p>
-//                           <p className="text-xs text-gray-500 mt-1">
-//                             Max 5 files, 20MB Limit
-//                           </p>
-//                         </div>
-//                       )}
+//                     {existingAttachments.length === 0 && formData.attachments.length === 0 && (
+//                       <div className="flex flex-col items-center justify-center text-center">
+//                         <Upload size={48} className="text-indigo-300 mb-2" />
+//                         <p className="text-sm text-gray-600">Drag & drop files here or click to browse</p>
+//                         <p className="text-xs text-gray-500 mt-1">Max 5 files, 20MB Limit</p>
+//                       </div>
+//                     )}
 //                   </div>
 
 //                   <input
-//                     id="attachments"
-//                     type="file"
-//                     multiple
-//                     onChange={handleFileChange}
-//                     className="hidden"
-//                     disabled={
-//                       formData.attachments.length +
-//                         existingAttachments.length >=
-//                       5
-//                     }
+//                     id="attachments" type="file" multiple
+//                     onChange={handleFileChange} className="hidden"
+//                     disabled={formData.attachments.length + existingAttachments.length >= 5}
 //                   />
 //                 </div>
 
 //                 <div className="text-sm text-gray-600 flex flex-wrap gap-4 items-center">
 //                   <div>
-//                     <span
-//                       className={`font-medium ${
-//                         formData.attachments.length +
-//                           existingAttachments.length >=
-//                         5
-//                           ? "text-red-500"
-//                           : "text-gray-600"
-//                       }`}
-//                     >
-//                       Files:{" "}
-//                       {formData.attachments.length + existingAttachments.length}
-//                       /5
+//                     <span className={`font-medium ${formData.attachments.length + existingAttachments.length >= 5 ? "text-red-500" : "text-gray-600"}`}>
+//                       Files: {formData.attachments.length + existingAttachments.length}/5
 //                     </span>
 //                   </div>
-//                   <div>
-//                     <span className="font-medium">Max size:</span> 20MB
-//                   </div>
-//                   <div>
-//                     <span className="font-medium">Supported types:</span> All
-//                     file types
-//                   </div>
+//                   <div><span className="font-medium">Max size:</span> 20MB</div>
+//                   <div><span className="font-medium">Supported types:</span> All file types</div>
 //                 </div>
 //               </div>
 //             </div>
 
 //             {/* Buttons */}
 //             <div className="flex justify-end gap-4 pt-6 border-t">
-//               <button
-//                 type="button"
-//                 onClick={handleBackClick}
-//                 className="px-6 py-2 rounded-lg border bg-white hover:bg-gray-100 text-gray-700 transition"
-//               >
+//               <button type="button" onClick={handleBackClick}
+//                 className="px-6 py-2 rounded-lg border bg-white hover:bg-gray-100 text-gray-700 transition">
 //                 Cancel
 //               </button>
-
-//               <button
-//                 type="submit"
-//                 disabled={isSubmitting}
-//                 className="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed"
-//               >
-//                 {isSubmitting
-//                   ? "Processing..."
-//                   : leadId
-//                     ? "Update Lead"
-//                     : "Save Lead"}
+//               <button type="submit" disabled={isSubmitting}
+//                 className="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed">
+//                 {isSubmitting ? "Processing..." : leadId ? "Update Lead" : "Save Lead"}
 //               </button>
 //             </div>
 //           </form>
@@ -2816,7 +2524,7 @@
 //       <ToastContainer position="top-right" autoClose={3000} theme="light" />
 //     </>
 //   );
-// }//final code all work perfectly..
+// }//all work correctly..
 
 
 import React, { useState, useEffect } from "react";
@@ -2838,7 +2546,7 @@ export default function CreateLeads() {
   const navigate    = useNavigate();
   const location    = useLocation();
   const queryParams = new URLSearchParams(location.search);
-  const leadId      = queryParams.get("id"); // edit mode if exists
+  const leadId      = queryParams.get("id");
 
   const [userRole,     setUserRole]     = useState("");
   const [userId,       setUserId]       = useState("");
@@ -2851,30 +2559,30 @@ export default function CreateLeads() {
   ];
 
   const [formData, setFormData] = useState({
-    leadName:    "",
-    phoneNumber: "",
-    email:       "",
-    source:      "",
-    destination: "",   // ✅ renamed from designation
-    duration:    "",
-    requirement: "",
-    status:      "Cold",
-    assignTo:    "",
-    address:     "",
-    country:     "",
-    followUpDate: "",
+    leadName:     "",
+    phoneNumber:  "",
+    email:        "",
+    source:       "",
+    destination:  "",
+    duration:     "",
+    requirement:  "",
+    status:       "Cold",
+    assignTo:     "",
+    address:      "",
+    country:      "",
+    followUpDate: "", // stays "" in UI — converted to null before sending if blank
     notes:        "",
     attachments:  [],
   });
 
-  const [customSource,         setCustomSource]         = useState("");
-  const [errors,               setErrors]               = useState({});
-  const [salesUsers,           setSalesUsers]           = useState([]);
-  const [countries]                                     = useState(getNames());
-  const [existingAttachments,  setExistingAttachments]  = useState([]);
-  const [isLoading,            setIsLoading]            = useState(false);
-  const [isDragging,           setIsDragging]           = useState(false);
-  const [phoneCountryCode,     setPhoneCountryCode]     = useState("in");
+  const [customSource,        setCustomSource]        = useState("");
+  const [errors,              setErrors]              = useState({});
+  const [salesUsers,          setSalesUsers]          = useState([]);
+  const [countries]                                   = useState(getNames());
+  const [existingAttachments, setExistingAttachments] = useState([]);
+  const [isLoading,           setIsLoading]           = useState(false);
+  const [isDragging,          setIsDragging]          = useState(false);
+  const [phoneCountryCode,    setPhoneCountryCode]    = useState("in");
 
   // Load user role and ID
   useEffect(() => {
@@ -2922,7 +2630,6 @@ export default function CreateLeads() {
 
           const leadData = response.data;
 
-          // Determine if source is custom
           const predefined      = sourceOptions.filter((opt) => opt !== "Other");
           const isCustomSource  = leadData.source && !predefined.includes(leadData.source);
           let sourceValue       = leadData.source || "";
@@ -2937,7 +2644,7 @@ export default function CreateLeads() {
           setExistingAttachments(leadData.attachments || []);
           setFormData({
             leadName:    leadData.leadName    || "",
-            destination: leadData.destination || "",  // ✅ renamed from designation
+            destination: leadData.destination || "",
             phoneNumber: leadData.phoneNumber || "",
             email:       leadData.email       || "",
             source:      sourceValue,
@@ -2947,6 +2654,7 @@ export default function CreateLeads() {
             assignTo:    leadData.assignTo?._id || "",
             address:     leadData.address     || "",
             country:     leadData.country     || "",
+            // ✅ Only populate if a real date exists — never default to today
             followUpDate: leadData.followUpDate
               ? new Date(leadData.followUpDate).toISOString().split("T")[0]
               : "",
@@ -3015,21 +2723,29 @@ export default function CreateLeads() {
 
   const handleDragOver  = (e) => { e.preventDefault(); setIsDragging(true);  };
   const handleDragLeave = (e) => { e.preventDefault(); setIsDragging(false); };
-  const handleDrop      = (e) => { e.preventDefault(); setIsDragging(false); processFiles(Array.from(e.dataTransfer.files)); };
+  const handleDrop      = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    processFiles(Array.from(e.dataTransfer.files));
+  };
 
   const processFiles = (files) => {
-    const totalFiles = formData.attachments.length + files.length + existingAttachments.length;
+    const totalFiles =
+      formData.attachments.length + files.length + existingAttachments.length;
     if (totalFiles > 5) { toast.error("Maximum 5 attachments allowed"); return; }
     const oversized = files.filter((f) => f.size > 20 * 1024 * 1024);
     if (oversized.length > 0) { toast.error("Some files exceed the 20MB size limit"); return; }
     setFormData((p) => ({ ...p, attachments: [...p.attachments, ...files] }));
   };
 
-  const handleFileChange  = (e) => processFiles(Array.from(e.target.files));
+  const handleFileChange = (e) => processFiles(Array.from(e.target.files));
 
   const handleRemoveFile = (idx, type = "new") => {
     if (type === "new")
-      setFormData((prev) => ({ ...prev, attachments: prev.attachments.filter((_, i) => i !== idx) }));
+      setFormData((prev) => ({
+        ...prev,
+        attachments: prev.attachments.filter((_, i) => i !== idx),
+      }));
     else
       setExistingAttachments((prev) => prev.filter((_, i) => i !== idx));
   };
@@ -3043,7 +2759,6 @@ export default function CreateLeads() {
       newFieldErrors.leadName = "Lead name is required";
     }
 
-    // ✅ validate destination (was designation)
     if (!formData.destination.trim()) {
       newErrors.destination      = true;
       newFieldErrors.destination = "Destination is required";
@@ -3059,7 +2774,8 @@ export default function CreateLeads() {
 
     if (formData.email.trim() && !validateEmailDomain(formData.email)) {
       newErrors.email      = true;
-      newFieldErrors.email = "Please enter a valid email address with a proper domain (e.g., name@company.com)";
+      newFieldErrors.email =
+        "Please enter a valid email address with a proper domain (e.g., name@company.com)";
     }
 
     setErrors(newErrors);
@@ -3071,7 +2787,6 @@ export default function CreateLeads() {
     e.preventDefault();
     setFieldErrors({});
 
-    // Prepare final source value
     let finalSource = formData.source;
     if (formData.source === "Other") {
       if (!customSource.trim()) {
@@ -3093,7 +2808,7 @@ export default function CreateLeads() {
     setIsSubmitting(true);
 
     try {
-      const token      = localStorage.getItem("token");
+      const token       = localStorage.getItem("token");
       const formDataObj = new FormData();
 
       for (let key in dataToSendForm) {
@@ -3102,24 +2817,53 @@ export default function CreateLeads() {
             formDataObj.append("attachments", file)
           );
         } else if (key === "assignTo") {
-          if (dataToSendForm.assignTo) formDataObj.append(key, dataToSendForm.assignTo);
+          if (dataToSendForm.assignTo)
+            formDataObj.append(key, dataToSendForm.assignTo);
+
+        } else if (key === "followUpDate") {
+          // ✅ THE KEY FIX:
+          // User picks 19-3-2026  → formData.followUpDate = "2026-03-19"
+          //                       → send "2026-03-19" to backend ✅
+          //
+          // User picks nothing    → formData.followUpDate = ""
+          //                       → send "null" to backend
+          //                       → backend stores null (not today) ✅
+          const dateVal = dataToSendForm.followUpDate;
+          if (dateVal && dateVal.trim() !== "") {
+            formDataObj.append("followUpDate", dateVal); // exact date user chose
+          } else {
+            formDataObj.append("followUpDate", "null");  // no date → null in DB
+          }
+
         } else {
           formDataObj.append(key, dataToSendForm[key]);
         }
       }
 
-      formDataObj.append("existingAttachments", JSON.stringify(existingAttachments));
+      formDataObj.append(
+        "existingAttachments",
+        JSON.stringify(existingAttachments)
+      );
 
       const config = {
-        headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${token}` },
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization:  `Bearer ${token}`,
+        },
         onUploadProgress: (progressEvent) => {
-          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          const progress = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
           console.log(`Upload progress: ${progress}%`);
         },
       };
 
       if (leadId) {
-        await axios.put(`${API_URL}/leads/updateLead/${leadId}`, formDataObj, config);
+        await axios.put(
+          `${API_URL}/leads/updateLead/${leadId}`,
+          formDataObj,
+          config
+        );
         toast.success("Lead updated successfully");
       } else {
         await axios.post(`${API_URL}/leads/create`, formDataObj, config);
@@ -3143,7 +2887,10 @@ export default function CreateLeads() {
           setFieldErrors({ leadName: "This lead name already exists" });
           setErrors({ leadName: true });
           toast.error("Lead name already exists");
-        } else if ((errorMsg.includes("file") && errorMsg.includes("large")) || errorMsg.includes("size")) {
+        } else if (
+          (errorMsg.includes("file") && errorMsg.includes("large")) ||
+          errorMsg.includes("size")
+        ) {
           toast.error("File size exceeds the 20MB limit");
         } else if (err.response.data.errors) {
           const backendErrors  = err.response.data.errors;
@@ -3155,7 +2902,10 @@ export default function CreateLeads() {
           setFieldErrors(newFieldErrors);
           toast.error("Please check the form for errors");
         } else {
-          toast.error(err.response.data.message || (leadId ? "Failed to update lead" : "Failed to create lead"));
+          toast.error(
+            err.response.data.message ||
+              (leadId ? "Failed to update lead" : "Failed to create lead")
+          );
         }
       } else if (err.message?.includes("Network Error")) {
         toast.error("Network error. Please check your connection.");
@@ -3169,18 +2919,20 @@ export default function CreateLeads() {
 
   const handleBackClick = () => navigate(-1);
 
-  // ✅ Field groups — destination replaces designation everywhere
   const fieldGroups = [
     {
       title:  "Basic Information",
       color:  "text-blue-600",
       fields: [
-        { name: "leadName",    label: "Lead Name",    icon: <User     size={16} /> },
-        { name: "destination", label: "Destination",  icon: <Building2 size={16} /> }, // ✅ renamed
-        { name: "phoneNumber", label: "Phone Number", icon: <Phone    size={16} /> },
-        { name: "email",       label: "Email",        icon: <Mail     size={16} /> },
-        { name: "address",     label: "Address",      icon: <MapPin   size={16} /> },
-        { name: "country",     label: "Country",      icon: <Globe    size={16} />, type: "select", options: countries },
+        { name: "leadName",    label: "Lead Name",    icon: <User      size={16} /> },
+        { name: "destination", label: "Destination",  icon: <Building2 size={16} /> },
+        { name: "phoneNumber", label: "Phone Number", icon: <Phone     size={16} /> },
+        { name: "email",       label: "Email",        icon: <Mail      size={16} /> },
+        { name: "address",     label: "Address",      icon: <MapPin    size={16} /> },
+        {
+          name: "country", label: "Country", icon: <Globe size={16} />,
+          type: "select",  options: countries,
+        },
       ],
     },
     {
@@ -3188,11 +2940,8 @@ export default function CreateLeads() {
       color:  "text-green-600",
       fields: [
         {
-          name:        "duration",
-          label:       "Duration",
-          icon:        <Briefcase size={16} />,
-          type:        "text",
-          placeholder: "e.g., 3 months, 1 year, etc.",
+          name: "duration", label: "Duration", icon: <Briefcase size={16} />,
+          type: "text", placeholder: "e.g., 3 months, 1 year, etc.",
         },
         { name: "source",      label: "Source",      icon: <Globe    size={16} /> },
         { name: "requirement", label: "Requirement", icon: <FileText size={16} /> },
@@ -3202,16 +2951,28 @@ export default function CreateLeads() {
       title:  "Lead Management",
       color:  "text-yellow-600",
       fields: [
-        { name: "status",      label: "Status",       icon: <UserCheck size={16} />, type: "select", options: ["Hot", "Warm", "Cold", "Junk"] },
-        { name: "assignTo",    label: "Assign To",    icon: <User      size={16} />, type: "select", options: getSalesUsersOptions() },
-        { name: "followUpDate",label: "Follow-up Date", icon: <Calendar size={16} />, type: "date" },
+        {
+          name: "status", label: "Status", icon: <UserCheck size={16} />,
+          type: "select", options: ["Hot", "Warm", "Cold", "Junk"],
+        },
+        {
+          name: "assignTo", label: "Assign To", icon: <User size={16} />,
+          type: "select",   options: getSalesUsersOptions(),
+        },
+        {
+          name: "followUpDate", label: "Follow-up Date",
+          icon: <Calendar size={16} />, type: "date",
+        },
       ],
     },
     {
       title:  "Additional Information",
       color:  "text-purple-600",
       fields: [
-        { name: "notes", label: "Notes", icon: <StickyNote size={16} />, type: "textarea" },
+        {
+          name: "notes", label: "Notes",
+          icon: <StickyNote size={16} />, type: "textarea",
+        },
       ],
     },
   ];
@@ -3247,17 +3008,22 @@ export default function CreateLeads() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="p-8 space-y-10">
             {fieldGroups.map((group) => (
-              <div key={group.title} className="space-y-6 p-6 border border-gray-200 rounded-xl shadow-sm">
+              <div
+                key={group.title}
+                className="space-y-6 p-6 border border-gray-200 rounded-xl shadow-sm"
+              >
                 <h2 className={`text-lg font-semibold border-b pb-2 ${group.color}`}>
                   {group.title}
                 </h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {group.fields.map((field) => (
-                    <div key={field.name} className={`${field.type === "textarea" ? "md:col-span-3" : ""}`}>
+                    <div
+                      key={field.name}
+                      className={`${field.type === "textarea" ? "md:col-span-3" : ""}`}
+                    >
                       <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                         {field.icon} {field.label}
-                        {/* ✅ Required marker for destination (was designation) */}
                         {(field.name === "leadName" ||
                           field.name === "destination" ||
                           field.name === "phoneNumber") && (
@@ -3265,39 +3031,57 @@ export default function CreateLeads() {
                         )}
                       </label>
 
-                      {/* Phone input */}
+                      {/* ── Phone ── */}
                       {field.name === "phoneNumber" ? (
                         <div>
-                          <div className={`border rounded-lg ${errors.phoneNumber ? "border-red-500" : "border-gray-300"}`}>
+                          <div
+                            className={`border rounded-lg ${
+                              errors.phoneNumber ? "border-red-500" : "border-gray-300"
+                            }`}
+                          >
                             <PhoneInput
                               country={"in"}
                               value={formData.phoneNumber}
                               onChange={handlePhoneChange}
                               specialLabel=""
-                              inputStyle={{ width: "100%", height: "42px", fontSize: "14px", paddingLeft: "55px", borderRadius: "0.5rem", boxSizing: "border-box", border: "none" }}
-                              buttonStyle={{ borderRadius: "0.5rem 0 0 0.5rem", height: "42px", background: "white", border: "none", borderRight: "1px solid #e5e7eb" }}
+                              inputStyle={{
+                                width: "100%", height: "42px", fontSize: "14px",
+                                paddingLeft: "55px", borderRadius: "0.5rem",
+                                boxSizing: "border-box", border: "none",
+                              }}
+                              buttonStyle={{
+                                borderRadius: "0.5rem 0 0 0.5rem", height: "42px",
+                                background: "white", border: "none",
+                                borderRight: "1px solid #e5e7eb",
+                              }}
                               containerStyle={{ width: "100%" }}
                               dropdownStyle={{ borderRadius: "0.5rem" }}
                             />
                           </div>
                           {fieldErrors.phoneNumber && (
-                            <p className="text-sm text-red-500 mt-1">{fieldErrors.phoneNumber}</p>
-                          )}
-                          {formData.country && formData.phoneNumber && !fieldErrors.phoneNumber && (
-                            <p className="text-xs text-gray-500 mt-1">
-                              Expected: {getPhoneNumberLengthMessage(phoneCountryCode)}
+                            <p className="text-sm text-red-500 mt-1">
+                              {fieldErrors.phoneNumber}
                             </p>
                           )}
+                          {formData.country &&
+                            formData.phoneNumber &&
+                            !fieldErrors.phoneNumber && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                Expected: {getPhoneNumberLengthMessage(phoneCountryCode)}
+                              </p>
+                            )}
                         </div>
 
                       ) : field.name === "source" ? (
-                        // Source with custom input
+                        /* ── Source ── */
                         <div>
                           <select
                             name="source"
                             value={formData.source || ""}
                             onChange={handleChange}
-                            className={`w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 outline-none transition h-11 ${errors.source ? "border-red-500" : "border-gray-300"}`}
+                            className={`w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 outline-none transition h-11 ${
+                              errors.source ? "border-red-500" : "border-gray-300"
+                            }`}
                           >
                             <option value="">Select Source</option>
                             {sourceOptions.map((opt) => (
@@ -3312,39 +3096,48 @@ export default function CreateLeads() {
                                 placeholder="Enter custom source"
                                 value={customSource}
                                 onChange={(e) => setCustomSource(e.target.value)}
-                                className={`w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 outline-none transition h-11 ${errors.source ? "border-red-500" : "border-gray-300"}`}
+                                className={`w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 outline-none transition h-11 ${
+                                  errors.source ? "border-red-500" : "border-gray-300"
+                                }`}
                               />
                             </div>
                           )}
-
                           {fieldErrors.source && (
                             <p className="text-sm text-red-500 mt-1">{fieldErrors.source}</p>
                           )}
                         </div>
 
                       ) : field.type === "select" ? (
+                        /* ── Select ── */
                         <div>
                           <select
                             name={field.name}
                             value={formData[field.name] || ""}
                             onChange={handleChange}
-                            className={`w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 outline-none transition h-11 ${errors[field.name] ? "border-red-500" : "border-gray-300"}`}
+                            className={`w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 outline-none transition h-11 ${
+                              errors[field.name] ? "border-red-500" : "border-gray-300"
+                            }`}
                           >
                             <option value="">Select {field.label}</option>
                             {field.options.map((opt) =>
                               typeof opt === "string" ? (
                                 <option key={opt} value={opt}>{opt}</option>
                               ) : (
-                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                <option key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </option>
                               )
                             )}
                           </select>
                           {fieldErrors[field.name] && (
-                            <p className="text-sm text-red-500 mt-1">{fieldErrors[field.name]}</p>
+                            <p className="text-sm text-red-500 mt-1">
+                              {fieldErrors[field.name]}
+                            </p>
                           )}
                         </div>
 
                       ) : field.type === "textarea" ? (
+                        /* ── Textarea ── */
                         <div>
                           <textarea
                             name={field.name}
@@ -3356,11 +3149,14 @@ export default function CreateLeads() {
                             maxLength={500}
                           />
                           {fieldErrors[field.name] && (
-                            <p className="text-sm text-red-500 mt-1">{fieldErrors[field.name]}</p>
+                            <p className="text-sm text-red-500 mt-1">
+                              {fieldErrors[field.name]}
+                            </p>
                           )}
                         </div>
 
                       ) : (
+                        /* ── Text / Date (including followUpDate) ── */
                         <div>
                           <input
                             type={field.type || "text"}
@@ -3368,10 +3164,14 @@ export default function CreateLeads() {
                             value={formData[field.name] || ""}
                             onChange={handleChange}
                             placeholder={field.placeholder || `Enter ${field.label}`}
-                            className={`w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 outline-none transition h-11 ${errors[field.name] ? "border-red-500" : "border-gray-300"}`}
+                            className={`w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 outline-none transition h-11 ${
+                              errors[field.name] ? "border-red-500" : "border-gray-300"
+                            }`}
                           />
                           {fieldErrors[field.name] && (
-                            <p className="text-sm text-red-500 mt-1">{fieldErrors[field.name]}</p>
+                            <p className="text-sm text-red-500 mt-1">
+                              {fieldErrors[field.name]}
+                            </p>
                           )}
                         </div>
                       )}
@@ -3390,7 +3190,9 @@ export default function CreateLeads() {
               <div className="space-y-4">
                 <div
                   className={`flex flex-col items-center justify-center w-full min-h-32 border-2 border-dashed rounded-xl cursor-pointer transition p-6 ${
-                    isDragging ? "border-indigo-500 bg-indigo-50" : "border-indigo-300 hover:border-indigo-500 hover:bg-indigo-50"
+                    isDragging
+                      ? "border-indigo-500 bg-indigo-50"
+                      : "border-indigo-300 hover:border-indigo-500 hover:bg-indigo-50"
                   }`}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
@@ -3399,9 +3201,15 @@ export default function CreateLeads() {
                 >
                   <div className="w-full flex flex-wrap gap-4">
                     {existingAttachments.map((file, idx) => (
-                      <div key={`existing-${idx}`} className="flex flex-col items-center justify-center w-28 h-28 bg-white border rounded-xl shadow-sm p-2 relative group">
-                        <button type="button" onClick={(e) => { e.stopPropagation(); handleRemoveFile(idx, "existing"); }}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div
+                        key={`existing-${idx}`}
+                        className="flex flex-col items-center justify-center w-28 h-28 bg-white border rounded-xl shadow-sm p-2 relative group"
+                      >
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); handleRemoveFile(idx, "existing"); }}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
                           <X size={12} />
                         </button>
                         <div className="w-12 h-12 flex items-center justify-center bg-indigo-100 rounded-md mb-1">
@@ -3409,16 +3217,29 @@ export default function CreateLeads() {
                             {file.name.split(".").pop().toUpperCase()}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-500 truncate w-full text-center">{file.name}</p>
-                        <button type="button" onClick={(e) => { e.stopPropagation(); handleRemoveFile(idx, "existing"); }}
-                          className="text-[12px] text-red-600 hover:underline mt-1">Remove</button>
+                        <p className="text-xs text-gray-500 truncate w-full text-center">
+                          {file.name}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); handleRemoveFile(idx, "existing"); }}
+                          className="text-[12px] text-red-600 hover:underline mt-1"
+                        >
+                          Remove
+                        </button>
                       </div>
                     ))}
 
                     {formData.attachments.map((file, idx) => (
-                      <div key={`new-${idx}`} className="flex flex-col items-center justify-center w-28 h-28 bg-white border rounded-xl shadow-sm p-2 relative group">
-                        <button type="button" onClick={(e) => { e.stopPropagation(); handleRemoveFile(idx, "new"); }}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div
+                        key={`new-${idx}`}
+                        className="flex flex-col items-center justify-center w-28 h-28 bg-white border rounded-xl shadow-sm p-2 relative group"
+                      >
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); handleRemoveFile(idx, "new"); }}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
                           <X size={12} />
                         </button>
                         <div className="w-12 h-12 flex items-center justify-center bg-indigo-100 rounded-md mb-1">
@@ -3426,50 +3247,87 @@ export default function CreateLeads() {
                             {file.name.split(".").pop().toUpperCase()}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
-                        <p className="text-[10px] text-gray-700 truncate w-full text-center">{file.name}</p>
-                        <button type="button" onClick={(e) => { e.stopPropagation(); handleRemoveFile(idx, "new"); }}
-                          className="text-[12px] text-red-600 hover:underline mt-1">Remove</button>
+                        <p className="text-xs text-gray-500">
+                          {(file.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                        <p className="text-[10px] text-gray-700 truncate w-full text-center">
+                          {file.name}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); handleRemoveFile(idx, "new"); }}
+                          className="text-[12px] text-red-600 hover:underline mt-1"
+                        >
+                          Remove
+                        </button>
                       </div>
                     ))}
 
-                    {existingAttachments.length === 0 && formData.attachments.length === 0 && (
-                      <div className="flex flex-col items-center justify-center text-center">
-                        <Upload size={48} className="text-indigo-300 mb-2" />
-                        <p className="text-sm text-gray-600">Drag & drop files here or click to browse</p>
-                        <p className="text-xs text-gray-500 mt-1">Max 5 files, 20MB Limit</p>
-                      </div>
-                    )}
+                    {existingAttachments.length === 0 &&
+                      formData.attachments.length === 0 && (
+                        <div className="flex flex-col items-center justify-center text-center">
+                          <Upload size={48} className="text-indigo-300 mb-2" />
+                          <p className="text-sm text-gray-600">
+                            Drag & drop files here or click to browse
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Max 5 files, 20MB Limit
+                          </p>
+                        </div>
+                      )}
                   </div>
 
                   <input
-                    id="attachments" type="file" multiple
-                    onChange={handleFileChange} className="hidden"
-                    disabled={formData.attachments.length + existingAttachments.length >= 5}
+                    id="attachments"
+                    type="file"
+                    multiple
+                    onChange={handleFileChange}
+                    className="hidden"
+                    disabled={
+                      formData.attachments.length + existingAttachments.length >= 5
+                    }
                   />
                 </div>
 
                 <div className="text-sm text-gray-600 flex flex-wrap gap-4 items-center">
                   <div>
-                    <span className={`font-medium ${formData.attachments.length + existingAttachments.length >= 5 ? "text-red-500" : "text-gray-600"}`}>
+                    <span
+                      className={`font-medium ${
+                        formData.attachments.length + existingAttachments.length >= 5
+                          ? "text-red-500"
+                          : "text-gray-600"
+                      }`}
+                    >
                       Files: {formData.attachments.length + existingAttachments.length}/5
                     </span>
                   </div>
                   <div><span className="font-medium">Max size:</span> 20MB</div>
-                  <div><span className="font-medium">Supported types:</span> All file types</div>
+                  <div>
+                    <span className="font-medium">Supported types:</span> All file types
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Buttons */}
             <div className="flex justify-end gap-4 pt-6 border-t">
-              <button type="button" onClick={handleBackClick}
-                className="px-6 py-2 rounded-lg border bg-white hover:bg-gray-100 text-gray-700 transition">
+              <button
+                type="button"
+                onClick={handleBackClick}
+                className="px-6 py-2 rounded-lg border bg-white hover:bg-gray-100 text-gray-700 transition"
+              >
                 Cancel
               </button>
-              <button type="submit" disabled={isSubmitting}
-                className="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed">
-                {isSubmitting ? "Processing..." : leadId ? "Update Lead" : "Save Lead"}
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting
+                  ? "Processing..."
+                  : leadId
+                  ? "Update Lead"
+                  : "Save Lead"}
               </button>
             </div>
           </form>
