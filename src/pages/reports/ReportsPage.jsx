@@ -1994,7 +1994,7 @@ const ReportsPage = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  {["Team Member","Leads","Time Logged","Completion","Actions"].map((h) => (
+                  {["Team Member","Leads","Time Logged","Actions"].map((h) => (
                     <th key={h} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                       {h}
                     </th>
@@ -2055,7 +2055,7 @@ const ReportsPage = () => {
                       </td>
 
                       {/* Completion bar */}
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      {/* <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-3">
                           <div className="w-24 bg-gray-200 rounded-full h-2">
                             <div
@@ -2072,7 +2072,7 @@ const ReportsPage = () => {
                             {rep.activityCompletionRate.toFixed(0)}%
                           </span>
                         </div>
-                      </td>
+                      </td> */}
 
                       {/* Actions */}
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
