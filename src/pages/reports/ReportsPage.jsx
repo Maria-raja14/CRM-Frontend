@@ -1994,7 +1994,7 @@ const ReportsPage = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  {["Team Member","Leads","Activities","Time Logged","Completion","Actions"].map((h) => (
+                  {["Team Member","Leads","Time Logged","Completion","Actions"].map((h) => (
                     <th key={h} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                       {h}
                     </th>
@@ -2028,7 +2028,7 @@ const ReportsPage = () => {
                       </td>
 
                       {/* Activities */}
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      {/* <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <div className="text-sm font-medium text-gray-900">
                             {rep.completedActivities}/{rep.totalActivities}
@@ -2044,7 +2044,7 @@ const ReportsPage = () => {
                             ? `${rep.activityCompletionRate.toFixed(0)}% done`
                             : "No activities"}
                         </div>
-                      </td>
+                      </td> */}
 
                       {/* Time Logged */}
                       <td className="px-6 py-4 whitespace-nowrap">
