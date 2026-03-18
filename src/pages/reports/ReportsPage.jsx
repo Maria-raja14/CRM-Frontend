@@ -1981,11 +1981,11 @@ const ReportsPage = () => {
             icon={<FaChartLine className="w-5 h-5" />} color="green"
             subtitle={getPerformanceLabel(avgProductivity)}
           />
-          <SummaryCard
+          {/* <SummaryCard
             title="Avg Completion Rate" value={`${avgCompletion.toFixed(0)}%`}
             icon={<FaCheckCircle className="w-5 h-5" />} color="purple"
             subtitle={`Across ${reports.length} member${reports.length !== 1 ? "s" : ""}`}
-          />
+          /> */}
         </div>
 
         {/* Main Table — stays visible and stable during refreshes */}
