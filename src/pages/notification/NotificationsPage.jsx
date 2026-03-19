@@ -587,7 +587,7 @@ const NotificationsPage = () => {
           {[
             { key: "all",      label: "All" },
             { key: "followup", label: "Lead follow-ups" },
-            { key: "activity", label: "Activity follow-ups" },
+            // { key: "activity", label: "Activity follow-ups" },
           ].map(({ key, label }) => (
             <button
               key={key}
