@@ -1609,4 +1609,4 @@ export default function LeadTable() {
       <LeadTableComponent />
     </TourProvider>
   );
-}
+}// all work perfectly..
