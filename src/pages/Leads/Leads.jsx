@@ -737,7 +737,6 @@
 
 
 
-
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
@@ -764,6 +763,99 @@ const tourSteps = [
   { selector: ".tour-finish",       content: "You've completed the tour!" },
 ];
 
+/* ─────────────────────────────────────────────────────────────────────────
+   AVATAR HELPER
+   ─────────────────────────────────────────────────────────────────────────
+   Extracts the best 1–2 initials from any name string, regardless of
+   whether it starts with a number, symbol, or mixed characters.
+   Examples:
+     "sheetalsuthar2788" → "SH"
+     "s.rajan3"          → "SR"
+     "pgvrreddy"         → "PG"
+     "agvenu0918"        → "AG"
+     "123abc"            → "12"  (fallback: first two chars uppercased)
+     ""  / null          → "?"
+   ──────────────────────────────────────────────────────────────────────── */
+const getInitials = (name) => {
+  if (!name || typeof name !== "string") return "?";
+
+  // Remove leading/trailing spaces
+  const trimmed = name.trim();
+  if (!trimmed) return "?";
+
+  // Extract only alphabetic characters from the name
+  const letters = trimmed.replace(/[^a-zA-Z]/g, "");
+
+  if (letters.length === 0) {
+    // No letters at all — fall back to first 1–2 raw characters, uppercased
+    return trimmed.slice(0, 2).toUpperCase();
+  }
+
+  if (letters.length === 1) {
+    return letters[0].toUpperCase();
+  }
+
+  // Split by word boundaries (spaces, dots, underscores, dashes)
+  const words = trimmed.split(/[\s._\-]+/).filter(Boolean);
+
+  if (words.length >= 2) {
+    // Multi-word name: first letter of first two words
+    const a = words[0].replace(/[^a-zA-Z]/g, "")[0] || "";
+    const b = words[1].replace(/[^a-zA-Z]/g, "")[0] || "";
+    return (a + b).toUpperCase();
+  }
+
+  // Single-word name: first two letters
+  return letters.slice(0, 2).toUpperCase();
+};
+
+/* Deterministic color based on name so each person always gets the same color */
+const AVATAR_COLORS = [
+  { bg: "bg-blue-100",   text: "text-blue-700"   },
+  { bg: "bg-purple-100", text: "text-purple-700"  },
+  { bg: "bg-green-100",  text: "text-green-700"   },
+  { bg: "bg-orange-100", text: "text-orange-700"  },
+  { bg: "bg-pink-100",   text: "text-pink-700"    },
+  { bg: "bg-teal-100",   text: "text-teal-700"    },
+  { bg: "bg-indigo-100", text: "text-indigo-700"  },
+  { bg: "bg-red-100",    text: "text-red-700"     },
+  { bg: "bg-yellow-100", text: "text-yellow-700"  },
+  { bg: "bg-cyan-100",   text: "text-cyan-700"    },
+];
+
+const getAvatarColor = (name) => {
+  if (!name) return AVATAR_COLORS[0];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+};
+
+/* ─── Avatar Component ──────────────────────────────────────────────── */
+const LeadAvatar = ({ name }) => {
+  const initials = getInitials(name);
+  const color    = getAvatarColor(name);
+
+  return (
+    <div
+      className={`
+        h-9 w-9 rounded-full flex-shrink-0
+        flex items-center justify-center
+        font-semibold text-xs select-none
+        ${color.bg} ${color.text}
+      `}
+      style={{ minWidth: "2.25rem", minHeight: "2.25rem" }}
+      title={name || ""}
+    >
+      {initials}
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════════════════════
+   MAIN COMPONENT
+   ═══════════════════════════════════════════════════════════════════════ */
 function LeadTableComponent() {
   const navigate      = useNavigate();
   const { setIsOpen } = useTour();
@@ -846,7 +938,7 @@ function LeadTableComponent() {
   // ── Reset page when filters change ───────────────────────────────────
   useEffect(() => { setCurrentPage(1); }, [statusFilter, sourceFilter, assigneeFilter]);
 
-  // ── Fetch ─────────────────────────────────────────────────────────────
+  // ── FETCH ─────────────────────────────────────────────────────────────
   useEffect(() => {
     const fetchLeads = async () => {
       try {
@@ -877,10 +969,9 @@ function LeadTableComponent() {
         const unique = [];
         leadsArr.forEach((lead) => {
           if (!lead.assignTo) return;
-          const name =
-            typeof lead.assignTo === "object" && lead.assignTo.firstName
-              ? `${lead.assignTo.firstName} ${lead.assignTo.lastName}`
-              : "Assigned User";
+          const name = typeof lead.assignTo === "object" && lead.assignTo.firstName
+            ? `${lead.assignTo.firstName} ${lead.assignTo.lastName}`
+            : "Assigned User";
           if (!seen.has(name)) { seen.add(name); unique.push(name); }
         });
         setAssignees(unique);
@@ -891,6 +982,7 @@ function LeadTableComponent() {
         setLoading(false);
       }
     };
+
     fetchLeads();
   }, [currentPage, debouncedSearch, statusFilter, sourceFilter, assigneeFilter]);
 
@@ -908,7 +1000,7 @@ function LeadTableComponent() {
     const left  = Math.max(2, currentPage - 1);
     const right = Math.min(totalPages - 1, currentPage + 1);
     pages.push(1);
-    if (left > 2)              pages.push("...");
+    if (left > 2) pages.push("...");
     for (let i = left; i <= right; i++) pages.push(i);
     if (right < totalPages - 1) pages.push("...");
     pages.push(totalPages);
@@ -963,7 +1055,6 @@ function LeadTableComponent() {
     setSelectedLeads((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
-
   const handleSelectAll = (e) =>
     setSelectedLeads(e.target.checked ? leads.map((l) => l._id) : []);
 
@@ -1094,12 +1185,12 @@ function LeadTableComponent() {
     `w-full px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-1 ${
       statusClasses[status] || statusClasses.Junk
     } ${
-      status === "Hot"  ? "focus:ring-red-300"    :
-      status === "Warm" ? "focus:ring-yellow-300"  :
-      status === "Cold" ? "focus:ring-blue-300"    : "focus:ring-gray-300"
+      status === "Hot"  ? "focus:ring-red-300"   :
+      status === "Warm" ? "focus:ring-yellow-300" :
+      status === "Cold" ? "focus:ring-blue-300"   : "focus:ring-gray-300"
     }`;
 
-  // ── Loading spinner ───────────────────────────────────────────────────
+  // ── Loading ───────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -1153,30 +1244,22 @@ function LeadTableComponent() {
         <div className="relative tour-search">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input
-            type="text"
-            placeholder="Search leads..."
-            value={searchQuery}
+            type="text" placeholder="Search leads..." value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
         {userRole === "Admin" && (
-          <select
-            value={assigneeFilter}
-            onChange={(e) => setAssigneeFilter(e.target.value)}
-            className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-          >
+          <select value={assigneeFilter} onChange={(e) => setAssigneeFilter(e.target.value)}
+            className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
             <option value="">All Assignees</option>
             {assignees.map((a, i) => <option key={i} value={a}>{a}</option>)}
           </select>
         )}
 
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-        >
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
+          className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
           <option value="">All Status</option>
           <option value="Hot">Hot</option>
           <option value="Warm">Warm</option>
@@ -1185,11 +1268,8 @@ function LeadTableComponent() {
           <option value="Converted">Converted</option>
         </select>
 
-        <select
-          value={sourceFilter}
-          onChange={(e) => setSourceFilter(e.target.value)}
-          className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-        >
+        <select value={sourceFilter} onChange={(e) => setSourceFilter(e.target.value)}
+          className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
           <option value="">All Sources</option>
           <option value="Website">Website</option>
           <option value="Referral">Referral</option>
@@ -1230,7 +1310,11 @@ function LeadTableComponent() {
             {leads.length > 0 ? leads.map((lead, idx) => (
               <tr
                 key={lead._id}
-                className={`hover:bg-blue-50/30 transition-colors whitespace-nowrap ${idx % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}
+                className={`hover:bg-blue-50/30 transition-colors whitespace-nowrap ${
+                  selectedLeads.includes(lead._id)
+                    ? "bg-blue-50"
+                    : idx % 2 === 0 ? "bg-white" : "bg-gray-50/50"
+                }`}
               >
                 <td className="px-4 py-3">
                   <input
@@ -1241,52 +1325,28 @@ function LeadTableComponent() {
                   />
                 </td>
 
-                {/* ── LEAD CELL — fixed avatar ── */}
+                {/* ── Lead cell with fixed avatar ── */}
                 <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    {/*
-                      FIX: Use inline style for the avatar circle to guarantee
-                      exact 32×32px dimensions regardless of table cell stretching.
-                      - width/height/minWidth/minHeight all set to 32px
-                      - borderRadius 50% ensures a perfect circle
-                      - overflow hidden clips any inner content
-                      - lineHeight matches height so the letter is vertically centred
-                    */}
-                    <span
-                      style={{
-                        display:       "inline-flex",
-                        alignItems:    "center",
-                        justifyContent:"center",
-                        width:         "32px",
-                        minWidth:      "32px",
-                        height:        "32px",
-                        minHeight:     "32px",
-                        borderRadius:  "50%",
-                        backgroundColor: "#dbeafe",  /* blue-100 */
-                        color:           "#2563eb",  /* blue-600 */
-                        fontWeight:      600,
-                        fontSize:        "0.875rem",
-                        overflow:        "hidden",
-                        flexShrink:      0,
-                        userSelect:      "none",
-                      }}
-                    >
-                      {lead.leadName?.charAt(0)?.toUpperCase() || "L"}
-                    </span>
+                  <div className="flex items-center gap-3">
+                    {/* Avatar — always shows initials */}
+                    <LeadAvatar name={lead.leadName} />
 
                     <div className="flex flex-col min-w-0">
                       <span
                         onClick={() => navigate(`/leads/view/${lead._id}`)}
-                        className="font-medium text-blue-600 text-sm cursor-pointer hover:underline truncate"
+                        className="font-medium text-blue-600 text-sm cursor-pointer hover:underline truncate max-w-[160px]"
+                        title={lead.leadName || "Unnamed Lead"}
                       >
                         {lead.leadName || "Unnamed Lead"}
                       </span>
-                      <span className="text-gray-400 text-xs truncate">{lead.email || "-"}</span>
+                      <span className="text-gray-400 text-xs truncate max-w-[160px]">
+                        {lead.email || "-"}
+                      </span>
                     </div>
                   </div>
                 </td>
 
-                <td className="px-4 py-3 text-sm text-gray-700">{lead.phoneNumber  || "-"}</td>
+                <td className="px-4 py-3 text-sm text-gray-700">{lead.phoneNumber || "-"}</td>
                 <td className="px-4 py-3 text-sm text-gray-700">{lead.destination  || "-"}</td>
                 <td className="px-4 py-3 text-sm text-gray-700">{lead.country      || "-"}</td>
                 <td className="px-4 py-3 text-sm text-gray-700">{lead.source       || "-"}</td>
@@ -1411,15 +1471,12 @@ function LeadTableComponent() {
               p === "..." ? (
                 <span key={`d${i}`} className="px-2 text-gray-400">…</span>
               ) : (
-                <button
-                  key={p}
-                  onClick={() => goToPage(p)}
+                <button key={p} onClick={() => goToPage(p)}
                   className={`min-w-[36px] px-2 py-1.5 text-sm border rounded-lg transition-colors ${
                     currentPage === p
                       ? "bg-blue-600 text-white border-blue-600 font-semibold"
                       : "hover:bg-gray-100 text-gray-700"
-                  }`}
-                >
+                  }`}>
                   {p}
                 </button>
               )
@@ -1481,8 +1538,7 @@ function LeadTableComponent() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Deal Value</label>
                 <div className="flex gap-2">
                   <input
-                    type="number"
-                    value={dealData.value}
+                    type="number" value={dealData.value}
                     onChange={(e) => setDealData((p) => ({ ...p, value: e.target.value }))}
                     placeholder="Enter value"
                     className="flex-1 px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none"
@@ -1515,24 +1571,16 @@ function LeadTableComponent() {
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
                 <textarea
-                  value={dealData.notes}
-                  rows={3}
-                  placeholder="Add any notes..."
+                  value={dealData.notes} rows={3} placeholder="Add any notes..."
                   onChange={(e) => setDealData((p) => ({ ...p, notes: e.target.value }))}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none"
                 />
               </div>
               <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setConvertModalOpen(false)}
-                  disabled={converting}
-                  className="px-4 py-2 rounded-lg border hover:bg-gray-100 text-gray-700"
-                >Cancel</button>
-                <button
-                  onClick={handleConvertDeal}
-                  disabled={converting}
-                  className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 flex items-center gap-2 disabled:opacity-50"
-                >
+                <button onClick={() => setConvertModalOpen(false)} disabled={converting}
+                  className="px-4 py-2 rounded-lg border hover:bg-gray-100 text-gray-700">Cancel</button>
+                <button onClick={handleConvertDeal} disabled={converting}
+                  className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 flex items-center gap-2 disabled:opacity-50">
                   {converting ? "Converting..." : "Convert"}
                 </button>
               </div>
@@ -1544,6 +1592,7 @@ function LeadTableComponent() {
   );
 }
 
+/* ─── Wrapper ───────────────────────────────────────────────────────── */
 export default function LeadTable() {
   return (
     <TourProvider
