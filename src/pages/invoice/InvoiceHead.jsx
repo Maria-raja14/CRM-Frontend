@@ -1,891 +1,3 @@
-// import React, { useState, useEffect, useRef } from "react";
-// import DatePicker from "react-datepicker";
-// import {
-//   FaEllipsisV,
-//   FaRupeeSign,
-//   FaDollarSign,
-//   FaEuroSign,
-//   FaPoundSign,
-//   FaChevronLeft,
-//   FaChevronRight,
-// } from "react-icons/fa";
-// import { useModal } from "../../context/ModalContext.jsx";
-// import InvoiceModal from "./InvoiceModal.jsx";
-// import axios from "axios";
-// import ReactDOM from "react-dom";
-// import { MagnifyingGlassIcon } from "@heroicons/react/24/solid";
-// import "react-datepicker/dist/react-datepicker.css";
-// import {
-//   Dialog,
-//   DialogContent,
-//   DialogHeader,
-//   DialogTitle,
-// } from "../../components/ui/dialog";
-// import { toast, ToastContainer } from "react-toastify";
-// import "react-toastify/dist/ReactToastify.css";
-// import { useNavigate } from "react-router-dom";
-
-// const InvoiceHead = () => {
-//   const API_URL = import.meta.env.VITE_API_URL;
-
-//   const { openModal } = useModal();
-//   const [startDate, setStartDate] = useState(null);
-//   const [invoices, setInvoices] = useState([]);
-//   const [filteredInvoices, setFilteredInvoices] = useState([]);
-//   const [searchTerm, setSearchTerm] = useState("");
-//   const [filterAssignTo, setFilterAssignTo] = useState("");
-//   const [filterStatus, setFilterStatus] = useState("");
-//   const [filterMethod, setFilterMethod] = useState("");
-//   const [openIndex, setOpenIndex] = useState(null);
-//   const [sendingEmailId, setSendingEmailId] = useState(null);
-//   const [refreshTrigger, setRefreshTrigger] = useState(0);
-//   const [editingInvoice, setEditingInvoice] = useState(null);
-//   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-//   const [invoiceToDelete, setInvoiceToDelete] = useState(null);
-//   const [dropdownButton, setDropdownButton] = useState(null);
-
-//   // Pagination state
-//   const [currentPage, setCurrentPage] = useState(1);
-//   const [itemsPerPage, setItemsPerPage] = useState(10);
-//   const [totalCount, setTotalCount] = useState(0);
-
-//   // modal state for email sending
-//   const [emailModalOpen, setEmailModalOpen] = useState(false);
-//   const [emailMessage, setEmailMessage] = useState("Sending invoice email...");
-//   const [emailStatus, setEmailStatus] = useState("loading"); // loading | success | error
-
-//   const [downloadModalOpen, setDownloadModalOpen] = useState(false);
-//   const [downloadMessage, setDownloadMessage] = useState(
-//     "Downloading invoice..."
-//   );
-//   const [downloadStatus, setDownloadStatus] = useState("loading"); // loading | success | error
-
-//   const dropdownRef = useRef(null);
-//   const currencyScrollRef = useRef(null);
-//   const navigate = useNavigate();
-//   useEffect(() => {
-//     fetchInvoices();
-//   }, [refreshTrigger, currentPage, itemsPerPage]); // Add pagination dependencies
-
-//   useEffect(() => {
-//     const handleClickOutside = (e) => {
-//       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-//         setOpenIndex(null);
-//       }
-//     };
-//     document.addEventListener("mousedown", handleClickOutside);
-//     return () => document.removeEventListener("mousedown", handleClickOutside);
-//   }, []);
-
-//   useEffect(() => {
-//     applyFilters();
-//   }, [
-//     searchTerm,
-//     startDate,
-//     filterAssignTo,
-//     filterStatus,
-//     filterMethod,
-//     invoices,
-//   ]);
-
-//   // Group by currency with enhanced data
-//   const groupedTotals = filteredInvoices.reduce((acc, inv) => {
-//     const cur = inv.currency || "INR"; // default INR
-//     const total = Number(inv.total) || 0;
-//     const paid = inv.status === "paid" ? total : 0;
-//     const due = inv.status !== "paid" ? total : 0;
-
-//     if (!acc[cur]) {
-//       acc[cur] = {
-//         totalAmount: 0,
-//         totalPaid: 0,
-//         totalDue: 0,
-//         count: 0,
-//         paidCount: 0,
-//         dueCount: 0,
-//       };
-//     }
-
-//     acc[cur].totalAmount += total;
-//     acc[cur].totalPaid += paid;
-//     acc[cur].totalDue += due;
-//     acc[cur].count += 1;
-
-//     if (inv.status === "paid") {
-//       acc[cur].paidCount += 1;
-//     } else {
-//       acc[cur].dueCount += 1;
-//     }
-
-//     return acc;
-//   }, {});
-
-  
-//   const fetchInvoices = async () => {
-//     try {
-//       const user = JSON.parse(localStorage.getItem("user"));
-//       const token = localStorage.getItem("token"); // make sure you saved token at login
-
-//       const response = await axios.get(
-//         `${API_URL}/invoice/getInvoice?page=${currentPage}&limit=${itemsPerPage}&assignTo=${user?._id}`,
-//         {
-//           headers: {
-//             Authorization: `Bearer ${token}`,
-//           },
-//         }
-//       );
-
-//       setInvoices(response.data.invoices || response.data);
-//       setFilteredInvoices(response.data.invoices || response.data);
-//       setTotalCount(response.data.totalCount || response.data.length);
-//     } catch (error) {
-//       toast.error("Error fetching invoices!");
-//       console.error("Error fetching invoices:", error.response?.data || error);
-//     }
-//   };
-//   const user = JSON.parse(localStorage.getItem("user")); // already exists
-
-//   const handleSendEmail = async (invoiceId) => {
-//     try {
-//       setSendingEmailId(invoiceId);
-//       setEmailModalOpen(true);
-//       setEmailStatus("loading");
-//       setEmailMessage("📨 Sending invoice email...");
-
-//       await axios.post(`${API_URL}/invoice/sendEmail/${invoiceId}`);
-
-//       setEmailStatus("success");
-//       setEmailMessage("✅ Invoice sent to customer email!");
-//     } catch (error) {
-//       setEmailStatus("error");
-//       setEmailMessage("❌ Failed to send email. Please try again.");
-//       toast.error("Failed to send invoice email.");
-//       console.error("Error sending invoice:", error);
-//     } finally {
-//       setSendingEmailId(null);
-//       setOpenIndex(null);
-
-//       // auto close modal after 2 seconds if success/error
-//       setTimeout(() => {
-//         setEmailModalOpen(false);
-//       }, 2000);
-//     }
-//   };
-
-//   const applyFilters = () => {
-//     let filtered = invoices;
-
-//     if (searchTerm) {
-//       filtered = filtered.filter(
-//         (invoice) =>
-//           invoice.invoicenumber &&
-//           invoice.invoicenumber.toLowerCase().includes(searchTerm.toLowerCase())
-//       );
-//     }
-
-//     if (startDate) {
-//       const selectedDate = new Date(startDate).toDateString();
-//       filtered = filtered.filter((invoice) => {
-//         const invoiceDate = new Date(invoice.createdAt).toDateString();
-//         return invoiceDate === selectedDate;
-//       });
-//     }
-
-//     if (filterAssignTo) {
-//       filtered = filtered.filter(
-//         (invoice) => invoice.assignTo?._id === filterAssignTo
-//       );
-//     }
-
-//     if (filterStatus) {
-//       filtered = filtered.filter((invoice) => invoice.status === filterStatus);
-//     }
-
-//     if (filterMethod) {
-//       filtered = filtered.filter(
-//         (invoice) => invoice.paymentMethod === filterMethod
-//       );
-//     }
-
-//     setFilteredInvoices(filtered);
-//   };
-
-//   const handleDelete = async (invoiceId) => {
-//     try {
-//       await axios.delete(`${API_URL}/invoice/delete/${invoiceId}`);
-//       toast.success("Invoice deleted successfully!");
-//       setRefreshTrigger((prev) => prev + 1);
-//       setDeleteConfirmOpen(false);
-//     } catch (error) {
-//       console.error("Error deleting invoice:", error);
-//       toast.error("Failed to delete invoice.");
-//     }
-//   };
-
-//   const handleEdit = (invoice) => {
-//     setEditingInvoice(invoice);
-//     openModal();
-//   };
-
-//   const confirmDelete = (invoice) => {
-//     setInvoiceToDelete(invoice);
-//     setDeleteConfirmOpen(true);
-//     setOpenIndex(null);
-//   };
-
-//   // Callback function to refresh invoices after creating/updating
-//   const handleInvoiceSaved = () => {
-//     setRefreshTrigger((prev) => prev + 1);
-//     setEditingInvoice(null);
-//   };
-
-//   const downloadInvoice = async (invoiceId, invoiceNumber) => {
-//     try {
-//       setDownloadModalOpen(true);
-//       setDownloadStatus("loading");
-//       setDownloadMessage("📥 Downloading invoice PDF...");
-
-//       const response = await axios.get(
-//         `${API_URL}/invoice/download/${invoiceId}`,
-//         { responseType: "blob" }
-//       );
-//       console.log(response);
-
-//       const url = window.URL.createObjectURL(new Blob([response.data]));
-//       const link = document.createElement("a");
-//       link.href = url;
-//       link.setAttribute("download", `Invoice_${invoiceNumber}.pdf`);
-//       document.body.appendChild(link);
-//       link.click();
-//       link.remove();
-
-//       setDownloadStatus("success");
-//       setDownloadMessage("Invoice downloaded successfully!");
-//     } catch (error) {
-//       setDownloadStatus("error");
-//       setDownloadMessage(" Failed to download invoice.");
-//       toast.error("Failed to download invoice.");
-//       console.error("Error downloading invoice:", error);
-//     } finally {
-//       // auto close after 2s
-//       setTimeout(() => {
-//         setDownloadModalOpen(false);
-//       }, 2000);
-//     }
-//   };
-
-//   // Currency icon mapping
-//   const getCurrencyIcon = (currency) => {
-//     switch (currency) {
-//       case "INR":
-//         return <FaRupeeSign className="text-indigo-600" />;
-//       case "USD":
-//         return <FaDollarSign className="text-teal-600" />;
-//       case "EUR":
-//         return <FaEuroSign className="text-rose-600" />;
-//       case "GBP":
-//         return <FaPoundSign className="text-amber-600" />;
-//       default:
-//         return <FaDollarSign className="text-gray-600" />;
-//     }
-//   };
-
-//   // Currency background color mapping with unique colors
-//   const getCurrencyBgColor = (currency) => {
-//     switch (currency) {
-//       case "INR":
-//         return "bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200";
-//       case "USD":
-//         return "bg-gradient-to-br from-teal-50 to-teal-100 border-teal-200";
-//       case "EUR":
-//         return "bg-gradient-to-br from-rose-50 to-rose-100 border-rose-200";
-//       case "GBP":
-//         return "bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200";
-//       default:
-//         return "bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200";
-//     }
-//   };
-
-//   // Currency text color mapping
-//   const getCurrencyTextColor = (currency) => {
-//     switch (currency) {
-//       case "INR":
-//         return "text-indigo-800";
-//       case "USD":
-//         return "text-teal-800";
-//       case "EUR":
-//         return "text-rose-800";
-//       case "GBP":
-//         return "text-amber-800";
-//       default:
-//         return "text-gray-800";
-//     }
-//   };
-//   // Scroll functions for currency cards
-//   const scrollLeft = () => {
-//     if (currencyScrollRef.current) {
-//       currencyScrollRef.current.scrollBy({ left: -300, behavior: "smooth" });
-//     }
-//   };
-
-//   const scrollRight = () => {
-//     if (currencyScrollRef.current) {
-//       currencyScrollRef.current.scrollBy({ left: 300, behavior: "smooth" });
-//     }
-//   };
-
-//   // Pagination functions
-//   const totalPages = Math.ceil(totalCount / itemsPerPage);
-//   const handlePageChange = (page) => {
-//     setCurrentPage(page);
-//   };
-//   const handleItemsPerPageChange = (e) => {
-//     setItemsPerPage(Number(e.target.value));
-//     setCurrentPage(1);
-//   };
-
-//   const handleInvoiceClick = (invoiceId) => {
-//     navigate(`/invoice/${invoiceId}`);
-//   };
-
-//   return (
-//     <div className="p-4">
-//       <div className="flex justify-between items-center">
-//         <h1 className="text-2xl font-semibold">Invoices</h1>
-     
-
-   
-// {user?.role?.name?.toLowerCase() === "admin" && (
-//   <button
-//     onClick={() => {
-//       setEditingInvoice(null);
-//       openModal();
-//     }}
-//     className="bg-[#4466f2] p-2 px-4 text-white rounded-sm"
-//   >
-//     Create invoices
-//   </button>
-// )}
-//       </div>
-
-//       <InvoiceModal
-//         onInvoiceSaved={handleInvoiceSaved}
-//         editingInvoice={editingInvoice}
-//       />
-
-//       {/* Enhanced Multi-Currency Summary Cards with Horizontal Scroll */}
-//       <div className="mb-8">
-//         <div className="flex justify-between items-center mb-4">
-//           <h2 className="text-xl font-semibold text-gray-800">
-//             Financial Summary
-//           </h2>
-//           {Object.keys(groupedTotals).length > 0 && (
-//             <div className="flex space-x-2 mt-2">
-//               <button
-//                 onClick={scrollLeft}
-//                 className="p-2  rounded-full bg-white border hover:bg-gray-50 transition-colors shadow-sm"
-//               >
-//                 <FaChevronLeft className="text-gray-600" />
-//               </button>
-//               <button
-//                 onClick={scrollRight}
-//                 className="p-2 rounded-full bg-white border hover:bg-gray-50 transition-colors shadow-sm"
-//               >
-//                 <FaChevronRight className="text-gray-600" />
-//               </button>
-//             </div>
-//           )}
-//         </div>
-
-//         {Object.keys(groupedTotals).length === 0 ? (
-//           <div className="bg-white p-8 rounded-xl shadow-sm border text-center">
-//             <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-//               <svg
-//                 xmlns="http://www.w3.org/2000/svg"
-//                 className="h-8 w-8 text-gray-400"
-//                 fill="none"
-//                 viewBox="0 0 24 24"
-//                 stroke="currentColor"
-//               >
-//                 <path
-//                   strokeLinecap="round"
-//                   strokeLinejoin="round"
-//                   strokeWidth={2}
-//                   d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-//                 />
-//               </svg>
-//             </div>
-//             <p className="text-gray-500">No invoice data available</p>
-//             <p className="text-gray-400 text-sm mt-1">
-//               Create your first invoice to see financial insights
-//             </p>
-//           </div>
-//         ) : (
-//           <div className="relative">
-//             <div
-//               ref={currencyScrollRef}
-//               className="flex overflow-x-auto scrollbar-hide space-4 pb-4 -mx-2 px-2"
-//               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-//             >
-//               {Object.entries(groupedTotals).map(([currency, data]) => (
-//                 <div
-//                   key={currency}
-//                   className={`${getCurrencyBgColor(
-//                     currency
-//                   )} flex-shrink-0 w-80 p-6 rounded-xl shadow-sm border relative overflow-hidden mx-2 transition-transform hover:scale-[1.02] hover:shadow-md`}
-//                 >
-//                   {/* Currency header */}
-//                   <div className="flex justify-between items-start mb-5">
-//                     <div>
-//                       <h3
-//                         className={`text-lg font-semibold ${getCurrencyTextColor(
-//                           currency
-//                         )} mb-1`}
-//                       >
-//                         {currency}
-//                       </h3>
-//                       <p className="text-sm text-gray-500">
-//                         {data.count} invoice{data.count !== 1 ? "s" : ""}
-//                       </p>
-//                     </div>
-//                     <div className="text-2xl p-2 bg-white rounded-lg shadow-sm">
-//                       {getCurrencyIcon(currency)}
-//                     </div>
-//                   </div>
-
-//                   {/* Amount metrics */}
-//                   <div className="space-y-3 mb-5">
-//                     {/* Total Amount */}
-//                     <div className="flex justify-between items-center">
-//                       <span className="text-sm font-medium text-gray-600">
-//                         Total Amount
-//                       </span>
-//                       <span className="font-semibold text-gray-800">
-//                         {data.totalAmount.toLocaleString()} {currency}
-//                       </span>
-//                     </div>
-
-//                     {/* Paid Amount */}
-//                     <div className="flex justify-between items-center">
-//                       <span className="text-sm font-medium text-gray-600">
-//                         Paid ({data.paidCount})
-//                       </span>
-//                       <span className="font-semibold text-green-600">
-//                         {data.totalPaid.toLocaleString()} {currency}
-//                       </span>
-//                     </div>
-
-//                     {/* Due Amount */}
-//                     <div className="flex justify-between items-center">
-//                       <span className="text-sm font-medium text-gray-600">
-//                         Due ({data.dueCount})
-//                       </span>
-//                       <span className="font-semibold text-rose-600">
-//                         {data.totalDue.toLocaleString()} {currency}
-//                       </span>
-//                     </div>
-//                   </div>
-
-//                   {/* Progress bar showing paid vs due */}
-//                   <div className="mb-2">
-//                     <div className="w-full bg-gray-200 rounded-full h-2">
-//                       <div
-//                         className="bg-green-500 h-2 rounded-full transition-all duration-500"
-//                         style={{
-//                           width: `${
-//                             data.totalAmount > 0
-//                               ? (data.totalPaid / data.totalAmount) * 100
-//                               : 0
-//                           }%`,
-//                         }}
-//                       ></div>
-//                     </div>
-//                     <div className="flex justify-between text-xs text-gray-500 mt-1">
-//                       <span>
-//                         {Math.round((data.totalPaid / data.totalAmount) * 100)}%
-//                         Paid
-//                       </span>
-//                       <span>
-//                         {Math.round((data.totalDue / data.totalAmount) * 100)}%
-//                         Due
-//                       </span>
-//                     </div>
-//                   </div>
-//                 </div>
-//               ))}
-//             </div>
-//           </div>
-//         )}
-//       </div>
-
-//       {/* Filters */}
-//       <div className="flex flex-wrap gap-4 mt-8 items-center justify-between">
-//         <div className="flex flex-wrap gap-12">
-//           <DatePicker
-//             selected={startDate}
-//             onChange={(date) => setStartDate(date)}
-//             className="px-4 py-2 rounded-md border bg-white  focus:ring-2 focus:ring-blue-400"
-//             placeholderText="Filter by Date"
-//           />
-//           <select
-//             className="px-4 py-2 rounded-md bg-white border  text-gray-600"
-//             value={filterAssignTo}
-//             onChange={(e) => setFilterAssignTo(e.target.value)}
-//           >
-//             <option value="">All Users</option>
-//             {[...new Set(invoices.map((inv) => inv.assignTo?._id))].map(
-//               (userId) => {
-//                 const user = invoices.find(
-//                   (inv) => inv.assignTo?._id === userId
-//                 )?.assignTo;
-//                 return (
-//                   <option key={userId} value={userId}>
-//                     {user ? `${user.firstName} ${user.lastName}` : "Unknown"}
-//                   </option>
-//                 );
-//               }
-//             )}
-//           </select>
-//           <select
-//             className="px-4 py-2 rounded-md bg-white border  text-gray-600"
-//             value={filterStatus}
-//             onChange={(e) => setFilterStatus(e.target.value)}
-//           >
-//             <option value="">All Status</option>
-//             <option value="paid">Paid</option>
-//             <option value="unpaid">Unpaid</option>
-//           </select>
-//         </div>
-
-//         {/* Search */}
-//         <div className="flex items-center border rounded-full bg-white px-3  w-[250px]">
-//           <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
-//           <input
-//             type="text"
-//             placeholder="Search Invoice #"
-//             className="ml-2 w-full py-2 rounded-full outline-none text-gray-700"
-//             value={searchTerm}
-//             onChange={(e) => setSearchTerm(e.target.value)}
-//           />
-//         </div>
-//       </div>
-
-//       {/* Table */}
-//       <div className="bg-white mt-6 rounded-xl shadow-md overflow-x-auto">
-//         <table className="w-full text-sm text-left">
-//           <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
-//             <tr>
-//               <th className="px-6 py-3">Invoice</th>
-//               <th className="px-6 py-3">Deal Name</th>
-//               <th className="px-6 py-3">Status</th>
-//               <th className="px-6 py-3">Amount</th>
-//               <th className="px-6 py-3">Assigned To</th>
-//               <th className="px-6 py-3">Due Date</th>
-//               <th className="px-6 py-3 text-center">Action</th>
-//             </tr>
-//           </thead>
-//           <tbody className="divide-y divide-gray-200">
-//             {filteredInvoices.map((invoice, index) => (
-//               <tr
-//                 key={invoice._id}
-//                 className="hover:bg-gray-50 transition-colors"
-//               >
-//                 <td className="px-6 py-4">
-//                   <button
-//                     onClick={() => handleInvoiceClick(invoice._id)}
-//                     className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
-//                   >
-//                     {invoice.invoicenumber}
-//                   </button>
-//                 </td>
-
-//                 <td className="px-6 py-4">
-//                   {invoice.items?.[0]?.deal?.dealName || "N/A"}
-//                 </td>
-//                 <td className="px-6 py-4">
-//                   <span
-//                     className={`px-3 py-1 text-xs font-semibold rounded-full ${
-//                       invoice.status === "paid"
-//                         ? "bg-green-100 text-green-700"
-//                         : "bg-red-100 text-red-700"
-//                     }`}
-//                   >
-//                     {invoice.status}
-//                   </span>
-//                 </td>
-//                 <td className="px-6 py-4 font-semibold">
-//                   {invoice.total
-//                     ? Number(invoice.total).toLocaleString("en-IN", {
-//                         minimumFractionDigits: 2,
-//                         maximumFractionDigits: 2,
-//                       })
-//                     : "-"}{" "}
-//                   {invoice.currency}
-//                 </td>
-
-//                 <td className="px-6 py-4">
-//                   {invoice.assignTo
-//                     ? `${invoice.assignTo.firstName} ${invoice.assignTo.lastName}`
-//                     : "N/A"}
-//                 </td>
-//                 <td className="px-6 py-4">
-//                   {invoice.dueDate
-//                     ? new Date(invoice.dueDate).toLocaleDateString("en-GB", {
-//                         day: "2-digit",
-//                         month: "short",
-//                         year: "numeric",
-//                       })
-//                     : "-"}
-//                 </td>
-
-//                 <td className="px-6 py-4 text-center relative">
-//                   <button
-//                     onClick={(e) => {
-//                       const rect = e.currentTarget.getBoundingClientRect();
-//                       const spaceBelow = window.innerHeight - rect.bottom;
-//                       const spaceAbove = rect.top;
-
-//                       const position = spaceBelow > 200 ? "below" : "above"; // if not enough space, open above
-
-//                       setOpenIndex(openIndex === index ? null : index);
-//                       setDropdownButton({
-//                         rect,
-//                         position,
-//                       });
-//                     }}
-//                     className="p-2 rounded-full hover:bg-gray-100 text-gray-500"
-//                   >
-//                     <FaEllipsisV />
-//                   </button>
-
-//                   {openIndex === index &&
-//                     ReactDOM.createPortal(
-//                       <div
-//                         ref={dropdownRef}
-//                         className="absolute z-50 bg-white border rounded-md shadow-lg"
-//                         style={{
-//                           top:
-//                             dropdownButton?.position === "below"
-//                               ? dropdownButton.rect.bottom + window.scrollY
-//                               : dropdownButton.rect.top +
-//                                 window.scrollY -
-//                                 (dropdownRef.current?.offsetHeight || 150),
-//                           left: dropdownButton
-//                             ? dropdownButton.rect.left + window.scrollX
-//                             : 0,
-//                           minWidth: "8rem",
-//                         }}
-//                       >
-//                         <button
-//                           className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-//                           onClick={() => handleSendEmail(invoice._id)}
-//                         >
-//                           Send to Email
-//                         </button>
-//                         <button
-//                           className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-//                           onClick={() =>
-//                             downloadInvoice(invoice._id, invoice.invoicenumber)
-//                           }
-//                         >
-//                           Download
-//                         </button>
-//                         <button
-//                           className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-//                           onClick={() => handleEdit(invoice)}
-//                         >
-//                           Edit
-//                         </button>
-//                         <button
-//                           className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-//                           onClick={() => confirmDelete(invoice)}
-//                         >
-//                           Delete
-//                         </button>
-//                       </div>,
-//                       document.body
-//                     )}
-//                 </td>
-//               </tr>
-//             ))}
-
-//             {filteredInvoices.length === 0 && (
-//               <tr>
-//                 <td colSpan="7" className="text-center py-6 text-gray-400">
-//                   No invoices found.
-//                 </td>
-//               </tr>
-//             )}
-//           </tbody>
-//         </table>
-//       </div>
-
-//       {/* Pagination */}
-//       <div className="flex items-center justify-between mt-4">
-//         <div className="flex items-center">
-//           <span className="text-sm text-gray-700 mr-2">Show</span>
-//           <select
-//             value={itemsPerPage}
-//             onChange={handleItemsPerPageChange}
-//             className="border rounded-md p-1 text-sm"
-//           >
-//             <option value="5">5</option>
-//             <option value="10">10</option>
-//             <option value="25">25</option>
-//             <option value="50">50</option>
-//           </select>
-//           <span className="text-sm text-gray-700 ml-2">entries</span>
-//         </div>
-
-//         <div className="flex items-center">
-//           <span className="text-sm text-gray-700 mr-4">
-//             Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-//             {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount}{" "}
-//             entries
-//           </span>
-
-//           <div className="flex space-x-1">
-//             <button
-//               onClick={() => handlePageChange(currentPage - 1)}
-//               disabled={currentPage === 1}
-//               className="px-3 py-1 rounded-md border text-sm disabled:opacity-50"
-//             >
-//               Previous
-//             </button>
-
-//             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-//               let pageNum;
-//               if (totalPages <= 5) {
-//                 pageNum = i + 1;
-//               } else if (currentPage <= 3) {
-//                 pageNum = i + 1;
-//               } else if (currentPage >= totalPages - 2) {
-//                 pageNum = totalPages - 4 + i;
-//               } else {
-//                 pageNum = currentPage - 2 + i;
-//               }
-
-//               return (
-//                 <button
-//                   key={pageNum}
-//                   onClick={() => handlePageChange(pageNum)}
-//                   className={`px-3 py-1 rounded-md border text-sm ${
-//                     currentPage === pageNum ? "bg-blue-500 text-white" : ""
-//                   }`}
-//                 >
-//                   {pageNum}
-//                 </button>
-//               );
-//             })}
-
-//             <button
-//               onClick={() => handlePageChange(currentPage + 1)}
-//               disabled={currentPage === totalPages}
-//               className="px-3 py-1 rounded-md border text-sm disabled:opacity-50"
-//             >
-//               Next
-//             </button>
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* Email Sending Modal */}
-//       <Dialog open={emailModalOpen} onOpenChange={setEmailModalOpen}>
-//         <DialogContent className="sm:max-w-md">
-//           <DialogHeader>
-//             <DialogTitle>Email Status</DialogTitle>
-//           </DialogHeader>
-//           <div className="py-6 text-center">
-//             {emailStatus === "loading" && (
-//               <p className="text-blue-600 font-medium animate-pulse">
-//                 {emailMessage}
-//               </p>
-//             )}
-//             {emailStatus === "success" && (
-//               <p className="text-green-600 font-semibold">{emailMessage}</p>
-//             )}
-//             {emailStatus === "error" && (
-//               <p className="text-red-600 font-semibold">{emailMessage}</p>
-//             )}
-//           </div>
-//         </DialogContent>
-//       </Dialog>
-
-//       {/* Delete Confirmation Modal */}
-//       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-//         <DialogContent className="sm:max-w-md">
-//           <DialogHeader>
-//             <DialogTitle>Confirm Delete</DialogTitle>
-//           </DialogHeader>
-//           <div className="py-4">
-//             <p>
-//               Are you sure you want to delete invoice #
-//               {invoiceToDelete?.invoicenumber}?
-//             </p>
-//             <p className="text-sm text-gray-500 mt-2">
-//               This action cannot be undone.
-//             </p>
-//           </div>
-//           <div className="flex justify-end space-x-3">
-//             <button
-//               onClick={() => setDeleteConfirmOpen(false)}
-//               className="px-4 py-2 border rounded-md text-sm"
-//             >
-//               Cancel
-//             </button>
-//             <button
-//               onClick={() => handleDelete(invoiceToDelete?._id)}
-//               className="px-4 py-2 bg-red-600 text-white rounded-md text-sm"
-//             >
-//               Delete
-//             </button>
-//           </div>
-//         </DialogContent>
-//       </Dialog>
-//       {/* Download PDF Modal */}
-//       <Dialog open={downloadModalOpen} onOpenChange={setDownloadModalOpen}>
-//         <DialogContent className="sm:max-w-md">
-//           <DialogHeader>
-//             <DialogTitle>Download Status</DialogTitle>
-//           </DialogHeader>
-//           <div className="py-6 text-center">
-//             {downloadStatus === "loading" && (
-//               <p className="text-blue-600 font-medium animate-pulse">
-//                 {downloadMessage}
-//               </p>
-//             )}
-//             {downloadStatus === "success" && (
-//               <p className="text-green-600 font-semibold">{downloadMessage}</p>
-//             )}
-//             {downloadStatus === "error" && (
-//               <p className="text-red-600 font-semibold">{downloadMessage}</p>
-//             )}
-//           </div>
-//         </DialogContent>
-//       </Dialog>
-
-//       <ToastContainer
-//         position="top-right"
-//         autoClose={3000}
-//         hideProgressBar={false}
-//       />
-
-//       <style jsx>{`
-//         .scrollbar-hide {
-//           -ms-overflow-style: none;
-//           scrollbar-width: none;
-//         }
-//         .scrollbar-hide::-webkit-scrollbar {
-//           display: none;
-//         }
-//       `}</style>
-//     </div>
-//   );
-// };
-
-// export default InvoiceHead;//original code list page..
-
-
 import React, { useState, useEffect, useRef } from "react";
 import DatePicker from "react-datepicker";
 import {
@@ -910,8 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../../components/ui/dialog";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import toast, { Toaster } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
 const InvoiceHead = () => {
@@ -933,24 +44,18 @@ const InvoiceHead = () => {
   const [invoiceToDelete, setInvoiceToDelete] = useState(null);
   const [dropdownButton, setDropdownButton] = useState(null);
 
-  // ── Bulk selection ──────────────────────────────────────────────────
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
-  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Email modal
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [emailMessage, setEmailMessage] = useState("Sending invoice email...");
   const [emailStatus, setEmailStatus] = useState("loading");
 
-  // Download modal
-  const [downloadModalOpen, setDownloadModalOpen] = useState(false);
-  const [downloadMessage, setDownloadMessage] = useState("Downloading invoice...");
-  const [downloadStatus, setDownloadStatus] = useState("loading");
+  const [downloadingId, setDownloadingId] = useState(null);
 
   const dropdownRef = useRef(null);
   const currencyScrollRef = useRef(null);
@@ -972,7 +77,6 @@ const InvoiceHead = () => {
 
   useEffect(() => { applyFilters(); }, [searchTerm, startDate, filterAssignTo, filterStatus, filterMethod, invoices]);
 
-  // ── Currency summary ────────────────────────────────────────────────
   const groupedTotals = filteredInvoices.reduce((acc, inv) => {
     const cur   = inv.currency || "INR";
     const total = Number(inv.total) || 0;
@@ -987,7 +91,6 @@ const InvoiceHead = () => {
     return acc;
   }, {});
 
-  // ── Fetch ───────────────────────────────────────────────────────────
   const fetchInvoices = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -1004,7 +107,6 @@ const InvoiceHead = () => {
     }
   };
 
-  // ── Send Email ──────────────────────────────────────────────────────
   const handleSendEmail = async (invoiceId) => {
     try {
       setSendingEmailId(invoiceId);
@@ -1025,7 +127,6 @@ const InvoiceHead = () => {
     }
   };
 
-  // ── Filters ─────────────────────────────────────────────────────────
   const applyFilters = () => {
     let filtered = invoices;
     if (searchTerm) {
@@ -1043,7 +144,6 @@ const InvoiceHead = () => {
     setFilteredInvoices(filtered);
   };
 
-  // ── Single delete ───────────────────────────────────────────────────
   const handleDelete = async (invoiceId) => {
     try {
       await axios.delete(`${API_URL}/invoice/delete/${invoiceId}`);
@@ -1060,32 +160,35 @@ const InvoiceHead = () => {
   const confirmDelete = (invoice) => { setInvoiceToDelete(invoice); setDeleteConfirmOpen(true); setOpenIndex(null); };
   const handleInvoiceSaved = () => { setRefreshTrigger((prev) => prev + 1); setEditingInvoice(null); };
 
-  // ── Download PDF ────────────────────────────────────────────────────
+  // ✅ Download — instant with toast feedback
   const downloadInvoice = async (invoiceId, invoiceNumber) => {
+    if (downloadingId === invoiceId) return;
+    const toastId = toast.loading(`Downloading Invoice ${invoiceNumber}...`);
     try {
-      setDownloadModalOpen(true);
-      setDownloadStatus("loading");
-      setDownloadMessage("📥 Downloading invoice PDF...");
-      const response = await axios.get(`${API_URL}/invoice/download/${invoiceId}`, { responseType: "blob" });
-      const url  = window.URL.createObjectURL(new Blob([response.data]));
+      setDownloadingId(invoiceId);
+      setOpenIndex(null);
+
+      const response = await axios.get(`${API_URL}/invoice/download/${invoiceId}`, {
+        responseType: "blob",
+      });
+
+      const url  = window.URL.createObjectURL(new Blob([response.data], { type: "application/pdf" }));
       const link = document.createElement("a");
       link.href  = url;
       link.setAttribute("download", `Invoice_${invoiceNumber}.pdf`);
       document.body.appendChild(link);
       link.click();
       link.remove();
-      setDownloadStatus("success");
-      setDownloadMessage("Invoice downloaded successfully!");
+      window.URL.revokeObjectURL(url);
+
+      toast.success(`Invoice ${invoiceNumber} downloaded!`, { id: toastId });
     } catch (error) {
-      setDownloadStatus("error");
-      setDownloadMessage("Failed to download invoice.");
-      toast.error("Failed to download invoice.");
+      toast.error("Failed to download invoice.", { id: toastId });
     } finally {
-      setTimeout(() => setDownloadModalOpen(false), 2000);
+      setDownloadingId(null);
     }
   };
 
-  // ── Bulk selection helpers ──────────────────────────────────────────
   const toggleSelect = (id) => {
     setSelectedIds((prev) => {
       const s = new Set(prev);
@@ -1115,15 +218,14 @@ const InvoiceHead = () => {
     }
   };
 
-  // ── Bulk delete ─────────────────────────────────────────────────────
   const confirmBulkDelete = async () => {
     setBulkDeleteOpen(false);
     const ids = Array.from(selectedIds);
     try {
       await axios.delete(`${API_URL}/invoice/deletemany`, { data: { ids } });
-      setInvoices((prev)          => prev.filter((inv) => !ids.includes(inv._id)));
-      setFilteredInvoices((prev)  => prev.filter((inv) => !ids.includes(inv._id)));
-      setTotalCount((n)           => n - ids.length);
+      setInvoices((prev)         => prev.filter((inv) => !ids.includes(inv._id)));
+      setFilteredInvoices((prev) => prev.filter((inv) => !ids.includes(inv._id)));
+      setTotalCount((n)          => n - ids.length);
       setSelectedIds(new Set());
       toast.success(`${ids.length} invoice(s) deleted.`);
     } catch {
@@ -1131,7 +233,6 @@ const InvoiceHead = () => {
     }
   };
 
-  // ── Currency UI helpers ─────────────────────────────────────────────
   const getCurrencyIcon = (c) => {
     const map = { INR: <FaRupeeSign className="text-indigo-600" />, USD: <FaDollarSign className="text-teal-600" />, EUR: <FaEuroSign className="text-rose-600" />, GBP: <FaPoundSign className="text-amber-600" /> };
     return map[c] || <FaDollarSign className="text-gray-600" />;
@@ -1142,7 +243,6 @@ const InvoiceHead = () => {
   const scrollLeft  = () => currencyScrollRef.current?.scrollBy({ left: -300, behavior: "smooth" });
   const scrollRight = () => currencyScrollRef.current?.scrollBy({ left:  300, behavior: "smooth" });
 
-  // Pagination
   const totalPages = Math.ceil(totalCount / itemsPerPage);
   const handlePageChange = (page) => setCurrentPage(page);
   const handleItemsPerPageChange = (e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); };
@@ -1150,8 +250,10 @@ const InvoiceHead = () => {
 
   return (
     <div className="p-4">
+      {/* ✅ Single Toaster for whole page */}
+      <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
 
-      {/* ── Bulk Delete Confirm Portal ── */}
+      {/* Bulk Delete Confirm Portal */}
       {bulkDeleteOpen && ReactDOM.createPortal(
         <div
           style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 99999, backdropFilter: "blur(4px)" }}
@@ -1168,14 +270,8 @@ const InvoiceHead = () => {
             </p>
             <p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 26 }}>This action cannot be undone.</p>
             <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
-              <button
-                onClick={() => setBulkDeleteOpen(false)}
-                style={{ padding: "10px 26px", borderRadius: 10, border: "1.5px solid #e2e8f0", background: "transparent", color: "#64748b", fontSize: 14, fontWeight: 600, cursor: "pointer" }}
-              >Cancel</button>
-              <button
-                onClick={confirmBulkDelete}
-                style={{ padding: "10px 26px", borderRadius: 10, border: "none", background: "linear-gradient(135deg,#ef4444,#dc2626)", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 14px rgba(239,68,68,0.38)" }}
-              >Yes, Delete</button>
+              <button onClick={() => setBulkDeleteOpen(false)} style={{ padding: "10px 26px", borderRadius: 10, border: "1.5px solid #e2e8f0", background: "transparent", color: "#64748b", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+              <button onClick={confirmBulkDelete} style={{ padding: "10px 26px", borderRadius: 10, border: "none", background: "linear-gradient(135deg,#ef4444,#dc2626)", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 14px rgba(239,68,68,0.38)" }}>Yes, Delete</button>
             </div>
           </div>
         </div>,
@@ -1276,7 +372,7 @@ const InvoiceHead = () => {
         </div>
       </div>
 
-      {/* ── Bulk Delete Action Bar ── */}
+      {/* Bulk Delete Action Bar */}
       {selectedIds.size > 0 && (
         <div className="flex items-center gap-3 mt-4 bg-red-50 border border-red-200 rounded-lg px-4 py-2.5">
           <span className="text-sm font-semibold text-red-700">{selectedIds.size} invoice(s) selected</span>
@@ -1298,7 +394,6 @@ const InvoiceHead = () => {
         <table className="w-full text-sm text-left">
           <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
             <tr>
-              {/* Checkbox column header */}
               <th className="px-4 py-3 w-10 text-center">
                 <input
                   type="checkbox"
@@ -1321,17 +416,9 @@ const InvoiceHead = () => {
           <tbody className="divide-y divide-gray-200">
             {filteredInvoices.map((invoice, index) => (
               <tr key={invoice._id} className={`transition-colors ${selectedIds.has(invoice._id) ? "bg-blue-50" : "hover:bg-gray-50"}`}>
-
-                {/* Checkbox cell */}
                 <td className="px-4 py-4 text-center">
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.has(invoice._id)}
-                    onChange={() => toggleSelect(invoice._id)}
-                    className="w-4 h-4 accent-blue-600 cursor-pointer"
-                  />
+                  <input type="checkbox" checked={selectedIds.has(invoice._id)} onChange={() => toggleSelect(invoice._id)} className="w-4 h-4 accent-blue-600 cursor-pointer" />
                 </td>
-
                 <td className="px-6 py-4">
                   <button onClick={() => handleInvoiceClick(invoice._id)} className="text-blue-600 hover:text-blue-800 hover:underline font-medium">
                     {invoice.invoicenumber}
@@ -1352,12 +439,10 @@ const InvoiceHead = () => {
                 <td className="px-6 py-4">
                   {invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "-"}
                 </td>
-
-                {/* Three-dot action menu (unchanged) */}
                 <td className="px-6 py-4 text-center relative">
                   <button
                     onClick={(e) => {
-                      const rect       = e.currentTarget.getBoundingClientRect();
+                      const rect = e.currentTarget.getBoundingClientRect();
                       const spaceBelow = window.innerHeight - rect.bottom;
                       setOpenIndex(openIndex === index ? null : index);
                       setDropdownButton({ rect, position: spaceBelow > 200 ? "below" : "above" });
@@ -1380,7 +465,24 @@ const InvoiceHead = () => {
                       }}
                     >
                       <button className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100" onClick={() => handleSendEmail(invoice._id)}>Send to Email</button>
-                      <button className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100" onClick={() => downloadInvoice(invoice._id, invoice.invoicenumber)}>Download</button>
+
+                      {/* ✅ Download with spinner */}
+                      <button
+                        className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm hover:bg-gray-100 disabled:opacity-60"
+                        disabled={downloadingId === invoice._id}
+                        onClick={() => downloadInvoice(invoice._id, invoice.invoicenumber)}
+                      >
+                        {downloadingId === invoice._id ? (
+                          <>
+                            <svg className="animate-spin h-3.5 w-3.5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                            </svg>
+                            Downloading...
+                          </>
+                        ) : "Download"}
+                      </button>
+
                       <button className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100" onClick={() => handleEdit(invoice)}>Edit</button>
                       <button className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50" onClick={() => confirmDelete(invoice)}>Delete</button>
                     </div>,
@@ -1389,7 +491,6 @@ const InvoiceHead = () => {
                 </td>
               </tr>
             ))}
-
             {filteredInvoices.length === 0 && (
               <tr><td colSpan="8" className="text-center py-6 text-gray-400">No invoices found.</td></tr>
             )}
@@ -1417,10 +518,10 @@ const InvoiceHead = () => {
             <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="px-3 py-1 rounded-md border text-sm disabled:opacity-50">Previous</button>
             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
               let pageNum;
-              if (totalPages <= 5)             pageNum = i + 1;
-              else if (currentPage <= 3)        pageNum = i + 1;
+              if (totalPages <= 5)                   pageNum = i + 1;
+              else if (currentPage <= 3)              pageNum = i + 1;
               else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
-              else                              pageNum = currentPage - 2 + i;
+              else                                    pageNum = currentPage - 2 + i;
               return (
                 <button key={pageNum} onClick={() => handlePageChange(pageNum)} className={`px-3 py-1 rounded-md border text-sm ${currentPage === pageNum ? "bg-blue-500 text-white" : ""}`}>{pageNum}</button>
               );
@@ -1430,7 +531,7 @@ const InvoiceHead = () => {
         </div>
       </div>
 
-      {/* Email Modal */}
+      {/* Email Status Modal */}
       <Dialog open={emailModalOpen} onOpenChange={setEmailModalOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader><DialogTitle>Email Status</DialogTitle></DialogHeader>
@@ -1456,20 +557,6 @@ const InvoiceHead = () => {
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Download Modal */}
-      <Dialog open={downloadModalOpen} onOpenChange={setDownloadModalOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>Download Status</DialogTitle></DialogHeader>
-          <div className="py-6 text-center">
-            {downloadStatus === "loading" && <p className="text-blue-600 font-medium animate-pulse">{downloadMessage}</p>}
-            {downloadStatus === "success" && <p className="text-green-600 font-semibold">{downloadMessage}</p>}
-            {downloadStatus === "error"   && <p className="text-red-600 font-semibold">{downloadMessage}</p>}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
 
       <style jsx>{`
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
