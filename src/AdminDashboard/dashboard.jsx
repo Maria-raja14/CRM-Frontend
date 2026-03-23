@@ -1612,7 +1612,7 @@ const AdminDashboard = () => {
       }
     } catch (err) {
       console.error("Dashboard fetch error:", err);
-      setError("Failed to load dashboard data. Check your network connection.");
+      setError("Failed to load dashboard data. Check your network connection or Refresh the Page.");
     } finally {
       setLoading(false);
     }
