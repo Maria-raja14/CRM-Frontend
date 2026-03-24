@@ -2020,24 +2020,67 @@ const SalesPipelineChart = ({ data, loading, totalLeads }) => {
 };
 
 /* ═══════════════════════════════════════════════════════════════
-   DEAL DISTRIBUTION — FULLY FIXED PIE LABELS
-   Strategy: NO inline SVG labels at all.
-   Instead render a clean HTML label list ABOVE and BELOW the donut,
-   so nothing is ever clipped by the SVG viewport.
+   DEAL DISTRIBUTION — PIE LABEL CLIPPING FIX
 ═══════════════════════════════════════════════════════════════ */
-const DEAL_COLORS = {
-  Open: "#3B82F6",
-  Won:  "#10B981",
-  Lost: "#F59E0B",
+
+/**
+ * Custom SVG label rendered outside the arc.
+ *
+ * Root cause of the bug: recharts renders labels with labelLine=false at a
+ * fixed offset from the arc centre, so labels near the top (midAngle ≈ 90°)
+ * fall above the SVG viewport and get clipped.
+ *
+ * Fix strategy:
+ *  1. Place the label at outerRadius + LABEL_OFFSET from the arc edge.
+ *  2. If the computed y is too close to the top edge, clamp it downward.
+ *  3. Give PieChart a large top margin (40 px) so the SVG viewport itself
+ *     has headroom for the topmost label.
+ *  4. Reduce innerRadius/outerRadius slightly so the chart fits inside the
+ *     taller container without crowding.
+ */
+const LABEL_OFFSET = 30; // px gap between arc edge and label text
+
+const renderDealLabel = ({ cx, cy, midAngle, outerRadius, name, percent }) => {
+  if (!percent || percent === 0) return null;
+
+  const RADIAN = Math.PI / 180;
+  const sin    = Math.sin(-midAngle * RADIAN);
+  const cos    = Math.cos(-midAngle * RADIAN);
+
+  // Raw label position
+  const rawX = cx + (outerRadius + LABEL_OFFSET) * cos;
+  const rawY = cy + (outerRadius + LABEL_OFFSET) * sin;
+
+  // Clamp: never let the label go above 14px from the top of the SVG
+  const MIN_Y  = 14;
+  const clampedY = rawY < MIN_Y ? MIN_Y : rawY;
+
+  // If we clamped vertically, shift X toward centre slightly so it doesn't
+  // overlap the arc when the angle is near 12 o'clock
+  const clampedX = rawY < MIN_Y ? cx + (outerRadius + 10) * cos : rawX;
+
+  return (
+    <text
+      x={clampedX}
+      y={clampedY}
+      textAnchor={clampedX > cx ? "start" : "end"}
+      dominantBaseline="central"
+      fontSize={12}
+      fontWeight={600}
+      fill="#374151"
+    >
+      {`${name} ${(percent * 100).toFixed(0)}%`}
+    </text>
+  );
 };
 
 const DealDistributionChart = ({ data, loading, totalDeals }) => {
   if (loading) return <Skeleton className="h-80 w-full rounded-lg" />;
 
   const pieData = [
-    { name: "Open", value: data.open },
-    { name: "Won",  value: data.won  },
-    { name: "Lost", value: data.lost },
+    { name: "Open", value: data.open, color: "#3B82F6" },
+    { name: "Won",  value: data.won,  color: "#10B981" },
+    { name: "Lost", value: data.lost, color: "#F59E0B" },
   ].filter((d) => d.value > 0);
 
   return (
@@ -2050,127 +2093,68 @@ const DealDistributionChart = ({ data, loading, totalDeals }) => {
           <Badge variant="secondary">{totalDeals} Total</Badge>
         </div>
       </CardHeader>
-
-      <CardContent className="pt-4 pb-5">
+      <CardContent className="pt-6">
         {totalDeals === 0 || pieData.length === 0 ? (
           <div className="h-64 flex flex-col items-center justify-center text-gray-400">
             <Target className="h-12 w-12 mb-2 opacity-30" />
             <p>No deals for this period</p>
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-0">
-
-            {/* ── Top labels (slices whose midpoint is in the upper half) ── */}
-            <TopBottomLabels pieData={pieData} totalDeals={totalDeals} position="top" />
-
-            {/* ── Donut chart — NO inline labels ── */}
-            <div className="relative" style={{ width: "100%", height: 220 }}>
+          <>
+            {/*
+              Container height = 270px gives enough room.
+              The PieChart margin top=40 creates viewport headroom for labels
+              that fall near the top of the donut.
+            */}
+            <div className="relative" style={{ height: 270 }}>
               <ResponsiveContainer width="100%" height="100%">
-                <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                <PieChart margin={{ top: 40, right: 35, bottom: 10, left: 35 }}>
                   <Pie
                     data={pieData}
                     cx="50%"
-                    cy="50%"
-                    innerRadius={58}
-                    outerRadius={88}
+                    cy="55%"
+                    innerRadius={50}
+                    outerRadius={78}
                     dataKey="value"
                     labelLine={false}
-                    label={false}
-                    startAngle={90}
-                    endAngle={-270}
+                    label={renderDealLabel}
                   >
-                    {pieData.map((e) => (
-                      <Cell key={e.name} fill={DEAL_COLORS[e.name] ?? "#94A3B8"} stroke="#fff" strokeWidth={2} />
+                    {pieData.map((e, i) => (
+                      <Cell key={i} fill={e.color} stroke="#fff" strokeWidth={2} />
                     ))}
                   </Pie>
                   <Tooltip
                     formatter={(v, n) => [v, n]}
-                    contentStyle={{ borderRadius: "8px", border: "1px solid #e5e7eb", fontSize: 13 }}
+                    contentStyle={{ borderRadius: "8px", border: "1px solid #e5e7eb" }}
                   />
                 </PieChart>
               </ResponsiveContainer>
 
-              {/* Centre label */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              {/* Centre total label — positioned relative to cy="55%" */}
+              <div
+                className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                style={{ paddingTop: 40 }}
+              >
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-gray-900 leading-tight">{totalDeals}</div>
-                  <div className="text-xs text-gray-500 font-medium">Total</div>
+                  <div className="text-2xl font-bold text-gray-900">{totalDeals}</div>
+                  <div className="text-xs text-gray-500">Total</div>
                 </div>
               </div>
             </div>
 
-            {/* ── Bottom labels ── */}
-            <TopBottomLabels pieData={pieData} totalDeals={totalDeals} position="bottom" />
-
-            {/* ── Legend dots row ── */}
-            <div className="flex justify-center gap-5 mt-4 flex-wrap">
+            {/* Legend */}
+            <div className="flex justify-center gap-4 mt-2 text-sm flex-wrap">
               {pieData.map((d) => (
                 <div key={d.name} className="flex items-center gap-1.5">
-                  <span
-                    className="w-3 h-3 rounded-full flex-shrink-0"
-                    style={{ background: DEAL_COLORS[d.name] ?? "#94A3B8" }}
-                  />
-                  <span className="text-sm text-gray-700">
-                    {d.name}: <strong>{d.value}</strong>
-                  </span>
+                  <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: d.color }} />
+                  <span>{d.name}: <strong>{d.value}</strong></span>
                 </div>
               ))}
             </div>
-          </div>
+          </>
         )}
       </CardContent>
     </Card>
-  );
-};
-
-/**
- * Renders HTML labels for slices whose centre angle falls in the top or
- * bottom half.  startAngle=90 means the first slice starts at 12 o'clock
- * and sweeps clockwise.  We accumulate angles and decide which rendered
- * labels belong to "top" (midAngle 0–180°) vs "bottom" (180–360°).
- *
- * Labels are plain HTML <div>s stacked in a small row — guaranteed visible,
- * no SVG clipping ever.
- */
-const TopBottomLabels = ({ pieData, totalDeals, position }) => {
-  const total = pieData.reduce((s, d) => s + d.value, 0);
-  if (total === 0) return null;
-
-  // Compute mid-angle for each slice (starting at 90°, going clockwise → decreasing angle)
-  let cumulative = 0;
-  const slicesWithAngles = pieData.map((d) => {
-    const sweep    = (d.value / total) * 360;
-    const startAng = 90 - cumulative;          // recharts startAngle=90 goes clockwise
-    const midAng   = startAng - sweep / 2;     // mid angle
-    cumulative    += sweep;
-    return { ...d, midAng: ((midAng % 360) + 360) % 360, percent: d.value / total };
-  });
-
-  // Top half: midAng between 0° and 180° (i.e. upper semicircle)
-  // Bottom half: midAng between 180° and 360°
-  const relevant = slicesWithAngles.filter((s) =>
-    position === "top"
-      ? s.midAng > 0 && s.midAng <= 180
-      : s.midAng > 180 && s.midAng <= 360
-  );
-
-  if (relevant.length === 0) return <div style={{ height: 8 }} />;
-
-  return (
-    <div
-      className="flex justify-center gap-4 flex-wrap w-full px-2"
-      style={{ minHeight: 24, marginBottom: position === "top" ? 4 : 0, marginTop: position === "bottom" ? 4 : 0 }}
-    >
-      {relevant.map((s) => (
-        <span
-          key={s.name}
-          className="text-xs font-semibold"
-          style={{ color: DEAL_COLORS[s.name] ?? "#374151" }}
-        >
-          {s.name} {(s.percent * 100).toFixed(0)}%
-        </span>
-      ))}
-    </div>
   );
 };
 
