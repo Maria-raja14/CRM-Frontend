@@ -94,7 +94,7 @@ const sections = [
           href="mailto:support@uenjoytours.cloud"
           className="text-blue-600 hover:underline font-medium"
         >
-          support@uenjoytours.cloud
+         uenjoytours@gmail.com
         </a>
         .
       </>

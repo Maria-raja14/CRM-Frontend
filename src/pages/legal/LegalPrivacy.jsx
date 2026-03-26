@@ -99,10 +99,11 @@ const sections = [
         If you have questions or concerns regarding this policy, please contact
         us at{" "}
         <a
-          href="mailto:support@uenjoytours.cloud"
+          href="mailto: uenjoytours@gmail.com"
           className="text-blue-600 hover:underline font-medium"
         >
-          support@uenjoytours.cloud
+          {/* support@uenjoytours.cloud */}
+          uenjoytours@gmail.com
         </a>
         . We aim to respond within 48 business hours.
       </>

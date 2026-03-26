@@ -188,6 +188,9 @@ function App() {
               {/* ✅ REMOVED: /privacy-policy and /terms as page routes */}
               {/* They now open as modals anywhere in the app */}
 
+                {/* ✅ ADD THESE BACK */}
+  <Route path="/privacy-policy" element={<LegalPrivacy />} />
+  <Route path="/terms-and-conditions" element={<LegalTerms />} />
               <Route
                 path="/reset-password/:token"
                 element={<ResetPassword />}
