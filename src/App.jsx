@@ -37,7 +37,8 @@ import EmailChat from "./pages/Email_chat/EmailChat";
 // import Terms from "./pages/legal/Terms";
 
 //import WhatsAppChat from './pages/WhatsApp/WhatsAppChat';
-import WhatsAppPage from "./pages/WhatsApp/Whatsapppage";
+// import WhatsAppPage from "./pages/WhatsApp/Whatsapppage";
+import WhatsAppPage from "./pages/WhatsApp/WhatsApp_Page";
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 

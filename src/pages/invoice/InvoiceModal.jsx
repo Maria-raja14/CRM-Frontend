@@ -1,4 +1,3 @@
-
 // import {
 //   Dialog,
 //   DialogContent,
@@ -21,7 +20,7 @@
 //     assignTo: "",
 //     issueDate: "",
 //     dueDate: "",
-//     status: "",
+//     status: "",        // ✅ Empty so placeholder shows by default
 //     deal: "",
 //     price: 0,
 //     tax: "0",
@@ -45,7 +44,7 @@
 //         dueDate: editingInvoice.dueDate
 //           ? new Date(editingInvoice.dueDate).toISOString().split("T")[0]
 //           : "",
-//         status: editingInvoice.status || "unpaid",
+//         status: editingInvoice.status || "",   // ✅ Keep existing or empty
 //         deal: editingInvoice.items?.[0]?.deal?._id || "",
 //         price: editingInvoice.items?.[0]?.price || 0,
 //         tax: editingInvoice.tax?.toString() || "0",
@@ -66,7 +65,7 @@
 //         assignTo: "",
 //         issueDate: "",
 //         dueDate: "",
-//         status: "",
+//         status: "",       // ✅ Reset to empty on new invoice
 //         deal: "",
 //         price: 0,
 //         tax: "0",
@@ -146,15 +145,16 @@
 
 //   const validateInputs = () => {
 //     const errors = {};
-//     const { assignTo, issueDate, dueDate, deal, price } = invoiceData;
-//     if (!assignTo) errors.assignTo = "Sales user is required.";
-//     if (!issueDate) errors.issueDate = "Issue Date is required.";
-//     if (!dueDate) errors.dueDate = "Due Date is required.";
-//     if (!deal) errors.deal = "Deal is required.";
-//     if (price <= 0) errors.price = "Price must be greater than 0.";
+//     const { assignTo, issueDate, dueDate, deal, price, status } = invoiceData;
+//     if (!assignTo)          errors.assignTo  = "Sales user is required.";
+//     if (!issueDate)         errors.issueDate = "Issue Date is required.";
+//     if (!dueDate)           errors.dueDate   = "Due Date is required.";
+//     if (!deal)              errors.deal      = "Deal is required.";
+//     if (!status)            errors.status    = "Payment status is required.";  // ✅ validate status
+//     if (price <= 0)         errors.price     = "Price must be greater than 0.";
 //     if (issueDate && dueDate) {
 //       const issue = new Date(issueDate);
-//       const due = new Date(dueDate);
+//       const due   = new Date(dueDate);
 //       if (due <= issue) errors.dueDate = "Due Date must be after Issue Date.";
 //     }
 //     setValidationErrors(errors);
@@ -168,7 +168,8 @@
 //     let discountAmount = 0;
 //     if (invoiceData.discountType && invoiceData.discountType !== "none") {
 //       const discountVal = Number(invoiceData.discountValue) || 0;
-//       if (invoiceData.discountType === "fixed") discountAmount = discountVal;
+//       if (invoiceData.discountType === "fixed")
+//         discountAmount = discountVal;
 //       else if (invoiceData.discountType === "percentage")
 //         discountAmount = (price * discountVal) / 100;
 //     }
@@ -176,16 +177,17 @@
 //     let taxAmount = 0;
 //     if (invoiceData.currency === "INR" && invoiceData.taxType !== "none") {
 //       const taxVal = Number(invoiceData.tax) || 0;
-//       if (invoiceData.taxType === "fixed") taxAmount = taxVal;
+//       if (invoiceData.taxType === "fixed")
+//         taxAmount = taxVal;
 //       else if (invoiceData.taxType === "percentage")
 //         taxAmount = (priceAfterDiscount * taxVal) / 100;
 //     }
 //     const total = priceAfterDiscount + taxAmount;
 //     return {
-//       price: price.toFixed(2),
-//       discountAmount: discountAmount.toFixed(2),
-//       taxAmount: taxAmount.toFixed(2),
-//       total: total.toFixed(2),
+//       price:                price.toFixed(2),
+//       discountAmount:       discountAmount.toFixed(2),
+//       taxAmount:            taxAmount.toFixed(2),
+//       total:                total.toFixed(2),
 //       subtotalAfterDiscount: priceAfterDiscount.toFixed(2),
 //       discountText:
 //         invoiceData.discountType === "percentage"
@@ -209,29 +211,29 @@
 //       ...invoiceData,
 //       items: [
 //         {
-//           deal: invoiceData.deal,
-//           price: Number(invoiceData.price),
+//           deal:   invoiceData.deal,
+//           price:  Number(invoiceData.price),
 //           amount: Number(invoiceData.price),
 //         },
 //       ],
 //       discountValue: Number(invoiceData.discountValue),
-//       discountType: invoiceData.discountType,
-//       tax: Number(invoiceData.tax),
-//       taxType: invoiceData.taxType,
-//       subtotal: Number(breakdown.price),
-//       discount: Number(breakdown.discountAmount),
-//       total: Number(breakdown.total),
-//       taxAmount: Number(breakdown.taxAmount),
+//       discountType:  invoiceData.discountType,
+//       tax:           Number(invoiceData.tax),
+//       taxType:       invoiceData.taxType,
+//       subtotal:      Number(breakdown.price),
+//       discount:      Number(breakdown.discountAmount),
+//       total:         Number(breakdown.total),
+//       taxAmount:     Number(breakdown.taxAmount),
 //     };
 
 //     if (invoiceToSave.discountType === "none") {
-//       invoiceToSave.discountType = "fixed";
+//       invoiceToSave.discountType  = "fixed";
 //       invoiceToSave.discountValue = 0;
-//       invoiceToSave.discount = 0;
+//       invoiceToSave.discount      = 0;
 //     }
 //     if (invoiceToSave.taxType === "none") {
-//       invoiceToSave.taxType = "fixed";
-//       invoiceToSave.tax = 0;
+//       invoiceToSave.taxType   = "fixed";
+//       invoiceToSave.tax       = 0;
 //       invoiceToSave.taxAmount = 0;
 //     }
 
@@ -267,11 +269,9 @@
 
 //   return (
 //     <>
-//       {/* ✅ Toaster outside Dialog so it's never blurred */}
 //       <Toaster position="top-right" />
 
 //       <Dialog open={isOpen} onOpenChange={closeModal}>
-//         {/* ✅ overlay-class removes the default backdrop-blur */}
 //         <DialogContent
 //           className="min-w-[1000px] max-w-4xl p-0 overflow-hidden rounded-lg shadow-xl"
 //           overlayClassName="bg-black/40"
@@ -284,6 +284,7 @@
 
 //           <div className="p-6 max-h-[80vh] overflow-y-auto">
 //             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+
 //               {/* Left Column */}
 //               <div className="space-y-6">
 //                 <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
@@ -294,6 +295,8 @@
 //                     Basic Information
 //                   </h3>
 //                   <div className="space-y-4">
+
+//                     {/* Assign To */}
 //                     <div>
 //                       <label className="block text-sm font-medium text-gray-700 mb-1">
 //                         Assign To (Sales User) *
@@ -319,6 +322,7 @@
 //                       )}
 //                     </div>
 
+//                     {/* Dates */}
 //                     <div className="grid grid-cols-2 gap-4">
 //                       <div>
 //                         <label className="block text-sm font-medium text-gray-700 mb-1">Issue Date *</label>
@@ -352,20 +356,28 @@
 //                       </div>
 //                     </div>
 
+//                     {/* ✅ Status — defaults to placeholder, user must pick paid/unpaid */}
 //                     <div>
-//                       <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+//                       <label className="block text-sm font-medium text-gray-700 mb-1">
+//                         Payment Status *
+//                       </label>
 //                       <select
 //                         name="status"
 //                         value={invoiceData.status}
 //                         onChange={handleChange}
-//                         className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+//                         className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition ${validationErrors.status ? "border-red-500 bg-red-50" : "border-gray-300"}`}
 //                       >
-//                          <option value="">Select Payment Status</option>
+//                         <option value="" disabled>Select Payment Status</option>
 //                         <option value="unpaid">Unpaid</option>
 //                         <option value="paid">Paid</option>
-//                         {/* <option value="send">Send</option> */}
 //                       </select>
+//                       {validationErrors.status && (
+//                         <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+//                           <span>⚠</span> {validationErrors.status}
+//                         </p>
+//                       )}
 //                     </div>
+
 //                   </div>
 //                 </div>
 //               </div>
@@ -380,6 +392,8 @@
 //                     Deal Information
 //                   </h3>
 //                   <div className="space-y-4">
+
+//                     {/* Deal */}
 //                     <div>
 //                       <label className="block text-sm font-medium text-gray-700 mb-1">Select Deal *</label>
 //                       <select
@@ -400,6 +414,7 @@
 //                       )}
 //                     </div>
 
+//                     {/* Deal Info Card */}
 //                     {selectedDealRequirement && (
 //                       <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
 //                         <p className="text-sm font-medium text-blue-800 mb-2 flex items-center">
@@ -419,6 +434,7 @@
 //                       </div>
 //                     )}
 
+//                     {/* Price & Amount */}
 //                     <div className="grid grid-cols-2 gap-4">
 //                       <div>
 //                         <label className="block text-sm font-medium text-gray-700 mb-1">Price *</label>
@@ -444,6 +460,7 @@
 //                         </div>
 //                       </div>
 //                     </div>
+
 //                   </div>
 //                 </div>
 //               </div>
@@ -476,13 +493,17 @@
 //                     {invoiceData.taxType === "fixed" && (
 //                       <div>
 //                         <label className="block text-sm font-medium text-gray-700 mb-1">Tax Amount</label>
-//                         <input type="number" name="tax" min="0" step="0.01" value={invoiceData.tax} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="Enter fixed tax amount" />
+//                         <input type="number" name="tax" min="0" step="0.01" value={invoiceData.tax} onChange={handleChange}
+//                           className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+//                           placeholder="Enter fixed tax amount" />
 //                       </div>
 //                     )}
 //                     {invoiceData.taxType === "percentage" && (
 //                       <div>
 //                         <label className="block text-sm font-medium text-gray-700 mb-1">Tax Percentage</label>
-//                         <input type="number" name="tax" min="0" max="100" step="0.01" value={invoiceData.tax} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="Enter tax %" />
+//                         <input type="number" name="tax" min="0" max="100" step="0.01" value={invoiceData.tax} onChange={handleChange}
+//                           className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+//                           placeholder="Enter tax %" />
 //                       </div>
 //                     )}
 //                   </>
@@ -504,7 +525,8 @@
 //                 {invoiceData.discountType !== "none" && (
 //                   <div>
 //                     <label className="block text-sm font-medium text-gray-700 mb-1">Discount Value</label>
-//                     <input type="number" name="discountValue" min="0" step="0.01" value={invoiceData.discountValue} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
+//                     <input type="number" name="discountValue" min="0" step="0.01" value={invoiceData.discountValue} onChange={handleChange}
+//                       className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
 //                   </div>
 //                 )}
 //               </div>
@@ -604,7 +626,9 @@
 //   );
 // };
 
-// export default InvoiceModal;//original
+// export default InvoiceModal;//original code..
+
+
 
 import {
   Dialog,
@@ -617,50 +641,65 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 
+// ✅ Helper: get logged-in user role
+const getUserRole = () => {
+  try {
+    const user = JSON.parse(localStorage.getItem("user"));
+    return user?.role?.name?.toLowerCase()?.trim() || "";
+  } catch {
+    return "";
+  }
+};
+
 const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
   const API_URL = import.meta.env.VITE_API_URL;
   const { isOpen, closeModal } = useModal();
 
-  const [salesUsers, setSalesUsers] = useState([]);
-  const [deals, setDeals] = useState([]);
+  // ✅ "assignableUsers" replaces the old "salesUsers" —
+  //    admin/manager fetch accounts users to assign to
+  const [assignableUsers, setAssignableUsers]             = useState([]);
+  const [deals, setDeals]                                 = useState([]);
   const [selectedDealRequirement, setSelectedDealRequirement] = useState(null);
-  const [invoiceData, setInvoiceData] = useState({
-    assignTo: "",
-    issueDate: "",
-    dueDate: "",
-    status: "",        // ✅ Empty so placeholder shows by default
-    deal: "",
-    price: 0,
-    tax: "0",
-    taxType: "none",
-    discountType: "none",
+  const [invoiceData, setInvoiceData]                     = useState({
+    assignTo:      "",
+    issueDate:     "",
+    dueDate:       "",
+    status:        "",
+    deal:          "",
+    price:         0,
+    tax:           "0",
+    taxType:       "none",
+    discountType:  "none",
     discountValue: 0,
-    note: "",
-    currency: "INR",
+    note:          "",
+    currency:      "INR",
   });
-  const [note, setNote] = useState("");
-  const [isNoteVisible, setIsNoteVisible] = useState(false);
+  const [note, setNote]                       = useState("");
+  const [isNoteVisible, setIsNoteVisible]     = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
 
+  const userRole = getUserRole();
+
+  // ── Populate form when editing ──────────────────────────────────────
   useEffect(() => {
     if (editingInvoice) {
       setInvoiceData({
-        assignTo: editingInvoice.assignTo?._id || "",
-        issueDate: editingInvoice.issueDate
+        assignTo:      editingInvoice.assignTo?._id || "",
+        issueDate:     editingInvoice.issueDate
           ? new Date(editingInvoice.issueDate).toISOString().split("T")[0]
           : "",
-        dueDate: editingInvoice.dueDate
+        dueDate:       editingInvoice.dueDate
           ? new Date(editingInvoice.dueDate).toISOString().split("T")[0]
           : "",
-        status: editingInvoice.status || "",   // ✅ Keep existing or empty
-        deal: editingInvoice.items?.[0]?.deal?._id || "",
-        price: editingInvoice.items?.[0]?.price || 0,
-        tax: editingInvoice.tax?.toString() || "0",
-        taxType: editingInvoice.taxType || "none",
-        discountType: editingInvoice.discountType || "none",
-        discountValue: editingInvoice.discountValue || 0,
-        note: editingInvoice.note || "",
-        currency: editingInvoice.currency || "INR",
+        status:        editingInvoice.status        || "",
+        deal:          editingInvoice.items?.[0]?.deal?._id || "",
+        price:         editingInvoice.items?.[0]?.price     || 0,
+        tax:           editingInvoice.tax?.toString()        || "0",
+        taxType:       editingInvoice.taxType        || "none",
+        discountType:  editingInvoice.discountType   || "none",
+        discountValue: editingInvoice.discountValue  || 0,
+        note:          editingInvoice.note           || "",
+        currency:      editingInvoice.currency       || "INR",
       });
       setNote(editingInvoice.note || "");
       setIsNoteVisible(!!editingInvoice.note);
@@ -670,18 +709,18 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
       setSelectedDealRequirement(selectedDeal || null);
     } else {
       setInvoiceData({
-        assignTo: "",
-        issueDate: "",
-        dueDate: "",
-        status: "",       // ✅ Reset to empty on new invoice
-        deal: "",
-        price: 0,
-        tax: "0",
-        taxType: "none",
-        discountType: "none",
+        assignTo:      "",
+        issueDate:     "",
+        dueDate:       "",
+        status:        "",
+        deal:          "",
+        price:         0,
+        tax:           "0",
+        taxType:       "none",
+        discountType:  "none",
         discountValue: 0,
-        note: "",
-        currency: "INR",
+        note:          "",
+        currency:      "INR",
       });
       setNote("");
       setIsNoteVisible(false);
@@ -690,21 +729,29 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
     setValidationErrors({});
   }, [editingInvoice, isOpen, deals]);
 
+  // ── Fetch accounts users to populate the "Assign To" dropdown ───────
+  // Admin and Manager assign invoices to accounts users
   useEffect(() => {
-    const fetchSalesUsers = async () => {
+    const fetchAssignableUsers = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get(`${API_URL}/users/sales`, {
+
+        // ✅ Fetch accounts users — these are who invoices get assigned to
+        const response = await axios.get(`${API_URL}/users/accounts`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setSalesUsers(response.data.users);
-      } catch {
-        // silently fail
+        setAssignableUsers(response.data.users || []);
+      } catch (err) {
+        console.error("Failed to fetch accounts users:", err);
+        // Silently fail — list will just be empty
       }
     };
-    fetchSalesUsers();
+
+    // Only admin and manager see the modal, so always fetch
+    fetchAssignableUsers();
   }, []);
 
+  // ── Fetch all deals ──────────────────────────────────────────────────
   useEffect(() => {
     const fetchDeals = async () => {
       const token = localStorage.getItem("token");
@@ -729,19 +776,19 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
       setSelectedDealRequirement(selectedDeal || null);
       if (selectedDeal?.value) {
         const numericValue = Number(selectedDeal.value.replace(/[^0-9.]/g, ""));
-        const currency = selectedDeal.value.replace(/[\d.,\s]/g, "").trim();
+        const currency     = selectedDeal.value.replace(/[\d.,\s]/g, "").trim();
         setInvoiceData((prev) => ({
           ...prev,
-          deal: value,
-          price: numericValue,
+          deal:     value,
+          price:    numericValue,
           currency: currency || "INR",
         }));
       }
     }
   };
 
-  const handleAddNoteClick = () => setIsNoteVisible(true);
-  const handleNoteChange = (e) => {
+  const handleAddNoteClick    = () => setIsNoteVisible(true);
+  const handleNoteChange      = (e) => {
     setNote(e.target.value);
     setInvoiceData((prev) => ({ ...prev, note: e.target.value }));
   };
@@ -754,12 +801,12 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
   const validateInputs = () => {
     const errors = {};
     const { assignTo, issueDate, dueDate, deal, price, status } = invoiceData;
-    if (!assignTo)          errors.assignTo  = "Sales user is required.";
-    if (!issueDate)         errors.issueDate = "Issue Date is required.";
-    if (!dueDate)           errors.dueDate   = "Due Date is required.";
-    if (!deal)              errors.deal      = "Deal is required.";
-    if (!status)            errors.status    = "Payment status is required.";  // ✅ validate status
-    if (price <= 0)         errors.price     = "Price must be greater than 0.";
+    if (!assignTo)  errors.assignTo  = "Accounts user is required.";
+    if (!issueDate) errors.issueDate = "Issue Date is required.";
+    if (!dueDate)   errors.dueDate   = "Due Date is required.";
+    if (!deal)      errors.deal      = "Deal is required.";
+    if (!status)    errors.status    = "Payment status is required.";
+    if (price <= 0) errors.price     = "Price must be greater than 0.";
     if (issueDate && dueDate) {
       const issue = new Date(issueDate);
       const due   = new Date(dueDate);
@@ -814,7 +861,7 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
       return;
     }
 
-    const breakdown = calculateTotalBreakdown();
+    const breakdown    = calculateTotalBreakdown();
     const invoiceToSave = {
       ...invoiceData,
       items: [
@@ -893,7 +940,7 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
           <div className="p-6 max-h-[80vh] overflow-y-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
 
-              {/* Left Column */}
+              {/* ── Left Column ── */}
               <div className="space-y-6">
                 <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
                   <h3 className="text-lg font-medium text-gray-800 mb-4 flex items-center">
@@ -904,28 +951,34 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
                   </h3>
                   <div className="space-y-4">
 
-                    {/* Assign To */}
+                    {/* ✅ Assign To — now shows Accounts users */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Assign To (Sales User) *
+                        Assign To (Accounts User) *
                       </label>
                       <select
                         name="assignTo"
                         value={invoiceData.assignTo}
                         onChange={handleChange}
-                        className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition ${validationErrors.assignTo ? "border-red-500 bg-red-50" : "border-gray-300"}`}
-                        disabled={editingInvoice && localStorage.getItem("role")?.toLowerCase() === "sales"}
+                        className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition ${
+                          validationErrors.assignTo ? "border-red-500 bg-red-50" : "border-gray-300"
+                        }`}
                       >
-                        <option value="">Select Sales User</option>
-                        {salesUsers.map((user) => (
-                          <option key={user._id} value={user._id}>
-                            {user.firstName} {user.lastName}
+                        <option value="">Select Accounts User</option>
+                        {assignableUsers.map((u) => (
+                          <option key={u._id} value={u._id}>
+                            {u.firstName} {u.lastName}
                           </option>
                         ))}
                       </select>
                       {validationErrors.assignTo && (
                         <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
                           <span>⚠</span> {validationErrors.assignTo}
+                        </p>
+                      )}
+                      {assignableUsers.length === 0 && (
+                        <p className="mt-1 text-xs text-amber-600">
+                          No accounts users found. Please create accounts users first.
                         </p>
                       )}
                     </div>
@@ -939,7 +992,9 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
                           name="issueDate"
                           value={invoiceData.issueDate}
                           onChange={handleChange}
-                          className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition ${validationErrors.issueDate ? "border-red-500 bg-red-50" : "border-gray-300"}`}
+                          className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition ${
+                            validationErrors.issueDate ? "border-red-500 bg-red-50" : "border-gray-300"
+                          }`}
                         />
                         {validationErrors.issueDate && (
                           <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
@@ -954,7 +1009,9 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
                           name="dueDate"
                           value={invoiceData.dueDate}
                           onChange={handleChange}
-                          className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition ${validationErrors.dueDate ? "border-red-500 bg-red-50" : "border-gray-300"}`}
+                          className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition ${
+                            validationErrors.dueDate ? "border-red-500 bg-red-50" : "border-gray-300"
+                          }`}
                         />
                         {validationErrors.dueDate && (
                           <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
@@ -964,7 +1021,7 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
                       </div>
                     </div>
 
-                    {/* ✅ Status — defaults to placeholder, user must pick paid/unpaid */}
+                    {/* Payment Status */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Payment Status *
@@ -973,7 +1030,9 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
                         name="status"
                         value={invoiceData.status}
                         onChange={handleChange}
-                        className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition ${validationErrors.status ? "border-red-500 bg-red-50" : "border-gray-300"}`}
+                        className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition ${
+                          validationErrors.status ? "border-red-500 bg-red-50" : "border-gray-300"
+                        }`}
                       >
                         <option value="" disabled>Select Payment Status</option>
                         <option value="unpaid">Unpaid</option>
@@ -990,7 +1049,7 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
                 </div>
               </div>
 
-              {/* Right Column */}
+              {/* ── Right Column ── */}
               <div className="space-y-6">
                 <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
                   <h3 className="text-lg font-medium text-gray-800 mb-4 flex items-center">
@@ -1008,7 +1067,9 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
                         name="deal"
                         value={invoiceData.deal}
                         onChange={handleChange}
-                        className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition ${validationErrors.deal ? "border-red-500 bg-red-50" : "border-gray-300"}`}
+                        className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition ${
+                          validationErrors.deal ? "border-red-500 bg-red-50" : "border-gray-300"
+                        }`}
                       >
                         <option value="">Select a Deal</option>
                         {deals.map((deal) => (
@@ -1053,7 +1114,9 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
                           step="0.01"
                           value={invoiceData.price}
                           onChange={handleChange}
-                          className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition ${validationErrors.price ? "border-red-500 bg-red-50" : "border-gray-300"}`}
+                          className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition ${
+                            validationErrors.price ? "border-red-500 bg-red-50" : "border-gray-300"
+                          }`}
                         />
                         {validationErrors.price && (
                           <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
@@ -1101,17 +1164,21 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
                     {invoiceData.taxType === "fixed" && (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Tax Amount</label>
-                        <input type="number" name="tax" min="0" step="0.01" value={invoiceData.tax} onChange={handleChange}
+                        <input
+                          type="number" name="tax" min="0" step="0.01" value={invoiceData.tax} onChange={handleChange}
                           className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                          placeholder="Enter fixed tax amount" />
+                          placeholder="Enter fixed tax amount"
+                        />
                       </div>
                     )}
                     {invoiceData.taxType === "percentage" && (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Tax Percentage</label>
-                        <input type="number" name="tax" min="0" max="100" step="0.01" value={invoiceData.tax} onChange={handleChange}
+                        <input
+                          type="number" name="tax" min="0" max="100" step="0.01" value={invoiceData.tax} onChange={handleChange}
                           className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                          placeholder="Enter tax %" />
+                          placeholder="Enter tax %"
+                        />
                       </div>
                     )}
                   </>
@@ -1133,8 +1200,10 @@ const InvoiceModal = ({ onInvoiceSaved, editingInvoice }) => {
                 {invoiceData.discountType !== "none" && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Discount Value</label>
-                    <input type="number" name="discountValue" min="0" step="0.01" value={invoiceData.discountValue} onChange={handleChange}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
+                    <input
+                      type="number" name="discountValue" min="0" step="0.01" value={invoiceData.discountValue} onChange={handleChange}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                    />
                   </div>
                 )}
               </div>

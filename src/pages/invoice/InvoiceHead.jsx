@@ -1,3 +1,5 @@
+
+
 // import React, { useState, useEffect, useRef } from "react";
 // import DatePicker from "react-datepicker";
 // import {
@@ -25,7 +27,7 @@
 // import toast, { Toaster } from "react-hot-toast";
 // import { useNavigate } from "react-router-dom";
 
-// const ITEMS_PER_PAGE = 10; // ✅ Fixed 10 per page
+// const ITEMS_PER_PAGE = 10;
 
 // const InvoiceHead = () => {
 //   const API_URL = import.meta.env.VITE_API_URL;
@@ -49,7 +51,6 @@
 //   const [selectedIds, setSelectedIds] = useState(new Set());
 //   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
-//   // ✅ Frontend pagination state
 //   const [currentPage, setCurrentPage] = useState(1);
 
 //   const [emailModalOpen, setEmailModalOpen] = useState(false);
@@ -64,7 +65,6 @@
 
 //   const user = JSON.parse(localStorage.getItem("user"));
 
-//   // ✅ Fetch ALL invoices once — pagination handled on frontend
 //   useEffect(() => {
 //     fetchInvoices();
 //   }, [refreshTrigger]);
@@ -79,7 +79,7 @@
 //     return () => document.removeEventListener("mousedown", handleClickOutside);
 //   }, []);
 
-//   // ✅ Reset to page 1 whenever filters change
+//   // Reset to page 1 whenever filters change
 //   useEffect(() => {
 //     applyFilters();
 //     setCurrentPage(1);
@@ -99,7 +99,6 @@
 //     return acc;
 //   }, {});
 
-//   // ✅ Fetch ALL invoices (no page/limit — frontend slices)
 //   const fetchInvoices = async () => {
 //     try {
 //       const token = localStorage.getItem("token");
@@ -136,20 +135,46 @@
 //     }
 //   };
 
+//   // ── Fixed date filter: compare year/month/day to avoid timezone mismatches ──
+//   const isSameLocalDate = (dateA, dateB) => {
+//     const a = new Date(dateA);
+//     const b = new Date(dateB);
+//     return (
+//       a.getFullYear() === b.getFullYear() &&
+//       a.getMonth()    === b.getMonth()    &&
+//       a.getDate()     === b.getDate()
+//     );
+//   };
+
 //   const applyFilters = () => {
 //     let filtered = invoices;
-//     if (searchTerm) {
+
+//     if (searchTerm.trim()) {
+//       const s = searchTerm.trim().toLowerCase();
 //       filtered = filtered.filter(
-//         (inv) => inv.invoicenumber?.toLowerCase().includes(searchTerm.toLowerCase())
+//         (inv) => inv.invoicenumber?.toLowerCase().includes(s)
 //       );
 //     }
+
+//     // ✅ Fixed: use isSameLocalDate instead of toDateString() to avoid timezone drift
 //     if (startDate) {
-//       const sel = new Date(startDate).toDateString();
-//       filtered = filtered.filter((inv) => new Date(inv.createdAt).toDateString() === sel);
+//       filtered = filtered.filter(
+//         (inv) => inv.createdAt && isSameLocalDate(inv.createdAt, startDate)
+//       );
 //     }
-//     if (filterAssignTo) filtered = filtered.filter((inv) => inv.assignTo?._id === filterAssignTo);
-//     if (filterStatus)   filtered = filtered.filter((inv) => inv.status === filterStatus);
-//     if (filterMethod)   filtered = filtered.filter((inv) => inv.paymentMethod === filterMethod);
+
+//     if (filterAssignTo) {
+//       filtered = filtered.filter((inv) => inv.assignTo?._id === filterAssignTo);
+//     }
+
+//     if (filterStatus) {
+//       filtered = filtered.filter((inv) => inv.status === filterStatus);
+//     }
+
+//     if (filterMethod) {
+//       filtered = filtered.filter((inv) => inv.paymentMethod === filterMethod);
+//     }
+
 //     setFilteredInvoices(filtered);
 //   };
 
@@ -202,12 +227,11 @@
 //     });
 //   };
 
-//   // ✅ Frontend pagination — slice the filtered array
 //   const totalCount    = filteredInvoices.length;
 //   const totalPages    = Math.max(1, Math.ceil(totalCount / ITEMS_PER_PAGE));
 //   const startIndex    = (currentPage - 1) * ITEMS_PER_PAGE;
 //   const endIndex      = startIndex + ITEMS_PER_PAGE;
-//   const pagedInvoices = filteredInvoices.slice(startIndex, endIndex); // ✅ only current page rows
+//   const pagedInvoices = filteredInvoices.slice(startIndex, endIndex);
 
 //   const allOnPageSelected =
 //     pagedInvoices.length > 0 && pagedInvoices.every((inv) => selectedIds.has(inv._id));
@@ -239,7 +263,6 @@
 //       setFilteredInvoices((prev) => prev.filter((inv) => !ids.includes(inv._id)));
 //       setSelectedIds(new Set());
 //       toast.success(`${ids.length} invoice(s) deleted.`);
-//       // ✅ Go back a page if current page becomes empty after delete
 //       setCurrentPage((p) => {
 //         const newTotal = totalCount - ids.length;
 //         const newTotalPages = Math.max(1, Math.ceil(newTotal / ITEMS_PER_PAGE));
@@ -267,7 +290,6 @@
 
 //   const handleInvoiceClick = (id) => navigate(`/invoice/${id}`);
 
-//   // ✅ Smart page number list with ellipsis
 //   const getPageNumbers = () => {
 //     if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
 //     const pages = [];
@@ -384,11 +406,14 @@
 //       {/* Filters */}
 //       <div className="flex flex-wrap gap-4 mt-8 items-center justify-between">
 //         <div className="flex flex-wrap gap-4">
+//           {/* ✅ isClearable lets users reset the date picker easily */}
 //           <DatePicker
 //             selected={startDate}
 //             onChange={(date) => setStartDate(date)}
 //             className="px-4 py-2 rounded-md border bg-white focus:ring-2 focus:ring-blue-400"
 //             placeholderText="Filter by Date"
+//             dateFormat="dd/MM/yyyy"
+//             isClearable
 //           />
 //           <select className="px-4 py-2 rounded-md bg-white border text-gray-600" value={filterAssignTo} onChange={(e) => setFilterAssignTo(e.target.value)}>
 //             <option value="">All Users</option>
@@ -457,7 +482,6 @@
 //             </tr>
 //           </thead>
 //           <tbody className="divide-y divide-gray-200">
-//             {/* ✅ pagedInvoices = sliced array for current page only */}
 //             {pagedInvoices.map((invoice, index) => (
 //               <tr key={invoice._id} className={`transition-colors ${selectedIds.has(invoice._id) ? "bg-blue-50" : "hover:bg-gray-50"}`}>
 //                 <td className="px-4 py-4 text-center">
@@ -533,13 +557,19 @@
 //               </tr>
 //             ))}
 //             {pagedInvoices.length === 0 && (
-//               <tr><td colSpan="8" className="text-center py-6 text-gray-400">No invoices found.</td></tr>
+//               <tr>
+//                 <td colSpan="8" className="text-center py-6 text-gray-400">
+//                   {startDate || searchTerm || filterAssignTo || filterStatus || filterMethod
+//                     ? "No invoices match your filters."
+//                     : "No invoices found."}
+//                 </td>
+//               </tr>
 //             )}
 //           </tbody>
 //         </table>
 //       </div>
 
-//       {/* ✅ Pagination — removed "Show entries", clean « Previous 1 2 Next » */}
+//       {/* Pagination */}
 //       {totalCount > 0 && (
 //         <div className="flex items-center justify-between mt-4 px-1">
 //           {/* Showing X–Y of Z */}
@@ -560,25 +590,19 @@
 //               disabled={currentPage === 1}
 //               className="px-2 py-1.5 rounded-md border text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
 //               title="First page"
-//             >
-//               «
-//             </button>
+//             >«</button>
 
 //             {/* Previous */}
 //             <button
 //               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
 //               disabled={currentPage === 1}
 //               className="px-3 py-1.5 rounded-md border text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
-//             >
-//               Previous
-//             </button>
+//             >Previous</button>
 
 //             {/* Page numbers with ellipsis */}
 //             {getPageNumbers().map((page, idx) =>
 //               page === "..." ? (
-//                 <span key={`ellipsis-${idx}`} className="px-2 py-1.5 text-sm text-gray-400 select-none">
-//                   ...
-//                 </span>
+//                 <span key={`ellipsis-${idx}`} className="px-2 py-1.5 text-sm text-gray-400 select-none">...</span>
 //               ) : (
 //                 <button
 //                   key={page}
@@ -599,9 +623,7 @@
 //               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
 //               disabled={currentPage === totalPages}
 //               className="px-3 py-1.5 rounded-md border text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
-//             >
-//               Next
-//             </button>
+//             >Next</button>
 
 //             {/* Last */}
 //             <button
@@ -609,9 +631,7 @@
 //               disabled={currentPage === totalPages}
 //               className="px-2 py-1.5 rounded-md border text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
 //               title="Last page"
-//             >
-//               »
-//             </button>
+//             >»</button>
 //           </div>
 //         </div>
 //       )}
@@ -651,7 +671,8 @@
 //   );
 // };
 
-// export default InvoiceHead;//original
+// export default InvoiceHead;//original code..
+
 
 import React, { useState, useEffect, useRef } from "react";
 import DatePicker from "react-datepicker";
@@ -682,39 +703,56 @@ import { useNavigate } from "react-router-dom";
 
 const ITEMS_PER_PAGE = 10;
 
+// ✅ Helper: get role from stored user object in localStorage
+const getUserRole = () => {
+  try {
+    const user = JSON.parse(localStorage.getItem("user"));
+    return user?.role?.name?.toLowerCase()?.trim() || "";
+  } catch {
+    return "";
+  }
+};
+
 const InvoiceHead = () => {
   const API_URL = import.meta.env.VITE_API_URL;
 
   const { openModal } = useModal();
-  const [startDate, setStartDate] = useState(null);
-  const [invoices, setInvoices] = useState([]);
+  const [startDate, setStartDate]             = useState(null);
+  const [invoices, setInvoices]               = useState([]);
   const [filteredInvoices, setFilteredInvoices] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterAssignTo, setFilterAssignTo] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
-  const [filterMethod, setFilterMethod] = useState("");
-  const [openIndex, setOpenIndex] = useState(null);
-  const [sendingEmailId, setSendingEmailId] = useState(null);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [editingInvoice, setEditingInvoice] = useState(null);
+  const [searchTerm, setSearchTerm]           = useState("");
+  const [filterAssignTo, setFilterAssignTo]   = useState("");
+  const [filterStatus, setFilterStatus]       = useState("");
+  const [filterMethod, setFilterMethod]       = useState("");
+  const [openIndex, setOpenIndex]             = useState(null);
+  const [sendingEmailId, setSendingEmailId]   = useState(null);
+  const [refreshTrigger, setRefreshTrigger]   = useState(0);
+  const [editingInvoice, setEditingInvoice]   = useState(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [invoiceToDelete, setInvoiceToDelete] = useState(null);
-  const [dropdownButton, setDropdownButton] = useState(null);
+  const [dropdownButton, setDropdownButton]   = useState(null);
 
-  const [selectedIds, setSelectedIds] = useState(new Set());
-  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [selectedIds, setSelectedIds]         = useState(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen]   = useState(false);
 
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage]         = useState(1);
 
-  const [emailModalOpen, setEmailModalOpen] = useState(false);
-  const [emailMessage, setEmailMessage] = useState("Sending invoice email...");
-  const [emailStatus, setEmailStatus] = useState("loading");
+  const [emailModalOpen, setEmailModalOpen]   = useState(false);
+  const [emailMessage, setEmailMessage]       = useState("Sending invoice email...");
+  const [emailStatus, setEmailStatus]         = useState("loading");
 
-  const [downloadingId, setDownloadingId] = useState(null);
+  const [downloadingId, setDownloadingId]     = useState(null);
 
-  const dropdownRef = useRef(null);
+  const dropdownRef      = useRef(null);
   const currencyScrollRef = useRef(null);
-  const navigate = useNavigate();
+  const navigate         = useNavigate();
+
+  // ✅ Get role once on mount
+  const userRole = getUserRole();
+
+  // ✅ Only Admin and Manager can create/delete invoices
+  const canCreateInvoice = userRole === "admin" || userRole === "manager" || userRole === "accounts"; ;
+  const canDeleteInvoice = userRole === "admin" || userRole === "manager" ||  userRole === "accounts";;
 
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -732,7 +770,6 @@ const InvoiceHead = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Reset to page 1 whenever filters change
   useEffect(() => {
     applyFilters();
     setCurrentPage(1);
@@ -756,7 +793,7 @@ const InvoiceHead = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `${API_URL}/invoice/getInvoice?assignTo=${user?._id}`,
+        `${API_URL}/invoice/getInvoice`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const all = response.data.invoices || response.data || [];
@@ -774,7 +811,10 @@ const InvoiceHead = () => {
       setEmailModalOpen(true);
       setEmailStatus("loading");
       setEmailMessage("📨 Sending invoice email...");
-      await axios.post(`${API_URL}/invoice/sendEmail/${invoiceId}`);
+      const token = localStorage.getItem("token");
+      await axios.post(`${API_URL}/invoice/sendEmail/${invoiceId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setEmailStatus("success");
       setEmailMessage("✅ Invoice sent to customer email!");
     } catch (error) {
@@ -788,7 +828,6 @@ const InvoiceHead = () => {
     }
   };
 
-  // ── Fixed date filter: compare year/month/day to avoid timezone mismatches ──
   const isSameLocalDate = (dateA, dateB) => {
     const a = new Date(dateA);
     const b = new Date(dateB);
@@ -809,7 +848,6 @@ const InvoiceHead = () => {
       );
     }
 
-    // ✅ Fixed: use isSameLocalDate instead of toDateString() to avoid timezone drift
     if (startDate) {
       filtered = filtered.filter(
         (inv) => inv.createdAt && isSameLocalDate(inv.createdAt, startDate)
@@ -833,7 +871,10 @@ const InvoiceHead = () => {
 
   const handleDelete = async (invoiceId) => {
     try {
-      await axios.delete(`${API_URL}/invoice/delete/${invoiceId}`);
+      const token = localStorage.getItem("token");
+      await axios.delete(`${API_URL}/invoice/delete/${invoiceId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       toast.success("Invoice deleted successfully!");
       setRefreshTrigger((prev) => prev + 1);
       setDeleteConfirmOpen(false);
@@ -843,8 +884,8 @@ const InvoiceHead = () => {
     }
   };
 
-  const handleEdit = (invoice) => { setEditingInvoice(invoice); openModal(); setOpenIndex(null); };
-  const confirmDelete = (invoice) => { setInvoiceToDelete(invoice); setDeleteConfirmOpen(true); setOpenIndex(null); };
+  const handleEdit        = (invoice) => { setEditingInvoice(invoice); openModal(); setOpenIndex(null); };
+  const confirmDelete     = (invoice) => { setInvoiceToDelete(invoice); setDeleteConfirmOpen(true); setOpenIndex(null); };
   const handleInvoiceSaved = () => { setRefreshTrigger((prev) => prev + 1); setEditingInvoice(null); };
 
   const downloadInvoice = async (invoiceId, invoiceNumber) => {
@@ -853,8 +894,10 @@ const InvoiceHead = () => {
     try {
       setDownloadingId(invoiceId);
       setOpenIndex(null);
+      const token = localStorage.getItem("token");
       const response = await axios.get(`${API_URL}/invoice/download/${invoiceId}`, {
         responseType: "blob",
+        headers: { Authorization: `Bearer ${token}` },
       });
       const url  = window.URL.createObjectURL(new Blob([response.data], { type: "application/pdf" }));
       const link = document.createElement("a");
@@ -911,7 +954,11 @@ const InvoiceHead = () => {
     setBulkDeleteOpen(false);
     const ids = Array.from(selectedIds);
     try {
-      await axios.delete(`${API_URL}/invoice/deletemany`, { data: { ids } });
+      const token = localStorage.getItem("token");
+      await axios.delete(`${API_URL}/invoice/deletemany`, {
+        data: { ids },
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setInvoices((prev)         => prev.filter((inv) => !ids.includes(inv._id)));
       setFilteredInvoices((prev) => prev.filter((inv) => !ids.includes(inv._id)));
       setSelectedIds(new Set());
@@ -935,6 +982,7 @@ const InvoiceHead = () => {
     };
     return map[c] || <FaDollarSign className="text-gray-600" />;
   };
+
   const getCurrencyBgColor   = (c) => ({ INR: "bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200", USD: "bg-gradient-to-br from-teal-50 to-teal-100 border-teal-200", EUR: "bg-gradient-to-br from-rose-50 to-rose-100 border-rose-200", GBP: "bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200" }[c] || "bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200");
   const getCurrencyTextColor = (c) => ({ INR: "text-indigo-800", USD: "text-teal-800", EUR: "text-rose-800", GBP: "text-amber-800" }[c] || "text-gray-800");
 
@@ -985,12 +1033,15 @@ const InvoiceHead = () => {
         document.body
       )}
 
-      {/* Header */}
+      {/* ✅ Header — Create Invoice button only for Admin and Manager */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold">Invoices</h1>
-        {user?.role?.name?.toLowerCase() === "admin" && (
-          <button onClick={() => { setEditingInvoice(null); openModal(); }} className="bg-[#4466f2] p-2 px-4 text-white rounded-sm">
-            Create invoices
+        {canCreateInvoice && (
+          <button
+            onClick={() => { setEditingInvoice(null); openModal(); }}
+            className="bg-[#4466f2] p-2 px-4 text-white rounded-sm"
+          >
+            Create Invoice
           </button>
         )}
       </div>
@@ -1059,7 +1110,6 @@ const InvoiceHead = () => {
       {/* Filters */}
       <div className="flex flex-wrap gap-4 mt-8 items-center justify-between">
         <div className="flex flex-wrap gap-4">
-          {/* ✅ isClearable lets users reset the date picker easily */}
           <DatePicker
             selected={startDate}
             onChange={(date) => setStartDate(date)}
@@ -1068,14 +1118,26 @@ const InvoiceHead = () => {
             dateFormat="dd/MM/yyyy"
             isClearable
           />
-          <select className="px-4 py-2 rounded-md bg-white border text-gray-600" value={filterAssignTo} onChange={(e) => setFilterAssignTo(e.target.value)}>
+          <select
+            className="px-4 py-2 rounded-md bg-white border text-gray-600"
+            value={filterAssignTo}
+            onChange={(e) => setFilterAssignTo(e.target.value)}
+          >
             <option value="">All Users</option>
             {[...new Set(invoices.map((inv) => inv.assignTo?._id))].map((userId) => {
               const u = invoices.find((inv) => inv.assignTo?._id === userId)?.assignTo;
-              return <option key={userId} value={userId}>{u ? `${u.firstName} ${u.lastName}` : "Unknown"}</option>;
+              return (
+                <option key={userId} value={userId}>
+                  {u ? `${u.firstName} ${u.lastName}` : "Unknown"}
+                </option>
+              );
             })}
           </select>
-          <select className="px-4 py-2 rounded-md bg-white border text-gray-600" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+          <select
+            className="px-4 py-2 rounded-md bg-white border text-gray-600"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+          >
             <option value="">All Status</option>
             <option value="paid">Paid</option>
             <option value="unpaid">Unpaid</option>
@@ -1093,8 +1155,8 @@ const InvoiceHead = () => {
         </div>
       </div>
 
-      {/* Bulk Delete Action Bar */}
-      {selectedIds.size > 0 && (
+      {/* ✅ Bulk Delete Action Bar — only for Admin/Manager */}
+      {selectedIds.size > 0 && canDeleteInvoice && (
         <div className="flex items-center gap-3 mt-4 bg-red-50 border border-red-200 rounded-lg px-4 py-2.5">
           <span className="text-sm font-semibold text-red-700">{selectedIds.size} invoice(s) selected</span>
           <button
@@ -1115,16 +1177,19 @@ const InvoiceHead = () => {
         <table className="w-full text-sm text-left">
           <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
             <tr>
-              <th className="px-4 py-3 w-10 text-center">
-                <input
-                  type="checkbox"
-                  checked={allOnPageSelected}
-                  ref={(el) => { if (el) el.indeterminate = someOnPageSelected; }}
-                  onChange={toggleSelectAll}
-                  className="w-4 h-4 accent-blue-600 cursor-pointer"
-                  title="Select / deselect all on this page"
-                />
-              </th>
+              {/* ✅ Show checkbox column only for Admin/Manager */}
+              {canDeleteInvoice && (
+                <th className="px-4 py-3 w-10 text-center">
+                  <input
+                    type="checkbox"
+                    checked={allOnPageSelected}
+                    ref={(el) => { if (el) el.indeterminate = someOnPageSelected; }}
+                    onChange={toggleSelectAll}
+                    className="w-4 h-4 accent-blue-600 cursor-pointer"
+                    title="Select / deselect all on this page"
+                  />
+                </th>
+              )}
               <th className="px-6 py-3">Invoice</th>
               <th className="px-6 py-3">Deal Name</th>
               <th className="px-6 py-3">Status</th>
@@ -1136,12 +1201,26 @@ const InvoiceHead = () => {
           </thead>
           <tbody className="divide-y divide-gray-200">
             {pagedInvoices.map((invoice, index) => (
-              <tr key={invoice._id} className={`transition-colors ${selectedIds.has(invoice._id) ? "bg-blue-50" : "hover:bg-gray-50"}`}>
-                <td className="px-4 py-4 text-center">
-                  <input type="checkbox" checked={selectedIds.has(invoice._id)} onChange={() => toggleSelect(invoice._id)} className="w-4 h-4 accent-blue-600 cursor-pointer" />
-                </td>
+              <tr
+                key={invoice._id}
+                className={`transition-colors ${selectedIds.has(invoice._id) ? "bg-blue-50" : "hover:bg-gray-50"}`}
+              >
+                {/* ✅ Checkbox only for Admin/Manager */}
+                {canDeleteInvoice && (
+                  <td className="px-4 py-4 text-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(invoice._id)}
+                      onChange={() => toggleSelect(invoice._id)}
+                      className="w-4 h-4 accent-blue-600 cursor-pointer"
+                    />
+                  </td>
+                )}
                 <td className="px-6 py-4">
-                  <button onClick={() => handleInvoiceClick(invoice._id)} className="text-blue-600 hover:text-blue-800 hover:underline font-medium">
+                  <button
+                    onClick={() => handleInvoiceClick(invoice._id)}
+                    className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                  >
                     {invoice.invoicenumber}
                   </button>
                 </td>
@@ -1152,13 +1231,20 @@ const InvoiceHead = () => {
                   </span>
                 </td>
                 <td className="px-6 py-4 font-semibold">
-                  {invoice.total ? Number(invoice.total).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"} {invoice.currency}
+                  {invoice.total
+                    ? Number(invoice.total).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                    : "-"}{" "}
+                  {invoice.currency}
                 </td>
                 <td className="px-6 py-4">
-                  {invoice.assignTo ? `${invoice.assignTo.firstName} ${invoice.assignTo.lastName}` : "N/A"}
+                  {invoice.assignTo
+                    ? `${invoice.assignTo.firstName} ${invoice.assignTo.lastName}`
+                    : "N/A"}
                 </td>
                 <td className="px-6 py-4">
-                  {invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "-"}
+                  {invoice.dueDate
+                    ? new Date(invoice.dueDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+                    : "-"}
                 </td>
                 <td className="px-6 py-4 text-center relative">
                   <button
@@ -1185,7 +1271,9 @@ const InvoiceHead = () => {
                         minWidth: "8rem",
                       }}
                     >
-                      <button className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100" onClick={() => handleSendEmail(invoice._id)}>Send to Email</button>
+                      <button className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100" onClick={() => handleSendEmail(invoice._id)}>
+                        Send to Email
+                      </button>
                       <button
                         className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm hover:bg-gray-100 disabled:opacity-60"
                         disabled={downloadingId === invoice._id}
@@ -1201,8 +1289,17 @@ const InvoiceHead = () => {
                           </>
                         ) : "Download"}
                       </button>
-                      <button className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100" onClick={() => handleEdit(invoice)}>Edit</button>
-                      <button className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50" onClick={() => confirmDelete(invoice)}>Delete</button>
+                      {/* ✅ Edit & Delete only for Admin/Manager */}
+                      {canCreateInvoice && (
+                        <button className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100" onClick={() => handleEdit(invoice)}>
+                          Edit
+                        </button>
+                      )}
+                      {canDeleteInvoice && (
+                        <button className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50" onClick={() => confirmDelete(invoice)}>
+                          Delete
+                        </button>
+                      )}
                     </div>,
                     document.body
                   )}
@@ -1211,7 +1308,7 @@ const InvoiceHead = () => {
             ))}
             {pagedInvoices.length === 0 && (
               <tr>
-                <td colSpan="8" className="text-center py-6 text-gray-400">
+                <td colSpan={canDeleteInvoice ? 8 : 7} className="text-center py-6 text-gray-400">
                   {startDate || searchTerm || filterAssignTo || filterStatus || filterMethod
                     ? "No invoices match your filters."
                     : "No invoices found."}
@@ -1225,7 +1322,6 @@ const InvoiceHead = () => {
       {/* Pagination */}
       {totalCount > 0 && (
         <div className="flex items-center justify-between mt-4 px-1">
-          {/* Showing X–Y of Z */}
           <span className="text-sm text-gray-600">
             Showing{" "}
             <span className="font-semibold text-gray-800">{startIndex + 1}</span>
@@ -1235,9 +1331,7 @@ const InvoiceHead = () => {
             <span className="font-semibold text-gray-800">{totalCount}</span>
           </span>
 
-          {/* Page buttons */}
           <div className="flex items-center gap-1">
-            {/* First */}
             <button
               onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1}
@@ -1245,14 +1339,12 @@ const InvoiceHead = () => {
               title="First page"
             >«</button>
 
-            {/* Previous */}
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
               className="px-3 py-1.5 rounded-md border text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
             >Previous</button>
 
-            {/* Page numbers with ellipsis */}
             {getPageNumbers().map((page, idx) =>
               page === "..." ? (
                 <span key={`ellipsis-${idx}`} className="px-2 py-1.5 text-sm text-gray-400 select-none">...</span>
@@ -1271,14 +1363,12 @@ const InvoiceHead = () => {
               )
             )}
 
-            {/* Next */}
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
               className="px-3 py-1.5 rounded-md border text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
             >Next</button>
 
-            {/* Last */}
             <button
               onClick={() => setCurrentPage(totalPages)}
               disabled={currentPage === totalPages}
