@@ -1530,7 +1530,7 @@ export default function CreateLeads() {
                             rows={8}
                             value={formData[field.name] || ""}
                             onChange={handleChange}
-                            placeholder={`Enter ${field.label}... (unlimited)`}
+                            placeholder={`Enter ${field.label}... `}
                             className="w-full px-4 py-3 rounded-xl border border-gray-300 bg-white shadow-sm text-sm text-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 placeholder-gray-400 transition resize-y min-h-[120px]"
                           />
                           {fieldErrors[field.name] && (
