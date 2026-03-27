@@ -2723,7 +2723,7 @@ const CurrencyBreakdownCard = ({ revenueData, loading }) => {
     <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg flex items-center gap-2"><Globe className="h-5 w-5 text-purple-600" />Revenue by Currency</CardTitle>
+          <CardTitle className="text-lg flex items-center gap-2"><Globe className="h-5 w-5 text-purple-600" />Invoice Revenue by Currency</CardTitle>
           <Badge variant="secondary">{currencies.length} Currencies</Badge>
         </div>
         <div className="mt-4 p-4 bg-white/60 rounded-lg border">
@@ -2838,7 +2838,7 @@ const RevenueTrendChart = ({ revenueData, loading, invoices }) => {
     <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm h-full">
       <CardHeader className="pb-4 border-b">
         <div className="flex justify-between items-center flex-wrap gap-2">
-          <CardTitle className="text-xl flex items-center gap-2"><TrendingUp className="h-5 w-5 text-purple-600" />Revenue Trend</CardTitle>
+          <CardTitle className="text-xl flex items-center gap-2"><TrendingUp className="h-5 w-5 text-purple-600" />Invoice Revenue Trend</CardTitle>
           <select
             value={selectedCurrency}
             onChange={(e) => setSelectedCurrency(e.target.value)}
