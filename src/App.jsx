@@ -110,7 +110,8 @@
 
 // export default App;//original
 
-
+//callback url
+//https://crm.stagingzar.com/api/facebook-leads/webhook
 
 
 import { BrowserRouter, Route, Routes } from "react-router-dom";
