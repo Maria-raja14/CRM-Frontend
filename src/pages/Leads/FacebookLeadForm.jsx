@@ -85,38 +85,69 @@ export default function FacebookLeadForm() {
     if (fieldErrors.phoneNumber) setFieldErrors((prev) => ({ ...prev, phoneNumber: '' }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setFieldErrors({});
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     setFieldErrors({});
 
-    // Optional validation – show warnings but do not block submission
-    if (formData.email && !validateEmailDomain(formData.email)) {
-      setFieldErrors((prev) => ({ ...prev, email: 'Please enter a valid email address' }));
-    }
-    const { valid, message } = validatePhoneNumber(formData.phoneNumber, phoneCountryData);
-    if (!valid) {
-      setFieldErrors((prev) => ({ ...prev, phoneNumber: message }));
-    }
+//     // Optional validation – show warnings but do not block submission
+//     if (formData.email && !validateEmailDomain(formData.email)) {
+//       setFieldErrors((prev) => ({ ...prev, email: 'Please enter a valid email address' }));
+//     }
+//     const { valid, message } = validatePhoneNumber(formData.phoneNumber, phoneCountryData);
+//     if (!valid) {
+//       setFieldErrors((prev) => ({ ...prev, phoneNumber: message }));
+//     }
 
-    setIsSubmitting(true);
+//     setIsSubmitting(true);
 
-    try {
-      const token = localStorage.getItem('token');
-      // Source is fixed to "Facebook"
-      const payload = { ...formData, source: 'Facebook' };
-      const response = await axios.post(`${API_URL}/facebook-form/create`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      toast.success('Facebook lead saved successfully');
-      setTimeout(() => navigate('/leads'), 1200);
-    } catch (error) {
-      console.error('Error submitting Facebook lead:', error);
-      const errorMsg = error.response?.data?.message || 'Failed to save lead';
-      toast.error(errorMsg);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+//     try {
+//       const token = localStorage.getItem('token');
+//       // Source is fixed to "Facebook"
+//       const payload = { ...formData, source: 'Facebook' };
+//       const response = await axios.post(`${API_URL}/facebook-form/create`, payload, {
+//         headers: { Authorization: `Bearer ${token}` },
+//       });
+//       toast.success('Facebook lead saved successfully');
+//       setTimeout(() => navigate('/leads'), 1200);
+//     } catch (error) {
+//       console.error('Error submitting Facebook lead:', error);
+//       const errorMsg = error.response?.data?.message || 'Failed to save lead';
+//       toast.error(errorMsg);
+//     } finally {
+//       setIsSubmitting(false);
+//     }
+//   };
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setFieldErrors({});
+
+  // Optional validations (email, phone) – keep as before
+  if (formData.email && !validateEmailDomain(formData.email)) {
+    setFieldErrors((prev) => ({ ...prev, email: 'Please enter a valid email address' }));
+  }
+  const { valid, message } = validatePhoneNumber(formData.phoneNumber, phoneCountryData);
+  if (!valid) {
+    setFieldErrors((prev) => ({ ...prev, phoneNumber: message }));
+  }
+
+  setIsSubmitting(true);
+
+  try {
+    // No token needed – route is public
+    const payload = { ...formData, source: 'Facebook' };
+    const response = await axios.post(`${API_URL}/facebook-form/create`, payload);
+
+    toast.success('Facebook lead saved successfully');
+    setTimeout(() => navigate('/leads'), 1200);
+  } catch (error) {
+    console.error('Error submitting Facebook lead:', error);
+    const errorMsg = error.response?.data?.message || 'Failed to save lead';
+    toast.error(errorMsg);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   const handleBackClick = () => navigate(-1);
 

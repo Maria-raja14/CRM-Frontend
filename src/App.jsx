@@ -146,7 +146,7 @@ import PrivateRoute from "./pages/auth/PrivateRoute";
 import ReportsPage from "./pages/reports/ReportsPage";
 import EmailChat from "./pages/Email_chat/EmailChat";
 import WhatsAppPage from "./pages/WhatsApp/WhatsApp_Page";
-
+import FacebookLeadForm from "./pages/Leads/FacebookLeadForm"; // adjust path if needed
 // ✅ Renamed files to av./pages/legal/LegalTermsBLOCKED_BY_CLIENT
 // Old: PrivacyPolicy.jsx → New: LegalPrivacy.jsx
 // Old: Terms.jsx         → New: LegalTerms.jsx
@@ -195,6 +195,7 @@ function App() {
                 path="/reset-password/:token"
                 element={<ResetPassword />}
               />
+                  <Route path="/facebook-lead" element={<FacebookLeadForm />} />
               <Route element={<PrivateRoute />}>
                 <Route path="/layout" element={<Layout />} />
                 <Route element={<Layout isModalOpen={isModalOpen} />}>
@@ -230,6 +231,7 @@ function App() {
                   <Route path="reports" element={<ReportsPage />} />
                   <Route path="/emailchat" element={<EmailChat />} />
                   <Route path="/whatsapp" element={<WhatsAppPage />} />
+                 
                 </Route>
               </Route>
             </Routes>
