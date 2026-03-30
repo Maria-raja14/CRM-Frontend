@@ -100,26 +100,9 @@ export default function FacebookLeadForm() {
 
     setIsSubmitting(true);
 
-    // try {
-    //   const token = localStorage.getItem('token');
-    //   // Source is fixed to "Facebook"
-    //   const payload = { ...formData, source: 'Facebook' };
-    //   const response = await axios.post(`${API_URL}/facebook-form/create`, payload, {
-    //     headers: { Authorization: `Bearer ${token}` },
-    //   });
-    //   toast.success('Facebook lead saved successfully');
-    //   setTimeout(() => navigate('/leads'), 1200);
-    // } catch (error) {
-    //   console.error('Error submitting Facebook lead:', error);
-    //   const errorMsg = error.response?.data?.message || 'Failed to save lead';
-    //   toast.error(errorMsg);
-    // } finally {
-    //   setIsSubmitting(false);
-    // }
-
-
- try {
+    try {
       const token = localStorage.getItem('token');
+      // Source is fixed to "Facebook"
       const payload = { ...formData, source: 'Facebook' };
       const response = await axios.post(`${API_URL}/facebook-form/create`, payload, {
         headers: { Authorization: `Bearer ${token}` },
@@ -133,9 +116,6 @@ export default function FacebookLeadForm() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-
   };
 
   const handleBackClick = () => navigate(-1);
