@@ -114,6 +114,9 @@
 //https://crm.stagingzar.com/api/facebook-leads/webhook
 
 
+//form -submit url
+//https://crm.stagingzar.com/facebook-lead
+
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import "./App.css";
