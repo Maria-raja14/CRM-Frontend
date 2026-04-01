@@ -1173,13 +1173,13 @@ function LeadTableComponent() {
         setTotalLeads((prev) => prev + 1);
 
         // Show a toast so the user knows a new lead just arrived
-        toast.info(
-          `🆕 New Facebook lead: ${newLead.leadName || "Unknown"}`,
-          {
-            autoClose: 5000,
-            icon: "📋",
-          }
-        );
+        // toast.info(
+        //   `🆕 New Facebook lead: ${newLead.leadName || "Unknown"}`,
+        //   {
+        //     autoClose: 5000,
+        //     icon: "📋",
+        //   }
+        // );
       };
 
       socket.on("new_facebook_lead", handleNewLead);
@@ -1957,4 +1957,4 @@ export default function LeadTable() {
       <LeadTableComponent />
     </TourProvider>
   );
-}
+}//without refresh data come correctly..
