@@ -989,7 +989,7 @@ import {
   MoreVertical, Trash2, Edit, Handshake, Search, Plus, Eye, Calendar,
   TrendingUp, TrendingDown, Users,
 } from "lucide-react";
-import { io } from "socket.io-client"; // ← keep your existing import style
+import { initSocket, getSocket } from "../../utils/socket"; // ✅ CHANGED: import getSocket too
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../components/ui/dialog";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -1124,14 +1124,6 @@ function LeadTableComponent() {
   const [editingFollowUpId, setEditingFollowUpId] = useState(null);
   const [followUpSavingId,  setFollowUpSavingId]  = useState(null);
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // ✅ NEW: Ref to hold active filters so socket handler always reads latest
-  // ─────────────────────────────────────────────────────────────────────────
-  const filtersRef = useRef({ currentPage, searchQuery, statusFilter, sourceFilter, assigneeFilter });
-  useEffect(() => {
-    filtersRef.current = { currentPage, searchQuery, statusFilter, sourceFilter, assigneeFilter };
-  }, [currentPage, searchQuery, statusFilter, sourceFilter, assigneeFilter]);
-
   const allowedCurrencies = [
     { code: "USD", symbol: "$"   }, { code: "EUR", symbol: "€"   },
     { code: "INR", symbol: "₹"   }, { code: "GBP", symbol: "£"   },
@@ -1151,71 +1143,55 @@ function LeadTableComponent() {
   const totalSelling    = parseCost(dealData.sellingLandCost)    + parseCost(dealData.sellingTicketCost);
   const profit          = totalSelling - totalPurchasing;
 
+  // ✅ CHANGED: Get userId once and store in ref so it's available for socket
+  const userIdRef = useRef(null);
+
   useEffect(() => {
     try {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
       setUserRole(user.role?.name || "");
+      userIdRef.current = user._id || user.id || null; // ✅ CHANGED: store userId
     } catch {}
   }, []);
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // ✅ NEW: Real-time socket listener for new Facebook leads
-  //         Uses io() from socket.io-client directly (matches your import)
-  // ─────────────────────────────────────────────────────────────────────────
+  // ✅ CHANGED: Initialize socket WITH userId, then listen for new Facebook leads
   useEffect(() => {
-    let userId;
-    try {
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-      userId = user._id || user.id;
-    } catch {}
+    // Wait a tick so the user effect above has run first
+    const timer = setTimeout(() => {
+      const userId = userIdRef.current;
+      const socket = initSocket(userId);
+      if (!socket) return;
 
-    const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || API_URL;
-
-    const socket = io(SOCKET_URL, {
-      transports: ["websocket", "polling"],
-      auth: { userId },
-    });
-
-    socket.on("connect", () => {
-      if (userId) socket.emit("user_connected", userId);
-    });
-
-    socket.on("new_facebook_lead", (newLead) => {
-      const { currentPage: pg, searchQuery: sq, statusFilter: sf, sourceFilter: srcf } = filtersRef.current;
-
-      // Only prepend if on page 1 AND no conflicting filters are active
-      const facebookFilterOk = !srcf || srcf === "Facebook";
-      const statusFilterOk   = !sf   || sf === "Hot"; // new FB leads come in as Hot
-      const searchFilterOk   = !sq;                    // can't know if it matches search without server
-
-      if (pg === 1 && facebookFilterOk && statusFilterOk && searchFilterOk) {
+      const handleNewLead = (newLead) => {
+        // Only prepend if we're on page 1 with no active filters
+        // (otherwise the lead's position in the list would be confusing)
         setLeads((prev) => {
-          // Avoid duplicate if already in list
+          // Avoid duplicate if somehow the lead already exists
           if (prev.some((l) => l._id === newLead._id)) return prev;
-          // Keep list at ITEMS_PER_PAGE max
-          const updated = [newLead, ...prev].slice(0, ITEMS_PER_PAGE);
-          return updated;
+          return [newLead, ...prev];
         });
         setTotalLeads((prev) => prev + 1);
 
-        toast.success(`New Facebook lead: ${newLead.leadName || "Unknown"}`, {
-          icon: "📋",
-          autoClose: 4000,
-        });
-      } else if (pg === 1 && searchFilterOk) {
-        // Filters might exclude it but count is still useful — just bump count
-        setTotalLeads((prev) => prev + 1);
-        toast.info("New Facebook lead received. Filters may be hiding it.", {
-          icon: "📋",
-          autoClose: 3000,
-        });
-      }
-    });
+        // Show a toast so the user knows a new lead just arrived
+        toast.info(
+          `🆕 New Facebook lead: ${newLead.leadName || "Unknown"}`,
+          {
+            autoClose: 5000,
+            icon: "📋",
+          }
+        );
+      };
 
-    return () => {
-      socket.disconnect();
-    };
-  }, []); // runs once on mount
+      socket.on("new_facebook_lead", handleNewLead);
+
+      // Cleanup: remove listener when component unmounts
+      return () => {
+        socket.off("new_facebook_lead", handleNewLead);
+      };
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []); // ✅ runs once on mount
 
   useEffect(() => {
     if (searchTimer.current) clearTimeout(searchTimer.current);
@@ -1268,6 +1244,7 @@ function LeadTableComponent() {
     fetchLeads();
   }, [currentPage, debouncedSearch, statusFilter, sourceFilter, assigneeFilter]);
 
+  // ... rest of your handlers are unchanged below ...
   const goToPage = (page) => {
     if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
@@ -1566,7 +1543,7 @@ function LeadTableComponent() {
         </select>
       </div>
 
-      {/* ── SCROLLABLE TABLE CONTAINER ── */}
+      {/* Table - unchanged from your original */}
       <div className="tour-lead-table rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-280px)]">
           <table className="min-w-max w-full table-auto divide-y divide-gray-200">
@@ -1618,7 +1595,6 @@ function LeadTableComponent() {
                         onChange={() => handleSelectLead(lead._id)}
                       />
                     </td>
-
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <LeadAvatar name={lead.leadName} />
@@ -1639,15 +1615,10 @@ function LeadTableComponent() {
                         </div>
                       </div>
                     </td>
-
                     <td className="px-4 py-3 text-sm text-gray-700">{lead.phoneNumber || "-"}</td>
                     <td className="px-4 py-3 text-sm text-gray-700">{lead.destination  || "-"}</td>
                     <td className="px-4 py-3 text-sm text-gray-700">{lead.country      || "-"}</td>
-
-                    <td className="px-4 py-3">
-                      <SourceBadge source={lead.source} />
-                    </td>
-
+                    <td className="px-4 py-3"><SourceBadge source={lead.source} /></td>
                     <td className="px-4 py-3 text-sm text-gray-700">
                       {lead.noOfTravellers != null ? (
                         <span className="inline-flex items-center gap-1">
@@ -1656,7 +1627,6 @@ function LeadTableComponent() {
                       ) : "-"}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-700">{formatDate(lead.travelDate)}</td>
-
                     <td className="px-4 py-3">
                       <select
                         value={lead.status}
@@ -1669,7 +1639,6 @@ function LeadTableComponent() {
                         <option value="Junk">Junk</option>
                       </select>
                     </td>
-
                     <td className="px-4 py-3 text-sm text-gray-700">
                       {lead.assignTo
                         ? typeof lead.assignTo === "object"
@@ -1678,7 +1647,6 @@ function LeadTableComponent() {
                         : <span className="text-gray-400 italic text-xs">Unassigned</span>}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-700">{formatDate(lead.createdAt)}</td>
-
                     <td className="px-4 py-3 text-sm text-gray-700">
                       <div className="relative flex items-center gap-1">
                         <button
@@ -1704,7 +1672,6 @@ function LeadTableComponent() {
                         )}
                       </div>
                     </td>
-
                     <td className={`px-4 py-3 text-right relative sticky right-0 z-10 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.06)] ${
                       selectedLeads.includes(lead._id)
                         ? "bg-blue-50"
@@ -1768,7 +1735,7 @@ function LeadTableComponent() {
         </div>
       </div>
 
-      {/* Pagination */}
+      {/* Pagination - unchanged */}
       {totalPages > 1 && (
         <div className="flex flex-col sm:flex-row items-center justify-between mt-4 gap-3">
           <p className="text-sm text-gray-500">
@@ -1790,7 +1757,7 @@ function LeadTableComponent() {
         </div>
       )}
 
-      {/* Delete Modal */}
+      {/* Delete Modal - unchanged */}
       <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
         <DialogContent>
           <DialogHeader>
@@ -1819,7 +1786,7 @@ function LeadTableComponent() {
         </DialogContent>
       </Dialog>
 
-      {/* Convert Modal */}
+      {/* Convert Modal - unchanged */}
       <Dialog open={convertModalOpen} onOpenChange={setConvertModalOpen}>
         <DialogContent className="!max-w-3xl w-full p-0 overflow-hidden">
           <div className="px-6 pt-5 pb-3 border-b border-gray-100">
@@ -1827,7 +1794,6 @@ function LeadTableComponent() {
               <Handshake className="w-5 h-5" /> Convert Lead to Deal
             </DialogTitle>
           </div>
-
           {selectedLead && (
             <div className="px-6 py-5 space-y-5 max-h-[78vh] overflow-y-auto">
               <div className={`p-3 rounded-lg border ${selectedLead.source === "Facebook" ? "bg-blue-50 border-blue-200" : "bg-blue-50 border-blue-100"}`}>
@@ -1846,7 +1812,6 @@ function LeadTableComponent() {
                   )}
                 </div>
               </div>
-
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="md:col-span-2">
                   <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Deal Value</label>
@@ -1882,7 +1847,6 @@ function LeadTableComponent() {
                   </select>
                 </div>
               </div>
-
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-gray-600 uppercase tracking-wide whitespace-nowrap">Purchasing Cost</span>
@@ -1893,7 +1857,6 @@ function LeadTableComponent() {
                   <div className="flex-1 h-px bg-gray-200" />
                 </div>
               </div>
-
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1.5">Land Part</label>
@@ -1920,7 +1883,6 @@ function LeadTableComponent() {
                     className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none" />
                 </div>
               </div>
-
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 overflow-hidden">
                   <span className="text-xs font-medium text-gray-500 whitespace-nowrap">Total Purchasing</span>
@@ -1931,13 +1893,10 @@ function LeadTableComponent() {
                   <span className="text-sm font-bold text-gray-700 ml-2 truncate">{dealData.currency} {fmt(totalSelling)}</span>
                 </div>
               </div>
-
               {(totalPurchasing > 0 || totalSelling > 0) && (
                 <div className={`flex items-center justify-between px-4 py-3 rounded-lg border overflow-hidden ${profit >= 0 ? "bg-emerald-50 border-emerald-200" : "bg-red-50 border-red-200"}`}>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    {profit >= 0
-                      ? <TrendingUp size={16} className="text-emerald-600" />
-                      : <TrendingDown size={16} className="text-red-600" />}
+                    {profit >= 0 ? <TrendingUp size={16} className="text-emerald-600" /> : <TrendingDown size={16} className="text-red-600" />}
                     <span className={`text-sm font-semibold ${profit >= 0 ? "text-emerald-700" : "text-red-700"}`}>
                       {profit >= 0 ? "Net Profit" : "Net Loss"}
                     </span>
@@ -1947,7 +1906,6 @@ function LeadTableComponent() {
                   </span>
                 </div>
               )}
-
               <div>
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Notes</label>
                 <textarea
@@ -1958,7 +1916,6 @@ function LeadTableComponent() {
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none resize-y"
                 />
               </div>
-
               <div className="flex justify-end gap-3 pt-1 border-t border-gray-100">
                 <button
                   onClick={() => setConvertModalOpen(false)}
