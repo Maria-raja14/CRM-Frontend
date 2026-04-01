@@ -1,7 +1,7 @@
 // import { useEffect, useState } from "react";
 // import axios from "axios";
 // import { toast } from "react-toastify";
-// import { Edit, Trash2, Eye, Plus, TrendingUp, TrendingDown } from "lucide-react";
+// import { Edit, Trash2, Eye, Plus, TrendingUp, TrendingDown, Users, Calendar } from "lucide-react";
 // import {
 //   Dialog, DialogContent, DialogHeader, DialogTitle,
 // } from "../../components/ui/dialog";
@@ -39,7 +39,7 @@
 //   return map[stage] || "bg-gray-100 text-gray-700";
 // };
 
-// /* ── Display cost cell: show raw text if non-numeric, else formatted number ── */
+// /* ── Display cost cell ── */
 // const CostCell = ({ raw }) => {
 //   if (!raw && raw !== 0) return <span className="text-gray-300">—</span>;
 //   const str = String(raw).trim();
@@ -48,7 +48,6 @@
 //   if (!isNaN(numeric) && numeric > 0) {
 //     return <span className="text-gray-700 font-medium">{new Intl.NumberFormat("en-IN").format(numeric)}</span>;
 //   }
-//   /* non-numeric text (e.g. "Included", "N/A") */
 //   return <span className="text-gray-700">{str}</span>;
 // };
 
@@ -75,55 +74,45 @@
 
 //   const itemsPerPage = 10;
 
-
-  
 //   // useEffect(() => {
 //   //   const token = localStorage.getItem("token");
 //   //   let role = "";
 //   //   if (token) {
 //   //     try {
 //   //       const payload = JSON.parse(atob(token.split(".")[1]));
-//   //       role = payload.role || "";
-//   //     } catch (err) { console.error("Error decoding token:", err); }
+//   //       if (typeof payload.role === "string") {
+//   //         role = payload.role.toLowerCase();
+//   //       } else if (payload.role?.name) {
+//   //         role = payload.role.name.toLowerCase();
+//   //       } else {
+//   //         role = "";
+//   //       }
+//   //     } catch (err) {
+//   //       console.error("Error decoding token:", err);
+//   //     }
 //   //   }
 //   //   setUserRole(role);
-//   //   const hasTakenTour = localStorage.getItem("dealsTourCompleted");
-//   //   if (!hasTakenTour && role === "Sales") {
-//   //     setSteps(dealTourSteps);
-//   //     setTimeout(() => setIsOpen(true), 1000);
-//   //   }
-//   // }, [setIsOpen, setSteps]);
+//   // }, []);
 
 // useEffect(() => {
-//   const token = localStorage.getItem("token");
-
-//   let role = "";
-
-//   if (token) {
-//     try {
-//       const payload = JSON.parse(atob(token.split(".")[1]));
-
-//       console.log("PAYLOAD:", payload);
-
-//       // ✅ HANDLE ALL POSSIBLE CASES
-//       if (typeof payload.role === "string") {
-//         role = payload.role.toLowerCase();
-//       } else if (payload.role?.name) {
-//         role = payload.role.name.toLowerCase();
-//       } else {
-//         role = "";
+//     const userData = localStorage.getItem("user");
+//     let role = "";
+//     if (userData) {
+//       try {
+//         const user = JSON.parse(userData);
+//         role = user.role?.name || "";
+//       } catch (err) {
+//         console.error("Error parsing user data:", err);
 //       }
-
-//     } catch (err) {
-//       console.error("Error decoding token:", err);
 //     }
-//   }
+//     setUserRole(role);
+//     const hasTakenTour = localStorage.getItem("dealsTourCompleted");
+//     if (!hasTakenTour && role === "Sales") {
+//       setSteps(dealTourSteps);
+//       setTimeout(() => setIsOpen(true), 1000);
+//     }
+//   }, [setIsOpen, setSteps]);
 
-//   console.log("FINAL ROLE 👉", role); // 👈 VERY IMPORTANT
-
-//   setUserRole(role);
-
-// }, []);
 
 //   const startTour = () => {
 //     setSteps(dealTourSteps);
@@ -140,6 +129,11 @@
 //     const currency = match[2].toUpperCase();
 //     return `${Number(number).toLocaleString("en-IN")} ${currency}`;
 //   };
+
+//   const formatDate = (date) =>
+//     date
+//       ? new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+//       : "-";
 
 //   const fetchDeals = async () => {
 //     try {
@@ -171,11 +165,6 @@
 //   };
 
 //   useEffect(() => { fetchDeals(); fetchUsers(); }, []);
-
-//   const formatDate = (date) =>
-//     date
-//       ? new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-//       : "-";
 
 //   const filteredDeals = deals
 //     .filter((d) => d.dealName?.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -280,10 +269,18 @@
 //           <button onClick={startTour} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 tour-finish">
 //             <Eye className="w-4 h-4" /> Take Tour
 //           </button>
-//           <button onClick={() => navigate("/createDeal")} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 tour-create-deal">
-//             <Plus className="w-4 h-4" /> Create Deal
-//           </button>
           
+//           {/* <button onClick={() => navigate("/createDeal")} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 tour-create-deal">
+//             <Plus className="w-4 h-4" /> Create Deal
+//           </button> */}
+//           {userRole === "Admin" && (
+//             <button
+//               onClick={() => navigate("/createDeal")}
+//               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 tour-create-deal"
+//             >
+//               <Plus className="w-4 h-4" /> Create Deal
+//             </button>
+//           )}
 //         </div>
 //       </div>
 
@@ -303,7 +300,7 @@
 //             <p className="text-base font-bold text-gray-800">{new Intl.NumberFormat("en-IN").format(grandTotalSelling)}</p>
 //           </div>
 //         </div>
-//         <div className={`border rounded-xl p-4 flex items-center gap-3 shadow-sm ${grandProfit >= 0 ? "bg-white border-gray-200" : "bg-white border-gray-200"}`}>
+//         <div className="border rounded-xl p-4 flex items-center gap-3 shadow-sm bg-white border-gray-200">
 //           <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${grandProfit >= 0 ? "bg-emerald-100 text-emerald-600" : "bg-red-100 text-red-600"}`}>
 //             {grandProfit >= 0 ? <TrendingUp size={18} /> : <TrendingDown size={18} />}
 //           </div>
@@ -349,7 +346,7 @@
 //         </div>
 //       )}
 
-//       {/* ── Table — NO column background coloring ── */}
+//       {/* ── Table ── */}
 //       <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm tour-deals-table">
 //         <table className="min-w-full text-sm text-gray-700">
 //           <thead className="bg-gray-100">
@@ -363,6 +360,10 @@
 //               <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Assigned To</th>
 //               <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Stage</th>
 //               <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Deal Value</th>
+//               {/* ── NEW COLUMNS ── */}
+//               <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Travellers</th>
+//               <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Travel Date</th>
+//               {/* ── Cost columns ── */}
 //               <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Purch. Land</th>
 //               <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Purch. Ticket</th>
 //               <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Sell. Land</th>
@@ -409,7 +410,27 @@
 
 //                     <td className="px-4 py-3 font-medium">{formatCurrencyValue(deal.value)}</td>
 
-//                     {/* Cost columns — plain, no background */}
+//                     {/* ── Travellers ── */}
+//                     <td className="px-4 py-3">
+//                       {deal.noOfTravellers != null && deal.noOfTravellers !== "" ? (
+//                         <span className="inline-flex items-center gap-1 text-gray-700">
+//                           <Users size={14} className="text-gray-400" />
+//                           {deal.noOfTravellers}
+//                         </span>
+//                       ) : <span className="text-gray-300">—</span>}
+//                     </td>
+
+//                     {/* ── Travel Date ── */}
+//                     <td className="px-4 py-3">
+//                       {deal.travelDate ? (
+//                         <span className="inline-flex items-center gap-1 text-gray-700">
+//                           <Calendar size={14} className="text-gray-400" />
+//                           {formatDate(deal.travelDate)}
+//                         </span>
+//                       ) : <span className="text-gray-300">—</span>}
+//                     </td>
+
+//                     {/* Cost columns */}
 //                     <td className="px-4 py-3"><CostCell raw={deal.purchasingLandCost} /></td>
 //                     <td className="px-4 py-3"><CostCell raw={deal.purchasingTicketCost} /></td>
 //                     <td className="px-4 py-3"><CostCell raw={deal.sellingLandCost} /></td>
@@ -443,7 +464,7 @@
 //               })
 //             ) : (
 //               <tr>
-//                 <td colSpan={12} className="px-6 py-8 text-center text-gray-500">No deals found</td>
+//                 <td colSpan={14} className="px-6 py-8 text-center text-gray-500">No deals found</td>
 //               </tr>
 //             )}
 //           </tbody>
@@ -452,7 +473,7 @@
 //           {filteredDeals.length > 0 && (
 //             <tfoot>
 //               <tr className="bg-gray-100 border-t-2 border-gray-300 font-semibold text-sm">
-//                 <td colSpan={5} className="px-4 py-3 text-gray-700">Grand Total ({filteredDeals.length} deals)</td>
+//                 <td colSpan={7} className="px-4 py-3 text-gray-700">Grand Total ({filteredDeals.length} deals)</td>
 //                 <td className="px-4 py-3 text-gray-800">
 //                   {new Intl.NumberFormat("en-IN").format(filteredDeals.reduce((a, d) => a + parseCost(d.purchasingLandCost), 0))}
 //                 </td>
@@ -567,7 +588,8 @@
 //   >
 //     <AllDealsComponent />
 //   </TourProvider>
-// );//original code all work correctly..
+// );//all work correctly..
+
 
 
 
@@ -648,25 +670,44 @@ function AllDealsComponent() {
 
   const itemsPerPage = 10;
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
+  // useEffect(() => {
+  //   const token = localStorage.getItem("token");
+  //   let role = "";
+  //   if (token) {
+  //     try {
+  //       const payload = JSON.parse(atob(token.split(".")[1]));
+  //       if (typeof payload.role === "string") {
+  //         role = payload.role.toLowerCase();
+  //       } else if (payload.role?.name) {
+  //         role = payload.role.name.toLowerCase();
+  //       }
+  //     } catch (err) {
+  //       console.error("Error decoding token:", err);
+  //     }
+  //   }
+  //   setUserRole(role);
+  // }, []);
+
+useEffect(() => {
+    const userData = localStorage.getItem("user");
     let role = "";
-    if (token) {
+    if (userData) {
       try {
-        const payload = JSON.parse(atob(token.split(".")[1]));
-        if (typeof payload.role === "string") {
-          role = payload.role.toLowerCase();
-        } else if (payload.role?.name) {
-          role = payload.role.name.toLowerCase();
-        } else {
-          role = "";
-        }
+        const user = JSON.parse(userData);
+        role = user.role?.name || "";
       } catch (err) {
-        console.error("Error decoding token:", err);
+        console.error("Error parsing user data:", err);
       }
     }
     setUserRole(role);
-  }, []);
+    const hasTakenTour = localStorage.getItem("dealsTourCompleted");
+    if (!hasTakenTour && role === "Sales") {
+      setSteps(dealTourSteps);
+      setTimeout(() => setIsOpen(true), 1000);
+    }
+  }, [setIsOpen, setSteps]);
+
+
 
   const startTour = () => {
     setSteps(dealTourSteps);
@@ -796,7 +837,7 @@ function AllDealsComponent() {
     }
   };
 
-  /* ── Grand totals (numeric only) ── */
+  /* ── Grand totals ── */
   const grandTotalPurchasing = filteredDeals.reduce((acc, d) =>
     acc + parseCost(d.purchasingLandCost) + parseCost(d.purchasingTicketCost), 0);
   const grandTotalSelling = filteredDeals.reduce((acc, d) =>
@@ -823,9 +864,17 @@ function AllDealsComponent() {
           <button onClick={startTour} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 tour-finish">
             <Eye className="w-4 h-4" /> Take Tour
           </button>
-          <button onClick={() => navigate("/createDeal")} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 tour-create-deal">
+          {/* <button onClick={() => navigate("/createDeal")} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 tour-create-deal">
             <Plus className="w-4 h-4" /> Create Deal
-          </button>
+          </button> */}
+          {userRole === "Admin" && (
+            <button
+              onClick={() => navigate("/createDeal")}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 tour-create-deal"
+            >
+              <Plus className="w-4 h-4" /> Create Deal
+            </button>
+          )}
         </div>
       </div>
 
@@ -861,7 +910,8 @@ function AllDealsComponent() {
       {/* Filters */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-3 tour-filters">
         <div className="flex flex-wrap gap-4 items-center">
-          <select value={filters.stage} onChange={(e) => setFilters((prev) => ({ ...prev, stage: e.target.value }))} className="border rounded-md px-4 py-2 bg-white text-sm">
+          <select value={filters.stage} onChange={(e) => setFilters((prev) => ({ ...prev, stage: e.target.value }))}
+            className="border rounded-md px-4 py-2 bg-white text-sm">
             <option value="">All Stages</option>
             <option value="Qualification">Qualification</option>
             <option value="Negotiation">Negotiation</option>
@@ -869,11 +919,13 @@ function AllDealsComponent() {
             <option value="Closed Won">Closed Won</option>
             <option value="Closed Lost">Closed Lost</option>
           </select>
-          <select value={filters.assignedTo} onChange={(e) => setFilters((prev) => ({ ...prev, assignedTo: e.target.value }))} className="border rounded-md bg-white px-4 py-2 text-sm">
+          <select value={filters.assignedTo} onChange={(e) => setFilters((prev) => ({ ...prev, assignedTo: e.target.value }))}
+            className="border rounded-md bg-white px-4 py-2 text-sm">
             <option value="">All Assigned</option>
             {users.map((u) => <option key={u._id} value={u._id}>{u.firstName} {u.lastName}</option>)}
           </select>
-          <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search Deal Name..."
+          <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search Deal Name..."
             className="border rounded-full px-4 py-2 bg-white text-sm" />
         </div>
       </div>
@@ -905,10 +957,11 @@ function AllDealsComponent() {
               <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Assigned To</th>
               <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Stage</th>
               <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Deal Value</th>
-              {/* ── NEW COLUMNS ── */}
-              <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Travellers</th>
+              {/* ── UPDATED: Adults + Children columns ── */}
+              <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Adults</th>
+              <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Children</th>
               <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Travel Date</th>
-              {/* ── Cost columns ── */}
+              {/* Cost columns */}
               <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Purch. Land</th>
               <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Purch. Ticket</th>
               <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Sell. Land</th>
@@ -937,7 +990,9 @@ function AllDealsComponent() {
                   <tr key={deal._id}
                     className={`transition-colors ${selectedDeals.includes(deal._id) ? "bg-blue-50" : idx % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-blue-50`}>
                     <td className="px-4 py-3">
-                      <input type="checkbox" onChange={() => handleCheckboxChange(deal._id)} checked={selectedDeals.includes(deal._id)} className="cursor-pointer w-4 h-4 accent-blue-600" />
+                      <input type="checkbox" onChange={() => handleCheckboxChange(deal._id)}
+                        checked={selectedDeals.includes(deal._id)}
+                        className="cursor-pointer w-4 h-4 accent-blue-600" />
                     </td>
 
                     <td className="px-4 py-3">
@@ -955,12 +1010,22 @@ function AllDealsComponent() {
 
                     <td className="px-4 py-3 font-medium">{formatCurrencyValue(deal.value)}</td>
 
-                    {/* ── Travellers ── */}
+                    {/* ── Adults ── */}
                     <td className="px-4 py-3">
-                      {deal.noOfTravellers != null && deal.noOfTravellers !== "" ? (
+                      {deal.noOfAdults != null && deal.noOfAdults !== "" ? (
                         <span className="inline-flex items-center gap-1 text-gray-700">
-                          <Users size={14} className="text-gray-400" />
-                          {deal.noOfTravellers}
+                          <Users size={14} className="text-blue-400" />
+                          {deal.noOfAdults}
+                        </span>
+                      ) : <span className="text-gray-300">—</span>}
+                    </td>
+
+                    {/* ── Children ── */}
+                    <td className="px-4 py-3">
+                      {deal.noOfChildren != null && deal.noOfChildren !== "" ? (
+                        <span className="inline-flex items-center gap-1 text-gray-700">
+                          <Users size={14} className="text-purple-400" />
+                          {deal.noOfChildren}
                         </span>
                       ) : <span className="text-gray-300">—</span>}
                     </td>
@@ -996,10 +1061,12 @@ function AllDealsComponent() {
 
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <button onClick={() => handleEdit(deal)} title="Edit Deal" className="p-1.5 rounded-md hover:bg-blue-100 text-blue-600 transition-colors">
+                        <button onClick={() => handleEdit(deal)} title="Edit Deal"
+                          className="p-1.5 rounded-md hover:bg-blue-100 text-blue-600 transition-colors">
                           <Edit size={16} />
                         </button>
-                        <button onClick={() => handleDeleteClick(deal)} title="Delete Deal" className="p-1.5 rounded-md hover:bg-red-100 text-red-600 transition-colors">
+                        <button onClick={() => handleDeleteClick(deal)} title="Delete Deal"
+                          className="p-1.5 rounded-md hover:bg-red-100 text-red-600 transition-colors">
                           <Trash2 size={16} />
                         </button>
                       </div>
@@ -1009,7 +1076,7 @@ function AllDealsComponent() {
               })
             ) : (
               <tr>
-                <td colSpan={14} className="px-6 py-8 text-center text-gray-500">No deals found</td>
+                <td colSpan={15} className="px-6 py-8 text-center text-gray-500">No deals found</td>
               </tr>
             )}
           </tbody>
@@ -1018,7 +1085,7 @@ function AllDealsComponent() {
           {filteredDeals.length > 0 && (
             <tfoot>
               <tr className="bg-gray-100 border-t-2 border-gray-300 font-semibold text-sm">
-                <td colSpan={7} className="px-4 py-3 text-gray-700">Grand Total ({filteredDeals.length} deals)</td>
+                <td colSpan={8} className="px-4 py-3 text-gray-700">Grand Total ({filteredDeals.length} deals)</td>
                 <td className="px-4 py-3 text-gray-800">
                   {new Intl.NumberFormat("en-IN").format(filteredDeals.reduce((a, d) => a + parseCost(d.purchasingLandCost), 0))}
                 </td>
@@ -1090,7 +1157,8 @@ function AllDealsComponent() {
           <p>Are you sure you want to delete <strong>{deleteDeal?.dealName}</strong>?</p>
           <div className="mt-6 flex justify-end space-x-3">
             <button onClick={() => setIsDeleteModalOpen(false)} className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">Cancel</button>
-            <button onClick={handleDeleteConfirm} disabled={isDeleting} className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed">
+            <button onClick={handleDeleteConfirm} disabled={isDeleting}
+              className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed">
               {isDeleting ? "Deleting..." : "Delete"}
             </button>
           </div>
@@ -1103,8 +1171,10 @@ function AllDealsComponent() {
           <DialogHeader><DialogTitle>Confirm Bulk Delete</DialogTitle></DialogHeader>
           <p>Are you sure you want to delete <strong>{selectedDeals.length}</strong> selected deal{selectedDeals.length > 1 ? "s" : ""}? This action cannot be undone.</p>
           <div className="mt-6 flex justify-end space-x-3">
-            <button onClick={() => setIsBulkDeleteModalOpen(false)} disabled={isBulkDeleting} className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50">Cancel</button>
-            <button onClick={handleBulkDeleteConfirm} disabled={isBulkDeleting} className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed flex items-center gap-2">
+            <button onClick={() => setIsBulkDeleteModalOpen(false)} disabled={isBulkDeleting}
+              className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50">Cancel</button>
+            <button onClick={handleBulkDeleteConfirm} disabled={isBulkDeleting}
+              className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed flex items-center gap-2">
               {isBulkDeleting ? (
                 <><span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Deleting...</>
               ) : (

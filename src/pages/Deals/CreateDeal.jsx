@@ -1,4 +1,3 @@
-
 // import React, { useState, useEffect, useCallback, useRef, memo } from "react";
 // import { useNavigate, useLocation } from "react-router-dom";
 // import { toast, ToastContainer } from "react-toastify";
@@ -9,7 +8,7 @@
 // import {
 //   ArrowLeft, DollarSign, Briefcase, UserCheck, StickyNote,
 //   Phone, Mail, Building2, Globe, MapPin, FileText, BriefcaseBusiness,
-//   Download, Eye, X, TrendingUp, TrendingDown,
+//   Download, Eye, X, TrendingUp, TrendingDown, Users, Calendar,
 // } from "lucide-react";
 // import "react-toastify/dist/ReactToastify.css";
 
@@ -136,6 +135,8 @@
 //     phoneNumber: "", email: "", source: "",
 //     destination: "", duration: "", requirement: "",
 //     address: "", country: "", attachments: [],
+//     noOfTravellers: "",
+//     travelDate: "",
 //     purchasingLandCost:   "",
 //     purchasingTicketCost: "",
 //     sellingLandCost:      "",
@@ -179,7 +180,6 @@
 //     }
 //   }, []);
 
-//   // ✅ Fetch both Sales and Operations users for assign dropdown
 //   useEffect(() => {
 //     const fetchAssignableUsers = async () => {
 //       try {
@@ -225,6 +225,10 @@
 //         address:     existingDeal.address     || "",
 //         country:     existingDeal.country     || "",
 //         attachments: [],
+//         noOfTravellers: existingDeal.noOfTravellers != null ? String(existingDeal.noOfTravellers) : "",
+//         travelDate: existingDeal.travelDate
+//           ? new Date(existingDeal.travelDate).toISOString().split("T")[0]
+//           : "",
 //         purchasingLandCost:   existingDeal.purchasingLandCost   || "",
 //         purchasingTicketCost: existingDeal.purchasingTicketCost || "",
 //         sellingLandCost:      existingDeal.sellingLandCost      || "",
@@ -528,6 +532,35 @@
 //                 </div>
 //               ))}
 
+//               {/* ── NEW: No. of Travellers + Travel Date ── */}
+//               <div>
+//                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+//                   <Users size={16} /> No. of Travellers
+//                 </label>
+//                 <input
+//                   type="number"
+//                   name="noOfTravellers"
+//                   min="1"
+//                   value={formData.noOfTravellers}
+//                   onChange={handleChange}
+//                   placeholder="e.g. 2"
+//                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none transition h-11"
+//                 />
+//               </div>
+
+//               <div>
+//                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+//                   <Calendar size={16} /> Travel Date
+//                 </label>
+//                 <input
+//                   type="date"
+//                   name="travelDate"
+//                   value={formData.travelDate}
+//                   onChange={handleChange}
+//                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none transition h-11"
+//                 />
+//               </div>
+
 //               {/* Requirement */}
 //               <div>
 //                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
@@ -548,15 +581,13 @@
 //             </div>
 //           </div>
 
-//           {/* ══════════════════════════════════════════════════════════
-//               COST SECTION — Land Part supports text+numbers, memoized inputs prevent focus loss
-//               ══════════════════════════════════════════════════════════ */}
+//           {/* ── Cost Section ── */}
 //           <div className="p-6 border border-gray-200 rounded-xl shadow-sm space-y-5">
 //             <h2 className="text-lg font-semibold border-b pb-2 text-gray-700">Cost Details</h2>
 
 //             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 
-//               {/* ── Purchasing Cost ── */}
+//               {/* Purchasing Cost */}
 //               <div>
 //                 <div className="flex items-center gap-2 mb-4">
 //                   <span className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Purchasing Cost</span>
@@ -574,7 +605,7 @@
 //                 </div>
 //               </div>
 
-//               {/* ── Selling Cost ── */}
+//               {/* Selling Cost */}
 //               <div>
 //                 <div className="flex items-center gap-2 mb-4">
 //                   <span className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Selling Cost</span>
@@ -593,7 +624,7 @@
 //               </div>
 //             </div>
 
-//             {/* Profit/Loss summary — shown only when cost data entered */}
+//             {/* Profit/Loss summary */}
 //             {hasCostInput && (totalPurchasing > 0 || totalSelling > 0) && (
 //               <div className={`flex items-center justify-between px-5 py-3 rounded-xl border ${profit >= 0 ? "bg-emerald-50 border-emerald-200" : "bg-red-50 border-red-200"}`}>
 //                 <div className="flex items-center gap-2">
@@ -745,7 +776,7 @@
 //       {previewFile && <PreviewModal file={previewFile} onClose={closePreview} />}
 //     </div>
 //   );
-// }//all work correctly..
+// }//all work correctly...
 
 
 
@@ -886,7 +917,8 @@ export default function CreateDeal() {
     phoneNumber: "", email: "", source: "",
     destination: "", duration: "", requirement: "",
     address: "", country: "", attachments: [],
-    noOfTravellers: "",
+    noOfAdults: "",
+    noOfChildren: "",
     travelDate: "",
     purchasingLandCost:   "",
     purchasingTicketCost: "",
@@ -976,7 +1008,8 @@ export default function CreateDeal() {
         address:     existingDeal.address     || "",
         country:     existingDeal.country     || "",
         attachments: [],
-        noOfTravellers: existingDeal.noOfTravellers != null ? String(existingDeal.noOfTravellers) : "",
+        noOfAdults: existingDeal.noOfAdults != null ? String(existingDeal.noOfAdults) : "",
+        noOfChildren: existingDeal.noOfChildren != null ? String(existingDeal.noOfChildren) : "",
         travelDate: existingDeal.travelDate
           ? new Date(existingDeal.travelDate).toISOString().split("T")[0]
           : "",
@@ -1283,18 +1316,33 @@ export default function CreateDeal() {
                 </div>
               ))}
 
-              {/* ── NEW: No. of Travellers + Travel Date ── */}
+              {/* ── NEW: No. of Adults and No. of Children ── */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                  <Users size={16} /> No. of Travellers
+                  <Users size={16} /> No. of Adults
                 </label>
                 <input
                   type="number"
-                  name="noOfTravellers"
-                  min="1"
-                  value={formData.noOfTravellers}
+                  name="noOfAdults"
+                  min="0"
+                  value={formData.noOfAdults}
                   onChange={handleChange}
                   placeholder="e.g. 2"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none transition h-11"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  <Users size={16} /> No. of Children
+                </label>
+                <input
+                  type="number"
+                  name="noOfChildren"
+                  min="0"
+                  value={formData.noOfChildren}
+                  onChange={handleChange}
+                  placeholder="e.g. 1"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none transition h-11"
                 />
               </div>
