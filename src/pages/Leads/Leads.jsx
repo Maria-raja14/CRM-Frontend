@@ -4113,7 +4113,6 @@
 
 
 
-// LeadTable.jsx  (UPDATED — shows Email Leads alongside regular leads with email badge)
 
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -4136,7 +4135,7 @@ const tourSteps = [
   { selector: ".tour-create-lead",  content: "Click here to create a new lead." },
   { selector: ".tour-search",       content: "Use this search bar to quickly find leads." },
   { selector: ".tour-filters",      content: "Filter your leads by status, assignee, or source." },
-  { selector: ".tour-lead-table",   content: "This is your leads table. Facebook leads show a blue FB badge; Email leads show an envelope badge." },
+  { selector: ".tour-lead-table",   content: "This is your leads table with all key information. Facebook leads are marked with a blue 'FB' badge." },
   { selector: ".tour-checkbox",     content: "Select individual leads or use the header checkbox to select all." },
   { selector: ".tour-lead-actions", content: "Click the three-dot menu to edit, convert, or delete a lead." },
   { selector: ".tour-finish",       content: "You've completed the tour!" },
@@ -4218,7 +4217,6 @@ const EmailLeadBadge = () => (
       letterSpacing: "0.02em",
     }}
   >
-    {/* Gmail-style envelope icon */}
     <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-white flex-shrink-0" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
     </svg>
@@ -4228,6 +4226,7 @@ const EmailLeadBadge = () => (
 
 const fmt = (n) => new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2 }).format(n);
 
+/* ── Helper: extract assignee display name from a lead object ── */
 const getAssigneeName = (assignTo) => {
   if (!assignTo) return null;
   if (typeof assignTo === "object" && assignTo.firstName)
@@ -4320,22 +4319,30 @@ function LeadTableComponent() {
     const fetchAllAssignees = async () => {
       try {
         setAssigneesLoading(true);
+
         const { data } = await axios.get(
           `${API_URL}/leads/getAllLead?page=1&limit=99999`,
           { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
         );
+
         const isNew    = data && !Array.isArray(data) && Array.isArray(data.leads);
         const leadsArr = isNew ? data.leads : (Array.isArray(data) ? data : []);
+
         const seen  = new Map();
         const assigneeList = [];
+        
         leadsArr.forEach((lead) => {
           const assignee = lead.assignTo;
           if (assignee && assignee._id && !seen.has(assignee._id)) {
             seen.set(assignee._id, true);
             const name = `${assignee.firstName || ""} ${assignee.lastName || ""}`.trim();
-            assigneeList.push({ id: assignee._id, name: name || "Unnamed User" });
+            assigneeList.push({
+              id: assignee._id,
+              name: name || "Unnamed User"
+            });
           }
         });
+
         assigneeList.sort((a, b) => a.name.localeCompare(b.name));
         setAssignees(assigneeList);
       } catch (err) {
@@ -4344,6 +4351,7 @@ function LeadTableComponent() {
         setAssigneesLoading(false);
       }
     };
+
     fetchAllAssignees();
   }, [userRole]);
 
@@ -4354,13 +4362,13 @@ function LeadTableComponent() {
       const socket = initSocket(userId);
       if (!socket) return;
 
-      // Existing: Facebook leads
       const handleNewLead = (newLead) => {
         setLeads((prev) => {
           if (prev.some((l) => l._id === newLead._id)) return prev;
           return [newLead, ...prev];
         });
         setTotalLeads((prev) => prev + 1);
+
         const assignee = newLead.assignTo;
         if (assignee && assignee._id) {
           setAssignees((prev) => {
@@ -4374,7 +4382,6 @@ function LeadTableComponent() {
 
       // NEW: Email leads real-time
       const handleNewEmailLead = (newLead) => {
-        // Tag it so the table knows to show the email badge
         const tagged = { ...newLead, _isEmailLead: true, source: "Email Lead" };
         setLeads((prev) => {
           if (prev.some((l) => l._id === tagged._id)) return prev;
@@ -4385,11 +4392,11 @@ function LeadTableComponent() {
       };
 
       socket.on("new_facebook_lead", handleNewLead);
-      socket.on("new_email_lead", handleNewEmailLead);          // ← NEW
+      socket.on("new_email_lead", handleNewEmailLead); // NEW
 
       return () => {
         socket.off("new_facebook_lead", handleNewLead);
-        socket.off("new_email_lead", handleNewEmailLead);       // ← NEW
+        socket.off("new_email_lead", handleNewEmailLead); // NEW
       };
     }, 100);
 
@@ -4409,7 +4416,7 @@ function LeadTableComponent() {
   /* ── 5. Reset to page 1 when filters change ── */
   useEffect(() => { setCurrentPage(1); }, [statusFilter, sourceFilter, assigneeFilter]);
 
-  /* ── 6. Paginated lead fetch — combines regular leads + email leads (NEW) ── */
+  /* ── 6. Paginated lead fetch ── */
   useEffect(() => {
     const fetchLeads = async () => {
       try {
@@ -4422,13 +4429,8 @@ function LeadTableComponent() {
         if (statusFilter)    params.append("status",   statusFilter);
         if (assigneeFilter)  params.append("assignee", assigneeFilter);
 
-        // Decide which API(s) to call based on source filter
-        let combinedLeads = [];
-        let total = 0;
-        let pages = 1;
-
+        // NEW: "Email Lead" source → dedicated email-leads API with server-side pagination
         if (sourceFilter === "Email Lead") {
-          // Only email leads
           const emailParams = new URLSearchParams({ page: currentPage, limit: ITEMS_PER_PAGE });
           if (debouncedSearch) emailParams.append("search", debouncedSearch);
           if (statusFilter)    emailParams.append("status", statusFilter);
@@ -4437,59 +4439,26 @@ function LeadTableComponent() {
             `${API_URL}/email-leads?${emailParams.toString()}`,
             { headers }
           );
-          combinedLeads = (data.leads || []).map(l => ({ ...l, _isEmailLead: true }));
-          total = data.totalLeads || 0;
-          pages = data.totalPages  || 1;
-
-        } else if (!sourceFilter || sourceFilter === "") {
-          // Fetch BOTH regular leads and email leads, merge, then paginate client-side
-          // For large datasets consider server-side merge; this is fine for typical CRM size
-          const [regularRes, emailRes] = await Promise.allSettled([
-            axios.get(`${API_URL}/leads/getAllLead?${params.toString()}`, { headers }),
-            axios.get(`${API_URL}/email-leads?page=1&limit=99999${debouncedSearch ? `&search=${debouncedSearch}` : ""}${statusFilter ? `&status=${statusFilter}` : ""}`, { headers }),
-          ]);
-
-          // Regular leads
-          let regularLeads = [];
-          let regularTotal = 0;
-          if (regularRes.status === "fulfilled") {
-            const d = regularRes.value.data;
-            const isNew = d && !Array.isArray(d) && Array.isArray(d.leads);
-            regularLeads = isNew ? d.leads : (Array.isArray(d) ? d : []);
-            regularTotal = isNew ? d.totalLeads : regularLeads.length;
-          }
-
-          // Email leads
-          let emailLeads = [];
-          if (emailRes.status === "fulfilled") {
-            emailLeads = (emailRes.value.data.leads || []).map(l => ({ ...l, _isEmailLead: true, source: "Email Lead" }));
-          }
-
-          // Combine and sort by createdAt descending (newest first)
-          const all = [...regularLeads, ...emailLeads].sort(
-            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-          );
-
-          total = all.length;
-          pages = Math.ceil(total / ITEMS_PER_PAGE) || 1;
-
-          // Client-side paginate the merged array
-          const skip = (currentPage - 1) * ITEMS_PER_PAGE;
-          combinedLeads = all.slice(skip, skip + ITEMS_PER_PAGE);
-
-        } else {
-          // Specific source filter (Facebook, Website, etc.) — regular leads only
-          const { data } = await axios.get(
-            `${API_URL}/leads/getAllLead?${params.toString()}&source=${sourceFilter}`,
-            { headers }
-          );
-          const isNew = data && !Array.isArray(data) && Array.isArray(data.leads);
-          combinedLeads = isNew ? data.leads : (Array.isArray(data) ? data : []);
-          total = isNew ? data.totalLeads : combinedLeads.length;
-          pages = isNew ? data.totalPages  : Math.ceil(total / ITEMS_PER_PAGE);
+          setLeads((data.leads || []).map(l => ({ ...l, _isEmailLead: true })));
+          setTotalLeads(data.totalLeads || 0);
+          setTotalPages(data.totalPages  || 1);
+          return;
         }
 
-        setLeads(combinedLeads);
+        // Original logic — unchanged for all other source filters
+        if (sourceFilter) params.append("source", sourceFilter);
+
+        const { data } = await axios.get(
+          `${API_URL}/leads/getAllLead?${params.toString()}`,
+          { headers }
+        );
+
+        const isNew    = data && !Array.isArray(data) && Array.isArray(data.leads);
+        const leadsArr = isNew ? data.leads : (Array.isArray(data) ? data : []);
+        const total    = isNew ? data.totalLeads : leadsArr.length;
+        const pages    = isNew ? data.totalPages  : Math.ceil(leadsArr.length / ITEMS_PER_PAGE);
+
+        setLeads(leadsArr);
         setTotalLeads(total);
         setTotalPages(pages);
 
@@ -4526,7 +4495,7 @@ function LeadTableComponent() {
 
   /* ── CRUD handlers ── */
 
-  // Delete: works for both regular and email leads
+  // Delete: works for both regular and email leads (NEW: isEmailLead param)
   const handleDeleteLead = async (id, isEmailLead = false) => {
     try {
       const endpoint = isEmailLead
@@ -4547,6 +4516,7 @@ function LeadTableComponent() {
     }
   };
 
+  // Bulk delete: routes to correct endpoint per lead type (NEW)
   const handleBulkDelete = async () => {
     try {
       await Promise.all(selectedLeads.map((id) => {
@@ -4642,7 +4612,7 @@ function LeadTableComponent() {
     }
   };
 
-  // Status update: works for both regular and email leads
+  // Status update: NEW isEmailLead param routes to correct endpoint
   const handleStatusChange = async (leadId, newStatus, isEmailLead = false) => {
     try {
       const endpoint = isEmailLead
@@ -4670,7 +4640,7 @@ function LeadTableComponent() {
     }, 0);
   };
 
-  // Follow-up update: works for both regular and email leads
+  // Follow-up update: NEW isEmailLead param routes to correct endpoint
   const updateFollowUpDateInline = async (leadId, newDate, isEmailLead = false) => {
     if (!newDate) return;
     try {
@@ -4732,6 +4702,7 @@ function LeadTableComponent() {
         </span>
       );
     }
+    // NEW: Email Lead source badge
     if (source === "Email Lead") {
       return (
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap"
@@ -4825,7 +4796,9 @@ function LeadTableComponent() {
               {assigneesLoading ? "Loading assignees…" : "All Assignees"}
             </option>
             {assignees.map((assignee) => (
-              <option key={assignee.id} value={assignee.id}>{assignee.name}</option>
+              <option key={assignee.id} value={assignee.id}>
+                {assignee.name}
+              </option>
             ))}
           </select>
         )}
@@ -4844,7 +4817,7 @@ function LeadTableComponent() {
           <option value="Converted">Converted</option>
         </select>
 
-        {/* Source filter — now includes "Email Lead" */}
+        {/* Source filter — NEW: "Email Lead" option added */}
         <select
           value={sourceFilter}
           onChange={(e) => setSourceFilter(e.target.value)}
@@ -4896,7 +4869,7 @@ function LeadTableComponent() {
             <tbody className="divide-y divide-gray-200 bg-white">
               {leads.length > 0 ? leads.map((lead, idx) => {
                 const isFacebook  = lead.source === "Facebook";
-                const isEmailLead = lead._isEmailLead || lead.source === "Email Lead";
+                const isEmailLead = lead._isEmailLead || lead.source === "Email Lead"; // NEW
 
                 return (
                   <tr
@@ -4927,10 +4900,8 @@ function LeadTableComponent() {
                             >
                               {lead.leadName || "Unnamed Lead"}
                             </span>
-                            {/* Facebook badge */}
                             {isFacebook && !isEmailLead && <FacebookBadge />}
-                            {/* Email Lead badge (NEW) */}
-                            {isEmailLead && <EmailLeadBadge />}
+                            {isEmailLead && <EmailLeadBadge />} {/* NEW */}
                           </div>
                           <span className="text-gray-400 text-xs truncate max-w-[160px]">{lead.email || "-"}</span>
                         </div>
@@ -4962,7 +4933,7 @@ function LeadTableComponent() {
 
                     <td className="px-4 py-3 text-sm text-gray-700">{formatDate(lead.travelDate)}</td>
 
-                    {/* Status */}
+                    {/* Status — NEW: passes isEmailLead flag */}
                     <td className="px-4 py-3">
                       <select
                         value={lead.status}
@@ -4985,7 +4956,7 @@ function LeadTableComponent() {
 
                     <td className="px-4 py-3 text-sm text-gray-700">{formatDate(lead.createdAt)}</td>
 
-                    {/* Follow-up inline date picker */}
+                    {/* Follow-up inline date picker — NEW: passes isEmailLead flag */}
                     <td className="px-4 py-3 text-sm text-gray-700">
                       <div className="relative flex items-center gap-1">
                         <button
@@ -5027,7 +4998,7 @@ function LeadTableComponent() {
                           className="fixed z-50 w-40 bg-white rounded-lg shadow-lg border border-gray-200 py-1"
                           style={{ top: `${menuPosition.top}px`, left: `${menuPosition.left}px` }}
                         >
-                          {/* Email leads don't have an edit page yet — skip edit for them */}
+                          {/* NEW: Email leads skip Edit (no edit page yet) */}
                           {!isEmailLead && (
                             <button
                               onClick={(e) => { e.stopPropagation(); handleEdit(lead._id); }}
@@ -5044,11 +5015,11 @@ function LeadTableComponent() {
                               <Handshake className="w-4 h-4 mr-2" /> Convert
                             </button>
                           )}
+                          {/* NEW: View Email button for email leads */}
                           {isEmailLead && (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                // View raw email body
                                 toast.info(
                                   lead.rawEmailSubject
                                     ? `Subject: ${lead.rawEmailSubject}`
@@ -5082,7 +5053,7 @@ function LeadTableComponent() {
                         {sourceFilter === "Facebook"
                           ? "No Facebook leads yet. They appear automatically when someone submits your Facebook Lead Ad form."
                           : sourceFilter === "Email Lead"
-                          ? "No email leads yet. They appear automatically when TripMagics sends a new enquiry to your Gmail."
+                          ? "No email leads yet. They appear automatically when TripMagics sends a new enquiry to your Gmail." // NEW
                           : "Try adjusting your search or filters"}
                       </p>
                     </div>
@@ -5094,7 +5065,7 @@ function LeadTableComponent() {
         </div>
       </div>
 
-      {/* ── Pagination ── */}
+      {/* ── Pagination — unchanged ── */}
       {totalPages > 1 && (
         <div className="flex flex-col sm:flex-row items-center justify-between mt-4 gap-3">
           <p className="text-sm text-gray-500">
@@ -5146,6 +5117,7 @@ function LeadTableComponent() {
             >
               Cancel
             </button>
+            {/* NEW: passes isEmailLead flag when deleting */}
             <button
               onClick={() => {
                 if (leadToDelete) {
@@ -5355,4 +5327,4 @@ export default function LeadTable() {
       <LeadTableComponent />
     </TourProvider>
   );
-}//email lead code..
+}
