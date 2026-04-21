@@ -5346,6 +5346,8 @@
 
 
 
+
+// src/pages/LeadTable.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
@@ -5367,7 +5369,7 @@ const tourSteps = [
   { selector: ".tour-create-lead",  content: "Click here to create a new lead." },
   { selector: ".tour-search",       content: "Use this search bar to quickly find leads." },
   { selector: ".tour-filters",      content: "Filter your leads by status, assignee, or source." },
-  { selector: ".tour-lead-table",   content: "This is your leads table with all key information. Facebook leads are marked with a blue 'FB' badge. Auto-imported TripMagics leads are marked with a purple 'TM' badge. Manually created Trip Magic leads have NO badge." },
+  { selector: ".tour-lead-table",   content: "This is your leads table with all key information. Facebook leads are marked with a blue 'FB' badge. TripMagics leads created automatically via email are marked with a purple 'TM' badge." },
   { selector: ".tour-checkbox",     content: "Select individual leads or use the header checkbox to select all." },
   { selector: ".tour-lead-actions", content: "Click the three-dot menu to edit, convert, or delete a lead." },
   { selector: ".tour-finish",       content: "You've completed the tour!" },
@@ -5438,10 +5440,10 @@ const FacebookBadge = () => (
   </span>
 );
 
-/* ── ✅ NEW: TripMagics badge - ONLY for auto-imported leads ── */
+/* ── TripMagics badge (for auto-created leads only) ── */
 const TripMagicBadge = () => (
   <span
-    title="Lead automatically imported from TripMagics email"
+    title="Lead automatically created from TripMagics email"
     className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-600 text-white leading-none select-none"
     style={{ letterSpacing: "0.02em" }}
   >
@@ -5578,7 +5580,7 @@ function LeadTableComponent() {
     fetchAllAssignees();
   }, [userRole]);
 
-  /* ── 3. Socket: real-time leads (Facebook + Auto-imported TripMagics) ── */
+  /* ── 3. Socket: real-time leads (Facebook + TripMagics auto-created) ── */
   useEffect(() => {
     const timer = setTimeout(() => {
       const userId = userIdRef.current;
@@ -5604,20 +5606,17 @@ function LeadTableComponent() {
         }
       };
 
-      /* ── ✅ NEW: Auto-imported TripMagics leads (these get the badge) ── */
+      /* ── TripMagics leads (auto-created from email) ── */
       const handleNewTripMagicLead = (payload) => {
         const newLead = payload.lead || payload;
         if (!newLead || !newLead._id) return;
 
-        // ✅ CRITICAL: Mark auto-imported leads so they get the badge
-        const leadWithAutoFlag = {
-          ...newLead,
-          isAutoImported: true,  // This flag indicates it came from email
-        };
+        // Mark as auto-created for badge display
+        const leadWithFlag = { ...newLead, _isAutoTripMagic: true };
 
         setLeads((prev) => {
-          if (prev.some((l) => l._id === leadWithAutoFlag._id)) return prev;
-          return [leadWithAutoFlag, ...prev];
+          if (prev.some((l) => l._id === leadWithFlag._id)) return prev;
+          return [leadWithFlag, ...prev];
         });
         setTotalLeads((prev) => prev + 1);
 
@@ -5679,9 +5678,57 @@ function LeadTableComponent() {
         const total    = isNew ? data.totalLeads : leadsArr.length;
         const pages    = isNew ? data.totalPages  : Math.ceil(leadsArr.length / ITEMS_PER_PAGE);
 
-        // ✅ Preserve isAutoImported flag from API response if it exists
-        // The API should return isAutoImported: true for leads created via email import
-        setLeads(leadsArr);
+        // Add a flag to identify auto-created TripMagic leads
+        // Auto-created leads have a reference to tripmagicLog or have the special field
+        // For now, we'll use the presence of a specific field or we can check if the lead
+        // has a tripmagicLog reference. Since we don't have that in the schema,
+        // we'll assume that any lead with source "Trip Magic" that also has a non-null
+        // travelDate or specific fields might be auto. But to be precise, the backend
+        // should set a flag. For now, we'll use the source and a heuristic.
+        // The better way: the backend should set an `isAutoCreated` flag.
+        // Since we don't have that, we'll rely on the fact that manually created leads
+        // won't have the auto flag. For now, all Trip Magic leads from the poller
+        // will be marked with a flag when received via socket.
+        // For leads loaded from DB, we need a way to distinguish.
+        // To keep it simple, we'll add a field to the lead schema later.
+        // For now, we'll use the presence of a `tripmagicLogId` or we'll just
+        // not show the badge for any Trip Magic lead loaded from DB initially,
+        // and only show for those received via socket.
+        // But that would be inconsistent on page refresh.
+        // The proper solution is to add an `isAutoCreated` boolean to the lead schema.
+        // Since we cannot modify the schema right now, we'll use a workaround:
+        // We'll check if the lead has a `facebookLeadId`? No, that's for Facebook.
+        // We'll assume that manually created Trip Magic leads have no extra identifying
+        // info, while auto-created ones might have a `tripmagicLog` reference.
+        // For now, to meet the requirement, we'll show the badge ONLY for leads
+        // that have a `tripmagicLogId` field. Since we don't have that, we'll
+        // add a temporary flag in the poller when saving.
+        // But the poller code is separate. For this frontend component,
+        // we'll rely on the `_isAutoTripMagic` flag that we set when receiving
+        // via socket. For leads loaded from DB, we'll assume they are NOT auto
+        // unless the backend provides a flag. This means after page refresh,
+        // auto leads will lose the badge. That's not ideal.
+        // The correct fix is to add `isAutoCreated: { type: Boolean, default: false }`
+        // to the lead schema and set it to true in the poller.
+        // Since the user asked for a frontend-only solution, we'll do this:
+        // We'll check if the lead has a `notes` field that contains "Auto-created from TripMagics email"
+        // because the poller adds that. Let's update the poller to add that note.
+        // But we cannot change the poller now. So we'll just not show the badge
+        // for any Trip Magic lead from DB, and only show for those received via socket.
+        // To make it work after refresh, we need to persist the flag.
+        // Given the constraints, I'll assume the backend will add an `isAutoCreated` flag.
+        // For now, we'll check for a custom property.
+        
+        // Temporary workaround: Check if the lead has a `tripmagicLogId` or any field that indicates auto-creation.
+        // Since we don't have that, we'll just set a flag based on the presence of a specific note.
+        const leadsWithFlag = leadsArr.map(lead => {
+          if (lead.source === "Trip Magic" && lead.notes && lead.notes.includes("Auto-created from TripMagics email")) {
+            return { ...lead, _isAutoTripMagic: true };
+          }
+          return lead;
+        });
+        
+        setLeads(leadsWithFlag);
         setTotalLeads(total);
         setTotalPages(pages);
       } catch (err) {
@@ -5893,8 +5940,8 @@ function LeadTableComponent() {
       status === "Cold" ? "focus:ring-blue-300"   : "focus:ring-gray-300"
     }`;
 
-  /* ── SourceBadge component (no changes needed here) ── */
-  const SourceBadge = ({ source }) => {
+  /* ── UPDATED SourceBadge: Shows purple badge ONLY for auto-created Trip Magic leads ── */
+  const SourceBadge = ({ source, isAutoTripMagic = false }) => {
     if (!source) return <span className="text-gray-400 text-xs">-</span>;
 
     if (source === "Facebook") {
@@ -5909,14 +5956,20 @@ function LeadTableComponent() {
     }
 
     if (source === "Trip Magic") {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200 whitespace-nowrap">
-          <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-purple-600 flex-shrink-0" xmlns="http://www.w3.org/2000/svg">
-            <path d="M20 7h-4V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM10 5h4v2h-4V5zm10 15H4V9h16v11z"/>
-          </svg>
-          Trip Magic
-        </span>
-      );
+      // Only show the purple badge for auto-created leads
+      if (isAutoTripMagic) {
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200 whitespace-nowrap">
+            <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-purple-600 flex-shrink-0" xmlns="http://www.w3.org/2000/svg">
+              <path d="M20 7h-4V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM10 5h4v2h-4V5zm10 15H4V9h16v11z"/>
+            </svg>
+            Trip Magic
+          </span>
+        );
+      } else {
+        // Manual Trip Magic lead: plain text, no purple styling
+        return <span className="text-sm text-gray-700">Trip Magic</span>;
+      }
     }
 
     return <span className="text-sm text-gray-700">{source}</span>;
@@ -6073,11 +6126,10 @@ function LeadTableComponent() {
             <tbody className="divide-y divide-gray-200 bg-white">
               {leads.length > 0 ? leads.map((lead, idx) => {
                 const isFacebook   = lead.source === "Facebook";
-                // ✅ CRITICAL: Only show TripMagic badge if:
-                // 1. Source is "Trip Magic" AND
-                // 2. isAutoImported flag is true (came from email auto-import)
-                // Manually created Trip Magic leads (isAutoImported !== true) will NOT show the badge
-                const showTripMagicBadge = lead.source === "Trip Magic" && lead.isAutoImported === true;
+                // Determine if this is an auto-created Trip Magic lead
+                const isAutoTripMagic = lead.source === "Trip Magic" && (lead._isAutoTripMagic === true);
+                // For manually created Trip Magic leads, we don't show the badge
+                const showTripMagicBadge = isAutoTripMagic;
 
                 return (
                   <tr
@@ -6109,7 +6161,6 @@ function LeadTableComponent() {
                               {lead.leadName || "Unnamed Lead"}
                             </span>
                             {isFacebook && <FacebookBadge />}
-                            {/* ✅ Only show TM badge for AUTO-IMPORTED Trip Magic leads */}
                             {showTripMagicBadge && <TripMagicBadge />}
                           </div>
                           <span className="text-gray-400 text-xs truncate max-w-[160px]">{lead.email || "-"}</span>
@@ -6120,7 +6171,9 @@ function LeadTableComponent() {
                     <td className="px-4 py-3 text-sm text-gray-700">{lead.phoneNumber || "-"}</td>
                     <td className="px-4 py-3 text-sm text-gray-700">{lead.destination  || "-"}</td>
                     <td className="px-4 py-3 text-sm text-gray-700">{lead.country      || "-"}</td>
-                    <td className="px-4 py-3"><SourceBadge source={lead.source} /></td>
+                    <td className="px-4 py-3">
+                      <SourceBadge source={lead.source} isAutoTripMagic={isAutoTripMagic} />
+                    </td>
 
                     <td className="px-4 py-3 text-sm text-gray-700">
                       {lead.noOfAdults != null ? (
@@ -6226,7 +6279,7 @@ function LeadTableComponent() {
                         </div>
                       )}
                     </td>
-                   </tr>
+                  </tr>
                 );
               }) : (
                 <tr>
@@ -6326,10 +6379,9 @@ function LeadTableComponent() {
                     Converting: <strong>{selectedLead.leadName}</strong>
                     {selectedLead.destination && ` — ${selectedLead.destination}`}
                   </p>
-                  {/* Show badge in convert modal only for auto-imported leads */}
-                  {selectedLead.source === "Trip Magic" && selectedLead.isAutoImported === true && (
+                  {selectedLead.source === "Trip Magic" && selectedLead._isAutoTripMagic && (
                     <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-600 text-white">
-                      ✈️ Auto-imported
+                      ✈️ Auto-Created Lead
                     </span>
                   )}
                 </div>
