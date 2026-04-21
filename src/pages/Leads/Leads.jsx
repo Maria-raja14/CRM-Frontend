@@ -5346,13 +5346,6 @@
 
 
 
-// LeadTable.jsx  — FULL UPDATED FILE
-// Changes:
-//   1. Listen for "new_tripmagic_lead" socket event → prepend lead to list in real time
-//   2. TripMagicBadge component  (purple "TM" pill, same pattern as FacebookBadge)
-//   3. "Trip Magic" source badge in SourceBadge component
-//   4. Assignee filter now stores { id, name } objects — filter by ID (already in v2)
-
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
@@ -5374,7 +5367,7 @@ const tourSteps = [
   { selector: ".tour-create-lead",  content: "Click here to create a new lead." },
   { selector: ".tour-search",       content: "Use this search bar to quickly find leads." },
   { selector: ".tour-filters",      content: "Filter your leads by status, assignee, or source." },
-  { selector: ".tour-lead-table",   content: "This is your leads table with all key information. Facebook leads are marked with a blue 'FB' badge. TripMagics leads are marked with a purple 'TM' badge." },
+  { selector: ".tour-lead-table",   content: "This is your leads table with all key information. Facebook leads are marked with a blue 'FB' badge. Auto-imported TripMagics leads are marked with a purple 'TM' badge. Manually created Trip Magic leads have NO badge." },
   { selector: ".tour-checkbox",     content: "Select individual leads or use the header checkbox to select all." },
   { selector: ".tour-lead-actions", content: "Click the three-dot menu to edit, convert, or delete a lead." },
   { selector: ".tour-finish",       content: "You've completed the tour!" },
@@ -5445,14 +5438,13 @@ const FacebookBadge = () => (
   </span>
 );
 
-/* ── ✅ NEW: TripMagics badge ── */
+/* ── ✅ NEW: TripMagics badge - ONLY for auto-imported leads ── */
 const TripMagicBadge = () => (
   <span
-    title="Lead from TripMagics"
+    title="Lead automatically imported from TripMagics email"
     className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-600 text-white leading-none select-none"
     style={{ letterSpacing: "0.02em" }}
   >
-    {/* Simple suitcase/trip icon using emoji or SVG */}
     <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-white flex-shrink-0" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <path d="M20 7h-4V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM10 5h4v2h-4V5zm10 15H4V9h16v11z"/>
     </svg>
@@ -5586,7 +5578,7 @@ function LeadTableComponent() {
     fetchAllAssignees();
   }, [userRole]);
 
-  /* ── 3. Socket: real-time leads (Facebook + ✅ TripMagics) ── */
+  /* ── 3. Socket: real-time leads (Facebook + Auto-imported TripMagics) ── */
   useEffect(() => {
     const timer = setTimeout(() => {
       const userId = userIdRef.current;
@@ -5612,14 +5604,20 @@ function LeadTableComponent() {
         }
       };
 
-      /* ── ✅ NEW: TripMagics leads ── */
+      /* ── ✅ NEW: Auto-imported TripMagics leads (these get the badge) ── */
       const handleNewTripMagicLead = (payload) => {
         const newLead = payload.lead || payload;
         if (!newLead || !newLead._id) return;
 
+        // ✅ CRITICAL: Mark auto-imported leads so they get the badge
+        const leadWithAutoFlag = {
+          ...newLead,
+          isAutoImported: true,  // This flag indicates it came from email
+        };
+
         setLeads((prev) => {
-          if (prev.some((l) => l._id === newLead._id)) return prev;
-          return [newLead, ...prev];
+          if (prev.some((l) => l._id === leadWithAutoFlag._id)) return prev;
+          return [leadWithAutoFlag, ...prev];
         });
         setTotalLeads((prev) => prev + 1);
 
@@ -5633,17 +5631,10 @@ function LeadTableComponent() {
               .sort((a, b) => a.name.localeCompare(b.name));
           });
         }
-
-        // Toast notification
-        // toast.info(`📩 New TripMagics lead: ${newLead.leadName || "Unknown"}`, {
-        //   position: "top-right",
-        //   autoClose: 5000,
-        //   icon: "✈️",
-        // });
       };
 
       socket.on("new_facebook_lead",  handleNewFacebookLead);
-      socket.on("new_tripmagic_lead", handleNewTripMagicLead);  // ✅ NEW
+      socket.on("new_tripmagic_lead", handleNewTripMagicLead);
 
       return () => {
         socket.off("new_facebook_lead",  handleNewFacebookLead);
@@ -5688,6 +5679,8 @@ function LeadTableComponent() {
         const total    = isNew ? data.totalLeads : leadsArr.length;
         const pages    = isNew ? data.totalPages  : Math.ceil(leadsArr.length / ITEMS_PER_PAGE);
 
+        // ✅ Preserve isAutoImported flag from API response if it exists
+        // The API should return isAutoImported: true for leads created via email import
         setLeads(leadsArr);
         setTotalLeads(total);
         setTotalPages(pages);
@@ -5900,7 +5893,7 @@ function LeadTableComponent() {
       status === "Cold" ? "focus:ring-blue-300"   : "focus:ring-gray-300"
     }`;
 
-  /* ── ✅ UPDATED SourceBadge: added Trip Magic ── */
+  /* ── SourceBadge component (no changes needed here) ── */
   const SourceBadge = ({ source }) => {
     if (!source) return <span className="text-gray-400 text-xs">-</span>;
 
@@ -6028,7 +6021,7 @@ function LeadTableComponent() {
           <option value="Converted">Converted</option>
         </select>
 
-        {/* ✅ UPDATED Source filter: added Trip Magic */}
+        {/* Source filter */}
         <select
           value={sourceFilter}
           onChange={(e) => setSourceFilter(e.target.value)}
@@ -6080,7 +6073,11 @@ function LeadTableComponent() {
             <tbody className="divide-y divide-gray-200 bg-white">
               {leads.length > 0 ? leads.map((lead, idx) => {
                 const isFacebook   = lead.source === "Facebook";
-                const isTripMagic  = lead.source === "Trip Magic";
+                // ✅ CRITICAL: Only show TripMagic badge if:
+                // 1. Source is "Trip Magic" AND
+                // 2. isAutoImported flag is true (came from email auto-import)
+                // Manually created Trip Magic leads (isAutoImported !== true) will NOT show the badge
+                const showTripMagicBadge = lead.source === "Trip Magic" && lead.isAutoImported === true;
 
                 return (
                   <tr
@@ -6111,8 +6108,9 @@ function LeadTableComponent() {
                             >
                               {lead.leadName || "Unnamed Lead"}
                             </span>
-                            {isFacebook  && <FacebookBadge />}
-                            {isTripMagic && <TripMagicBadge />}
+                            {isFacebook && <FacebookBadge />}
+                            {/* ✅ Only show TM badge for AUTO-IMPORTED Trip Magic leads */}
+                            {showTripMagicBadge && <TripMagicBadge />}
                           </div>
                           <span className="text-gray-400 text-xs truncate max-w-[160px]">{lead.email || "-"}</span>
                         </div>
@@ -6228,7 +6226,7 @@ function LeadTableComponent() {
                         </div>
                       )}
                     </td>
-                  </tr>
+                   </tr>
                 );
               }) : (
                 <tr>
@@ -6328,9 +6326,10 @@ function LeadTableComponent() {
                     Converting: <strong>{selectedLead.leadName}</strong>
                     {selectedLead.destination && ` — ${selectedLead.destination}`}
                   </p>
-                  {selectedLead.source === "Trip Magic" && (
+                  {/* Show badge in convert modal only for auto-imported leads */}
+                  {selectedLead.source === "Trip Magic" && selectedLead.isAutoImported === true && (
                     <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-600 text-white">
-                      ✈️ TripMagics Lead
+                      ✈️ Auto-imported
                     </span>
                   )}
                 </div>
@@ -6455,4 +6454,3 @@ export default function LeadTable() {
     </TourProvider>
   );
 }
-// Trip magics email code correctly working code...
