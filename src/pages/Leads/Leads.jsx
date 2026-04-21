@@ -5635,11 +5635,11 @@ function LeadTableComponent() {
         }
 
         // Toast notification
-        toast.info(`📩 New TripMagics lead: ${newLead.leadName || "Unknown"}`, {
-          position: "top-right",
-          autoClose: 5000,
-          icon: "✈️",
-        });
+        // toast.info(`📩 New TripMagics lead: ${newLead.leadName || "Unknown"}`, {
+        //   position: "top-right",
+        //   autoClose: 5000,
+        //   icon: "✈️",
+        // });
       };
 
       socket.on("new_facebook_lead",  handleNewFacebookLead);
