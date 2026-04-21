@@ -5345,9 +5345,8 @@
 
 
 
+// LeadTable.jsx  — FULL UPDATED FILE
 
-
-// src/pages/LeadTable.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
@@ -5365,11 +5364,11 @@ const API_URL = import.meta.env.VITE_API_URL;
 const ITEMS_PER_PAGE = 10;
 
 const tourSteps = [
-  { selector: ".tour-lead-header",  content: "Welcome to the Leads Management page! Here you can view, manage, and convert your leads." },
+  { selector: ".tour-lead-header",  content: "Welcome to the Leads Management page!" },
   { selector: ".tour-create-lead",  content: "Click here to create a new lead." },
   { selector: ".tour-search",       content: "Use this search bar to quickly find leads." },
   { selector: ".tour-filters",      content: "Filter your leads by status, assignee, or source." },
-  { selector: ".tour-lead-table",   content: "This is your leads table with all key information. Facebook leads are marked with a blue 'FB' badge. TripMagics leads created automatically via email are marked with a purple 'TM' badge." },
+  { selector: ".tour-lead-table",   content: "This is your leads table. TripMagics email leads are marked with a purple TM badge." },
   { selector: ".tour-checkbox",     content: "Select individual leads or use the header checkbox to select all." },
   { selector: ".tour-lead-actions", content: "Click the three-dot menu to edit, convert, or delete a lead." },
   { selector: ".tour-finish",       content: "You've completed the tour!" },
@@ -5440,10 +5439,10 @@ const FacebookBadge = () => (
   </span>
 );
 
-/* ── TripMagics badge (for auto-created leads only) ── */
+/* ── TripMagics badge — ONLY shown for auto-imported email leads ── */
 const TripMagicBadge = () => (
   <span
-    title="Lead automatically created from TripMagics email"
+    title="Lead auto-imported from TripMagics email"
     className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-600 text-white leading-none select-none"
     style={{ letterSpacing: "0.02em" }}
   >
@@ -5456,12 +5455,65 @@ const TripMagicBadge = () => (
 
 const fmt = (n) => new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2 }).format(n);
 
-/* ── Helper: extract assignee display name from a lead object ── */
 const getAssigneeName = (assignTo) => {
   if (!assignTo) return null;
   if (typeof assignTo === "object" && assignTo.firstName)
     return `${assignTo.firstName} ${assignTo.lastName || ""}`.trim();
   return "Assigned User";
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   KEY HELPER — determines if a lead should show TM badge
+   Rules:
+     ✅ Show TM badge  → source === "Trip Magic" AND fromEmail === true
+     ❌ Hide TM badge  → source === "Trip Magic" but manually created (no fromEmail flag)
+     ❌ Hide TM badge  → any other source
+   ═══════════════════════════════════════════════════════════════ */
+const isAutoTripMagicLead = (lead) => {
+  return lead.source === "Trip Magic" && lead.fromEmail === true;
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   SOURCE BADGE
+   - "Trip Magic" auto-imported  → purple pill with icon
+   - "Trip Magic" manual         → plain text "Trip Magic" (no special styling)
+   - "Facebook"                  → blue Facebook pill
+   - anything else               → plain text
+   ═══════════════════════════════════════════════════════════════ */
+const SourceBadge = ({ lead }) => {
+  const source = lead?.source;
+  if (!source) return <span className="text-gray-400 text-xs">-</span>;
+
+  if (source === "Facebook") {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">
+        <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-blue-600 flex-shrink-0" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22 12a10 10 0 1 0-11.563 9.874v-6.988H7.898V12h2.539V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.886h-2.33v6.988A10.003 10.003 0 0 0 22 12z"/>
+        </svg>
+        Facebook
+      </span>
+    );
+  }
+
+  // ── Trip Magic: only show purple badge if auto-imported from email ──
+  if (source === "Trip Magic") {
+    if (isAutoTripMagicLead(lead)) {
+      // Auto-imported from email → purple styled badge
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200 whitespace-nowrap">
+          <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-purple-600 flex-shrink-0" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 7h-4V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM10 5h4v2h-4V5zm10 15H4V9h16v11z"/>
+          </svg>
+          Trip Magic
+        </span>
+      );
+    } else {
+      // Manually created → plain text, no special badge
+      return <span className="text-sm text-gray-700">Trip Magic</span>;
+    }
+  }
+
+  return <span className="text-sm text-gray-700">{source}</span>;
 };
 
 /* ═══════════════════════════════════════════════════════════════
@@ -5503,12 +5555,10 @@ function LeadTableComponent() {
     value: "", currency: "USD", notes: "", stage: "Qualification",
     purchasingLandCost: "", purchasingTicketCost: "",
     sellingLandCost:    "", sellingTicketCost:    "",
-    noOfAdults:   "",
-    noOfChildren: "",
-    travelDate:   "",
+    noOfAdults: "", noOfChildren: "", travelDate: "",
   });
 
-  const dateInputRefs                              = useRef({});
+  const dateInputRefs = useRef({});
   const [editingFollowUpId, setEditingFollowUpId] = useState(null);
   const [followUpSavingId,  setFollowUpSavingId]  = useState(null);
 
@@ -5545,7 +5595,6 @@ function LeadTableComponent() {
   /* ── 2. Fetch ALL assignees once on mount (Admin only) ── */
   useEffect(() => {
     if (!userRole || userRole !== "Admin") return;
-
     const fetchAllAssignees = async () => {
       try {
         setAssigneesLoading(true);
@@ -5553,12 +5602,10 @@ function LeadTableComponent() {
           `${API_URL}/leads/getAllLead?page=1&limit=99999`,
           { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
         );
-
         const isNew    = data && !Array.isArray(data) && Array.isArray(data.leads);
         const leadsArr = isNew ? data.leads : (Array.isArray(data) ? data : []);
-
-        const seen  = new Map();
-        const list  = [];
+        const seen = new Map();
+        const list = [];
         leadsArr.forEach((lead) => {
           const assignee = lead.assignTo;
           if (assignee && assignee._id && !seen.has(assignee._id)) {
@@ -5567,7 +5614,6 @@ function LeadTableComponent() {
             list.push({ id: assignee._id, name: name || "Unnamed User" });
           }
         });
-
         list.sort((a, b) => a.name.localeCompare(b.name));
         setAssignees(list);
       } catch (err) {
@@ -5576,25 +5622,22 @@ function LeadTableComponent() {
         setAssigneesLoading(false);
       }
     };
-
     fetchAllAssignees();
   }, [userRole]);
 
-  /* ── 3. Socket: real-time leads (Facebook + TripMagics auto-created) ── */
+  /* ── 3. Socket: real-time leads ── */
   useEffect(() => {
     const timer = setTimeout(() => {
       const userId = userIdRef.current;
       const socket = initSocket(userId);
       if (!socket) return;
 
-      /* ── Facebook leads (existing) ── */
       const handleNewFacebookLead = (newLead) => {
         setLeads((prev) => {
           if (prev.some((l) => l._id === newLead._id)) return prev;
           return [newLead, ...prev];
         });
         setTotalLeads((prev) => prev + 1);
-
         const assignee = newLead.assignTo;
         if (assignee && assignee._id) {
           setAssignees((prev) => {
@@ -5606,21 +5649,15 @@ function LeadTableComponent() {
         }
       };
 
-      /* ── TripMagics leads (auto-created from email) ── */
       const handleNewTripMagicLead = (payload) => {
         const newLead = payload.lead || payload;
         if (!newLead || !newLead._id) return;
-
-        // Mark as auto-created for badge display
-        const leadWithFlag = { ...newLead, _isAutoTripMagic: true };
-
+        // fromEmail is set true by the poller — so TM badge shows automatically
         setLeads((prev) => {
-          if (prev.some((l) => l._id === leadWithFlag._id)) return prev;
-          return [leadWithFlag, ...prev];
+          if (prev.some((l) => l._id === newLead._id)) return prev;
+          return [newLead, ...prev];
         });
         setTotalLeads((prev) => prev + 1);
-
-        // Add assignee to dropdown if not already present
         const assignee = newLead.assignTo;
         if (assignee && assignee._id) {
           setAssignees((prev) => {
@@ -5630,6 +5667,10 @@ function LeadTableComponent() {
               .sort((a, b) => a.name.localeCompare(b.name));
           });
         }
+        toast.info(`📩 New TripMagics lead: ${newLead.leadName || "Unknown"}`, {
+          position: "top-right",
+          autoClose: 5000,
+        });
       };
 
       socket.on("new_facebook_lead",  handleNewFacebookLead);
@@ -5640,7 +5681,6 @@ function LeadTableComponent() {
         socket.off("new_tripmagic_lead", handleNewTripMagicLead);
       };
     }, 100);
-
     return () => clearTimeout(timer);
   }, []);
 
@@ -5654,7 +5694,7 @@ function LeadTableComponent() {
     return () => clearTimeout(searchTimer.current);
   }, [searchQuery]);
 
-  /* ── 5. Reset to page 1 when filters change ── */
+  /* ── 5. Reset page on filter change ── */
   useEffect(() => { setCurrentPage(1); }, [statusFilter, sourceFilter, assigneeFilter]);
 
   /* ── 6. Paginated lead fetch ── */
@@ -5672,63 +5712,11 @@ function LeadTableComponent() {
           `${API_URL}/leads/getAllLead?${params.toString()}`,
           { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
         );
-
         const isNew    = data && !Array.isArray(data) && Array.isArray(data.leads);
         const leadsArr = isNew ? data.leads : (Array.isArray(data) ? data : []);
         const total    = isNew ? data.totalLeads : leadsArr.length;
         const pages    = isNew ? data.totalPages  : Math.ceil(leadsArr.length / ITEMS_PER_PAGE);
-
-        // Add a flag to identify auto-created TripMagic leads
-        // Auto-created leads have a reference to tripmagicLog or have the special field
-        // For now, we'll use the presence of a specific field or we can check if the lead
-        // has a tripmagicLog reference. Since we don't have that in the schema,
-        // we'll assume that any lead with source "Trip Magic" that also has a non-null
-        // travelDate or specific fields might be auto. But to be precise, the backend
-        // should set a flag. For now, we'll use the source and a heuristic.
-        // The better way: the backend should set an `isAutoCreated` flag.
-        // Since we don't have that, we'll rely on the fact that manually created leads
-        // won't have the auto flag. For now, all Trip Magic leads from the poller
-        // will be marked with a flag when received via socket.
-        // For leads loaded from DB, we need a way to distinguish.
-        // To keep it simple, we'll add a field to the lead schema later.
-        // For now, we'll use the presence of a `tripmagicLogId` or we'll just
-        // not show the badge for any Trip Magic lead loaded from DB initially,
-        // and only show for those received via socket.
-        // But that would be inconsistent on page refresh.
-        // The proper solution is to add an `isAutoCreated` boolean to the lead schema.
-        // Since we cannot modify the schema right now, we'll use a workaround:
-        // We'll check if the lead has a `facebookLeadId`? No, that's for Facebook.
-        // We'll assume that manually created Trip Magic leads have no extra identifying
-        // info, while auto-created ones might have a `tripmagicLog` reference.
-        // For now, to meet the requirement, we'll show the badge ONLY for leads
-        // that have a `tripmagicLogId` field. Since we don't have that, we'll
-        // add a temporary flag in the poller when saving.
-        // But the poller code is separate. For this frontend component,
-        // we'll rely on the `_isAutoTripMagic` flag that we set when receiving
-        // via socket. For leads loaded from DB, we'll assume they are NOT auto
-        // unless the backend provides a flag. This means after page refresh,
-        // auto leads will lose the badge. That's not ideal.
-        // The correct fix is to add `isAutoCreated: { type: Boolean, default: false }`
-        // to the lead schema and set it to true in the poller.
-        // Since the user asked for a frontend-only solution, we'll do this:
-        // We'll check if the lead has a `notes` field that contains "Auto-created from TripMagics email"
-        // because the poller adds that. Let's update the poller to add that note.
-        // But we cannot change the poller now. So we'll just not show the badge
-        // for any Trip Magic lead from DB, and only show for those received via socket.
-        // To make it work after refresh, we need to persist the flag.
-        // Given the constraints, I'll assume the backend will add an `isAutoCreated` flag.
-        // For now, we'll check for a custom property.
-        
-        // Temporary workaround: Check if the lead has a `tripmagicLogId` or any field that indicates auto-creation.
-        // Since we don't have that, we'll just set a flag based on the presence of a specific note.
-        const leadsWithFlag = leadsArr.map(lead => {
-          if (lead.source === "Trip Magic" && lead.notes && lead.notes.includes("Auto-created from TripMagics email")) {
-            return { ...lead, _isAutoTripMagic: true };
-          }
-          return lead;
-        });
-        
-        setLeads(leadsWithFlag);
+        setLeads(leadsArr);
         setTotalLeads(total);
         setTotalPages(pages);
       } catch (err) {
@@ -5741,7 +5729,7 @@ function LeadTableComponent() {
     fetchLeads();
   }, [currentPage, debouncedSearch, statusFilter, sourceFilter, assigneeFilter]);
 
-  /* ── Pagination helpers ── */
+  /* ── Pagination ── */
   const goToPage = (page) => {
     if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
@@ -5762,7 +5750,7 @@ function LeadTableComponent() {
     return pages;
   };
 
-  /* ── CRUD handlers ── */
+  /* ── CRUD ── */
   const handleDeleteLead = async (id) => {
     try {
       await axios.delete(`${API_URL}/leads/deleteLead/${id}`, {
@@ -5799,9 +5787,9 @@ function LeadTableComponent() {
     }
   };
 
-  const handleSelectLead    = (id) =>
+  const handleSelectLead = (id) =>
     setSelectedLeads((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
-  const handleSelectAll     = (e) =>
+  const handleSelectAll = (e) =>
     setSelectedLeads(e.target.checked ? leads.map((l) => l._id) : []);
 
   const handleMenuToggle = (leadId, e) => {
@@ -5830,15 +5818,11 @@ function LeadTableComponent() {
       currency: lead.currency || "USD",
       notes:    lead.notes    || "",
       stage:    "Qualification",
-      purchasingLandCost:   "",
-      purchasingTicketCost: "",
-      sellingLandCost:      "",
-      sellingTicketCost:    "",
+      purchasingLandCost: "", purchasingTicketCost: "",
+      sellingLandCost:    "", sellingTicketCost:    "",
       noOfAdults:   lead.noOfAdults   != null ? String(lead.noOfAdults)   : "",
       noOfChildren: lead.noOfChildren != null ? String(lead.noOfChildren) : "",
-      travelDate:   lead.travelDate
-        ? new Date(lead.travelDate).toISOString().split("T")[0]
-        : "",
+      travelDate:   lead.travelDate ? new Date(lead.travelDate).toISOString().split("T")[0] : "",
     });
     setConvertModalOpen(true);
     setMenuOpen(null);
@@ -5849,7 +5833,7 @@ function LeadTableComponent() {
     try {
       setConverting(true);
       const toastId = toast.loading("Converting lead to deal...");
-      const res     = await axios.patch(
+      const res = await axios.patch(
         `${API_URL}/leads/${selectedLead._id}/convert`,
         dealData,
         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
@@ -5913,7 +5897,7 @@ function LeadTableComponent() {
     }
   };
 
-  /* ── Formatting helpers ── */
+  /* ── Formatting ── */
   const formatDate = (d) => {
     if (!d) return "-";
     return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -5940,42 +5924,6 @@ function LeadTableComponent() {
       status === "Cold" ? "focus:ring-blue-300"   : "focus:ring-gray-300"
     }`;
 
-  /* ── UPDATED SourceBadge: Shows purple badge ONLY for auto-created Trip Magic leads ── */
-  const SourceBadge = ({ source, isAutoTripMagic = false }) => {
-    if (!source) return <span className="text-gray-400 text-xs">-</span>;
-
-    if (source === "Facebook") {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">
-          <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-blue-600 flex-shrink-0" xmlns="http://www.w3.org/2000/svg">
-            <path d="M22 12a10 10 0 1 0-11.563 9.874v-6.988H7.898V12h2.539V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.886h-2.33v6.988A10.003 10.003 0 0 0 22 12z"/>
-          </svg>
-          Facebook
-        </span>
-      );
-    }
-
-    if (source === "Trip Magic") {
-      // Only show the purple badge for auto-created leads
-      if (isAutoTripMagic) {
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200 whitespace-nowrap">
-            <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-purple-600 flex-shrink-0" xmlns="http://www.w3.org/2000/svg">
-              <path d="M20 7h-4V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM10 5h4v2h-4V5zm10 15H4V9h16v11z"/>
-            </svg>
-            Trip Magic
-          </span>
-        );
-      } else {
-        // Manual Trip Magic lead: plain text, no purple styling
-        return <span className="text-sm text-gray-700">Trip Magic</span>;
-      }
-    }
-
-    return <span className="text-sm text-gray-700">{source}</span>;
-  };
-
-  /* ── Initial loading spinner ── */
   if (loading && leads.length === 0) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -6029,7 +5977,6 @@ function LeadTableComponent() {
 
       {/* ── Filters ── */}
       <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4 tour-filters">
-        {/* Search */}
         <div className="relative tour-search">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input
@@ -6041,7 +5988,6 @@ function LeadTableComponent() {
           />
         </div>
 
-        {/* Assignee filter (Admin only) */}
         {userRole === "Admin" && (
           <select
             value={assigneeFilter}
@@ -6053,14 +5999,11 @@ function LeadTableComponent() {
               {assigneesLoading ? "Loading assignees…" : "All Assignees"}
             </option>
             {assignees.map((assignee) => (
-              <option key={assignee.id} value={assignee.id}>
-                {assignee.name}
-              </option>
+              <option key={assignee.id} value={assignee.id}>{assignee.name}</option>
             ))}
           </select>
         )}
 
-        {/* Status filter */}
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
@@ -6074,7 +6017,6 @@ function LeadTableComponent() {
           <option value="Converted">Converted</option>
         </select>
 
-        {/* Source filter */}
         <select
           value={sourceFilter}
           onChange={(e) => setSourceFilter(e.target.value)}
@@ -6125,11 +6067,9 @@ function LeadTableComponent() {
             </thead>
             <tbody className="divide-y divide-gray-200 bg-white">
               {leads.length > 0 ? leads.map((lead, idx) => {
-                const isFacebook   = lead.source === "Facebook";
-                // Determine if this is an auto-created Trip Magic lead
-                const isAutoTripMagic = lead.source === "Trip Magic" && (lead._isAutoTripMagic === true);
-                // For manually created Trip Magic leads, we don't show the badge
-                const showTripMagicBadge = isAutoTripMagic;
+                const isFacebook      = lead.source === "Facebook";
+                // ✅ KEY: TM badge only when fromEmail === true (set by poller, never by manual create)
+                const isEmailTripMagic = isAutoTripMagicLead(lead);
 
                 return (
                   <tr
@@ -6160,8 +6100,10 @@ function LeadTableComponent() {
                             >
                               {lead.leadName || "Unnamed Lead"}
                             </span>
+                            {/* FB badge — Facebook leads only */}
                             {isFacebook && <FacebookBadge />}
-                            {showTripMagicBadge && <TripMagicBadge />}
+                            {/* TM badge — ONLY auto-imported TripMagics email leads */}
+                            {isEmailTripMagic && <TripMagicBadge />}
                           </div>
                           <span className="text-gray-400 text-xs truncate max-w-[160px]">{lead.email || "-"}</span>
                         </div>
@@ -6171,9 +6113,9 @@ function LeadTableComponent() {
                     <td className="px-4 py-3 text-sm text-gray-700">{lead.phoneNumber || "-"}</td>
                     <td className="px-4 py-3 text-sm text-gray-700">{lead.destination  || "-"}</td>
                     <td className="px-4 py-3 text-sm text-gray-700">{lead.country      || "-"}</td>
-                    <td className="px-4 py-3">
-                      <SourceBadge source={lead.source} isAutoTripMagic={isAutoTripMagic} />
-                    </td>
+
+                    {/* ✅ Pass full lead object so SourceBadge can check fromEmail */}
+                    <td className="px-4 py-3"><SourceBadge lead={lead} /></td>
 
                     <td className="px-4 py-3 text-sm text-gray-700">
                       {lead.noOfAdults != null ? (
@@ -6214,7 +6156,6 @@ function LeadTableComponent() {
 
                     <td className="px-4 py-3 text-sm text-gray-700">{formatDate(lead.createdAt)}</td>
 
-                    {/* Follow-up inline date picker */}
                     <td className="px-4 py-3 text-sm text-gray-700">
                       <div className="relative flex items-center gap-1">
                         <button
@@ -6241,7 +6182,6 @@ function LeadTableComponent() {
                       </div>
                     </td>
 
-                    {/* Actions menu */}
                     <td className={`px-4 py-3 text-right relative sticky right-0 z-10 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.06)] ${
                       selectedLeads.includes(lead._id) ? "bg-blue-50" : idx % 2 === 0 ? "bg-white" : "bg-gray-50/80"
                     }`}>
@@ -6336,7 +6276,7 @@ function LeadTableComponent() {
         </div>
       )}
 
-      {/* ── Delete Confirmation Modal ── */}
+      {/* ── Delete Modal ── */}
       <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
         <DialogContent>
           <DialogHeader>
@@ -6363,7 +6303,7 @@ function LeadTableComponent() {
         </DialogContent>
       </Dialog>
 
-      {/* ── Convert Lead to Deal Modal ── */}
+      {/* ── Convert Modal ── */}
       <Dialog open={convertModalOpen} onOpenChange={setConvertModalOpen}>
         <DialogContent className="!max-w-3xl w-full p-0 overflow-hidden">
           <div className="px-6 pt-5 pb-3 border-b border-gray-100">
@@ -6373,15 +6313,21 @@ function LeadTableComponent() {
           </div>
           {selectedLead && (
             <div className="px-6 py-5 space-y-5 max-h-[78vh] overflow-y-auto">
-              <div className={`p-3 rounded-lg border ${selectedLead.source === "Facebook" ? "bg-blue-50 border-blue-200" : selectedLead.source === "Trip Magic" ? "bg-purple-50 border-purple-200" : "bg-blue-50 border-blue-100"}`}>
+              <div className={`p-3 rounded-lg border ${
+                selectedLead.source === "Facebook"
+                  ? "bg-blue-50 border-blue-200"
+                  : isAutoTripMagicLead(selectedLead)
+                  ? "bg-purple-50 border-purple-200"
+                  : "bg-blue-50 border-blue-100"
+              }`}>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <p className={`text-sm ${selectedLead.source === "Trip Magic" ? "text-purple-800" : "text-blue-800"}`}>
+                  <p className={`text-sm ${isAutoTripMagicLead(selectedLead) ? "text-purple-800" : "text-blue-800"}`}>
                     Converting: <strong>{selectedLead.leadName}</strong>
                     {selectedLead.destination && ` — ${selectedLead.destination}`}
                   </p>
-                  {selectedLead.source === "Trip Magic" && selectedLead._isAutoTripMagic && (
+                  {isAutoTripMagicLead(selectedLead) && (
                     <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-600 text-white">
-                      ✈️ Auto-Created Lead
+                      ✈️ TripMagics Lead
                     </span>
                   )}
                 </div>
@@ -6426,10 +6372,10 @@ function LeadTableComponent() {
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                  ["purchasingLandCost", "Land Part (Buy)", "5000"],
-                  ["purchasingTicketCost", "Ticket (Buy)", "2000"],
-                  ["sellingLandCost", "Land Part (Sell)", "7000"],
-                  ["sellingTicketCost", "Ticket (Sell)", "3000"],
+                  ["purchasingLandCost",   "Land Part (Buy)",  "5000"],
+                  ["purchasingTicketCost", "Ticket (Buy)",     "2000"],
+                  ["sellingLandCost",      "Land Part (Sell)", "7000"],
+                  ["sellingTicketCost",    "Ticket (Sell)",    "3000"],
                 ].map(([field, label, placeholder]) => (
                   <div key={field}>
                     <label className="block text-xs font-medium text-gray-600 mb-1.5">{label}</label>
@@ -6506,3 +6452,4 @@ export default function LeadTable() {
     </TourProvider>
   );
 }
+
