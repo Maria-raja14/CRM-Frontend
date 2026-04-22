@@ -84,8 +84,6 @@
 //   //         role = payload.role.toLowerCase();
 //   //       } else if (payload.role?.name) {
 //   //         role = payload.role.name.toLowerCase();
-//   //       } else {
-//   //         role = "";
 //   //       }
 //   //     } catch (err) {
 //   //       console.error("Error decoding token:", err);
@@ -112,6 +110,7 @@
 //       setTimeout(() => setIsOpen(true), 1000);
 //     }
 //   }, [setIsOpen, setSteps]);
+
 
 
 //   const startTour = () => {
@@ -242,7 +241,7 @@
 //     }
 //   };
 
-//   /* ── Grand totals (numeric only) ── */
+//   /* ── Grand totals ── */
 //   const grandTotalPurchasing = filteredDeals.reduce((acc, d) =>
 //     acc + parseCost(d.purchasingLandCost) + parseCost(d.purchasingTicketCost), 0);
 //   const grandTotalSelling = filteredDeals.reduce((acc, d) =>
@@ -269,7 +268,6 @@
 //           <button onClick={startTour} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 tour-finish">
 //             <Eye className="w-4 h-4" /> Take Tour
 //           </button>
-          
 //           {/* <button onClick={() => navigate("/createDeal")} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 tour-create-deal">
 //             <Plus className="w-4 h-4" /> Create Deal
 //           </button> */}
@@ -316,7 +314,8 @@
 //       {/* Filters */}
 //       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-3 tour-filters">
 //         <div className="flex flex-wrap gap-4 items-center">
-//           <select value={filters.stage} onChange={(e) => setFilters((prev) => ({ ...prev, stage: e.target.value }))} className="border rounded-md px-4 py-2 bg-white text-sm">
+//           <select value={filters.stage} onChange={(e) => setFilters((prev) => ({ ...prev, stage: e.target.value }))}
+//             className="border rounded-md px-4 py-2 bg-white text-sm">
 //             <option value="">All Stages</option>
 //             <option value="Qualification">Qualification</option>
 //             <option value="Negotiation">Negotiation</option>
@@ -324,11 +323,13 @@
 //             <option value="Closed Won">Closed Won</option>
 //             <option value="Closed Lost">Closed Lost</option>
 //           </select>
-//           <select value={filters.assignedTo} onChange={(e) => setFilters((prev) => ({ ...prev, assignedTo: e.target.value }))} className="border rounded-md bg-white px-4 py-2 text-sm">
+//           <select value={filters.assignedTo} onChange={(e) => setFilters((prev) => ({ ...prev, assignedTo: e.target.value }))}
+//             className="border rounded-md bg-white px-4 py-2 text-sm">
 //             <option value="">All Assigned</option>
 //             {users.map((u) => <option key={u._id} value={u._id}>{u.firstName} {u.lastName}</option>)}
 //           </select>
-//           <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search Deal Name..."
+//           <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+//             placeholder="Search Deal Name..."
 //             className="border rounded-full px-4 py-2 bg-white text-sm" />
 //         </div>
 //       </div>
@@ -360,10 +361,11 @@
 //               <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Assigned To</th>
 //               <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Stage</th>
 //               <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Deal Value</th>
-//               {/* ── NEW COLUMNS ── */}
-//               <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Travellers</th>
+//               {/* ── UPDATED: Adults + Children columns ── */}
+//               <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Adults</th>
+//               <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Children</th>
 //               <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Travel Date</th>
-//               {/* ── Cost columns ── */}
+//               {/* Cost columns */}
 //               <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Purch. Land</th>
 //               <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Purch. Ticket</th>
 //               <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Sell. Land</th>
@@ -392,7 +394,9 @@
 //                   <tr key={deal._id}
 //                     className={`transition-colors ${selectedDeals.includes(deal._id) ? "bg-blue-50" : idx % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-blue-50`}>
 //                     <td className="px-4 py-3">
-//                       <input type="checkbox" onChange={() => handleCheckboxChange(deal._id)} checked={selectedDeals.includes(deal._id)} className="cursor-pointer w-4 h-4 accent-blue-600" />
+//                       <input type="checkbox" onChange={() => handleCheckboxChange(deal._id)}
+//                         checked={selectedDeals.includes(deal._id)}
+//                         className="cursor-pointer w-4 h-4 accent-blue-600" />
 //                     </td>
 
 //                     <td className="px-4 py-3">
@@ -410,12 +414,22 @@
 
 //                     <td className="px-4 py-3 font-medium">{formatCurrencyValue(deal.value)}</td>
 
-//                     {/* ── Travellers ── */}
+//                     {/* ── Adults ── */}
 //                     <td className="px-4 py-3">
-//                       {deal.noOfTravellers != null && deal.noOfTravellers !== "" ? (
+//                       {deal.noOfAdults != null && deal.noOfAdults !== "" ? (
 //                         <span className="inline-flex items-center gap-1 text-gray-700">
-//                           <Users size={14} className="text-gray-400" />
-//                           {deal.noOfTravellers}
+//                           <Users size={14} className="text-blue-400" />
+//                           {deal.noOfAdults}
+//                         </span>
+//                       ) : <span className="text-gray-300">—</span>}
+//                     </td>
+
+//                     {/* ── Children ── */}
+//                     <td className="px-4 py-3">
+//                       {deal.noOfChildren != null && deal.noOfChildren !== "" ? (
+//                         <span className="inline-flex items-center gap-1 text-gray-700">
+//                           <Users size={14} className="text-purple-400" />
+//                           {deal.noOfChildren}
 //                         </span>
 //                       ) : <span className="text-gray-300">—</span>}
 //                     </td>
@@ -451,10 +465,12 @@
 
 //                     <td className="px-4 py-3">
 //                       <div className="flex items-center gap-2">
-//                         <button onClick={() => handleEdit(deal)} title="Edit Deal" className="p-1.5 rounded-md hover:bg-blue-100 text-blue-600 transition-colors">
+//                         <button onClick={() => handleEdit(deal)} title="Edit Deal"
+//                           className="p-1.5 rounded-md hover:bg-blue-100 text-blue-600 transition-colors">
 //                           <Edit size={16} />
 //                         </button>
-//                         <button onClick={() => handleDeleteClick(deal)} title="Delete Deal" className="p-1.5 rounded-md hover:bg-red-100 text-red-600 transition-colors">
+//                         <button onClick={() => handleDeleteClick(deal)} title="Delete Deal"
+//                           className="p-1.5 rounded-md hover:bg-red-100 text-red-600 transition-colors">
 //                           <Trash2 size={16} />
 //                         </button>
 //                       </div>
@@ -464,7 +480,7 @@
 //               })
 //             ) : (
 //               <tr>
-//                 <td colSpan={14} className="px-6 py-8 text-center text-gray-500">No deals found</td>
+//                 <td colSpan={15} className="px-6 py-8 text-center text-gray-500">No deals found</td>
 //               </tr>
 //             )}
 //           </tbody>
@@ -473,7 +489,7 @@
 //           {filteredDeals.length > 0 && (
 //             <tfoot>
 //               <tr className="bg-gray-100 border-t-2 border-gray-300 font-semibold text-sm">
-//                 <td colSpan={7} className="px-4 py-3 text-gray-700">Grand Total ({filteredDeals.length} deals)</td>
+//                 <td colSpan={8} className="px-4 py-3 text-gray-700">Grand Total ({filteredDeals.length} deals)</td>
 //                 <td className="px-4 py-3 text-gray-800">
 //                   {new Intl.NumberFormat("en-IN").format(filteredDeals.reduce((a, d) => a + parseCost(d.purchasingLandCost), 0))}
 //                 </td>
@@ -545,7 +561,8 @@
 //           <p>Are you sure you want to delete <strong>{deleteDeal?.dealName}</strong>?</p>
 //           <div className="mt-6 flex justify-end space-x-3">
 //             <button onClick={() => setIsDeleteModalOpen(false)} className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">Cancel</button>
-//             <button onClick={handleDeleteConfirm} disabled={isDeleting} className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed">
+//             <button onClick={handleDeleteConfirm} disabled={isDeleting}
+//               className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed">
 //               {isDeleting ? "Deleting..." : "Delete"}
 //             </button>
 //           </div>
@@ -558,8 +575,10 @@
 //           <DialogHeader><DialogTitle>Confirm Bulk Delete</DialogTitle></DialogHeader>
 //           <p>Are you sure you want to delete <strong>{selectedDeals.length}</strong> selected deal{selectedDeals.length > 1 ? "s" : ""}? This action cannot be undone.</p>
 //           <div className="mt-6 flex justify-end space-x-3">
-//             <button onClick={() => setIsBulkDeleteModalOpen(false)} disabled={isBulkDeleting} className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50">Cancel</button>
-//             <button onClick={handleBulkDeleteConfirm} disabled={isBulkDeleting} className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed flex items-center gap-2">
+//             <button onClick={() => setIsBulkDeleteModalOpen(false)} disabled={isBulkDeleting}
+//               className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50">Cancel</button>
+//             <button onClick={handleBulkDeleteConfirm} disabled={isBulkDeleting}
+//               className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed flex items-center gap-2">
 //               {isBulkDeleting ? (
 //                 <><span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Deleting...</>
 //               ) : (
@@ -588,10 +607,7 @@
 //   >
 //     <AllDealsComponent />
 //   </TourProvider>
-// );//all work correctly..
-
-
-
+// );//original all work correctly fine..
 
 
 import { useEffect, useState } from "react";
@@ -670,25 +686,7 @@ function AllDealsComponent() {
 
   const itemsPerPage = 10;
 
-  // useEffect(() => {
-  //   const token = localStorage.getItem("token");
-  //   let role = "";
-  //   if (token) {
-  //     try {
-  //       const payload = JSON.parse(atob(token.split(".")[1]));
-  //       if (typeof payload.role === "string") {
-  //         role = payload.role.toLowerCase();
-  //       } else if (payload.role?.name) {
-  //         role = payload.role.name.toLowerCase();
-  //       }
-  //     } catch (err) {
-  //       console.error("Error decoding token:", err);
-  //     }
-  //   }
-  //   setUserRole(role);
-  // }, []);
-
-useEffect(() => {
+  useEffect(() => {
     const userData = localStorage.getItem("user");
     let role = "";
     if (userData) {
@@ -706,8 +704,6 @@ useEffect(() => {
       setTimeout(() => setIsOpen(true), 1000);
     }
   }, [setIsOpen, setSteps]);
-
-
 
   const startTour = () => {
     setSteps(dealTourSteps);
@@ -854,6 +850,22 @@ useEffect(() => {
 
   const pageNumbers = getPageNumbers();
 
+  /* ── Shared sticky cell styles ── */
+  const stickyCheckbox  = "sticky left-0 z-10 bg-inherit";
+  const stickyDealName  = "sticky left-[48px] z-10 bg-inherit";
+  const stickyStage     = "sticky left-[220px] z-10 bg-inherit";
+  const stickyActions   = "sticky right-0 z-10 bg-inherit shadow-[-4px_0_6px_-1px_rgba(0,0,0,0.08)]";
+
+  /* thead versions (need bg-gray-100) */
+  const stickyCheckboxTh = "sticky left-0 z-20 bg-gray-100";
+  const stickyDealNameTh = "sticky left-[48px] z-20 bg-gray-100 after:absolute after:right-0 after:top-0 after:bottom-0 after:w-px after:bg-gray-200";
+  const stickyStageThe   = "sticky left-[220px] z-20 bg-gray-100 after:absolute after:right-0 after:top-0 after:bottom-0 after:w-px after:bg-gray-200";
+  const stickyActionsTh  = "sticky right-0 z-20 bg-gray-100 shadow-[-4px_0_6px_-1px_rgba(0,0,0,0.08)]";
+
+  /* tfoot versions */
+  const stickyCheckboxTf = "sticky left-0 z-10 bg-gray-100";
+  const stickyDealNameTf = "sticky left-[48px] z-10 bg-gray-100";
+
   return (
     <div className="p-4">
 
@@ -864,9 +876,6 @@ useEffect(() => {
           <button onClick={startTour} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 tour-finish">
             <Eye className="w-4 h-4" /> Take Tour
           </button>
-          {/* <button onClick={() => navigate("/createDeal")} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 tour-create-deal">
-            <Plus className="w-4 h-4" /> Create Deal
-          </button> */}
           {userRole === "Admin" && (
             <button
               onClick={() => navigate("/createDeal")}
@@ -944,31 +953,47 @@ useEffect(() => {
       )}
 
       {/* ── Table ── */}
-      <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm tour-deals-table">
-        <table className="min-w-full text-sm text-gray-700">
+      <div
+        className="rounded-lg border border-gray-200 shadow-sm tour-deals-table"
+        style={{ overflowX: "auto", overflowY: "auto", maxHeight: "60vh" }}
+      >
+        <table className="min-w-full text-sm text-gray-700" style={{ borderCollapse: "separate", borderSpacing: 0 }}>
           <thead className="bg-gray-100">
             <tr>
-              <th className="px-4 py-3 w-10">
+              {/* ── Sticky: checkbox ── */}
+              <th className={`${stickyCheckboxTh} px-4 py-3 w-[48px] min-w-[48px]`}>
                 <input type="checkbox" onChange={handleSelectAll} checked={isAllSelected}
                   ref={(el) => { if (el) el.indeterminate = isIndeterminate; }}
                   className="cursor-pointer w-4 h-4 accent-blue-600" />
               </th>
-              <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Deal Name</th>
-              <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Assigned To</th>
-              <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Stage</th>
-              <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Deal Value</th>
-              {/* ── UPDATED: Adults + Children columns ── */}
-              <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Adults</th>
-              <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Children</th>
-              <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Travel Date</th>
-              {/* Cost columns */}
-              <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Purch. Land</th>
-              <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Purch. Ticket</th>
-              <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Sell. Land</th>
-              <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Sell. Ticket</th>
-              <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Profit / Loss</th>
-              <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Created At</th>
-              <th className="px-4 py-3 text-left font-semibold whitespace-nowrap tour-deal-actions">Actions</th>
+
+              {/* ── Sticky: Deal Name ── */}
+              <th className={`${stickyDealNameTh} px-4 py-3 text-left font-semibold whitespace-nowrap w-[172px] min-w-[172px]`}>
+                Deal Name
+              </th>
+
+              {/* ── Sticky: Stage ── */}
+              <th className={`${stickyStageThe} px-4 py-3 text-left font-semibold whitespace-nowrap w-[140px] min-w-[140px]`}>
+                Stage
+              </th>
+
+              {/* Scrollable columns */}
+              <th className="px-4 py-3 text-left font-semibold whitespace-nowrap bg-gray-100">Assigned To</th>
+              <th className="px-4 py-3 text-left font-semibold whitespace-nowrap bg-gray-100">Deal Value</th>
+              <th className="px-4 py-3 text-left font-semibold whitespace-nowrap bg-gray-100">Adults</th>
+              <th className="px-4 py-3 text-left font-semibold whitespace-nowrap bg-gray-100">Children</th>
+              <th className="px-4 py-3 text-left font-semibold whitespace-nowrap bg-gray-100">Travel Date</th>
+              <th className="px-4 py-3 text-left font-semibold whitespace-nowrap bg-gray-100">Purch. Land</th>
+              <th className="px-4 py-3 text-left font-semibold whitespace-nowrap bg-gray-100">Purch. Ticket</th>
+              <th className="px-4 py-3 text-left font-semibold whitespace-nowrap bg-gray-100">Sell. Land</th>
+              <th className="px-4 py-3 text-left font-semibold whitespace-nowrap bg-gray-100">Sell. Ticket</th>
+              <th className="px-4 py-3 text-left font-semibold whitespace-nowrap bg-gray-100">Profit / Loss</th>
+              <th className="px-4 py-3 text-left font-semibold whitespace-nowrap bg-gray-100">Created At</th>
+
+              {/* ── Sticky: Actions ── */}
+              <th className={`${stickyActionsTh} px-4 py-3 text-left font-semibold whitespace-nowrap tour-deal-actions w-[90px] min-w-[90px]`}>
+                Actions
+              </th>
             </tr>
           </thead>
 
@@ -985,32 +1010,35 @@ useEffect(() => {
                 const hasProfit   = profit > 0;
                 const hasLoss     = profit < 0;
                 const hasCostData = totalPurch > 0 || totalSell > 0;
+                const rowBg       = selectedDeals.includes(deal._id) ? "bg-blue-50" : idx % 2 === 0 ? "bg-white" : "bg-gray-50";
 
                 return (
-                  <tr key={deal._id}
-                    className={`transition-colors ${selectedDeals.includes(deal._id) ? "bg-blue-50" : idx % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-blue-50`}>
-                    <td className="px-4 py-3">
+                  <tr key={deal._id} className={`${rowBg} hover:bg-blue-50 transition-colors`}>
+
+                    {/* ── Sticky: checkbox ── */}
+                    <td className={`${stickyCheckbox} px-4 py-3 w-[48px] min-w-[48px]`}>
                       <input type="checkbox" onChange={() => handleCheckboxChange(deal._id)}
                         checked={selectedDeals.includes(deal._id)}
                         className="cursor-pointer w-4 h-4 accent-blue-600" />
                     </td>
 
-                    <td className="px-4 py-3">
+                    {/* ── Sticky: Deal Name ── */}
+                    <td className={`${stickyDealName} px-4 py-3 w-[172px] min-w-[172px]`}>
                       <button onClick={() => navigate(`/Pipelineview/${deal._id}`)}
-                        className="text-blue-600 hover:text-blue-800 hover:underline font-medium tour-deal-name">
+                        className="text-blue-600 hover:text-blue-800 hover:underline font-medium tour-deal-name text-left break-words w-full">
                         {deal.dealName || "-"}
                       </button>
                     </td>
 
-                    <td className="px-4 py-3">{deal.assignedTo ? `${deal.assignedTo.firstName} ${deal.assignedTo.lastName}` : "-"}</td>
-
-                    <td className="px-4 py-3">
+                    {/* ── Sticky: Stage ── */}
+                    <td className={`${stickyStage} px-4 py-3 w-[140px] min-w-[140px]`}>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${stageBadge(deal.stage)}`}>{deal.stage || "-"}</span>
                     </td>
 
-                    <td className="px-4 py-3 font-medium">{formatCurrencyValue(deal.value)}</td>
+                    {/* Scrollable columns */}
+                    <td className="px-4 py-3 whitespace-nowrap">{deal.assignedTo ? `${deal.assignedTo.firstName} ${deal.assignedTo.lastName}` : "-"}</td>
+                    <td className="px-4 py-3 font-medium whitespace-nowrap">{formatCurrencyValue(deal.value)}</td>
 
-                    {/* ── Adults ── */}
                     <td className="px-4 py-3">
                       {deal.noOfAdults != null && deal.noOfAdults !== "" ? (
                         <span className="inline-flex items-center gap-1 text-gray-700">
@@ -1020,7 +1048,6 @@ useEffect(() => {
                       ) : <span className="text-gray-300">—</span>}
                     </td>
 
-                    {/* ── Children ── */}
                     <td className="px-4 py-3">
                       {deal.noOfChildren != null && deal.noOfChildren !== "" ? (
                         <span className="inline-flex items-center gap-1 text-gray-700">
@@ -1030,8 +1057,7 @@ useEffect(() => {
                       ) : <span className="text-gray-300">—</span>}
                     </td>
 
-                    {/* ── Travel Date ── */}
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 whitespace-nowrap">
                       {deal.travelDate ? (
                         <span className="inline-flex items-center gap-1 text-gray-700">
                           <Calendar size={14} className="text-gray-400" />
@@ -1040,14 +1066,12 @@ useEffect(() => {
                       ) : <span className="text-gray-300">—</span>}
                     </td>
 
-                    {/* Cost columns */}
-                    <td className="px-4 py-3"><CostCell raw={deal.purchasingLandCost} /></td>
-                    <td className="px-4 py-3"><CostCell raw={deal.purchasingTicketCost} /></td>
-                    <td className="px-4 py-3"><CostCell raw={deal.sellingLandCost} /></td>
-                    <td className="px-4 py-3"><CostCell raw={deal.sellingTicketCost} /></td>
+                    <td className="px-4 py-3 whitespace-nowrap"><CostCell raw={deal.purchasingLandCost} /></td>
+                    <td className="px-4 py-3 whitespace-nowrap"><CostCell raw={deal.purchasingTicketCost} /></td>
+                    <td className="px-4 py-3 whitespace-nowrap"><CostCell raw={deal.sellingLandCost} /></td>
+                    <td className="px-4 py-3 whitespace-nowrap"><CostCell raw={deal.sellingTicketCost} /></td>
 
-                    {/* Profit / Loss */}
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 whitespace-nowrap">
                       {hasCostData ? (
                         <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${hasProfit ? "bg-emerald-100 text-emerald-700" : hasLoss ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-600"}`}>
                           {hasProfit ? <TrendingUp size={12} /> : hasLoss ? <TrendingDown size={12} /> : null}
@@ -1057,9 +1081,10 @@ useEffect(() => {
                       ) : <span className="text-gray-300">—</span>}
                     </td>
 
-                    <td className="px-4 py-3">{formatDate(deal.createdAt)}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">{formatDate(deal.createdAt)}</td>
 
-                    <td className="px-4 py-3">
+                    {/* ── Sticky: Actions ── */}
+                    <td className={`${stickyActions} px-4 py-3 w-[90px] min-w-[90px]`}>
                       <div className="flex items-center gap-2">
                         <button onClick={() => handleEdit(deal)} title="Edit Deal"
                           className="p-1.5 rounded-md hover:bg-blue-100 text-blue-600 transition-colors">
@@ -1085,26 +1110,44 @@ useEffect(() => {
           {filteredDeals.length > 0 && (
             <tfoot>
               <tr className="bg-gray-100 border-t-2 border-gray-300 font-semibold text-sm">
-                <td colSpan={8} className="px-4 py-3 text-gray-700">Grand Total ({filteredDeals.length} deals)</td>
-                <td className="px-4 py-3 text-gray-800">
+                {/* Sticky checkbox cell */}
+                <td className={`${stickyCheckboxTf} px-4 py-3`} />
+                {/* Sticky deal name cell — spans label */}
+                <td className={`${stickyDealNameTf} px-4 py-3 text-gray-700 whitespace-nowrap`}>
+                  Grand Total ({filteredDeals.length} deals)
+                </td>
+                {/* Sticky stage cell */}
+                <td className={`sticky left-[220px] z-10 bg-gray-100 px-4 py-3`} />
+
+                {/* Assigned To + Deal Value + Adults + Children + Travel Date = 5 scrollable cols before costs */}
+                <td className="px-4 py-3" />
+                <td className="px-4 py-3" />
+                <td className="px-4 py-3" />
+                <td className="px-4 py-3" />
+                <td className="px-4 py-3" />
+
+                {/* Cost totals */}
+                <td className="px-4 py-3 text-gray-800 whitespace-nowrap">
                   {new Intl.NumberFormat("en-IN").format(filteredDeals.reduce((a, d) => a + parseCost(d.purchasingLandCost), 0))}
                 </td>
-                <td className="px-4 py-3 text-gray-800">
+                <td className="px-4 py-3 text-gray-800 whitespace-nowrap">
                   {new Intl.NumberFormat("en-IN").format(filteredDeals.reduce((a, d) => a + parseCost(d.purchasingTicketCost), 0))}
                 </td>
-                <td className="px-4 py-3 text-gray-800">
+                <td className="px-4 py-3 text-gray-800 whitespace-nowrap">
                   {new Intl.NumberFormat("en-IN").format(filteredDeals.reduce((a, d) => a + parseCost(d.sellingLandCost), 0))}
                 </td>
-                <td className="px-4 py-3 text-gray-800">
+                <td className="px-4 py-3 text-gray-800 whitespace-nowrap">
                   {new Intl.NumberFormat("en-IN").format(filteredDeals.reduce((a, d) => a + parseCost(d.sellingTicketCost), 0))}
                 </td>
-                <td className={`px-4 py-3 ${grandProfit >= 0 ? "text-emerald-700" : "text-red-700"}`}>
+                <td className={`px-4 py-3 whitespace-nowrap ${grandProfit >= 0 ? "text-emerald-700" : "text-red-700"}`}>
                   <div className="flex items-center gap-1">
                     {grandProfit >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
                     {grandProfit >= 0 ? "+" : "-"}{new Intl.NumberFormat("en-IN").format(Math.abs(grandProfit))}
                   </div>
                 </td>
-                <td colSpan={2} className="px-4 py-3" />
+                <td className="px-4 py-3" />
+                {/* Sticky actions cell */}
+                <td className={`${stickyActions} px-4 py-3`} />
               </tr>
             </tfoot>
           )}
