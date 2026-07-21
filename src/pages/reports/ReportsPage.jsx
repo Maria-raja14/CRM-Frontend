@@ -1009,7 +1009,7 @@
 //     const rows = reports.flatMap(buildExportRows);
 //     const wb   = XLSX.utils.book_new();
 //     const ws   = XLSX.utils.json_to_sheet(rows);
-//     ws["!cols"] = Array(16).fill({ wch: 22 });
+//     ws["!cols"] = Array(11).fill({ wch: 26 });
 //     XLSX.utils.book_append_sheet(wb, ws, "Team Performance");
 //     XLSX.writeFile(wb, `team_performance_${getFileSuffix()}.xlsx`);
 //   };
@@ -1018,7 +1018,7 @@
 //     const rows = buildExportRows(rep);
 //     const wb   = XLSX.utils.book_new();
 //     const ws   = XLSX.utils.json_to_sheet(rows);
-//     ws["!cols"] = Array(16).fill({ wch: 22 });
+//     ws["!cols"] = Array(11).fill({ wch: 26 });
 //     XLSX.utils.book_append_sheet(wb, ws, rep.name.slice(0, 31));
 //     XLSX.writeFile(wb, `${rep.name.replace(/\s+/g, "_")}_${getFileSuffix()}.xlsx`);
 //   };
@@ -1457,10 +1457,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import {
-  FaUserAlt, FaDownload, FaChartLine, FaUsers, FaCheckCircle,
+  FaUserAlt, FaDownload, FaChartLine, FaUsers,
 } from "react-icons/fa";
 import {
-  FiChevronDown, FiChevronUp, FiSearch, FiTrendingUp, FiTrendingDown,
+  FiChevronDown, FiChevronUp, FiSearch,
   FiCalendar, FiRefreshCw,
 } from "react-icons/fi";
 import * as XLSX from "xlsx";
@@ -1507,6 +1507,64 @@ const formatSessionDuration = (login, logout) => {
 };
 
 const getTodayDate = () => new Date().toISOString().split("T")[0];
+
+// ── Date key helper (YYYY-MM-DD in local time) ──────────────────────────────
+const toDateKey = (ds) => {
+  if (!ds) return null;
+  const d = new Date(ds);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
+const daysBetween = (d1, d2) => {
+  if (!d1 || !d2) return null;
+  const diff = Math.abs(new Date(d2) - new Date(d1));
+  return Math.round(diff / (1000 * 60 * 60 * 24));
+};
+
+const formatDateIN = (ds) =>
+  ds ? new Date(ds).toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—";
+
+// ── Build a date-wise summary across leads, deals, and login sessions ────────
+// Returns array sorted by date: [{ dateKey, leadsAssigned, won, closed, sessions[], totalSecs }]
+const buildDateWiseSummary = (leads, deals, loginHistory) => {
+  const map = {};
+
+  const ensure = (key) => {
+    if (!map[key]) map[key] = { dateKey: key, leadsAssigned: 0, won: 0, closed: 0, sessions: [], totalSecs: 0 };
+  };
+
+  // Leads assigned per date (createdAt = date lead was assigned)
+  (leads || []).forEach((lead) => {
+    const k = toDateKey(lead.createdAt);
+    if (!k) return;
+    ensure(k);
+    map[k].leadsAssigned++;
+  });
+
+  // Won / Closed per date (updatedAt = date deal stage was last changed)
+  (deals || []).forEach((deal) => {
+    if (deal.stage !== "Closed Won" && deal.stage !== "Closed Lost") return;
+    const k = toDateKey(deal.updatedAt || deal.createdAt);
+    if (!k) return;
+    ensure(k);
+    if (deal.stage === "Closed Won") map[k].won++;
+    else map[k].closed++;
+  });
+
+  // Login sessions per date
+  (loginHistory || []).forEach((log) => {
+    const k = toDateKey(log.login);
+    if (!k) return;
+    ensure(k);
+    map[k].sessions.push(log);
+    if (log.login && log.logout) {
+      const diff = (new Date(log.logout) - new Date(log.login)) / 1000;
+      if (diff > 0) map[k].totalSecs += diff;
+    }
+  });
+
+  return Object.values(map).sort((a, b) => a.dateKey.localeCompare(b.dateKey));
+};
 
 const getMonthOptions = (count = 13) => {
   const opts = [];
@@ -1635,8 +1693,11 @@ const ReportsPage = () => {
           const activityCompletionRate =
             totalActivities > 0 ? (completedActivities / totalActivities) * 100 : 0;
 
-          const leads      = Array.isArray(data.leads) ? data.leads : [];
-          const totalLeads = data.metrics?.totalLeadsAssigned ?? leads.length ?? 0;
+          const leads       = Array.isArray(data.leads) ? data.leads : [];
+          const deals       = Array.isArray(data.deals) ? data.deals : [];
+          const totalLeads  = data.metrics?.totalLeadsAssigned ?? leads.length;
+          const wonLeads    = data.metrics?.wonLeadsCount    ?? 0;
+          const closedLeads = data.metrics?.closedLeadsCount ?? 0;
 
           const now            = new Date();
           const totalFollowUps = leads.filter(
@@ -1653,12 +1714,16 @@ const ReportsPage = () => {
             email:  user.email,
             totalLogins: loginHistory.length,
             totalLeads,
+            wonLeads,
+            closedLeads,
             totalActivities,
             completedActivities,
             totalFollowUps,
             totalSeconds,
             totalDuration: formatDuration(totalSeconds),
             loginHistory,
+            leads,
+            deals,
             activityCompletionRate,
             productivityScore,
           };
@@ -1714,53 +1779,80 @@ const ReportsPage = () => {
     });
   };
 
-  const buildExportRows = (rep) => {
-    const sessions = rep.loginHistory;
-    let periodLabel = "all";
-    const { startDate: sd, endDate: ed } = getEffectiveDates();
-    if (filterMode === "month" && selectedMonth) periodLabel = selectedMonth.replace("-", "");
-    else if (filterMode === "range" && (sd || ed)) periodLabel = `${sd || "start"}_to_${ed || "end"}`;
-    else if (filterMode === "single" && sd) periodLabel = sd.replace(/-/g, "");
+  /* ── Excel Sheet 1a : Assigned Leads ── */
+  const buildAssignedLeadRows = (rep) => {
+    const leads = rep.leads || [];
+    if (leads.length === 0)
+      return [{ "Salesman Name": rep.name, "Email": rep.email, "Lead Name": "No Data", "Lead Assigned Date": "—", "Lead Status": "—" }];
+    return [...leads]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .map((lead) => ({
+        "Salesman Name":     rep.name,
+        "Email":             rep.email,
+        "Lead Name":         lead.leadName || "—",
+        "Lead Assigned Date": formatDateIN(lead.createdAt),
+        "Lead Status":       lead.status || "—",
+      }));
+  };
 
+  /* ── Excel Sheet 2 : Deals ── */
+  const buildDealRows = (rep) => {
+    const deals = rep.deals || [];
+    if (deals.length === 0)
+      return [{ "Salesman Name": rep.name, "Email": rep.email, "Deal Name": "No Data",
+        "Lead → Deal Convert Date": "—", "Direct Deal Date": "—", "Deal Completion Date": "—", "Days Taken": "—", "Deal Stage": "—" }];
+    return [...deals]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .map((deal) => {
+        const isConverted = !!deal.leadId;
+        const isFinished  = deal.stage === "Closed Won" || deal.stage === "Closed Lost";
+        const completedDt = isFinished ? deal.updatedAt : null;
+        const days        = completedDt ? daysBetween(deal.createdAt, completedDt) : null;
+        return {
+          "Salesman Name":            rep.name,
+          "Email":                    rep.email,
+          "Deal Name":                deal.dealName || "—",
+          "Lead → Deal Convert Date": isConverted ? formatDateIN(deal.createdAt) : "—",
+          "Direct Deal Date":         !isConverted ? formatDateIN(deal.createdAt) : "—",
+          "Deal Completion Date":     completedDt ? formatDateIN(completedDt) : "—",
+          "Days Taken":               days === 0 ? "Same Day" : days !== null ? `${days} day${days !== 1 ? "s" : ""}` : "—",
+          "Deal Stage":               deal.stage || "—",
+        };
+      });
+  };
+
+  // Keep old name for backward compat (used by downloadAllReports)
+  const buildLeadTrackingRows = buildAssignedLeadRows;
+
+  /* ── Sheet 2: Login sessions ── */
+  const buildSessionRows = (rep) => {
+    const sessions = rep.loginHistory || [];
     if (sessions.length === 0) {
       return [{
-        "Salesman Name": rep.name, "Email": rep.email,
-        "Login Date": "No Data", "Login Time": "No Data",
-        "Logout Date": "No Data", "Logout Time": "No Data",
-        "Session Duration": "No Data",
-        "Total Leads Assigned": rep.totalLeads,
-        "Total Activities": rep.totalActivities,
-        "Completed Activities": rep.completedActivities,
-        "Activity Completion %": `${rep.activityCompletionRate.toFixed(1)}%`,
-        "Pending Follow-ups": rep.totalFollowUps,
-        "Total Time Logged": rep.totalDuration,
-        "Productivity Score": `${rep.productivityScore.toFixed(0)}%`,
-        "Performance Level": getPerformanceLabel(rep.productivityScore),
-        "Period": periodLabel,
+        "Salesman Name": rep.name,
+        "Email":         rep.email,
+        "Login Date":    "No Data",
+        "Login Time":    "—",
+        "Logout Time":   "—",
+        "Duration":      "—",
+        "Status":        "—",
       }];
     }
-
-    return sessions.map((log) => {
-      const login  = log.login  ? new Date(log.login)  : null;
-      const logout = log.logout ? new Date(log.logout) : null;
-      return {
-        "Salesman Name": rep.name, "Email": rep.email,
-        "Login Date":  login  ? login.toLocaleDateString()  : "N/A",
-        "Login Time":  login  ? login.toLocaleTimeString()  : "N/A",
-        "Logout Date": logout ? logout.toLocaleDateString() : "N/A",
-        "Logout Time": logout ? logout.toLocaleTimeString() : "N/A",
-        "Session Duration": login && logout ? formatSessionDuration(log.login, log.logout) : "Active",
-        "Total Leads Assigned": rep.totalLeads,
-        "Total Activities": rep.totalActivities,
-        "Completed Activities": rep.completedActivities,
-        "Activity Completion %": `${rep.activityCompletionRate.toFixed(1)}%`,
-        "Pending Follow-ups": rep.totalFollowUps,
-        "Total Time Logged": rep.totalDuration,
-        "Productivity Score": `${rep.productivityScore.toFixed(0)}%`,
-        "Performance Level": getPerformanceLabel(rep.productivityScore),
-        "Period": periodLabel,
-      };
-    });
+    return [...sessions]
+      .sort((a, b) => new Date(b.login) - new Date(a.login))
+      .map((log) => {
+        const loginDt  = log.login  ? new Date(log.login)  : null;
+        const logoutDt = log.logout ? new Date(log.logout) : null;
+        return {
+          "Salesman Name": rep.name,
+          "Email":         rep.email,
+          "Login Date":    loginDt  ? formatDateIN(log.login)  : "—",
+          "Login Time":    loginDt  ? loginDt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true }) : "—",
+          "Logout Time":   logoutDt ? logoutDt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true }) : "—",
+          "Duration":      loginDt && logoutDt ? formatSessionDuration(log.login, log.logout) : "—",
+          "Status":        log.logout ? "Completed" : "Active",
+        };
+      });
   };
 
   const getFileSuffix = () => {
@@ -1772,20 +1864,50 @@ const ReportsPage = () => {
   };
 
   const downloadAllReports = () => {
-    const rows = reports.flatMap(buildExportRows);
-    const wb   = XLSX.utils.book_new();
-    const ws   = XLSX.utils.json_to_sheet(rows);
-    ws["!cols"] = Array(16).fill({ wch: 22 });
-    XLSX.utils.book_append_sheet(wb, ws, "Team Performance");
+    const wb = XLSX.utils.book_new();
+
+    // Sheet 1 – Assigned Leads
+    const assignedRows = reports.flatMap(buildAssignedLeadRows);
+    const ws1 = XLSX.utils.json_to_sheet(assignedRows);
+    ws1["!cols"] = [{ wch: 22 }, { wch: 28 }, { wch: 24 }, { wch: 18 }, { wch: 14 }];
+    XLSX.utils.book_append_sheet(wb, ws1, "Assigned Leads");
+
+    // Sheet 2 – Deals
+    const dealRows = reports.flatMap(buildDealRows);
+    const ws2 = XLSX.utils.json_to_sheet(dealRows);
+    ws2["!cols"] = [{ wch: 22 }, { wch: 28 }, { wch: 28 }, { wch: 26 }, { wch: 20 }, { wch: 22 }, { wch: 14 }, { wch: 16 }];
+    XLSX.utils.book_append_sheet(wb, ws2, "Deals");
+
+    // Sheet 3 – Login Sessions
+    const sessionRows = reports.flatMap(buildSessionRows);
+    const ws3 = XLSX.utils.json_to_sheet(sessionRows);
+    ws3["!cols"] = Array(7).fill({ wch: 22 });
+    XLSX.utils.book_append_sheet(wb, ws3, "Login Sessions");
+
     XLSX.writeFile(wb, `team_performance_${getFileSuffix()}.xlsx`);
   };
 
   const downloadSalesmanReport = (rep) => {
-    const rows = buildExportRows(rep);
-    const wb   = XLSX.utils.book_new();
-    const ws   = XLSX.utils.json_to_sheet(rows);
-    ws["!cols"] = Array(16).fill({ wch: 22 });
-    XLSX.utils.book_append_sheet(wb, ws, rep.name.slice(0, 31));
+    const wb = XLSX.utils.book_new();
+
+    // Sheet 1 – Assigned Leads
+    const assignedRows = buildAssignedLeadRows(rep);
+    const ws1 = XLSX.utils.json_to_sheet(assignedRows);
+    ws1["!cols"] = [{ wch: 22 }, { wch: 28 }, { wch: 24 }, { wch: 18 }, { wch: 14 }];
+    XLSX.utils.book_append_sheet(wb, ws1, "Assigned Leads");
+
+    // Sheet 2 – Deals
+    const dealRows = buildDealRows(rep);
+    const ws2 = XLSX.utils.json_to_sheet(dealRows);
+    ws2["!cols"] = [{ wch: 22 }, { wch: 28 }, { wch: 28 }, { wch: 26 }, { wch: 20 }, { wch: 22 }, { wch: 14 }, { wch: 16 }];
+    XLSX.utils.book_append_sheet(wb, ws2, "Deals");
+
+    // Sheet 3 – Login Sessions
+    const sessionRows = buildSessionRows(rep);
+    const ws3 = XLSX.utils.json_to_sheet(sessionRows);
+    ws3["!cols"] = Array(7).fill({ wch: 22 });
+    XLSX.utils.book_append_sheet(wb, ws3, "Login Sessions");
+
     XLSX.writeFile(wb, `${rep.name.replace(/\s+/g, "_")}_${getFileSuffix()}.xlsx`);
   };
 
@@ -1994,7 +2116,7 @@ const ReportsPage = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  {["Team Member","Leads","Time Logged","Actions"].map((h) => (
+                  {["Team Member","Leads","Won","Closed","Time Logged","Actions"].map((h) => (
                     <th key={h} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                       {h}
                     </th>
@@ -2025,6 +2147,18 @@ const ReportsPage = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">{rep.totalLeads}</div>
                         <div className="text-xs text-gray-500">Assigned</div>
+                      </td>
+
+                      {/* Won */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-green-700">{rep.wonLeads}</div>
+                        <div className="text-xs text-gray-500">Won</div>
+                      </td>
+
+                      {/* Closed */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-red-600">{rep.closedLeads}</div>
+                        <div className="text-xs text-gray-500">Closed</div>
                       </td>
 
                       {/* Activities */}
@@ -2097,90 +2231,17 @@ const ReportsPage = () => {
                       </td>
                     </tr>
 
-                    {/* Expanded sessions */}
-                    {expandedUsers.has(rep.userId) && (() => {
-                      const sessions = getSessionsForView(rep.loginHistory);
-                      const totalSecs = sessions.reduce((acc, log) => {
-                        if (log.login && log.logout) {
-                          const d = (new Date(log.logout) - new Date(log.login)) / 1000;
-                          return acc + (d > 0 ? d : 0);
-                        }
-                        return acc;
-                      }, 0);
-
-                      return (
-                        <tr className="bg-gray-50">
-                          <td colSpan="6" className="px-6 py-6">
-                            <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-
-                              <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center flex-wrap gap-2">
-                                <h4 className="text-sm font-semibold text-gray-900">
-                                  {getSessionLabel()} — {rep.name}
-                                </h4>
-                                <div className="flex items-center gap-4 text-xs text-gray-500">
-                                  <span>{sessions.length} session(s)</span>
-                                  <span className="font-medium text-gray-700">
-                                    Total time: {formatDuration(totalSecs)}
-                                  </span>
-                                </div>
-                              </div>
-
-                              <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                  <thead className="bg-gray-50">
-                                    <tr>
-                                      {["#","Date","Login Time","Logout Time","Duration","Status"].map((h) => (
-                                        <th key={h} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                                          {h}
-                                        </th>
-                                      ))}
-                                    </tr>
-                                  </thead>
-                                  <tbody className="divide-y divide-gray-200">
-                                    {sessions.length > 0 ? (
-                                      sessions.map((log, idx) => (
-                                        <tr key={idx} className="hover:bg-gray-50">
-                                          <td className="px-4 py-3 text-sm text-gray-500">{idx + 1}</td>
-                                          <td className="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{formatDate(log.login)}</td>
-                                          <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{formatTime(log.login)}</td>
-                                          <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{formatTime(log.logout)}</td>
-                                          <td className="px-4 py-3 whitespace-nowrap">
-                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                              {formatSessionDuration(log.login, log.logout)}
-                                            </span>
-                                          </td>
-                                          <td className="px-4 py-3 whitespace-nowrap">
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                              log.logout ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
-                                            }`}>
-                                              {log.logout ? "Completed" : "Active"}
-                                            </span>
-                                          </td>
-                                        </tr>
-                                      ))
-                                    ) : (
-                                      <tr>
-                                        <td colSpan="6" className="px-4 py-10 text-center">
-                                          <FaUserAlt className="mx-auto w-8 h-8 mb-2 text-gray-300" />
-                                          <p className="text-sm text-gray-500">No login sessions found for this period</p>
-                                        </td>
-                                      </tr>
-                                    )}
-                                  </tbody>
-                                </table>
-                              </div>
-
-                              <div className="px-6 py-4 border-t border-gray-100 grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                <MiniStat label="Total Leads"  value={rep.totalLeads} />
-                                <MiniStat label="Activities"   value={`${rep.completedActivities}/${rep.totalActivities}`} />
-                                <MiniStat label="Follow-ups"   value={rep.totalFollowUps} />
-                                <MiniStat label="Total Logged" value={rep.totalDuration} />
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })()}
+                    {/* Expanded — date-wise breakdown */}
+                    {expandedUsers.has(rep.userId) && (
+                      <tr className="bg-gray-50">
+                        <td colSpan="6" className="px-6 py-6">
+                          <ExpandedDateTable
+                            rep={rep}
+                            sessionLabel={getSessionLabel()}
+                          />
+                        </td>
+                      </tr>
+                    )}
                   </React.Fragment>
                 ))}
               </tbody>
@@ -2207,6 +2268,504 @@ const ReportsPage = () => {
 
 /* ─── Sub-components ─────────────────────────────────────────────────── */
 
+/* Reusable paginator --------------------------------------------------- */
+const usePagination = (data, defaultRows = 10) => {
+  const [page, setPage]           = useState(1);
+  const [rowsPerPage, setRowsPer] = useState(defaultRows);
+  const total      = data.length;
+  const totalPages = Math.max(1, Math.ceil(total / rowsPerPage));
+  const safePage   = Math.min(page, totalPages);
+  const rows       = data.slice((safePage - 1) * rowsPerPage, safePage * rowsPerPage);
+  const changeRows = (n) => { setRowsPer(Number(n)); setPage(1); };
+  return { rows, page: safePage, totalPages, total, rowsPerPage, setPage, changeRows };
+};
+
+/* Pagination bar ------------------------------------------------------- */
+const PaginationBar = ({ pagination, total }) => {
+  const { page, totalPages, rowsPerPage, setPage, changeRows } = pagination;
+  return (
+    <div className="flex items-center gap-3 text-sm text-gray-600">
+      <div className="flex items-center gap-1.5">
+        <span className="text-xs">Rows per page:</span>
+        <select
+          value={rowsPerPage}
+          onChange={(e) => changeRows(e.target.value)}
+          className="border border-gray-300 rounded px-1.5 py-0.5 text-xs bg-white focus:ring-1 focus:ring-blue-500"
+        >
+          {[5, 10, 20, 50].map((n) => <option key={n} value={n}>{n}</option>)}
+        </select>
+      </div>
+      <span className="text-xs text-gray-500">
+        {total === 0 ? "0–0 of 0"
+          : `${(page - 1) * rowsPerPage + 1}–${Math.min(page * rowsPerPage, total)} of ${total}`}
+      </span>
+      <div className="flex items-center gap-1">
+        <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}
+          className="w-7 h-7 flex items-center justify-center rounded border border-gray-300 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed text-gray-700 text-lg font-semibold">‹</button>
+        <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages}
+          className="w-7 h-7 flex items-center justify-center rounded border border-gray-300 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed text-gray-700 text-lg font-semibold">›</button>
+      </div>
+    </div>
+  );
+};
+
+/* Main expanded panel -------------------------------------------------- */
+const ExpandedDateTable = ({ rep, sessionLabel }) => {
+  const [activeTab, setActiveTab] = useState("leads");
+
+  /* ── Search state ── */
+  const [leadNameSearch,  setLeadNameSearch]  = useState("");
+  const [leadDateFilter,  setLeadDateFilter]  = useState("");
+  const [dealNameSearch,  setDealNameSearch]  = useState("");
+  const [dealDateFilter,  setDealDateFilter]  = useState("");
+  const [sessionDateFilter, setSessionDateFilter] = useState("");
+
+  /* ── leadId → deal map  (ONLY reliable key — no name fallback) ── */
+  const leadToDeal = {};
+  (rep.deals || []).forEach((d) => {
+    if (d.leadId) leadToDeal[String(d.leadId)] = d;
+  });
+
+  /* ── Leads that DO have a matched deal ── */
+  const linkedLeadIds = new Set(Object.keys(leadToDeal));
+
+  /* ── Deals that have NO matching assigned lead (direct deals) ── */
+  const directDeals = (rep.deals || []).filter(
+    (d) => !d.leadId || !linkedLeadIds.has(String(d.leadId))
+  );
+
+  /* ── All lead rows sorted ── */
+  const allLeadRows = [...(rep.leads || [])]
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  /* ── All deal rows sorted ── */
+  const allDealRows = [...(rep.deals || [])]
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  /* ── Login Sessions data ── */
+  const allSessions = [...(rep.loginHistory || [])]
+    .sort((a, b) => new Date(b.login) - new Date(a.login));
+
+  /* ── Filtered arrays (search applied) ── */
+  const filteredLeads = allLeadRows.filter((l) => {
+    const matchName = !leadNameSearch || (l.leadName || "").toLowerCase().includes(leadNameSearch.toLowerCase());
+    const matchDate = !leadDateFilter || toDateKey(l.createdAt) === leadDateFilter;
+    return matchName && matchDate;
+  });
+
+  const filteredDeals = allDealRows.filter((d) => {
+    const matchName = !dealNameSearch || (d.dealName || "").toLowerCase().includes(dealNameSearch.toLowerCase());
+    const matchDate = !dealDateFilter || toDateKey(d.createdAt) === dealDateFilter;
+    return matchName && matchDate;
+  });
+
+  const filteredSessions = allSessions.filter((s) =>
+    !sessionDateFilter || toDateKey(s.login) === sessionDateFilter
+  );
+
+  /* ── Pagination (on filtered data) ── */
+  const leadPag    = usePagination(filteredLeads, 10);
+  const dealPag    = usePagination(filteredDeals, 10);
+  const sessionPag = usePagination(filteredSessions, 10);
+
+  const tabClass = (id) =>
+    `px-4 py-2 text-xs font-semibold rounded-t-lg border-b-2 transition-colors whitespace-nowrap ${
+      activeTab === id
+        ? "border-blue-600 text-blue-700 bg-blue-50"
+        : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+    }`;
+
+  /* Shared search input style */
+  const inputCls = "h-8 px-2.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-400";
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+
+      {/* ── Panel header ── */}
+      <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex flex-wrap justify-between items-center gap-3">
+        <div>
+          <h4 className="text-sm font-semibold text-gray-900">{sessionLabel} — {rep.name}</h4>
+          <p className="text-xs text-gray-500 mt-0.5">
+            {rep.totalLogins} login session(s) &nbsp;·&nbsp; Total time logged: <span className="font-medium text-gray-700">{rep.totalDuration}</span>
+          </p>
+        </div>
+        {/* Summary chips */}
+        <div className="flex flex-wrap gap-2">
+          {[
+            { label: "Total Leads", value: rep.totalLeads,   cls: "bg-blue-50 text-blue-700 border-blue-200"  },
+            { label: "Won",         value: rep.wonLeads,     cls: "bg-green-50 text-green-700 border-green-200" },
+            { label: "Closed",      value: rep.closedLeads,  cls: "bg-red-50 text-red-600 border-red-200"     },
+            { label: "Follow-ups",  value: rep.totalFollowUps, cls: "bg-yellow-50 text-yellow-700 border-yellow-200" },
+          ].map(({ label, value, cls }) => (
+            <span key={label} className={`inline-flex flex-col items-center px-3 py-1 rounded-lg border text-xs font-medium ${cls}`}>
+              <span className="text-base font-bold leading-tight">{value}</span>
+              <span className="opacity-75">{label}</span>
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Tab bar ── */}
+      <div className="flex gap-0 px-6 pt-3 border-b border-gray-200">
+        <button className={tabClass("leads")}    onClick={() => setActiveTab("leads")}>
+          📋 Lead Assignment Tracker ({allLeadRows.length})
+        </button>
+        <button className={tabClass("sessions")} onClick={() => setActiveTab("sessions")}>
+          🕐 Login Sessions ({allSessions.length})
+        </button>
+      </div>
+
+      {/* ══════════════════════════════════════════════
+          TAB 1 — LEAD ASSIGNMENT TRACKER
+      ══════════════════════════════════════════════ */}
+      {activeTab === "leads" && (
+        <>
+          {/* ── SECTION A : Assigned Leads ── */}
+          <div className="px-5 pt-4 pb-2 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-bold text-blue-700 uppercase tracking-widest flex items-center gap-2">
+              <span className="inline-block w-2 h-2 rounded-full bg-blue-500" />
+              Assigned Leads — {filteredLeads.length}{filteredLeads.length !== allLeadRows.length ? ` / ${allLeadRows.length}` : ""}
+            </p>
+            {/* Search bar — Leads */}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative">
+                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">🔍</span>
+                <input
+                  type="text"
+                  placeholder="Search lead name…"
+                  value={leadNameSearch}
+                  onChange={(e) => { setLeadNameSearch(e.target.value); leadPag.setPage(1); }}
+                  className={`${inputCls} pl-6 w-40`}
+                />
+              </div>
+              <input
+                type="date"
+                value={leadDateFilter}
+                onChange={(e) => { setLeadDateFilter(e.target.value); leadPag.setPage(1); }}
+                className={`${inputCls} w-36`}
+                title="Filter by assigned date"
+              />
+              {(leadNameSearch || leadDateFilter) && (
+                <button
+                  onClick={() => { setLeadNameSearch(""); setLeadDateFilter(""); leadPag.setPage(1); }}
+                  className="h-8 px-2.5 text-xs rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition-colors"
+                  title="Clear filters"
+                >✕ Clear</button>
+              )}
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-blue-50">
+                <tr>
+                  {["#","Lead Name","Lead Assigned Date","Lead Status"].map(h => (
+                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-blue-700 uppercase tracking-wider whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 bg-white">
+                {leadPag.rows.length > 0 ? leadPag.rows.map((lead, idx) => {
+                  const leadStatusColors = {
+                    "Converted": "bg-green-100 text-green-800",
+                    "Hot":       "bg-red-100 text-red-700",
+                    "Warm":      "bg-orange-100 text-orange-700",
+                    "Cold":      "bg-blue-100 text-blue-700",
+                    "Junk":      "bg-gray-100 text-gray-500",
+                  };
+                  return (
+                    <tr key={String(lead._id)} className="hover:bg-blue-50/20">
+                      <td className="px-4 py-3 text-xs text-gray-400 w-8">{(leadPag.page - 1) * leadPag.rowsPerPage + idx + 1}</td>
+                      <td className="px-4 py-3 text-sm font-semibold text-gray-900">{lead.leadName || "—"}</td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
+                          <span className="text-sm text-gray-700">{lead.createdAt ? formatDate(lead.createdAt) : "—"}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${leadStatusColors[lead.status] || "bg-gray-100 text-gray-500"}`}>
+                          {lead.status || "—"}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                }) : (
+                  <tr><td colSpan="4" className="px-4 py-8 text-center text-sm text-gray-400">
+                    {leadNameSearch || leadDateFilter ? "No leads match the search/filter" : "No leads assigned"}
+                  </td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          {/* Leads pagination bar */}
+          {filteredLeads.length > 0 && (
+            <div className="px-4 py-2 border-t border-blue-100 bg-blue-50/30 flex justify-end">
+              <PaginationBar pagination={leadPag} total={filteredLeads.length} />
+            </div>
+          )}
+
+          {/* ── SECTION B : Deals ── */}
+          <div className="px-5 pt-4 pb-2 border-t-2 border-gray-100 mt-0 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-bold text-green-700 uppercase tracking-widest flex items-center gap-2">
+              <span className="inline-block w-2 h-2 rounded-full bg-green-500" />
+              Deals — {filteredDeals.length}{filteredDeals.length !== allDealRows.length ? ` / ${allDealRows.length}` : ""}
+              <span className="ml-2 text-gray-400 font-normal normal-case tracking-normal">
+                (Won: <span className="text-green-700 font-bold">{allDealRows.filter(d=>d.stage==="Closed Won").length}</span>
+                &nbsp;·&nbsp; Lost: <span className="text-red-600 font-bold">{allDealRows.filter(d=>d.stage==="Closed Lost").length}</span>
+                &nbsp;·&nbsp; In Progress: <span className="text-blue-600 font-bold">{allDealRows.filter(d=>d.stage!=="Closed Won"&&d.stage!=="Closed Lost").length}</span>)
+              </span>
+            </p>
+            {/* Search bar — Deals */}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative">
+                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">🔍</span>
+                <input
+                  type="text"
+                  placeholder="Search deal name…"
+                  value={dealNameSearch}
+                  onChange={(e) => { setDealNameSearch(e.target.value); dealPag.setPage(1); }}
+                  className={`${inputCls} pl-6 w-40`}
+                />
+              </div>
+              <input
+                type="date"
+                value={dealDateFilter}
+                onChange={(e) => { setDealDateFilter(e.target.value); dealPag.setPage(1); }}
+                className={`${inputCls} w-36`}
+                title="Filter by deal created date"
+              />
+              {(dealNameSearch || dealDateFilter) && (
+                <button
+                  onClick={() => { setDealNameSearch(""); setDealDateFilter(""); dealPag.setPage(1); }}
+                  className="h-8 px-2.5 text-xs rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition-colors"
+                  title="Clear filters"
+                >✕ Clear</button>
+              )}
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-green-50">
+                <tr>
+                  {["#","Deal Name","Lead → Deal Convert Date","Direct Deal Date","Deal Completion Date","Days Taken","Deal Status"].map(h => (
+                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-green-700 uppercase tracking-wider whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 bg-white">
+                {dealPag.rows.length > 0
+                  ? dealPag.rows.map((deal, i) => {
+                      const isConverted = !!deal.leadId;          // came from a lead
+                      const isFinished  = deal.stage === "Closed Won" || deal.stage === "Closed Lost";
+                      const completedDt = isFinished ? deal.updatedAt : null;
+                      const days        = completedDt ? daysBetween(deal.createdAt, completedDt) : null;
+                      const stageColors = {
+                        "Closed Won":    "bg-green-100 text-green-800",
+                        "Closed Lost":   "bg-red-100 text-red-700",
+                        "Qualification": "bg-blue-100 text-blue-700",
+                        "Negotiation":   "bg-purple-100 text-purple-700",
+                        "Proposal":      "bg-indigo-100 text-indigo-700",
+                        "Proposal Sent": "bg-orange-100 text-orange-700",
+                      };
+                      return (
+                        <tr key={String(deal._id)} className="hover:bg-green-50/30 transition-colors">
+                          <td className="px-4 py-3 text-xs text-gray-400 w-8">{(dealPag.page - 1) * dealPag.rowsPerPage + i + 1}</td>
+                          <td className="px-4 py-3 text-sm font-semibold text-gray-900">{deal.dealName || "—"}</td>
+
+                          {/* Lead → Deal Convert Date — only for converted deals */}
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            {isConverted ? (
+                              <div className="flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full bg-purple-400 shrink-0" />
+                                <span className="text-sm text-gray-700">{formatDate(deal.createdAt)}</span>
+                              </div>
+                            ) : <span className="text-gray-400 text-sm">—</span>}
+                          </td>
+
+                          {/* Direct Deal Date — only for manually created deals */}
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            {!isConverted ? (
+                              <div className="flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full bg-orange-400 shrink-0" />
+                                <span className="text-sm text-gray-700">{formatDate(deal.createdAt)}</span>
+                              </div>
+                            ) : <span className="text-gray-400 text-sm">—</span>}
+                          </td>
+
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            {completedDt ? (
+                              <div className="flex items-center gap-1.5">
+                                <span className={`w-2 h-2 rounded-full shrink-0 ${deal.stage==="Closed Won"?"bg-green-500":"bg-red-400"}`} />
+                                <span className="text-sm text-gray-700">{formatDate(completedDt)}</span>
+                              </div>
+                            ) : <span className="text-gray-400 text-sm">—</span>}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            {days !== null ? (
+                              days === 0 ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-800">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
+                                  Same Day
+                                </span>
+                              ) : (
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold
+                                  ${days<=7?"bg-green-100 text-green-800":days<=30?"bg-blue-100 text-blue-800":days<=90?"bg-yellow-100 text-yellow-800":"bg-red-100 text-red-800"}`}>
+                                  {days} day{days!==1?"s":""}
+                                </span>
+                              )
+                            ) : <span className="text-gray-400 text-sm">—</span>}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${stageColors[deal.stage]||"bg-gray-100 text-gray-500"}`}>
+                              {deal.stage || "—"}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  : <tr><td colSpan="7" className="px-4 py-8 text-center text-sm text-gray-400">
+                    {dealNameSearch || dealDateFilter ? "No deals match the search/filter" : "No deals found"}
+                  </td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          {/* Deals pagination bar */}
+          {filteredDeals.length > 0 && (
+            <div className="px-4 py-2 border-t border-green-100 bg-green-50/30 flex justify-end">
+              <PaginationBar pagination={dealPag} total={filteredDeals.length} />
+            </div>
+          )}
+
+          {/* Footer totals */}
+          <div className="px-4 py-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3 bg-gray-50/50">
+            <div className="flex flex-wrap gap-4">
+              <MiniStat label="Total Leads"   value={allLeadRows.length} />
+              <MiniStat label="Total Deals"   value={allDealRows.length} />
+              <MiniStat label="Closed Won"    value={allDealRows.filter(d=>d.stage==="Closed Won").length}    valueClass="text-green-700" />
+              <MiniStat label="Closed Lost"   value={allDealRows.filter(d=>d.stage==="Closed Lost").length}   valueClass="text-red-600" />
+              <MiniStat label="In Progress"   value={allDealRows.filter(d=>d.stage!=="Closed Won"&&d.stage!=="Closed Lost").length} valueClass="text-blue-600" />
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ══════════════════════════════════════════════
+          TAB 2 — LOGIN SESSIONS
+          Shows: # | Login Date | Login Time | Logout Time | Duration | Status
+      ══════════════════════════════════════════════ */}
+      {activeTab === "sessions" && (
+        <>
+          {/* Sessions search bar */}
+          <div className="px-5 pt-4 pb-2 flex flex-wrap items-center justify-between gap-2 border-b border-gray-100">
+            <p className="text-xs font-bold text-gray-600 uppercase tracking-widest flex items-center gap-2">
+              <span className="inline-block w-2 h-2 rounded-full bg-gray-400" />
+              Login Sessions — {filteredSessions.length}{filteredSessions.length !== allSessions.length ? ` / ${allSessions.length}` : ""}
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                type="date"
+                value={sessionDateFilter}
+                onChange={(e) => { setSessionDateFilter(e.target.value); sessionPag.setPage(1); }}
+                className={`${inputCls} w-36`}
+                title="Filter sessions by login date"
+              />
+              {sessionDateFilter && (
+                <button
+                  onClick={() => { setSessionDateFilter(""); sessionPag.setPage(1); }}
+                  className="h-8 px-2.5 text-xs rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition-colors"
+                  title="Clear date filter"
+                >✕ Clear</button>
+              )}
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  {["#", "Login Date", "Login Time", "Logout Time", "Duration", "Status"].map((h) => (
+                    <th key={h}
+                      className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {sessionPag.rows.length > 0 ? sessionPag.rows.map((log, idx) => {
+                  const loginDt  = log.login  ? new Date(log.login)  : null;
+                  const logoutDt = log.logout ? new Date(log.logout) : null;
+                  const isActive = !log.logout;
+                  const dur      = loginDt && logoutDt ? formatSessionDuration(log.login, log.logout) : null;
+
+                  return (
+                    <tr key={idx} className="hover:bg-blue-50/30 transition-colors">
+                      {/* # */}
+                      <td className="px-4 py-3 text-xs text-gray-400 font-medium">
+                        {(sessionPag.page - 1) * sessionPag.rowsPerPage + idx + 1}
+                      </td>
+                      {/* Login Date */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="text-sm font-medium text-gray-800">
+                          {loginDt ? formatDate(log.login) : "—"}
+                        </span>
+                      </td>
+                      {/* Login Time */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="text-sm text-gray-700">
+                          {loginDt ? loginDt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true }) : "—"}
+                        </span>
+                      </td>
+                      {/* Logout Time */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="text-sm text-gray-700">
+                          {logoutDt ? logoutDt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true }) : <span className="text-gray-400">—</span>}
+                        </span>
+                      </td>
+                      {/* Duration */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        {dur
+                          ? <span className="text-sm text-gray-700">{dur}</span>
+                          : <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-xs">—</span>
+                        }
+                      </td>
+                      {/* Status */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold
+                          ${isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>
+                          {isActive && <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />}
+                          {isActive ? "Active" : "Completed"}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                }) : (
+                  <tr>
+                    <td colSpan="6" className="px-4 py-12 text-center">
+                      <FaUserAlt className="mx-auto w-8 h-8 mb-2 text-gray-300" />
+                      <p className="text-sm text-gray-500">
+                        {sessionDateFilter ? "No sessions found for the selected date" : "No login sessions found for this period"}
+                      </p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          {/* Sessions tab footer */}
+          <div className="px-4 py-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3 bg-gray-50/50">
+            <div className="flex flex-wrap gap-4">
+              <MiniStat label="Sessions"     value={allSessions.length} />
+              <MiniStat label="Total Logged" value={rep.totalDuration} />
+            </div>
+            <PaginationBar pagination={sessionPag} total={filteredSessions.length} />
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
 const SummaryCard = ({ title, value, icon, color, subtitle }) => {
   const colors = {
     blue:   "bg-blue-50 text-blue-700",
@@ -2228,10 +2787,10 @@ const SummaryCard = ({ title, value, icon, color, subtitle }) => {
   );
 };
 
-const MiniStat = ({ label, value }) => (
+const MiniStat = ({ label, value, valueClass = "text-gray-900" }) => (
   <div className="text-center">
     <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">{label}</p>
-    <p className="text-sm font-semibold text-gray-900">{value}</p>
+    <p className={`text-sm font-semibold ${valueClass}`}>{value}</p>
   </div>
 );
 
